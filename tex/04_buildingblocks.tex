@@ -1,0 +1,104 @@
+\newcommand{\vt}{\mathsf{vt}}
+\newcommand{\wx}{\mathsf{wx}}
+\newcommand{\wxone}{\mathsf{w_1x}}
+\newcommand{\wxtwo}{\mathsf{w_2x}}
+\newcommand{\wxhat}{\mathsf{\hat{w}x}}
+% \newcommand{\x}{\mathsf{x}}
+
+\newcommand{\acu}{\mathsf{ACU}}
+\newcommand{\acusetup}{\mathsf{ACU.Setup}}
+\newcommand{\acuadd}{\mathsf{ACU.Add}}
+\newcommand{\acudel}{\mathsf{ACU.Del}}
+\newcommand{\acuvermem}{\mathsf{ACU.VerMem}}
+\newcommand{\acuvernonmem}{\mathsf{ACU.VerNonMem}}
+
+
+\newcommand{\rev}{\mathsf{REV}}
+\newcommand{\revsetup}{\mathsf{REV.Setup}}
+\newcommand{\revrevoke}{\mathsf{REV.Revoke}}
+\newcommand{\revtokengen}{\mathsf{REV.TokenGen}}
+\newcommand{\revtokenver}{\mathsf{REV.TokenVer}}
+
+\newcommand{\rt}{\mathsf{rt}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \subsection{Revocation}
+% Credential revocation is a fundamental challenge in identity management systems. While credentials grant users access to services, there must be mechanisms to invalidate them when necessary. Since the introduction of public key infrastructure, numerous solutions have been proposed to handle certificate revocation such as time-based expiration, usage limits (k-times use), and revocation lists. In the latter approach, a trusted authority manages a whitelist of valid credentials or blacklist of revoked ones, requiring users to prove their credential status with respect to the list.
+
+% The challenge becomes more complex in privacy-preserving systems as users must be able to prove revocation status without revealing the credential or its attributes. Furthermore, the revocation list should not leak information about which credentials are valid or revoked. 
+
+% \subsubsection{Revocation Scheme}
+% A revocation scheme enables efficient proofs of credential validity while maintaining privacy of the revocation status. The scheme consists of a revocation authority that manages the revocation state, protocols for revoking credentials, and methods for users to prove their credentials remain valid. A privacy-preserving revocation scheme must satisfy several properties:
+
+% \begin{itemize}
+%     \item Privacy: Users can prove their credential's status without revealing the credential
+%     \item Unlinkability: Multiple proofs by the same user cannot be linked
+%     \item Efficiency: Proofs should be succinct and verification efficient
+%     \item Dynamic Updates: The system supports real-time credential revocation
+% \end{itemize}
+
+% \paragraph{Syntax}
+% A revocation scheme consists of the following algorithms:
+
+% \begin{itemize}
+%     \item $\revsetup(\secparam) \torand (\ppar, \sk, \pk, \vt):$ Given security parameter $\secparam$, generates system parameters $\ppar$, authority's secret key $\sk$, public key $\pk$, and initial revocation state $\vt$
+    
+%     \item $\revrevoke(\sk, \vt, \cred) \to (\vt', \text{RI}):$ Revokes credential $\cred$, updates revocation state from $\vt$ to $\vt'$, and outputs revocation information RI
+    
+%     \item $\revtokengen(\cred, \vt, \text{RI}) \to \rt:$ Generates a revocation token $\rt$ for credential $\cred$ using the current revocation state $\vt$ and revocation information RI
+    
+%     \item $\revtokenver(\vt, \cred, \rt) \to \bit:$ Verifies revocation token $\rt$ for credential $\cred$ against revocation state $\vt$
+% \end{itemize}
+
+
+
+
+% \subsubsection{Security Definition}
+
+% \newpage
+
+
+% % Construction
+
+
+% \subsubsection{Accumulator}
+% An accumulator allows for compact representation of a set while enabling efficient proofs of membership. Our construction uses a universal accumulator that supports both membership and non-membership proofs. The accumulator maintains a constant-size value regardless of the number of elements in the set, while allowing elements to be dynamically added and removed. For each element, the system can generate succinct witnesses that prove either membership or non-membership in the accumulated set.
+
+
+
+% \subsubsection{Syntax}
+% An accumulator $\acu$ is a set of $\PPT$ algorithms $\acu = \mathsf{Setup, Add, Del, VerMem, VerNonMem}$. 
+% \begin{itemize}
+%     \item $\acusetup(\secparam) \torand \ppar, \sk, \pk, \vt:$ generates system parameters, takes security parameter $\secparam$ as input, outputs system parameters $\ppar$, secret key $\sk$, public key $\pk$, and initial accumulator value $\vt$
+    
+%     \item $\acuadd(\sk, \vt, \x) \to (\vt', \wx):$ adds element $\x$, takes secret key $\sk$, current accumulator value $\vt$, element $\x$ as input. Outputs updated accumulator value $\vt'$, and membership witness $\wx$
+    
+%     \item $\acudel(\sk, \vt, \x) \to (\vt', \wxhat):$ Deletes element $\x$, takes secret key $\sk$, current accumulator value $\vt$, element $\x$ as input. Outputs updated accumulator value $\vt'$, non-membership witness $\wxhat$ 
+    
+%     \item $\acuvermem(\vt, \x, \wx) \to \bit:$ verifies membership, takes current accumulator value $\vt$, element $\x$, witness $\wx$ as input. Outputs accept/reject
+    
+%     \item $\acuvernonmem(\vt, \x, \wxhat) \to \bit:$ Verifies non-membership, takes current accumulator value $\vt$, element $\x$, non-member witness $\wxhat$ as input. Outputs accept/reject
+% \end{itemize}
+
+%  with additional witness operations $\mathsf{MemWitUpOnAdd/Del, NonMemWitUpOnAdd/Del}$ 

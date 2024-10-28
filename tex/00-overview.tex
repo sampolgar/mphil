@@ -1,0 +1,391 @@
+\newcommand{\user}{\mathsf{U}}
+\newcommand{\uri}{\mathsf{URI}}
+\newcommand{\expiry}{\mathsf{exp}}
+\newcommand{\idp}{\mathsf{IDP}}
+\newcommand{\ra}{\mathsf{RA}}
+\newcommand{\cp}{\mathsf{CP}}
+\newcommand{\rpk}{\mathsf{rpk}}
+\newcommand{\rsk}{\mathsf{rsk}}
+\newcommand{\dsk}{\mathsf{dsk}}
+\newcommand{\apk}{\mathsf{apk}}
+\newcommand{\ask}{\mathsf{ask}}
+\newcommand{\rai}{\mathsf{rai}}
+\newcommand{\cci}{\mathsf{cci}}
+\newcommand{\wpid}{\mathsf{w_{pid}}}
+\newcommand{\wctx}{\mathsf{w_{ctx}}}
+\newcommand{\ri}{\mathsf{ri}}
+\newcommand{\s}{\mathsf{s}}
+\newcommand{\acc}{\mathsf{acc}}
+\newcommand{\attrs}{\mathsf{attrs}}
+\newcommand{\precred}{\mathsf{precred}}
+\newcommand{\escrow}{\mathsf{escrow}}
+\newcommand{\audit}{\mathsf{AUD}}
+\newcommand{\rely}{\mathsf{REL}}
+
+% Lists
+\newcommand{\ul}{\mathsf{UL}}
+\newcommand{\ctxl}{\mathsf{CTXL}}
+
+% RL
+
+
+\newcommand{\ctxid}{\mathsf{ctx}_{id}}
+\newcommand{\cpid}{\mathsf{CP}_{id}}
+
+
+% COM
+\newcommand{\cmcom}{\mathsf{CM.Com}}
+\newcommand{\cmopen}{\mathsf{CM.Open}}
+
+
+% IBE
+\newcommand{\ibekg}{\mathsf{IBE.KeyGen}}
+\newcommand{\ibeextract}{\mathsf{IBE.Extract}}
+\newcommand{\ibeenc}{\mathsf{IBE.Enc}}
+\newcommand{\ibedec}{\mathsf{IBE.Dec}}
+
+% TPKE.Enc
+\newcommand{\tpkeenc}{\mathsf{TPKE.Enc}}
+\newcommand{\tpkdec}{\mathsf{TPKE.Dec}}
+
+% PS
+\newcommand{\psrerand}{\mathsf{PS.Rerand}}
+\newcommand{\psverify}{\mathsf{PS.Verify}}
+
+% PRF
+\newcommand{\vrfgen}{\mathsf{PRF.Gen}}
+\newcommand{\vrfprove}{\mathsf{PRF.Prove}}
+\newcommand{\vrfverify}{\mathsf{PRF.Verify}}
+
+
+\section{Protocol Syntax}
+After public parameter creation, we assume each algorithm receives public parameters as input $\ppar$ 
+\begin{itemize}
+
+    \item $\mathsf{Setup}(\secparam) \torand \ppar:$ inputs the security parameter $\lambda$ in unary, outputs system parameters $\ppar$
+
+    \item $\mathsf{CASetup}() \torand sk_{ca_i}, pk_{ca_i}:$ run by each $CA$, outputs $sk_{ca_i}, pk_{ca_i}$ (or a threshold version) for each $CA_i$
+
+    % level 1 credential issuance
+    \item $\mathsf{RequestLvl1}() \torand sk_1, pk_1, \pi_{1}, attrs_1$ run by a user, inputs the public parameters $\ppar$ and outputs secret key $\sk_1$, public key $\pk_1$ and  $\pi_{1}$ are proofs of correct identity and identity matches the $CA$
+    
+    \item $\mathsf{IssueLvl1}(sk_{ca_1}, sk_1, pk_1, pi_{1}, attrs_1) \to cred_1, \sigma_1:$ run by the $CA_1$ after receive inputs from $RequestLvl1$, verifies identity proofs $pi_{id}$, issues cred1 binding $pk_1$ to attributes $attrs$. Outputs $cred_1$ to user
+
+    \item $\mathsf{ProveLvl1}(cred1, \phi_4) \to \pi_4, aux:$ run by a user, creates a zkproof satisfying statement $\phi$, outputs $\pi_4$ and auxiliary information such as selectively disclosed attributes from $cred1$
+
+    \item $\mathsf{VerifyLvl1}(\pi_4, \phi_4, aux) \to \bit: $ run by verifier, verifies $\pi_4$ with respect to zkproof $\phi_4$ and auxiliary information $aux$.
+    
+    % Level 2 credential issuance
+    \item $\mathsf{RequestLvl2}(cred_1, cred2Type, attrs_2) \to pk_2, \pi_{2}, \pi_{3}:$ run by a user requesting a level 2 credential of type $cred2Type$. User computes $sk_2, pk_2 \gets \mathsf{DeriveKey(sk_1, cred2Type)}$, computes $\pi_{2}$ showing knowledge of a valid level 1 credential and correctness of $DeriveKey$ with respect to $sk_1$ and $pk_2$. Outputs $pk_2$, $\pi_{2}$ to level 2 CA $CA_2$
+
+    \item $\mathsf{IssueLvl2(cred_1, pk_1,  pk_{ca_1}, \pi_{2}, sk_{ca_2}, pk_2), attrs_2, \pi_{3}} \to cred_2, \sigma_2$: run by the $CA_2$ after receiving inputs from $\mathsf{RequestLvl2}$, verifies $cred_1$ with respect to $pk_1, pk_{ca_1}, \pi_2$. Checks $pk_2$ is not previously used (Sybil check). Issues $cred2$ binding $pk_2$ to $attrs_2$
+
+    \item $\mathsf{ProveLvl2}(cred_2, \phi_5) \to \pi_5, aux:$ run by a user, creates zkproof satisfying statement $\phi_5$ including proving knowledge of $sk_1$ from a valid $cred_1$, and proving $pk_2 = \mathsf{DeriveKey}(sk_1, cred2Type)$, and proving knowledge of $sk_2$ from a valid $cred_2$
+
+    \item $\mathsf{VerifyLvl2}(\pi_5, \phi_5, aux) \to \bit: $ run by a verifier, verifies $\pi_5$ with respect to zkproof $\phi_5$ and auxiliary information $aux$
+
+    \item $\mathsf{DeriveKey(sk_1, cred2Type)} \to (sk_2, pk_2):$ run by a user, takes as input their level 1 secret key $sk_1$ and credential type string $cred2Type$ and outputs a deterministically derived key pair $sk_2, pk_2$
+
+    \item $\mathsf{Revoke(sk_1, cred2Type)} \to (sk_2, pk_2):$ run by a user, takes as input their level 1 secret key $sk_1$ and credential type string $cred2Type$ and outputs a deterministically derived key pair $sk_2, pk_2$
+
+\end{itemize}
+
+
+
+
+\section{Protocol Syntax}
+After public parameter creation, we assume each algorithm receives public parameters as input $\ppar$
+\subsection{Setup and Key Generation}
+\begin{itemize}
+    \item $\mathsf{Setup}(\secparam) \torand \ppar:$ inputs the security parameter $\lambda$ in unary, outputs system parameters $\ppar$
+
+    \item $\mathsf{CASetup}() \torand sk_{ca_i}, pk_{ca_i}:$ run by each $CA$, outputs $CA$ key pair (or threshold based) $sk_{ca_i}, pk_{ca_i}$
+\end{itemize}
+
+\subsection{Level-1 Credential Operations}
+\begin{itemize}
+    \item $\mathsf{RequestLvl1}(attrs_1) \torand sk_1, pk_1, \pi_{1}, attrs_1$ run by a user, outputs Level-1 keypair $sk_1, pk_1$ and $\pi_{1}$ the proof of identity validity. $\pi_1$ proves 
+    \begin{enumerate}
+        \item user knows $sk_1$ corresponding to $pk_1$
+        \item identity attributes are valid
+        \item proof of correct identity process followed, can be non-cryptographic or for example biometric based
+    \end{enumerate}
+
+    \item $\mathsf{IssueLvl1}(sk_{ca_1}, sk_1, pk_1, \pi_{1}, attrs_1) \to cred_1, \sigma_1:$ run by the $CA_1$ with inputs from $\mathsf{RequestLvl1}$. Outputs $(cred_1, \sigma_1)$ to user
+\end{itemize}
+
+
+\subsection{Level-2 Credential Operations}
+\begin{itemize}
+    \item $\mathsf{RequestLvl2}(cred_1, cred2Type, attrs_2) \to pk_2, \pi_{2}:$ Run by a user, inputs Level-1 credential $cred_1$, desired L2 credential type $cred2Type$, L2 credential attributes $attrs_2$. Computes $(sk_2, pk_2) \gets \mathsf{DeriveKey}(sk_1, cred2Type)$. Outputs derived public key $pk_2$ and $\pi_2$ proves:
+    \begin{enumerate}
+        \item user has valid $cred_1$
+        \item $pk_2$ was correctly derived from $sk_1$ using $cred2Type$
+        \item user knows $sk_2$ corresponding to $pk_2$
+    \end{enumerate}
+
+    \item $\mathsf{IssueLvl2}(cred_1, pk_1, pk_{ca_1}, \pi_2, sk_{ca_2}, pk_2, attrs_2) \to (cred_2, \sigma_2): $ run by $CA_2$, verifies $\pi_2$, checks $pk_2$ hasn't been issued before (Sybil Check). Outputs Level-2 credential $cred_2$ and signature $\sigma_2$
+\end{itemize}
+
+
+
+\subsection{Verification Operations}
+\begin{itemize}
+     \item $\mathsf{ProveLvl1}(cred1, \phi) \to \pi_3, aux:$ run by a user, inputs level-1 credential $cred_1$ and statement to prove $\phi$. Outputs a proof $\pi_3$ proves:
+     \begin{enumerate}
+         \item User possess a valid $cred_1$
+         \item public and private attributes satisfy $\phi$
+     \end{enumerate}
+     and auxiliary information $aux$ such as selectively disclosed attributes
+     
+     \item $\mathsf{ProveLvl2}(cred_1, cred_2, \phi) \to (\pi_4, aux)$ run by a user, takes $cred_1, cred_2$ as input and $\phi$ the statement to prove. Outputs $\pi_4$ which proves:
+     \begin{enumerate}
+         \item user possesses valid $cred_2$
+         \item $cred_2$ is linked to a valid $cred_1$
+         \item $pk_2$ was correctly derived from $sk_1$
+         \item selected attributes satisfy $\phi$
+     \end{enumerate}
+     and auxiliary information $aux$ such as selectively disclosed attributes
+
+     \item $\mathsf{VerifyLvl1}(\pi_3, \phi, aux) \to \bit$
+     \item $\mathsf{VerifyLvl2}(\pi_4, \phi, aux) \to \bit$
+     run by a verifier, inputs proof, statement, auxiliary information. Outputs accept/reject
+\end{itemize}
+
+
+\subsection{Key Derivation and Revocation}
+\begin{itemize}
+    \item $\mathsf{DeriveKey}(sk_1, cred2Type) \to (sk_2, pk_2): $ run by a user, takes as input Level-1 secret key $sk_1$, credential 2 type $cred2Type$, computes $sk_2 = PRF_{sk_1}(cred2Type), pk_2 = g^{sk_2}$, outputs derived keypair $sk_2, pk_2$
+    
+    \item $\mathsf{Revoke}(sk_1, cred2Type) \to revocationInfo: $ run by a revocation authority, takes as input the level-1 secret key $sk_1$ and credential type $cred2Type$. Outputs information to add to the revocation list including $pk_2$
+\end{itemize}
+
+\subsection{Properties}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \section{System Model}
+% Our identity system involves a user interacting with a registration authority ($\ra$), credential providers ($\cp$), and an auditor ($\audit$). We separate the concerns of the $\ra$, $\cp$, and $\audit$, but in practice, they could be one (threshold) entity of nodes or nodes of a blockchain. 
+
+% \begin{itemize}
+%     \item \textbf{User: }($\user$) a user holds a registration credential $\rcd$ and any number of context credentials $\ccd$ in their identity wallet. Their $\rcd$ contains a $\pid$ public identifier such as a passport number or email address, $s$ their secret PRF key, which they use during context-credential generation, $\dsk$ the identity-based decryption key, and credential expiry $\exp$. The user also holds context credentials $\ccd$ issued by Identity Providers $\idp$ such as a driver's license, or a university bachelor's degree. To generate $\rcd$, the user interacts with the $\ra$, which involves a non-private interaction where $\user$ identifies themself with a previous login mechanism - this is a requirement for governments implementing Decentralized Identity. To generate $\ccd$ the user interacts 
+
+%     \item \textbf{Registration Authority: } ($\ra$) 
+%     The $\ra$ runs an identity system outside this protocol's scope. It's used to store a mapping between $\user$ and their encrypted PRF key $\s$ for key escrow, used for accountability.
+%     On registration, $\user$ interacts with $\ra$, $\ra$ learns the user's $\pid$ and verifies their $\rcd$ is sybil (based on the system) meanwhile they do not learn the prf key $\s$. 
+%     $\ra$ signs credentials with their keys $\rpk_{rcd}$, $\rsk_{rcd}$ and Identity Based Encryption keys $\rpk_{ibe}, \rsk_{ibe}$.
+
+%     \item \textbf{Credential Provider: }($\cp$) Credential Providers are involved in issuing context credentials by first issuing a pre-credential $\precred$ which $\user$ will interact with $\ra$ to be issued a context credential $\ccd$. $\precred$ is cryptographically attested data, which is verified by $\ra$, and matched to data within a user's $\rcd$. $\ra$ verifies the $\precred$ and issues $\ccd$.
+
+%     \item \textbf{Auditor: } ($\audit$) The auditor runs a Threshold Encryption Scheme with keys $(ask, apk)$ for key escrow. During issuance, a user encrypts $\s$ stored in the external identity system. When 
+%     During audit or accountability, the Auditor receives the cipher text and decrypts it to handle accountability.
+
+%     \item \textbf{Relying Party: } ($\rely$) The auditor runs a Threshold Encryption Scheme with keys $(ask, apk)$ for key escrow. During issuance, a user encrypts $\s$ stored in the external identity system. When 
+%     During audit or accountability, the Auditor receives the cipher text and decrypts it to handle accountability.
+    
+% \end{itemize}
+
+% \subsection{Objects}
+
+% \subsubsection{Registration Credential $\rcd$}
+% $\user$ registers with $\ra$ and attests to their personal information, $\rcd$ contains
+% \begin{itemize}
+%     \item $\pid$ personal identifier such as passport number or email address
+%     \item $\s$ their PRF key
+%     \item $\dsk$ their IBE decryption key
+%     \item $\exp$ their credential expiry date
+%     \item $\rcm$ a commitment to $\pid, \s, \dsk, \exp$
+%     \item $\sigma$ a signature by $\ra$ over $\rcm$ issued by $\rpk_{rcd}$, $\rsk_{rcd}$. A credential that verifies and has details that are not revoked verifies the user is valid and attested to by the $\ra$, e.g. a government body
+% \end{itemize}
+
+% \subsubsection{Registration Authority's Information $\uri$}
+% $\ra$ receives the following during $\rcd$ issuance. $\rcd$ contains $\rcm = CM.Com()$
+% \begin{itemize}
+%     \item $\pid$ the user's identifier
+%     \item $\rcm$ the registration commitment used in the signature
+%     \item $\pi$ the commitment opening proof
+%     \item TPKE.Enc($\s$)
+% \end{itemize}
+
+% \subsubsection{Pre Credential $\precred$}
+% $\user$ interacts with a credential provider $\cp$ who will issue a $\precred$ after successful protocol run. Each $\cp$ has a $\cp_id$ to denote which provider it is, such as a university or government entity like a DMV. $\user$ will interact with $\cp$ and will need to satisfy a credential issuance statement $\phi$ to be issued a $\precred$ which might require verifying their $\rcd$ and other cryptographic / non-cryptographic requirements. 
+% \begin{itemize}
+%     \item $\ccm$
+% \end{itemize}
+
+% \subsubsection{Context Credential $\ccd$}
+% \begin{itemize}
+%     \item contains a commitment $\ccm$ to to the following attributes
+%     \item $\s$ their PRF key
+%     \item $\ctx_{id}$ the context credential identifier
+%     \item $\cp_{id}$ the credential provider 
+%     \item $\expiry$ the credential expiration 
+%     \item $\attrs$ specific user attributes from $\cp$
+% \end{itemize}
+
+% \subsubsection{Context Credential Information $\cci$}
+% To create a new, linked, context credential, a $\user$ with $\rcd$ and valid $\precred$ can submit the following information for verification and issuance
+% \begin{itemize}
+%     \item $\precred$ is a commitment to the context credential $\ccm$ signed by a $\cp$
+%     \item $\pi$ $\user$ $\rcd$ verifies
+%     \item $\nullif, \vk, y$, used for Sybil resistance. $\nullif$ is a nullifier based off the users PRF key and context credential id, in secret form. $\vk$ and $y$ prove it's correctness.
+%     \item 
+% \end{itemize}
+
+
+% \subsubsection{Revocation List $\rl$}
+% RevocationList $\rl$ maintains the nullifiers of revoked credentials. For each revoked credential, $\rl$ stores: 
+% \begin{itemize}
+%     \item $\nullif$ the nullifier derived from $vrf_s(\ctxid)$
+%     \item $\ctxid$ the context identifier of the revoked credential
+%     \item timestamp: when it was revoked
+%     \item reason for revocation
+% \end{itemize}
+
+% \subsubsection{User List $\ul$}
+% \subsubsection{Public Key List $\ul$}
+
+
+% \subsection{Protocols}
+% \subsubsection{Create Registration Credential}
+% First, $\user$ interacts with $\ra$ to generate their identity-based decryption key $\dsk$ by running $\ibeextract(\rpk_{ibe}, \pid)$, where $\pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $\pid$ in $\rcd$. $\user$ then initiates PRF key generation by sampling $\s_1 \sample \Z_p$ and generating a commitment $\cm_1([0, \s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $\ra$. Upon receiving $\cm_1$, $\ra$ samples $\s_2 \sample \Z_p$ and generates $\cm_2([\pid, \s_2, \dsk, \exp ], 0) = g_1^{\pid}g_2^{\s_2}g_3^{\dsk}g_4^{\exp}h^0$ where $\exp$ is the credential expiry. This interaction hides the PRF key $\s$ from $\ra$ but allows $\ra$ to be involved in its issuance to prevent replay attacks. Finally, $\ra$ computes $\rcm = \cm_1 \cdot \cm_2 = \rcm([\pid, \s, \dsk, \exp ], \alpha)$ where $\s = \s_1 \cdot \s_2$. For accountability, $\user$ escrows their PRF key by computing ciphertext $\escrow \gets \tpkeenc_{\apk}(\s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $\s$ in $\escrow$ ciphertext, 2) $\s$ knowledge of the same $\s$ within the commitment $\rcm$, and  3) $\s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $\ra$ signs the commitment $\rcm$ to create $\sigma$ and constructs $\rcd = \cred([\pid, \s, \dsk, \exp, \rcm, \sigma])$ which is returned to $\user$. For record-keeping, $\ra$ stores User Registration Information $\uri =(\rcm, \pi, \escrow)$ and for accountability, $\ra$ stores $(\pid, \escrow)$ in their user list $\ul$. 
+
+% % user needs to add prf_s(rcd) to the list
+
+
+% \subsubsection{Create Context Credential}
+
+% A user $\user$ with a valid registration credential $\rcd$ wants to obtain a context credential $\ccd$ and begins by interacting with a credential provider $\cp$ to generate a $\precred$. $\cp$'s are varied and have their own issuance requirements, which can include cryptographic and non-cryptographic requirements. 
+% Firstly $\user$ proves possession of a valid $\rcd$ by randomizing their $\rcd' = \psrerand(\rcd)$ and verifying the signature $\psverify(\rcd')$, then proves knowledge of the opening of the commitment $\cmopen(\rcm)$ and the credential isn't expired $\exp > current_time$ and isn't revoked. $\cp$ verifies the proofs and checks $\user$ satisfies their credential specific requirements $\phi$ which may include external attribute verification. 
+
+% Upon successful verification, $\user$ initiates pre-credential generation by sampling fresh randomness $\alpha \sample \Z_p$, and creates $\cm_1([s, 0, 0, 0, 0], \alpha)$ and sends it to $\cp$, $\cp$ generates $\cm_2([0, ctx_id, cp_id, \exp, \attrs],0)$ and combines $\cm_1 \cdot \cm_2$ for $\ccm([s, ctx_id, cp_id, \exp, \attrs], \alpha)$ where $\ctxid$ represents the credential e.g. "driverslicense", $\cpid$ is the credential providers identifier and $\attrs$ are the attributes. $\user$ proves correct pre-credential formation by proving knowledge of $ZKPOK_ComOpen(\ccm)$ and equality of $\s$ in $\ccm$ and $\ccm$ $ZKPoK_ComEquality(s, \rcm, \ccm)$. $\cp$ verifies these proofs and signs $\ccm$ to create $\sigma_{pre}$ forming $\precred = (\ccm, \sigma_{pre})$. 
+% Finally, to obtain the context credential $\ccd$, $\user$ submits $\precred$ to $\ra$ along with a nullifier $\nullif, \vk, y = \vrfprove_{\s}(\ctxid)$. $\user$ generates a proof demonstrating 1) valid precred signature verification, 2) knowledge of $\s$ in $\ccm$, correctness of $\nullif$, and equality of $\s$ in $\ccm$ and $\rcm$, and $\nullif$ is formed using $\ctxid$ from $\ccm$. 
+% % Optionally, to enable fine-grained sybil resistance, $\user$ can escrow an encryption of their $\s$ with $\cp$. 
+% $\ra$ verifies $\sigma_{pre}$ under $\cp's$ public key, validates the proofs, and ensures the nullifier hasn't already been used (Sybil resistance). Upon successful verification, $\ra$ signs $\ccm$ to create $\sigma_{ctx}$, records $\nullif$, returns the context credential $\ccd([\s, \ctxid, \cpid], \ccm, \sigma_{ctx})$.
+
+% For record-keeping, $\ra$ stores Context Credential Information $\cci = (\ccm, \pi_2, \pi_3, \nullif, \vk, y)$.
+
+% \subsubsection{Revocation}
+
+% When $\ra$ needs to revoke a user's credential/s (due to user request or credential provider request), $\ra$ finds $\escrow$ based on the user's $\pid$, recall $\ra$ has a user list $\ul$ = $(\pid, \escrow)$ and requests the auditor $\audit$ to decrypt $\s \gets \tpkdec_{\ask}(\escrow)$. $\audit$ computes the nullifiers to add to the revocation accumulator. $\nullif_{\rcd} \gets PRF_s(\pid)$ and for each context credential to revoke, $\nullif_{ctxid} \gets PRF_s(\ctxid)$. $\audit$ updates the accumulator $\acc' \gets Acc.Add(\acc)$
+
+% If the registration credential requires revocation, $\audit$ can compute each $\nullif \gets PRF_{\s}(\ctxid) \; \forall \; \ctxid \; \in \; \ctxl$ and add $(\nullif, timestamp, reason)$ to $\rl$. For record-keeping, $\ra$ stores Revocation Information $\ri = (\nullif, timestamp, reason)$ allowing $\ra$ to track which credentials are revoked and why, $\nullif$ in $\rl$ ensures revoked credentials can't be verified.
+% During credential verification, verifiers check if a credential's nullifier appears in $\rl$, if present, the verification fails. 
+
+% % Revoke Anonymity of Account. Revocation of the anonymity of an account can be done by at least d+1 of the n ARs involved in the set-up of the account, working together with the IP with whom the AH registered. The input is an account identifier RegIDACC and the output is the name AH of the account holder.
+
+
+
+% \subsubsection{Verification}
+% A user $\user$ wants to prove to any relying party $\rely$ they have a valid credential that satisfies a verification statement $\phi$. 
+% The protocol takes as input $(\rcd, \ccd, \phi, \rpk, \acc, n$) and outputs success or failure. 
+% $\rely$ starts by sending $(\phi, n, \acc)$ to $\user$ where $\phi$ is a statement that specifies the requirements for a successful verification and $\acc$ is the current accumulator value of revoked nullifiers.
+
+% $\user$ starts by randomizing their credentials $\rcd' = \psrerand(\rcd)$ and $\ccd' = \psrerand(\ccd)$ and verifies $\psverify_{\ck_{rcd}}(\rcd')$ and $\psverify_{\ck_{ccd}}(\ccd')$. $\user$ generate their nullifiers $\nullif_{\pid} \gets PRF_s(\pid)$ and $\nullif_{\ctx} \gets PRF_s(\ctxid)$ and obtains non-membership witnesses $\wpid$, $\wctx$ for nullifiers against $\acc$.
+
+% $\user$ generates a zero-knowledge proof $\pi$ showing 1) their credentials are valid, 2) they're not expired ($\expiry > current_time$), 3) their nullifiers are correctly formed from $\s$, 4) their nullifiers are not in $\acc$ using witnesses $\wpid, \wctx$, 5) the credential attributes satisfy $\phi$, 6) proof freshness using $n$.
+
+% $\user$ sends $(\pi, \attrs_{\phi})$ to $\rely$, $\rely$ verifies $\pi$ against $\acc$ and validates $\attrs_{\phi}$ satisfies $\phi$. Returns accept if all checks pass, reject otherwise.
+
+
+
+% \section{Security Model}
+% \subsection{Adversarial Model}
+% We use 2 different adversarial models, one to model internal threats from the threshold systems and one to model external threats such as malicious users, verifiers, or outside parties. 
+
+% \subsubsection{Internal Threats}
+% $\Adv_1$ can statically and actively corrupt up to t of n nodes for t < n/3. We include attempts to forge signatures, compromise user identity during credential generation, link master and context credentials together.
+
+% \subsubsection{External Threats}
+% $\Adv_2$ is used to model $EUF-CMA$ for our signature scheme, $IND-CCA1/2$ for encryption scheme, and Zero Knowledge Proofs.
+
+% \subsubsection{Assumptions}
+% Identity verification is handled by a system outside of ours, for example, a current method used for verification. We have a trust assumption on the user's registration credential being generated honestly from this process.
+
+% \subsection{System Goals}
+% \begin{itemize}
+%     \item \textbf{Accountable Privacy:} to simultaneously enable anonymous use of the system while retaining accountability, two paradoxical properties
+%     \item \textbf{Complex Identity Support:} enabling private pairwise connections between credentials to enable system owners to setup private, hierarchal ownership
+%     \item \textbf{Decentralized and Efficient:} components must support threshold cryptography and optimize for efficiency over simplicity as to benchmark against identity systems
+%     \item \textbf{Enhanced Identity:} Key recovery and user friendly addresses are a plus (tbc)
+% \end{itemize}
+
+
+% % \subsubsection{Key Recovery} When $\user$ needs to recover their identity after losing access to their credentials, they interact with $\ra$ to re-derive their identity-based decryption key $\dsk$. First, $\user$ authenticates with $\ra$ using their $\pid$ through the existing system, the same system used during initial registration. Upon authentication, $\user$ runs $\ibeextract(\rpk_{ibe}, \pid)$ to generate $\dsk$ and
+
+% % 1. Key Recovery Mechanisms
+% % dsk Recovery
+% % Goal: Allow users to recover their IBE decryption key
+% % Method:
+% % User reauthenticates with RA using pid
+% % Rerun IBE.Extract(rpk_ibe, pid)
+% % Deterministically reproduces same dsk
+
+% % s Recovery
+% % Goal: Allow users to recover their PRF key
+% % Method:
+% % Need to implement secret sharing of s during registration
+% % s would be shared between user and RA
+% % User can recover through secret sharing reconstruction
+
+% % Required Changes:
+% % Add secret sharing to registration protocol
+% % Define recovery protocol using shares
+
+% % 2. Key Theft Prevention
+% % Version-based Revocation
+
+% % Goal: Handle compromised credentials while allowing pid reuse
+% % Method:
+% % Extend pid format to include version numbers: pid_v = (pid, version)
+% % Maintain revocation list RL of (pid, version) pairs
+% % Users check latest valid version before interactions
+
+% % Required Changes:
+
+% % Add version field to pid structure
+% % Define revocation list format
+% % Add version checking to verification protocol
+
+% % Private Revocation Checking
+% % Goal: Allow private checking of revocation status
+% % Method:
+% % Implement PIR for private revocation list queries
+% % Alternative: Fallback to regular PK encryption
+% % Required Changes:
+% % Add PIR protocol for revocation checks
+% % Define fallback encryption mechanism
+
+% % Future Implementation Notes
+% % Modify registration protocol first to support secret sharing
+% % Add versioning to pid system
+% % Implement revocation list with PIR
+% % Design recovery protocols for both dsk and s
+% % Consider privacy implications of each mechanism

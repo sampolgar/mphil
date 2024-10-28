@@ -1,0 +1,140 @@
+\section{Abstract}
+
+
+
+\section{Intro}
+
+\subsection{Hierarchical Credentials}
+The user's Level-1 credential forms the root of trust.
+We want a way to privately prove Level-1 credentials are valid when using Level-2 credentials. We want to allow verification of Level-1 credential status without revealing which Level-1 credential it is, maintain revocation across levels.
+\begin{itemize}
+    \item \textbf{Level-1 (High Security):} Government issues passport credentials using secure threshold infrastructure (foundational identity credentials for users)
+    \item \textbf{Level-2 (Lower Security):} Organisations like DMV, Universities, Running their own credential infrastructure. Want to privately link users to Level-1 Credential for accountability and higher security (borrowing security from Level-1). If a Level-1 credential is revoked, level-2 can borrow it's revocation
+\end{itemize}
+
+The problem I'm addressing
+\begin{enumerate}
+    \item creating a hierarchical credential system where high-security credentials (Level-1, like passports) can be linked to lower security credentials (Level-2, like driver's license)
+    \item Solving the privacy vs accountability trade-off that exists in current systems like CanDID
+\end{enumerate}
+
+Novel Contribution
+\begin{enumerate}
+    \item Privacy-Preserving link between credential levels using deterministic key derivation
+    \item Efficient and Private system design which doesn't require Level-1 CA interaction for Level-2 Credentials. Maintains privacy for Level-1 Credentials, enables accountability and Sybil Resistance
+    \item Zero-Knowledge Proof System allowing credential verification and proof of correct link between credentials, selective disclosure, revocation checking across levels
+\end{enumerate}
+
+
+\subsection{Related Works}
+\begin{itemize}
+    \item CanDID Decentralized Identity records the state i.e. (level1-pk, level2-pk) on the level1 ca. This is not private and requires interacting with level-1 for each credential issued which isn't good because it will overwhelm level-1 ca.
+    
+\end{itemize}
+
+
+
+(Overview of this paper - this is just for my draft)
+\textbf{Introduction}
+\begin{itemize}
+    \item Problem: Decentralized identity systems need both high-security root credentials and lower-security derived credentials
+    \item Challenge: Creating private, accountable links between credential levels without overwhelming root CA
+    \item Current approaches and their limitations (like the paper you mentioned that records state at level-1)
+    \item Your contribution: A new scheme for privately linking credentials with Sybil resistance
+\end{itemize}
+
+
+
+\noindent \textbf{Background \& Related Work}
+\begin{itemize}
+    \item Foundations in digital credentials
+    \item Anonymous credentials and zero-knowledge proofs
+    \item Existing hierarchical/delegatable credential systems
+    \item PRF-based key derivation schemes
+\end{itemize}
+
+
+\noindent \textbf{System Model \& Requirements}
+\begin{itemize}
+    \item Trust model (level-1 CA, level-2 CAs, users, verifiers)
+    \item Security requirements:
+    \item Privacy (unlinkability between levels)
+    \item Accountability (level-1 credential status checking)
+    \item Sybil resistance
+    \item Performance requirements (minimal level-1 CA interaction)
+\end{itemize}
+
+
+\noindent \textbf{Protocol Design}
+\begin{itemize}
+    \item Level-1 credential issuance
+    \item Level-2 key derivation and credential issuance
+    \item Verification protocol including accountability checks
+    \item Formal protocol description with all algorithms
+\end{itemize}
+
+
+\noindent \textbf{Security Analysis}
+\begin{itemize}
+    \item Security definitions
+    \item Proofs for privacy, accountability, Sybil resistance
+    \item Comparison with existing approaches
+\end{itemize}
+
+
+\noindent \textbf{Implementation \& Evaluation}
+\begin{itemize}
+    \item Prototype implementation
+    \item Performance measurements
+    \item Comparison with other systems
+\end{itemize}
+
+
+Draft Proposed Flow of information
+When user gets Level-1 credential (passport):
+Gets credential containing their attributes
+Also receives a deterministic secret key derived from their Level-1 credential
+For Level-2 credential issuance (e.g., driver's license):
+User proves possession of valid Level-1 credential to Level-2 issuer
+User creates a zero-knowledge proof that their Level-2 public key is derived from their Level-1 secret key
+This creates cryptographic link without revealing the actual Level-1 credential
+
+
+During verification of Level-2 credential:
+User proves their credential is valid
+If needed, can prove Level-1 credential status without revealing which specific Level-1 credential
+Could use techniques like set membership proofs to prove Level-1 credential is not in revocation set
+
+The key would be finding the right cryptographic primitives to:
+
+Create deterministic but unlinkable derivation between Level-1 and Level-2 keys
+Allow proving relationship between keys without revealing them
+Enable efficient revocation checking
+
+
+Draft system idea for privately linking credentials
+generate randomness: $r = PRF_sk1(level-2-credname)$
+generate level2 keypair $sk2 = r, pk2 = g^r $(for a discrete log based keypair example)
+Then when verifying level2 credentials, we can tie the accountability back to level1 credentials privately if needed
+Private linkage (can't tell which level-1 credential without sk1)
+Accountability (can verify level-1 credential status if needed)
+No interaction with level-1 CA during level-2 issuance
+Deterministic derivation (same user always gets same level-2 key for a given credential name)
+Yes exactly! The deterministic derivation of pk2 = $g^PRF_sk1(level-2-credname)$ provides Sybil resistance because:
+
+For a given level-1 credential (with unique sk1) and level-2 credential type (e.g., "drivers-license"), there can only be one possible pk2
+The level-2 CA can check if pk2 was already used before issuing a new credential
+Users can't create multiple different pk2s for the same level-2 credential type since it's deterministically derived from their level-1 sk1
+
+From the CA's perspective:
+
+They maintain a list of issued pk2s
+When a new user requests a level-2 credential, they check if that pk2 exists
+If it exists, this user already has this type of credential
+If not, it's their first time requesting this credential type
+
+The beauty is:
+
+This Sybil check is done without revealing which level-1 credential the user has
+The level-2 CA only needs to track pk2s, not any level-1 credential information
+Different level-2 credentials for the same user will have different, unlinkable pk2s due to different credential names in the PRF

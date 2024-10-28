@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: alpha-short.bst
+Database file #1: bib/abbrev3.bib
+Reallocated str_pool (elt_size=1) to 130000 items from 65000.
+Reallocated str_pool (elt_size=1) to 195000 items from 130000.
+Database file #2: bib/zotero.bib
+Database file #3: bib/manual.bib
+You've used 1 entry,
+            2536 wiz_defined-function locations,
+            12589 strings with 146221 characters,
+and the built_in function-call counts, 510 in all, are:
+= -- 42
+> -- 45
+< -- 0
++ -- 17
+- -- 17
+* -- 44
+:= -- 103
+add.period$ -- 3
+call.type$ -- 1
+change.case$ -- 11
+chr.to.int$ -- 1
+cite$ -- 1
+duplicate$ -- 13
+empty$ -- 21
+format.name$ -- 17
+if$ -- 90
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 1
+newline$ -- 9
+num.names$ -- 3
+pop$ -- 10
+preamble$ -- 1
+purify$ -- 12
+quote$ -- 0
+skip$ -- 11
+stack$ -- 0
+substring$ -- 7
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 8
+warning$ -- 0
+while$ -- 3
+width$ -- 2
+write$ -- 15

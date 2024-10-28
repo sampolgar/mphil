@@ -1,0 +1,121 @@
+\subsection{Security Properties}
+Our anonymous credential system with Sybil resistance aims to achieve the following security and privacy properties:
+\begin{enumerate}
+    \item \textbf{Sybil resistance}: An adversary cannot obtain more than one credential for the same context
+    \item \textbf{Unforgeability}: An adversary cannot forge credentials of honest users or use credentials belonging to other users
+    \item \textbf{PRF Key Privacy: } An adversary, or less than t malicious nodes, can't obtain the PRF key during credential issuance or key escrow
+    \item \textbf{Anonymity:} an adversary can't learn more than a user's public information during credential verification
+    \item \textbf{Blind Issuance:} an issuer can't learn about a user's private information during credential issuance
+    \item \textbf{Validity:} an adversary with a revoked or expired credential cannot verify successfully
+    \item \textbf{Unlinkability for Credential Verification:} verifiers can't collude and link different uses of the same credential
+    \item \textbf{Unlinkability for Identity Usage:} verifiers can't collude and link an individual with multiple context credentials through their different credential uses
+\end{enumerate}
+
+\todonote{Is the security of ZKP included in the above properties?}
+\begin{itemize}
+    \item Soundness: a malicious user can't create a valid proof for an incorrect relation between $\Gamma$ and $\tau$
+    \item Zero-Knowledge: $\pi$ reveals nothing beyond the validity of the relation
+\end{itemize}
+
+\section{Ideal Functionality}
+
+\subsection{Ideal Functionality $\mathcal{F}_{\mathsf{CredIssueRCD}}$}
+
+\subsubsection{Parties}
+\begin{itemize}
+    \item User $\user$
+    \item Registration Authority $\ra$
+    \item Ideal Functionality $\mathcal{F}_{\mathsf{CredIssueRCD}}$
+\end{itemize}
+
+\subsubsection{State}
+\begin{itemize}
+    \item $\texttt{PIDS}$ = []: List of registered personal identifiers
+    \item $\texttt{RCDS}$ = []: List of issued registration credentials
+\end{itemize}
+
+\subsection{Functionality}
+
+\subsubsection{Registration Credential Issuance}
+On input ($\textt{ISSUE-RCD}, \pid$) from $\user$ to $\ra$:
+
+\begin{enumerate}
+    \item if $\pid$ exists in $\texttt{PID-LIST}$, $\bot$
+    \item create new credential for $\user$, add $(\pid, issuancetime)$ to CRED-LIST
+    \item Output (RCD-ISSUED) to User
+    \item Output (RCD-RECORDED, pid) to ra
+\end{enumerate}
+
+\subsubsection{Security Properties}
+\begin{enumerate}
+    \item Uniqueness: each $\pid$ can only be registered once
+    \item Unforgeability: only $\ra$ can issue valid registration credentials
+    \item Privacy: $\ra$ only learns the $\pid$ during issuance
+    \item Key Privacy: PRF key is only known to the user
+    \item Credential Ownership: only the owner of $\rcd$ can verify their own credential
+\end{enumerate}
+
+
+
+
+\subsection{Ideal Functionality $\mathcal{F}_{\mathsf{CredIssueCCD}}$}
+
+\subsubsection{Parties}
+\begin{itemize}
+    \item User $\user$
+    \item Credential Provider $\cp$
+    \item Registration Authority $\ra$
+    \item Ideal Functionality $\mathcal{F}_{\mathsf{CredIssueCCD}}$
+\end{itemize}
+
+\subsubsection{State}
+\begin{itemize}
+    \item $\texttt{CONTEXT-CREDS}$ = [], stores a mapping: $(\pid, \ctxid)$
+    \item $\texttt{PRECREDS}$ = [], stores a mapping: $(\pid, \ctxid)$
+\end{itemize}
+
+\subsection{Functionality}
+
+\subsubsection{Pre-credential Generation}
+On input $(\texttt{REQUEST-PRECRED}, \ctxid, \attrs)$ from $\user$ to $\cp$
+\begin{enumerate}
+    \item If not $(\texttt{REGISTERED}, \pid)$ from $\mathcal{F}_{\mathsf{CredIssueRCD}}$, abort
+    \item Create new precred-id
+    \item Store (precred-id, context-id, attributes) in precred-map
+    \item output (precred-issued, precred-id) to $\user$
+    \item output (precred-created, context-id) to $\cp$
+\end{enumerate}
+
+\subsubsection{Context Credential Issuance}
+On input (ISSUE-CCD, precred-id) from $\user$ to $\ra$:
+\begin{enumerate}
+    \item Retrieve $(context-id, attributes)$ from PRECRED-MAP[precred-id]. If not found, abort
+    \item if (pid, context-id) exists in CONTEXT-CREDS, abort (sybil check)
+    \item Add (pid, context-id) to CONTEXT-CREDS
+    \item Output (CREDENTIAL-ISSUED, context-id) to $\user$
+    \item Output (ISSUANCE-RECORDED, context-id) to $\ra$
+\end{enumerate}
+
+\subsection{Security Properties}
+\begin{enumerate}
+    \item Registration Required: Only registered users with a valid $\rcd$ can obtain context credentials
+    \item Sybil Resistance: each $\pid$ can only generate one credential per context
+    \item Attribute Privacy: $\cp$ only learns the attributes it provides during pre-credential issuance. $\ra$ learns nothing about the credential or attributes during $\ccd$ issuance other than the originating $\cp$
+    \item Context Unlinkability: Different context credentials of the same user can't be linked during issuance
+    \item Unforgeability: Credentials can only be issued through proper protocol flow
+    \item Selective Disclosure: User can chose which attributes are revealed during verification
+\end{enumerate}
+
+\subsection{Assumptions}
+\begin{enumerate}
+    \item $\mathcal{F}_{\mathsf{CredIssueCCD}}$ can check registration status with $\mathcal{F}_{\mathsf{CredIssueRCD}}$
+    \item Valid pre-crednetial from $\cp$ required for issuance
+    \item $\ra$ can verify precredential authenticity without learning attributes
+\end{enumerate}
+
+
+
+
+
+\subsection{Ideal Functionality $\mathcal{F}_{\mathsf{Revocation}}$}
+Reference \cite{robshaw_uc_2016, cheon_universal_2016}
