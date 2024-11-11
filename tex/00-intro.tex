@@ -3,10 +3,84 @@
 
 
 \section{Intro}
+% When answering, discuss how they motivate, in which setting and why it’s important, and what they’re missing / outstanding work.
+% – How used / important is "certified sampling" ?
+% – How is it done (if it exists) ?
+
+% Motivation
+% https://eprint.iacr.org/2024/1124.pdf#page=14.48
+% https://pages.nist.gov/800-63-4/sp800-63c.html
+
+
+Presenting multiple credentials for verification 
+
+\subsection{Motivation}
+Balancing accountability and privacy in credential systems.
+A user has an Identity linked to multiple credentials, such as a driver's license and university card. Users want to authenticate with various Relying Parties (Verifiers) without being linked between multiple uses of the same service (e.g. a user verifying multiple credentials with 1 service such as a bank requiring proof of multiple credentials linked to an identity), and between uses of different services (e.g. a user presenting their drivers license for age verification on multiple services).
+
+\subsection{Literature Review}
+Identity Providers (IdP's)/SSO systems enable a user with a single identity (uid) to login to multiple services called Relying Parties (RP). User's wanting to authenticate with an RP are redirected to the IdP to login, the IdP then sends a cryptographic token to the RP attesting to the user's permission to login, sharing user identifier uid and optionally user attributes.
+\textbf{Unlinkability:} To prevent different RP's from tracking the user's uid (a privacy problem), pairwise pseudonyms were proposed, and recommended by NIST to improve user privacy, and currently used by Apple's SSO service. Pairwise pseudonyms create a new problem - the record of user id uid and pairwise id ppid needs to be stored on the IdP on a central service and accessed for each login request and therefore every authentication request can be tracked by the IdP. 
+
+OpenID Connect (OIDC) supports pairwise pseudonyms by setting $ppid = H(k, uid, rid)$ where H is a hash function, $k$ is a random key and $rid$ is the relying party. During login, the IdP generates ppid and stores it, then sends $ppid$ instead of $uid$ to the RP. User's cannot generate more than 1 ppid and thus \textbf{pseudonym Sybil Resistance} is upheld. 
+
+\textbf{Observability: } is defined by the notion that each authentication request from a relying party RP to the IdP enables IdP to observe the user's identity usage. Furthermore, to prevent reply attacks, the IdP includes RP specific information in the authentication token to prevent multiple uses or uses for the wrong RP.
+
+
+OPPID \cite{kroschewski_oppid_2024} supports unlinkability (across relying parties), sybil resistance (for each context) and unobservability (which prevents the IdP from learning each RP the user interacts while retaining their requirement to bind their login token to an RP). OPPID enhances privacy in pseudonym login tokens by hiding which RP is being used while retaining existing security requirements.
+
+Breaking from the SSO IdP model, 
+
+
+
+
+
+
+
+
+
+
 
 \subsection{Hierarchical Credentials}
+
+
+
+
+
+Prove credentials have a link between them when there are no equal attributes.
+
+
+This can be done by a user with multiple credentials and proving equality of attributes between credentials, the user needs to generate a non-membership proof with some private cryptographic object. 
+We bypass this and maintain privacy and sybil resistance by ...
+This method uses a PRF derived from msater credential.
+
+Obtain and Issuing
+Scenario 1: to obtain a context credential, 
+
+Scenario 2 (improvement) we are better.
+
+
+Linkable Show and Verify
+Scenario 1: uses equality of commitment
+Scenario 2: uses our method
+
+Improvements
+The concrete 
+
+
+
+
+
+
+
+
+
+
+
+
+
 The user's Level-1 credential forms the root of trust.
-We want a way to privately prove Level-1 credentials are valid when using Level-2 credentials. We want to allow verification of Level-1 credential status without revealing which Level-1 credential it is, maintain revocation across levels.
+We want a way to privately prove Level-1 credentials are valid when using Level-2 credentials, when the attributes in each credential are different. We want to allow verification of Level-1 credential status without revealing which Level-1 credential it is, maintain revocation across levels.
 \begin{itemize}
     \item \textbf{Level-1 (High Security):} Government issues passport credentials using secure threshold infrastructure (foundational identity credentials for users)
     \item \textbf{Level-2 (Lower Security):} Organisations like DMV, Universities, Running their own credential infrastructure. Want to privately link users to Level-1 Credential for accountability and higher security (borrowing security from Level-1). If a Level-1 credential is revoked, level-2 can borrow it's revocation
@@ -29,6 +103,10 @@ Novel Contribution
 \subsection{Related Works}
 \begin{itemize}
     \item CanDID Decentralized Identity records the state i.e. (level1-pk, level2-pk) on the level1 ca. This is not private and requires interacting with level-1 for each credential issued which isn't good because it will overwhelm level-1 ca.
+
+    \item Commitment Equality
+
+    \item Link-G16
     
 \end{itemize}
 
@@ -65,13 +143,13 @@ Novel Contribution
 \end{itemize}
 
 
-\noindent \textbf{Protocol Design}
-\begin{itemize}
-    \item Level-1 credential issuance
-    \item Level-2 key derivation and credential issuance
-    \item Verification protocol including accountability checks
-    \item Formal protocol description with all algorithms
-\end{itemize}
+% \noindent \textbf{Protocol Design}
+% \begin{itemize}
+%     \item Level-1 credential issuance
+%     \item Level-2 key derivation and credential issuance
+%     \item Verification protocol including accountability checks
+%     \item Formal protocol description with all algorithms
+% \end{itemize}
 
 
 \noindent \textbf{Security Analysis}
@@ -138,3 +216,143 @@ The beauty is:
 This Sybil check is done without revealing which level-1 credential the user has
 The level-2 CA only needs to track pk2s, not any level-1 credential information
 Different level-2 credentials for the same user will have different, unlinkable pk2s due to different credential names in the PRF
+
+
+\newpage
+\subsection{Analysis}
+2 methods to privately prove two or more credentials are linked together are proving equality of attributes within commitments and proving that a Level2 credential contains a derivation of the Level1 credential, linking the two together in a hierarchy. 
+We asymptotically compare the 2 approaches modelled using Pedersen Commitments and Sigma Protocols as used in many popular Anonymous Credential schemes.
+
+\begin{itemize}
+    \item Equality proof method using $Com_1([pid],r_1)$ and $Com_2([pid,ctx],r_2)$
+    \item Derivation proof method using $Com_1([pid],r_1)$ and $Com_2([prf(pid,ctx),ctx],r_2)$
+\end{itemize}
+
+While proving equality between commitments does not add additional overhead, proving derivation requires additional Prover and Verifier work scaling linearly with respect to the number of credentials being verified
+\begin{itemize}
+    \item \textbf{Prover:} 3 exponentiation in $\G_1$, 5 add/mul in $\F_p$, 1 inverse operation in $\F_p^{inv}$ and 1 additional commitment $Com$
+    \item \textbf{Verifier:} 2 exponentiations in $\G_1$, 3 add/mul in $\F_p$
+\end{itemize}
+
+\subsubsection{Equality of committed string}
+This method uses sigma protocol with the same challenge $c$ to prove the response $z_{pid}$ can be used to prove knowledge of the opening of both commitments and thus the string must be the same.
+\[
+ZKP
+    \left\{ 
+    (pid, r_1, r_2): Com_1 = g_1^{pid} h^{r_1} \wedge Com_2 = g_1^{pid} h^{r_2}
+    \right\}
+\]
+
+\pcb{
+\textbf{User} \< \< \textbf{Verifier}  \\[0.1\baselineskip][\hline]
+\<\< \\[-0.5\baselineskip]
+pid, r1, r2 \<\< Com_1, Com_2 \\
+a, \rho_1, \rho_2 \sample \mathbb{Z}_q^3 \<\< \\
+T_1 := g_1^a h^{\rho_1} \<\< \\
+T_2 := g_1^a h^{\rho_2} \< \sendmessageright*{T_1, T_2} \< \\
+\< \sendmessageleft*{c} \< c \sample \mathbb{Z}_q \\
+z_{pid} = a + c \cdot pid \<\< \\
+z_{r_1} = \rho_1 + c \cdot r_1 \<\< \\
+z_{r_2} = \rho_2 + c \cdot r_2 \<\< \\
+\< \sendmessageright*{z_{pid}, z_{r1}, z_{r2}} \< \\
+\<\< g_1^{z_{pid}} h^{z_{r_1}} \stackrel{?}{=} Com_1^c \cdot T_1 \\
+\<\< g_1^{z_{pid}} h^{z_{r_2}} \stackrel{?}{=} Com_2^c \cdot T_2 \\
+}
+
+\begin{itemize}
+    \item Proving knowledge of openings $(pid, r1)$ and $(pid, r2)$ for commitments $Com1 = g_1^{pid}h^{r1}$ and $Com2 = g_1^{pid}h^{r2}$
+    \item Proves equality of $pid$ across both commitments
+\end{itemize}
+
+
+
+\newpage
+\subsubsection{Proving derivation of $PRF(x) \to y$}
+We use the Dodis Yampolskiy PRF, given the PRF key $pid$ and input $ctx$ $y \gets PRF_{pid}(ctx)$. Algebraically, the output is $y = g^{\frac{1}{pid + ctx}}$. For this protocol, we refer $w := {\frac{1}{pid + ctx}}$ and thus $y = g^w$. We create a sigma protocol to prove knowledge showing $pid$ from $Com_1$ and $ctx$ from $Com_2$ is used for the output $y$. 
+
+\[
+ZKP
+    \left\{ 
+    \begin{aligned}
+    (pid, ctx, &w, r_1, r_2, r_3, r_4): \\
+    Com_1 &= g_1^{pid} h^{r_1} \wedge \\
+    Com_2 &= g_2^{ctx}g_3^{w} h^{r_2} \wedge  \\
+    Com_3 &= g_3^{(pid + ctx)} h^{r_3} \wedge \\
+    Com_4 &= g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} \wedge \\
+    w \cdot (pid + ctx) &= 1
+    \end{aligned}
+    \right\}
+\]
+
+\pcb{
+Prover[] \< \< \textbf{Verifier}  \\[0.1\baselineskip][\hline]
+\<\< \\[-0.5\baselineskip]
+pid, ctx, w, r_1, r_2, r_3 \<\< Com_1, Com_2, Com_3, Com_4 \\
+\text{where } w = 1/(pid + ctx) \<\< \\
+\alpha_1, \alpha_2, \alpha_3, \rho_1, \rho_2, \rho_3 \sample \mathbb{Z}_q^6 \<\< \\
+T_1 := g_1^{\rho_1} h^{\alpha_1} \<\< \\
+T_2 := g_2^{\rho_2} g_3^{\rho_3} h^{\alpha_2} \<\< \\
+T_3 := g_3^{\rho_1 + \rho_3} h^{\alpha_3} \<\< \\
+T_4 := g_1^{\rho_1}g_2^{\rho_2}g_3^1h^{\alpha_1 + \alpha_2 + \alpha_3} \<\< \\
+\< \sendmessageright*{T_1, T_2, T_3, T_4} \< \\
+\< \sendmessageleft*{c} \< c \sample \mathbb{Z}_q \\
+z_{pid} = \rho_1 + c \cdot pid \<\< \\
+z_{ctx} = \rho_2 + c \cdot ctx \<\< \\
+z_{w} =   \rho_3 + c \cdot w \<\< \\
+z_{r_1} = \alpha_1 + c \cdot r_1 \<\< \\
+z_{r_2} = \alpha_2 + c \cdot r_2 \<\< \\
+z_{r_3} = \alpha_3 + c \cdot r_3 \<\< \\
+\< \sendmessageright*{z_{pid}, z_{ctx}, z_w, z_{r1}, z_{r2}, z_{r3}} \< \\
+\<\< g_1^{z_{pid}} h^{z_{r1}} \stackrel{?}{=} Com_1^c \cdot T_1 \wedge\\
+\<\< g_2^{z_{ctx}} g_3^{z_{w}} h^{z_{r2}} \stackrel{?}{=} Com_2^c \cdot T_2 \wedge\\
+\<\< g_3^{z_{pid} + z_{ctx}} h^{z_{r3}} \stackrel{?}{=} Com_3^c \cdot T_3 \wedge\\
+\<\< g_1^{z_{pid}} g_2^{z_{ctx}} g_3 h^{z_{r_1} + z_{r2} + z_{r3}} \stackrel{?}{=} Com_4^c \cdot T_4 \wedge \\
+\<\< Com_4 = Com_1 \cdot Com_2 \cdot Com_3
+}
+
+\paragraph{Correctness}
+The prover wants to prove knowledge of $pid$ and $ctx$ and that the PRF value $w$ is correctly computed as  $w = \frac{1}{pid + ctx}$.
+
+\[
+    \begin{aligned}
+        g_1^{z_{pid}} h^{z_{r1}} \stackrel{?}{=}& \; Com_1^c \cdot T_1 \\
+        g_1^{\rho_1 + c \cdot pid} h^{\alpha_1 + c \cdot r_1} \stackrel{?}{=}& \; (g_1^{pid} h^{r_1})^c \cdot g_1^{\rho_1} h^{\alpha_1} \\
+        g_1^{\rho_1 + c \cdot pid} h^{\alpha_1 + c \cdot r_1} \stackrel{}{=}& \; g_1^{\rho_1 + c \cdot pid} h^{\alpha_1 + c \cdot r_1}\\
+    \end{aligned}
+\]
+
+\[
+    \begin{aligned}
+      g_2^{z_{ctx}} g_3^{z_{w}} h^{z_{r2}} \stackrel{?}{=}& \; Com_2^c \cdot T_2 \\
+      g_2^{\rho_2 + c \cdot ctx} g_3^{\rho_3 + c \cdot w} h^{\alpha_2 + c \cdot r_2} \stackrel{?}{=}& \; (g_2^{ctx}g_3^{w} h^{r_2})^c \cdot g_2^{\rho_2} g_3^{\rho_3} h^{\alpha_2} \\
+      g_2^{\rho_2 + c \cdot ctx} g_3^{\rho_3 + c \cdot w} h^{\alpha_2 + c \cdot r_2} \stackrel{}{=}& \; g_2^{\rho_2 + c \cdot ctx} g_3^{\rho_3 + c \cdot w} h^{\alpha_2 + c \cdot r_2} \\
+    \end{aligned}
+\]
+
+\[
+    \begin{aligned}
+      g_3^{z_{pid} + z_{ctx}} h^{z_{r3}} \stackrel{?}{=}& \; Com_3^c \cdot T_3 \\
+      g_3^{\rho_1 + c \cdot pid + \rho_2 + c \cdot ctx} h^{\alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; (g_3^{(pid + ctx)}h^{r_3})^c  \cdot g_3^{\rho_1 + \rho_3} h^{\alpha_3} \\
+      g_3^{c (pid + ctx) + \rho_1 + \rho_2} h^{\alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; (g_3^{c(pid + ctx)}h^{c \cdot r_3})  \cdot g_3^{\rho_1 + \rho_3} h^{\alpha_3} \\
+      g_3^{c (pid + ctx) + \rho_1 + \rho_2} h^{\alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; g_3^{c (pid + ctx) + \rho_1 + \rho_2} h^{\alpha_3 + c \cdot r_3} \\
+    \end{aligned}
+\]
+
+\[
+    \begin{aligned}
+      g_1^{z_{pid}} g_2^{z_{ctx}} g_3 h^{z_{r2} + z_{r3}} \stackrel{?}{=}& \; Com_4^c \cdot T_4 \\
+      g_1^{\rho_1 + c \cdot pid} g_2^{\rho_2 + c \cdot ctx} g_3 h^{\alpha_2 + c \cdot r_2 + \alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; (g_1^{pid}g_2^{ctx}g_3h^{r_2 + r_3})^c \cdot g_1^{\rho_1}g_2^{\rho_2}g_3h^{\alpha_2 + \alpha_3}\\
+      g_1^{\rho_1 + c \cdot pid} g_2^{\rho_2 + c \cdot ctx} g_3 h^{c (r_2 + r_3) + \alpha_2 + \alpha_3 } \stackrel{?}{=}& \; (g_1^{c \cdot pid}g_2^{c \cdot ctx}g_3h^{c (r_2 + r_3)}) \cdot g_1^{\rho_1}g_2^{\rho_2}g_3h^{\alpha_2 + \alpha_3}\\
+    \end{aligned}
+\]
+
+It has been proven that $Com_1$ opens with $pid$ and $Com_2$ opens with $w$ and $ctx$ and $Com_3$ opens with both $pid + ctx$. $g_3$ is used for both $w$ and $pid + ctx$.
+\[
+    \begin{aligned}
+        Com_4 =& Com_1 \cdot Com_2 \cdot Com_3 \\
+        g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} =& (g_1^{pid} h^{r_1}) \cdot (g_2^{ctx}g_3^{w} h^{r_2}) \cdot (g_3^{(pid + ctx)}h^{r_3}) \\
+        g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} =& g_1^{pid}g_2^{ctx}g_3^{\frac{1}{(pid + ctx)}}g_3^{(pid + ctx)} h^{r_1}h^{r_2}h^{r_3}\\
+        g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} =& g_1^{pid}g_2^{ctx}g_3h^{r_1}h^{r_2}h^{r_3}\\
+    \end{aligned}
+\]
+

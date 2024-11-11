@@ -1,4 +1,219 @@
 
+@article{kroschewski_oppid_2024,
+	title = {{OPPID}: {Single} {Sign}-{On} with {Oblivious} {Pairwise} {Pseudonyms}},
+	abstract = {Single Sign-On (SSO) allows users to conveniently authenticate to many Relying Parties (RPs) through a central Identity Provider (IdP). SSO supports unlinkable authentication towards the RPs via pairwise pseudonyms, where the IdP assigns the user an RPspecific pseudonym. This feature has been rolled out prominently within Apple’s SSO service. While establishing unlinkable identities provides privacy towards RPs, it actually emphasizes the main privacy problem of SSO: with every authentication request, the IdP learns the RP that the user wants to access. Solutions to overcome this limitation exist, but either assume users to behave honestly or require them to manage long-term cryptographic keys.},
+	language = {en},
+	author = {Kroschewski, Maximilian and Lehmann, Anja and Ozbay, Cavit},
+	month = jul,
+	year = {2024},
+}
+
+@misc{guo_uppresso_2022,
+	title = {{UPPRESSO}: {Untraceable} and {Unlinkable} {Privacy}-{PREserving} {Single} {Sign}-{On} {Services}},
+	shorttitle = {{UPPRESSO}},
+	url = {http://arxiv.org/abs/2110.10396},
+	abstract = {Single sign-on (SSO) allows a user to maintain only the credential at the identity provider (IdP), to login to numerous RPs. However, SSO introduces extra privacy threats, compared with traditional authentication mechanisms, as (a) the IdP could track all RPs which a user is visiting, and (b) collusive RPs could learn a user’s online proﬁle by linking his identities across these RPs. This paper proposes a privacypreserving SSO system, called UPPRESSO, to protect a user’s login activities against both the curious IdP and collusive RPs. We analyze the identity dilemma between the security requirements and these privacy concerns, and convert the SSO privacy problems into an identity transformation challenge. In each login instance, an ephemeral pseudo-identity (denoted as P IDRP ) of the RP, is ﬁrstly negotiated between the user and the RP. P IDRP is sent to the IdP and designated in the identity token, so the IdP is not aware of the visited RP. Meanwhile, P IDRP is used by the IdP to transform the permanent user identity IDU into an ephemeral user pseudo-identity (denoted as P IDU ) in the identity token. On receiving the identity token, the RP transforms P IDU into a permanent account (denoted as Acct) of the user, by an ephemeral trapdoor in the negotiation. Given a user, the account at each RP is unique and different from IDU , so collusive RPs cannot link his identities across these RPs. We build the UPPRESSO prototype on top of MITREid Connect, an open-source implementation of OIDC. The extensive evaluation shows that UPPRESSO fulﬁlls the requirements of both security and privacy and introduces reasonable overheads.},
+	language = {en},
+	urldate = {2024-11-05},
+	publisher = {arXiv},
+	author = {Guo, Chengqian and Lin, Jingqiang and Cai, Quanwei and Wang, Wei and Li, Fengjun and Wang, Qiongxiao and Jing, Jiwu and Zhao, Bin},
+	month = sep,
+	year = {2022},
+	note = {arXiv:2110.10396 [cs]},
+	keywords = {Computer Science - Cryptography and Security},
+}
+
+@misc{noauthor_nist_nodate,
+	title = {{NIST} {Special} {Publication} 800-{63C}},
+	url = {https://pages.nist.gov/800-63-4/sp800-63c.html},
+	abstract = {NIST Special Publication 800-63C},
+	urldate = {2024-11-05},
+}
+
+@misc{noauthor_prof_nodate,
+	title = {Prof. {Dr}. {Daniel} {Slamanig} {\textbar} {Universität} der {Bundeswehr} {München} {\textbar} {Research} {Institute} {CODE}},
+	url = {https://danielslamanig.info/ModernCrypto19},
+	urldate = {2024-11-05},
+}
+
+@article{goldreich_complexity_nodate,
+	title = {On the complexity of computational problems regarding distributions (a survey)},
+	abstract = {We consider two basic computational problems regarding discrete probability distributions: (1) approximating the statistical difference (aka variation distance) between two given distributions, and (2) approximating the entropy of a given distribution. Both problems are considered in two diﬀerent settings. In the ﬁrst setting the approximation algorithm is only given samples from the distributions in question, whereas in the second setting the algorithm is given the “code” of a sampling device (for the distributions in question).},
+	language = {en},
+	author = {Goldreich, Oded and Vadhan, Salil},
+}
+
+@inproceedings{choi_sok_2023,
+	title = {{SoK}: {Distributed} {Randomness} {Beacons}},
+	shorttitle = {{SoK}},
+	url = {https://ieeexplore.ieee.org/document/10179419/?arnumber=10179419},
+	doi = {10.1109/SP46215.2023.10179419},
+	abstract = {Motivated and inspired by the emergence of blockchains, many new protocols have recently been proposed for generating publicly verifiable randomness in a distributed yet secure fashion. These protocols work under different setups and assumptions, use various cryptographic tools, and entail unique trade-offs and characteristics. In this paper, we systematize the design of distributed randomness beacons (DRBs) as well as the cryptographic building blocks they rely on. We evaluate protocols on two key security properties, unbiasability and unpredictability, and discuss common attack vectors for predicting or biasing the beacon output and the countermeasures employed by protocols. We also compare protocols by communication and computational efficiency. Finally, we provide insights on the applicability of different protocols in various deployment scenarios and highlight possible directions for further research.},
+	urldate = {2024-11-04},
+	booktitle = {2023 {IEEE} {Symposium} on {Security} and {Privacy} ({SP})},
+	author = {Choi, Kevin and Manoj, Aathira and Bonneau, Joseph},
+	month = may,
+	year = {2023},
+	note = {ISSN: 2375-1207},
+	keywords = {Blockchains, Computational efficiency, Privacy, Protocols},
+	pages = {75--92},
+}
+
+@misc{christ_cornucopia_2023,
+	title = {Cornucopia: {Distributed} randomness beacons at scale},
+	shorttitle = {Cornucopia},
+	url = {https://eprint.iacr.org/2023/1554},
+	abstract = {We propose Cornucopia, a distributed randomness beacon protocol combining accumulators and verifiable delay functions. Cornucopia extends the Unicorn protocol of Lenstra and Wesolowski, utilizing an accumulator to enable efficient verification by each participant that their randomness contribution has been included in the beacon output. The output is unpredictable as long as at least one participant is honest, yielding a highly scalable distributed randomness beacon with strong security properties. The security of this construction reduces to a novel property of accumulators, insertion security. We first show that not all accumulators are insertion-secure. We then prove that common constructions (Merkle trees, RSA accumulators, and bilinear accumulators) are either naturally insertion-secure or can be made so with trivial modifications. Finally, we give two generic constructions for insertion-secure accumulators, from universal accumulators and vector commitments respectively.},
+	urldate = {2024-11-04},
+	author = {Christ, Miranda and Choi, Kevin and Bonneau, Joseph},
+	year = {2023},
+	note = {Publication info: Preprint.},
+	keywords = {accumulator, blockchain, distributed randomness, randomness beacon, verifiable delay function},
+}
+
+@inproceedings{corrigan-gibbs_ensuring_2013,
+	address = {Berlin, Germany},
+	title = {Ensuring high-quality randomness in cryptographic key generation},
+	isbn = {978-1-4503-2477-9},
+	url = {http://dl.acm.org/citation.cfm?doid=2508859.2516680},
+	doi = {10.1145/2508859.2516680},
+	abstract = {The security of any cryptosystem relies on the secrecy of the system’s secret keys. Yet, recent experimental work demonstrates that tens of thousands of devices on the Internet use RSA and DSA secrets drawn from a small pool of candidate values. As a result, an adversary can derive the device’s secret keys without breaking the underlying cryptosystem. We introduce a new threat model, under which there is a systemic solution to such randomness ﬂaws. In our model, when a device generates a cryptographic key, it incorporates some random values from an entropy authority into its cryptographic secrets and then proves to the authority, using zero-knowledge-proof techniques, that it performed this operation correctly. By presenting an entropy-authority-signed public-key certiﬁcate to a third party (like a certiﬁcate authority or SSH client), the device can demonstrate that its public key incorporates randomness from the authority and is therefore drawn from a large pool of candidate values. Where possible, our protocol protects against eavesdroppers, entropy authority misbehavior, and devices attempting to discredit the entropy authority. To demonstrate the practicality of our protocol, we have implemented and evaluated its performance on a commodity wireless home router. When running on a home router, our protocol incurs a 1.7× slowdown over conventional RSA key generation and it incurs a 3.6× slowdown over conventional EC-DSA key generation.},
+	language = {en},
+	urldate = {2024-11-04},
+	booktitle = {Proceedings of the 2013 {ACM} {SIGSAC} conference on {Computer} \& communications security - {CCS} '13},
+	publisher = {ACM Press},
+	author = {Corrigan-Gibbs, Henry and Mu, Wendy and Boneh, Dan and Ford, Bryan},
+	year = {2013},
+	pages = {685--696},
+}
+
+@inproceedings{syta_scalable_2017,
+	address = {San Jose, CA, USA},
+	title = {Scalable {Bias}-{Resistant} {Distributed} {Randomness}},
+	isbn = {978-1-5090-5533-3},
+	url = {http://ieeexplore.ieee.org/document/7958592/},
+	doi = {10.1109/SP.2017.45},
+	abstract = {Bias-resistant public randomness is a critical component in many (distributed) protocols. Generating public randomness is hard, however, because active adversaries may behave dishonestly to bias public random choices toward their advantage. Existing solutions do not scale to hundreds or thousands of participants, as is needed in many decentralized systems. We propose two large-scale distributed protocols, RandHound and RandHerd, which provide publicly-veriﬁable, unpredictable, and unbiasable randomness against Byzantine adversaries. RandHound relies on an untrusted client to divide a set of randomness servers into groups for scalability, and it depends on the pigeonhole principle to ensure output integrity, even for non-random, adversarial group choices. RandHerd implements an efﬁcient, decentralized randomness beacon. RandHerd is structurally similar to a BFT protocol, but uses RandHound in a one-time setup to arrange participants into veriﬁably unbiased random secret-sharing groups, which then repeatedly produce random output at predeﬁned intervals. Our prototype demonstrates that RandHound and RandHerd achieve good performance across hundreds of participants while retaining a low failure probability by properly selecting protocol parameters, such as a group size and secret-sharing threshold. For example, when sharding 512 nodes into groups of 32, our experiments show that RandHound can produce fresh random output after 240 seconds. RandHerd, after a setup phase of 260 seconds, is able to generate fresh random output in intervals of approximately 6 seconds. For this conﬁguration, both protocols operate at a failure probability of at most 0.08\% against a Byzantine adversary.},
+	language = {en},
+	urldate = {2024-11-04},
+	booktitle = {2017 {IEEE} {Symposium} on {Security} and {Privacy} ({SP})},
+	publisher = {IEEE},
+	author = {Syta, Ewa and Jovanovic, Philipp and Kogias, Eleftherios Kokoris and Gailly, Nicolas and Gasser, Linus and Khoffi, Ismail and Fischer, Michael J. and Ford, Bryan},
+	month = may,
+	year = {2017},
+	pages = {444--460},
+}
+
+@article{goldreich_how_1986,
+	title = {How to construct random functions},
+	volume = {33},
+	issn = {0004-5411, 1557-735X},
+	url = {https://dl.acm.org/doi/10.1145/6490.6503},
+	doi = {10.1145/6490.6503},
+	abstract = {A constructive theory of randomness for functions, based on computational complexity, is developed, and a pseudorandom function generator is presented. This generator is a deterministic polynomial-time algorithm that transforms pairs (
+              g
+              ,
+              r
+              ), where
+              g
+              is
+              any
+              one-way function and
+              r
+              is a random
+              k
+              -bit string, to polynomial-time computable functions ƒ
+              
+                r
+              
+              : \{\vphantom{\}}1, … , 2
+              
+                k
+              
+              \vphantom{\{}\} → \{\vphantom{\}}1, … , 2
+              
+                k
+              
+              \vphantom{\{}\}. These ƒ
+              
+                r
+              
+              's cannot be distinguished from
+              random
+              functions by any probabilistic polynomial-time algorithm that asks and receives the value of a function at arguments of its choice. The result has applications in cryptography, random constructions, and complexity theory.},
+	language = {en},
+	number = {4},
+	urldate = {2024-11-01},
+	journal = {Journal of the ACM},
+	author = {Goldreich, Oded and Goldwasser, Shafi and Micali, Silvio},
+	month = aug,
+	year = {1986},
+	pages = {792--807},
+}
+
+@inproceedings{micali_verifiable_1999,
+	address = {New York City, NY, USA},
+	title = {Verifiable random functions},
+	isbn = {978-0-7695-0409-4},
+	url = {http://ieeexplore.ieee.org/document/814584/},
+	doi = {10.1109/SFFCS.1999.814584},
+	abstract = {We efﬁciently combine unpredictability and veriﬁability by extending the Goldreich–Goldwasser–Micali construction of pseudorandom functions fs from a secret seed s, so that knowledge of s not only enables one to evaluate fs at any point x, but also to provide an NP-proof that the value fs x is indeed correct without compromising the unpredictability of fs at any other point for which no such a proof was provided.},
+	language = {en},
+	urldate = {2024-11-01},
+	booktitle = {40th {Annual} {Symposium} on {Foundations} of {Computer} {Science} ({Cat}. {No}.{99CB37039})},
+	publisher = {IEEE Comput. Soc},
+	author = {Micali, S. and Rabin, M. and Vadhan, S.},
+	year = {1999},
+	pages = {120--130},
+}
+
+@misc{noauthor_prof_nodate-1,
+	title = {Prof. {Dr}. {Daniel} {Slamanig} {\textbar} {Universität} der {Bundeswehr} {München} {\textbar} {Research} {Institute} {CODE}},
+	url = {https://danielslamanig.info/ModernCrypto18.html},
+	urldate = {2024-10-31},
+}
+
+@article{klein__nodate,
+	title = {– daniel.slamanig@ait.ac.at},
+	language = {en},
+	author = {Klein, Karen},
+}
+
+@article{aranha_introduction_nodate,
+	title = {Introduction to {Pairings} - {ECC} ``{Summer}'' {School}},
+	language = {en},
+	author = {Aranha, Diego F},
+}
+
+@article{pointcheval_security_2000,
+	title = {Security {Arguments} for {Digital} {Signatures} and {Blind} {Signatures}},
+	volume = {13},
+	issn = {0933-2790, 1432-1378},
+	url = {http://link.springer.com/10.1007/s001450010003},
+	doi = {10.1007/s001450010003},
+	abstract = {Since the appearance of public-key cryptography in the seminal Difﬁe–Hellman paper, many new schemes have been proposed and many have been broken. Thus, the simple fact that a cryptographic algorithm withstands cryptanalytic attacks for several years is often considered as a kind of validation procedure. A much more convincing line of research has tried to provide “provable” security for cryptographic protocols. Unfortunately, in many cases, provable security is at the cost of a considerable loss in terms of efﬁciency. Another way to achieve some kind of provable security is to identify concrete cryptographic objects, such as hash functions, with ideal random objects and to use arguments from relativized complexity theory. The model underlying this approach is often called the “random oracle model.” We use the word “arguments” for security results proved in this model. As usual, these arguments are relative to wellestablished hard algorithmic problems such as factorization or the discrete logarithm.},
+	language = {en},
+	number = {3},
+	urldate = {2024-10-30},
+	journal = {Journal of Cryptology},
+	author = {Pointcheval, David and Stern, Jacques},
+	month = jun,
+	year = {2000},
+	pages = {361--396},
+}
+
+@article{komlo_note_nodate,
+	title = {A {Note} on {Various} {Forking} {Lemmas}},
+	language = {en},
+	author = {Komlo, Chelsea},
+}
+
+@article{komlo_notes_nodate,
+	title = {Notes on {Proving} the {Security} of {Single}-{Party} {Schnorr}},
+	language = {en},
+	author = {Komlo, Chelsea},
+}
+
 @incollection{cheon_universal_2016,
 	address = {Berlin, Heidelberg},
 	title = {Universal {Composition} with {Responsive} {Environments}},
@@ -444,12 +659,6 @@ Thumbnail photo by Rebecca Kiger (https://www.rebeccakphoto.com/)},
 	publisher = {Cengage Learning},
 	author = {Sipser, Michael},
 	year = {2013},
-}
-
-@article{lee_remarks_nodate,
-	title = {Some {Remarks} on {Writing} {Mathematical} {Proofs}},
-	language = {en},
-	author = {Lee, John M},
 }
 
 @misc{noauthor_cse_nodate,
@@ -1420,24 +1629,6 @@ compatible implementation of Σ-protocols.},
 	journal = {Google Docs},
 }
 
-@article{noauthor_thesis_2020,
-	title = {Thesis and {Examination} of {HIgher} {Degrees} by {Research} {Procedures} 2020},
-	language = {en},
-	year = {2020},
-}
-
-@article{noauthor_thesis_2015,
-	title = {Thesis and {Examination} of {Higher} {Degrees} by {Research} {Policy} 2015},
-	language = {en},
-	year = {2015},
-}
-
-@article{noauthor_dual_2019,
-	title = {Dual and {Joint} {Degree} {Policy} 2019},
-	language = {en},
-	year = {2019},
-}
-
 @incollection{goos_practical_2003,
 	address = {Berlin, Heidelberg},
 	title = {Practical {Verifiable} {Encryption} and {Decryption} of {Discrete} {Logarithms}},
@@ -1695,17 +1886,6 @@ compatible implementation of Σ-protocols.},
 	keywords = {Computer Science - Computational Complexity},
 }
 
-@misc{noauthor_managing_2013,
-	title = {Managing {Your} {Advisor}},
-	url = {https://greatresearch.org/2013/08/14/managing-your-advisor/},
-	abstract = {With the new academic term almost upon us, several of my students started to put together a list of practical advice for incoming students—including various niceties such as how to gain access to t…},
-	language = {en},
-	urldate = {2024-04-30},
-	journal = {How to Do Great Research},
-	month = aug,
-	year = {2013},
-}
-
 @book{fraleigh_first_2020,
 	address = {Hoboken, New Jersey},
 	edition = {Eighth edition},
@@ -1785,7 +1965,7 @@ compatible implementation of Σ-protocols.},
 	journal = {MIT OpenCourseWare},
 }
 
-@article{noauthor_probability_nodate-1,
+@article{noauthor_probability_nodate,
 	title = {Probability : theory and examples},
 	language = {en},
 }
@@ -3058,12 +3238,6 @@ it is computationally infeasible to tell which one. Their technique also implies
 	keywords = {Groth-Sahai proofs, Zero-knowledge, distributed cryptography, simulation soundness.},
 }
 
-@article{noauthor_iacrtans_nodate,
-	title = {iacrtans class documentation},
-	abstract = {This document is a quick introduction to the LATEX class for the IACR Transactions.},
-	language = {en},
-}
-
 @misc{chase_malleable_2012,
 	title = {Malleable {Proof} {Systems} and {Applications}},
 	url = {https://eprint.iacr.org/2012/012},
@@ -3118,40 +3292,6 @@ Finally, we compare the efficiency of our new systems to two existing constructi
 	year = {2013},
 	note = {Publication info: Published elsewhere. Major revision. ACM CCS 2014},
 	keywords = {anonymous credentials},
-}
-
-@article{martin-moratinos_effects_2023,
-	title = {Effects of {Music} on {Attention}-{Deficit}/{Hyperactivity} {Disorder} ({ADHD}) and {Potential} {Application} in {Serious} {Video} {Games}: {Systematic} {Review}},
-	volume = {25},
-	issn = {1439-4456},
-	shorttitle = {Effects of {Music} on {Attention}-{Deficit}/{Hyperactivity} {Disorder} ({ADHD}) and {Potential} {Application} in {Serious} {Video} {Games}},
-	url = {https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10221503/},
-	doi = {10.2196/37742},
-	abstract = {Background
-Attention-deficit/hyperactivity disorder (ADHD) has a considerable impact on an individual’s daily life. Some difficulties with timing deficits may be associated with deficiencies in attention, reading, language skills, or executive function. Music therapy, either active (playing an instrument) or passive (listening to music) has demonstrated its efficacy in reducing symptomatology in many disorders. Video games may prove to be a useful assessment and treatment tool in compensating for the difficulties with multimodal treatment in ADHD.
-
-Objective
-The aim of the study is to (1) analyze the evidence that music is beneficial in reducing the symptomatology of ADHD using systematic review and (2) propose the application of music in video games following music therapy strategies.
-
-Methods
-Searches were conducted in PubMed, Embase, PsycINFO, Cochrane, and gray literature (Google Scholar and WorldCat). We used the following search syntax: ((music[Title/Abstract]) or (music therapy[Title/Abstract])) and (attention deficit disorder[MeSH or thesaurus term]).
-
-Results
-Of the 70 records identified, 17 provided findings that music can be beneficial in various domains of ADHD. Active music therapy improves hemispheric synchrony, social skills, aggressivity, and impulsivity. Passive music therapy improves academic skills like arithmetic, drawing, and reading comprehension, as well as attention and disruptive behaviors. The effects depend on the music genre, tempo, or task difficulty. Music in video games was generally found to be beneficial for people with ADHD. Music improves immersion and flow while playing video games. Using rhythm may also improve timing skills and immersion in patients with ADHD. Regarding the proposed application of aspects of music to therapeutic video games for ADHD, some paradigms in timing and music therapy were considered in the proposed design of video games.
-
-Conclusions
-Improving ADHD treatment through the application of music in video games is proposed.
-
-Trial Registration
-PROSPERO CRD42021288226; https://www.crd.york.ac.uk/prospero/display\_record.php?RecordID=288226},
-	urldate = {2024-03-25},
-	journal = {Journal of Medical Internet Research},
-	author = {Martin-Moratinos, Marina and Bella-Fernández, Marcos and Blasco-Fontecilla, Hilario},
-	month = may,
-	year = {2023},
-	pmid = {37171837},
-	pmcid = {PMC10221503},
-	pages = {e37742},
 }
 
 @inproceedings{halpin_nym_2020,
@@ -3355,7 +3495,7 @@ We present the CanDID architecture and its technical innovations and report on e
 	pages = {49--68},
 }
 
-@incollection{iwata_composable_2015,
+@incollection{iwata_composable_2015-1,
 	address = {Berlin, Heidelberg},
 	title = {Composable and {Modular} {Anonymous} {Credentials}: {Definitions} and {Practical} {Constructions}},
 	volume = {9453},
@@ -3684,12 +3824,6 @@ Jews are an ethnoreligious group including those born Jewish (or "ethnic Jews"),
 	month = oct,
 	year = {2020},
 	pages = {1--7},
-}
-
-@misc{noauthor_lessons_nodate,
-	title = {Lessons {From} {A} {Year} {Of} {Reviewing}},
-	url = {https://cs-people.bu.edu/kaptchuk/blog/post/reviewing-reflections.html},
-	urldate = {2024-01-27},
 }
 
 @misc{noauthor_decentralized_nodate,
@@ -4728,7 +4862,7 @@ in using pairings to design cryptographic schemes.},
 	year = {2011},
 }
 
-@misc{noauthor_how_nodate,
+@misc{noauthor_how_nodate-1,
 	title = {How {Not} to {Learn} {Cryptography}},
 	url = {https://esl.cs.brown.edu/blog/how-not-to-learn-cryptography/},
 	language = {en-us},
@@ -6609,33 +6743,6 @@ To remove additional trust in the latter approach, we propose verifying credenti
 	author = {Meiklejohn, Sarah and Kalinnikov, Pavel and Lin, Cindy S and Hutchinson, Martin and Belvin, Gary},
 }
 
-@misc{noauthor_zk_nodate,
-	title = {{ZK} {Whiteboard} {Sessions} – {Module} {Fourteen}: {Nova} {Crash} {Course} with {Justin} {Drake} - {YouTube}},
-	url = {https://www.youtube.com/watch?v=SwonTtOQzAk},
-	urldate = {2023-08-14},
-}
-
-@misc{noauthor_incrementally_2023,
-	title = {Incrementally verifiable computation: {NOVA}},
-	shorttitle = {Incrementally verifiable computation},
-	url = {https://blog.lambdaclass.com/incrementally-verifiable-computation-nova/},
-	abstract = {Introduction
-
-
-One of the current goals is to realize, in an efficient way, incrementally verifiable computation (IVC). This cryptographic primitive allows a given party to show the integrity of a given computer program's execution by providing proof that the result of each step is correct and that all previous ones},
-	language = {en},
-	urldate = {2023-08-14},
-	journal = {LambdaClass Blog},
-	month = jan,
-	year = {2023},
-}
-
-@misc{noauthor_sangria_nodate,
-	title = {Sangria: a {Folding} {Scheme} for {PLONK} - {Geometry} {Research}},
-	url = {https://geometry.xyz/notebook/sangria-a-folding-scheme-for-plonk},
-	urldate = {2023-08-14},
-}
-
 @article{wu_dizk_nodate,
 	title = {{DIZK}: {A} {Distributed} {Zero} {Knowledge} {Proof} {System}},
 	abstract = {Recently there has been much academic and industrial interest in practical implementations of zero knowledge proofs. These techniques allow a party to prove to another party that a given statement is true without revealing any additional information. In a Bitcoin-like system, this allows a payer to prove validity of a payment without disclosing the payment’s details.},
@@ -6696,51 +6803,6 @@ One of the current goals is to realize, in an efficient way, incrementally verif
 	author = {Chiesa, Alessandro and Lehmkuhl, Ryan and Mishra, Pratyush and Zhang, Yinuo},
 }
 
-@misc{chen_proof-carrying_nodate,
-	title = {Proof-{Carrying} {Data} {From} {Arithmetized} {Random} {Oracles}},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {Proof-carrying data (PCD) is a powerful cryptographic primitive that allows mutually distrustful parties to perform distributed computation in an efficiently verifiable manner. Known constructions of PCD are obtained by recursively-composing SNARKs or related primitives. SNARKs with desirable properties such as transparent setup are constructed in the random oracle model. However, using such SNARKs to construct PCD requires heuristically instantiating the oracle and using it in a non-black-box way. Chen, Chiesa and Spooner (EC'22) constructed SNARKs in the low-degree random oracle model, circumventing this issue, but instantiating their model in the real world appears difficult. In this paper, we introduce a new model: the arithmetized random oracle model (AROM). We provide a plausible standard-model (software-only) instantiation of the AROM, and we construct PCD in the AROM, given only a standard-model collision-resistant hash function. Furthermore, our PCD construction is for arbitrary-depth compliance predicates. We obtain our PCD construction by showing how to construct SNARKs in the AROM for computations that query the oracle, given an accumulation scheme for oracle queries in the AROM. We then construct such an accumulation scheme for the AROM. We give an efficient "lazy sampling" algorithm (an emulator) for the ARO up to some error. Our emulator enables us to prove the security of cryptographic constructs in the AROM and that zkSNARKs in the ROM also satisfy zero-knowledge in the AROM. The algorithm is non-trivial, and relies on results in algebraic query complexity and the combinatorial nullstellensatz.},
-	urldate = {2023-08-14},
-	author = {Chen, Megan and Chiesa, Alessandro and Gur, Tom and O'Connor, Jack and Spooner, Nicholas},
-	keywords = {arithmetization, proof-carrying data, random oracle},
-}
-
-@misc{golovnev_brakedown_nodate,
-	title = {Brakedown: {Linear}-time and post-quantum {SNARKs} for {R1CS}},
-	shorttitle = {Brakedown},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {This paper introduces Brakedown, the first built system that provides linear-time SNARKs for NP, meaning the prover incurs \$O(N)\$ finite field operations to prove the satisfiability of an \$N\$-sized R1CS instance. Brakedown’s prover is faster, both concretely and asymptotically, than prior SNARK implementations. Brakedown does not require a trusted setup and is plausibly post-quantum secure. Furthermore, it is compatible with arbitrary finite fields of sufficient size; this property is new amongst implemented arguments with sublinear proof sizes. To design Brakedown, we observe that recent work of Bootle, Chiesa, and Groth (BCG, TCC 2020) provides a polynomial commitment scheme that, when combined with the linear-time interactive proof system of Spartan (CRYPTO 2020), yields linear-time IOPs and SNARKs for R1CS (a similar theoretical result was previously established by BCG, but our approach is conceptually simpler, and crucial for achieving high-speed SNARKs). A core ingredient in the polynomial commitment scheme that we distill from BCG is a linear-time encodable code. Existing constructions of such codes are believed to be impractical. Nonetheless, we design and engineer a new one that is practical in our context. We also implement a variant of Brakedown that uses Reed-Solomon codes instead of our linear-time encodable codes; we refer to this variant as Shockwave. Shockwave is not a linear-time SNARK, but it provides shorter proofs and lower verification times than Brakedown (it also provides a faster prover than prior plausibly post-quantum SNARKs).},
-	urldate = {2023-08-14},
-	author = {Golovnev, Alexander and Lee, Jonathan and Setty, Srinath and Thaler, Justin and Wahby, Riad S.},
-	keywords = {linear-time SNARKs, proof systems, succinct arguments},
-}
-
-@misc{ames_ligero_nodate,
-	title = {Ligero: {Lightweight} {Sublinear} {Arguments} {Without} a {Trusted} {Setup}},
-	shorttitle = {Ligero},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {We design and implement a simple zero-knowledge argument protocol for \${\textbackslash}mathsf\{NP\}\$ whose communication complexity is proportional to the square-root of the verification circuit size. The protocol can be based on any collision-resistant hash function. Alternatively, it can be made non-interactive in the random oracle model, yielding concretely efficient zk-SNARKs that do not require a trusted setup or public-key cryptography. Our protocol is obtained by applying an optimized version of the general transformation of Ishai et al. (STOC 2007) to a variant of the protocol for secure multiparty computation of Damg\${\textbackslash}mathring\{a\}\$rd and Ishai (CRYPTO 2006). It can be viewed as a simple zero-knowledge interactive PCP based on ``interleaved'' Reed-Solomon codes. This paper is an extended version of the paper published in CCS 2017 and features a tighter analysis, better implementation along with formal proofs. For large verification circuits, the Ligero prover remains competitive against subsequent works with respect to the prover’s running time, where our efficiency advantages become even bigger in an amortized setting, where several instances need to be proven simultaneously. Our protocol is attractive not only for very large verification circuits but also for moderately large circuits that arise in applications. For instance, for verifying a SHA-256 preimage with \$2{\textasciicircum}\{-40\}\$ soundness error, the communication complexity is roughly 35KB. The communication complexity of our protocol is independent of the circuit structure and depends only on the number of gates. For \$2{\textasciicircum}\{-40\}\$ soundness error, the communication becomes smaller than the circuit size for circuits containing roughly 3 million gates or more. With our refined analysis the Ligero system's proof lengths and prover's running times are better than subsequent post-quantum ZK-SNARKs for small to moderately large circuits.},
-	urldate = {2023-08-14},
-	author = {Ames, Scott and Hazay, Carmit and Ishai, Yuval and Venkitasubramaniam, Muthuramakrishnan},
-	keywords = {ZKSNARKs, fiat-shamir, post-quantum, zero-knowledge},
-}
-
-@techreport{ben-sasson_fast_2017,
-	title = {Fast {Reed}-{Solomon} {Interactive} {Oracle} {Proofs} of {Proximity}},
-	url = {https://eccc.weizmann.ac.il/report/2017/134/},
-	number = {134},
-	urldate = {2023-08-14},
-	author = {Ben-Sasson, Eli and Bentov, Iddo and Horesh, Ynon and Riabzev, Michael},
-	year = {2017},
-}
-
-@article{setty_unlocking_nodate,
-	title = {Unlocking the lookup singularity with {Lasso}},
-	abstract = {This paper introduces Lasso, a new family of lookup arguments, which allow an untrusted prover to commit to a vector a ∈ Fm and prove that all entries of a reside in some predetermined table t ∈ Fn. Lasso’s performance characteristics unlock the so-called “lookup singularity”. Lasso works with any multilinear polynomial commitment scheme, and provides the following efficiency properties.},
-	language = {en},
-	author = {Setty, Srinath and Thaler, Justin and Wahby, Riad},
-}
-
 @misc{libert_vector_nodate,
 	title = {Vector {Commitments} {With} {Short} {Proofs} of {Smallness}},
 	url = {https://eprint.iacr.org/undefined/undefined},
@@ -6748,141 +6810,6 @@ One of the current goals is to realize, in an efficient way, incrementally verif
 	urldate = {2023-08-14},
 	author = {Libert, Benoit},
 	keywords = {Vector commitments, range proofs, ring LWE ciphertexts},
-}
-
-@inproceedings{liu_matproofs_2022,
-	address = {Los Angeles CA USA},
-	title = {Matproofs: {Maintainable} {Matrix} {Commitment} with {Efficient} {Aggregation}},
-	isbn = {978-1-4503-9450-5},
-	shorttitle = {Matproofs},
-	url = {https://dl.acm.org/doi/10.1145/3548606.3560591},
-	doi = {10.1145/3548606.3560591},
-	language = {en},
-	urldate = {2023-08-14},
-	booktitle = {Proceedings of the 2022 {ACM} {SIGSAC} {Conference} on {Computer} and {Communications} {Security}},
-	publisher = {ACM},
-	author = {Liu, Jing and Zhang, Liang Feng},
-	month = nov,
-	year = {2022},
-	note = {Matproofs give solutions to payment-only stateless cryptocurrencies with lower bandwidth and computational complexity.
-aggregatable, easily updatable and maintainable,
-Matproofs achieve the additional property of conciseness},
-	pages = {2041--2054},
-}
-
-@misc{zapico_baloo_nodate,
-	title = {Baloo: {Nearly} {Optimal} {Lookup} {Arguments}},
-	shorttitle = {Baloo},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {We present Baloo, the first protocol for lookup tables where the prover work is linear on the amount of lookups and independent of the size of the table. Baloo is built over the lookup arguments of Caulk and Caulk+, and the framework for linear relations of Rafols and Zapico. Our protocol supports commit-and-prove expansions: the prover selects the subtable containing the elements used in the lookup, that is unknown to the verifier, commits to it and later prove relation with the committed element. This feature makes Baloo especially suitable for prover input-ouput relations on hash functions, and in particular to instantiate the Ethereum Virtual Machine (EVM).},
-	urldate = {2023-08-14},
-	author = {Zapico, Arantxa and Gabizon, Ariel and Khovratovich, Dmitry and Maller, Mary and Ràfols, Carla},
-	note = {lookup tables where the prover work is linear on the
-amount of lookups},
-	keywords = {EVM, Lookup, SNARK, Scalability},
-}
-
-@misc{naor_incrementally_nodate,
-	title = {Incrementally {Verifiable} {Computation} via {Incremental} {PCPs}},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {If I commission a long computation, how can I check that the result is correct without re-doing the computation myself? This is the question that efficient verifiable computation deals with. In this work, we address the issue of verifying the computation as it unfolds. That is, at any intermediate point in the computation, I would like to see a proof that the current state is correct. Ideally, these proofs should be short, non-interactive, and easy to verify. In addition, the proof at each step should be generated efficiently by updating the previous proof, without recomputing the entire proof from scratch. This notion, known as incrementally verifiable computation, was introduced by Valiant [TCC 08] about a decade ago. Existing solutions follow the approach of recursive proof composition and can be based on strong and non-falsifiable cryptographic assumptions (so-called ``knowledge assumptions''). In this work, we present a new framework for constructing incrementally verifiable computation schemes in both the publicly verifiable and designated-verifier settings. Our designated-verifier scheme is based on somewhat homomorphic encryption (which can be based on Learning with Errors) and our publicly verifiable scheme is based on the notion of zero-testable homomorphic encryption, which can be constructed from ideal multi-linear maps [Paneth and Rothblum, TCC 17]. Our framework is anchored around the new notion of a probabilistically checkable proof (PCP) with incremental local updates. An incrementally updatable PCP proves the correctness of an ongoing computation, where after each computation step, the value of every symbol can be updated locally without reading any other symbol. This update results in a new PCP for the correctness of the next step in the computation. Our primary technical contribution is constructing such an incrementally updatable PCP. We show how to combine updatable PCPs with recently suggested (ordinary) verifiable computation to obtain our results.},
-	urldate = {2023-08-14},
-	author = {Naor, Moni and Paneth, Omer and Rothblum, Guy N.},
-}
-
-@misc{kothapalli_hypernova_nodate,
-	title = {{HyperNova}: {Recursive} arguments for customizable constraint systems},
-	shorttitle = {{HyperNova}},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {This paper introduces HyperNova, a recursive argument for proving incremental computations whose steps are expressed with CCS (Setty et al. ePrint 2023/552), a customizable constraint system that simultaneously generalizes Plonkish, R1CS, and AIR without overheads. A distinguishing aspect of HyperNova is that the prover’s cost at each step is dominated by a single multi-scalar multiplication (MSM) of size equal to the number of variables in the constraint system, which is optimal when using an MSM-based commitment scheme. To construct HyperNova, we generalize folding schemes (CRYPTO 22) to allow instances from two (potentially) different NP relations, that share a compatible structure, to be folded; we refer to this generalization as multi-folding schemes. Furthermore, we devise a public-coin multi-folding scheme for instances in CCS and linearized CCS (a variant of CCS that we introduce). This construction can be viewed as an "early stopping" version of Spartan (CRYPTO 20), applied to a carefully-crafted polynomial that includes claims about prior linearized CCS instances. The prover’s work in the multi-folding scheme is a linear number of finite field operations and the verifier’s work is a logarithmic number of finite field operations and a single group scalar multiplication. We then construct incrementally verifiable computation (IVC) from non-interactive multi-folding schemes with the lowest prover costs. We also provide an alternate realization of HyperNova with a black box use of Nova, which nearly eliminates the need for deferred arithmetic when instantiated with a cycle of elliptic curves. As an additional contribution, we describe nlookup, a lookup argument, that is particularly suited for recursive arguments based on folding schemes. Specifically, at a particular step in an incremental computation, for m lookups into a table of size \$n\$ \$(m {\textless}{\textless} n)\$, the prover’s work is dominated by \$O(n)\$ finite field operations and it requires only \$O(m {\textbackslash}cdot {\textbackslash}log\{n\})\$ degree-2 constraints and \$O({\textbackslash}log\{n\})\$ hash evaluations in the incremental computation. nlookup is currently not suitable for efficiently encoding bitwise operations, but it provides a powerful tool for efficiently encoding (large) finite state machines and proving their transitions with recursive arguments.Fix typos.},
-	urldate = {2023-08-14},
-	author = {Kothapalli, Abhiram and Setty, Srinath},
-	keywords = {customizable constraints, folding schemes, recursive arguments, succinct arguments},
-}
-
-@misc{kothapalli_nova_nodate,
-	title = {Nova: {Recursive} {Zero}-{Knowledge} {Arguments} from {Folding} {Schemes}},
-	shorttitle = {Nova},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {We introduce a new approach to realize incrementally verifiable computation (IVC), in which the prover recursively proves the correct execution of incremental computations of the form \$y=F{\textasciicircum}\{({\textbackslash}ell)\}(x)\$, where \$F\$ is a (potentially non-deterministic) computation, \$x\$ is the input, \$y\$ is the output, and \${\textbackslash}ell {\textgreater} 0\$. Unlike prior approaches to realize IVC, our approach avoids succinct non-interactive arguments of knowledge (SNARKs) entirely and arguments of knowledge in general. Instead, we introduce and employ folding schemes, a weaker, simpler, and more efficiently-realizable primitive, which reduces the task of checking two instances in some relation to the task of checking a single instance. We construct a folding scheme for a characterization of \${\textbackslash}mathsf\{NP\}\$ and show that it implies an IVC scheme with improved efficiency characteristics: (1) the "recursion overhead" (i.e., the number of steps that the prover proves in addition to proving the execution of \$F\$) is a constant and it is dominated by two group scalar multiplications expressed as a circuit (this is the smallest recursion overhead in the literature), and (2) the prover's work at each step is dominated by two multiexponentiations of size \$O({\textbar}F{\textbar})\$, providing the fastest prover in the literature. The size of a proof is \$O({\textbar}F{\textbar})\$ group elements, but we show that using a variant of an existing zkSNARK, the prover can prove the knowledge of a valid proof succinctly and in zero-knowledge with \$O({\textbackslash}log\{{\textbar}F{\textbar}\})\$ group elements. Finally, our approach neither requires a trusted setup nor FFTs, so it can be instantiated efficiently with any cycles of elliptic curves where DLOG is hard.},
-	urldate = {2023-08-14},
-	author = {Kothapalli, Abhiram and Setty, Srinath and Tzialla, Ioanna},
-	keywords = {incrementally verifiable computation, recursive proof composition, zero knowledge arguments},
-}
-
-@incollection{canetti_incrementally_2008,
-	address = {Berlin, Heidelberg},
-	title = {Incrementally {Verifiable} {Computation} or {Proofs} of {Knowledge} {Imply} {Time}/{Space} {Efficiency}},
-	volume = {4948},
-	isbn = {978-3-540-78523-1 978-3-540-78524-8},
-	url = {http://link.springer.com/10.1007/978-3-540-78524-8_1},
-	abstract = {A probabilistically checkable proof (PCP) system enables proofs to be veriﬁed in time polylogarithmic in the length of a classical proof. Computationally sound (CS) proofs improve upon PCPs by additionally shortening the length of the transmitted proof to be polylogarithmic in the length of the classical proof.},
-	language = {en},
-	urldate = {2023-08-14},
-	booktitle = {Theory of {Cryptography}},
-	publisher = {Springer Berlin Heidelberg},
-	author = {Valiant, Paul},
-	editor = {Canetti, Ran},
-	year = {2008},
-	doi = {10.1007/978-3-540-78524-8_1},
-	note = {Series Title: Lecture Notes in Computer Science},
-	pages = {1--18},
-}
-
-@misc{bunz_protostar_nodate,
-	title = {{ProtoStar}: {Generic} {Efficient} {Accumulation}/{Folding} for {Special} {Sound} {Protocols}},
-	shorttitle = {{ProtoStar}},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {Accumulation is a simple yet powerful primitive that enables incrementally verifiable computation (IVC) without the need for recursive SNARKs. We provide a generic, efficient accumulation (or folding) scheme for any \$(2k-1)\$-move special-sound protocol with a verifier that checks \${\textbackslash}ell\$ degree-\$d\$ equations. The accumulation verifier only performs \$k+2\$ elliptic curve multiplications and \$k+d+O(1)\$ field/hash operations. Using the compiler from BCLMS21 (Crypto 21), this enables building efficient IVC schemes where the recursive circuit only depends on the number of rounds and the verifier degree of the underlying special-sound protocol but not the proof size or the verifier time. We use our generic accumulation compiler to build ProtoStar. ProtoStar is a non-uniform IVC scheme for Plonk that supports high-degree gates and (vector) lookups. The recursive circuit is dominated by \$3\$ group scalar multiplications and a hash of \$d{\textasciicircum}*\$ field elements, where \$d{\textasciicircum}*\$ is the degree of the highest gate. The scheme does not require a trusted setup or pairings, and the prover does not need to compute any FFTs. The prover in each accumulation/IVC step is also only logarithmic in the number of supported circuits and independent of the table size in the lookup.Fixed minor typos and added more citations.},
-	urldate = {2023-08-14},
-	author = {Bünz, Benedikt and Chen, Binyi},
-	keywords = {accumulation schemes, incremental verifiable computation, proof-carrying data, recursive proof composition},
-}
-
-@misc{baghery_benchmarking_nodate,
-	title = {Benchmarking the {Setup} of {Updatable} zk-{SNARKs}},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {Subversion-resistant zk-SNARKs allow the provers to verify the Structured Reference String (SRS), via an SRS Verification (SV) algorithm and bypass the need for a Trusted Third Party (TTP). Pairing-based zk-SNARKs with {\textbackslash}(updatable{\textbackslash}) and {\textbackslash}(universal{\textbackslash}) SRS are an extension of subversion-resistant ones which additionally allow the verifiers to update the SRS, via an SRS Updating (SU) algorithm, and similarly bypass the need for a TTP. In this paper, we examine the setup of these zk-SNARKs by benchmarking the efficiency of the SV and SU algorithms within the {\textbackslash}({\textbackslash}textsf\{Arkworks\}{\textbackslash}) library. The benchmarking covers a range of updatable zk-SNARKs, including Sonic, Plonk, Marlin, Lunar, and Basilisk. Our analysis reveals that relying solely on the standard Algebraic Group Model (AGM) may not be sufficient in practice, and we may need a model with weaker assumptions. Specifically, we find that while Marlin is secure in the AGM, additional elements need to be added to its SRS to formally prove certain security properties in the updatable CRS model. We demonstrate that the SV algorithms become inefficient for mid-sized circuits with over 20,000 multiplication gates and 100 updates. To address this, we introduce Batched SV algorithms (BSV) that leverage standard batching techniques and offer significantly improved performance. As a tool, we propose an efficient verification approach that allows the parties to identify a malicious SRS updater with logarithmic verification in the number of updates. In the case of Basilisk, for a circuit with {\textbackslash}(2{\textasciicircum}\{20\}{\textbackslash}) multiplication gates, a {\textbackslash}(1000{\textbackslash})-time updated SRS can be verified in less than 30 sec, a malicious updater can be identified in less than 4 min (improvable by pre-computation), and each update takes less than 6 min.This is the full version of the Latincrypt 2023 paper.},
-	urldate = {2023-08-14},
-	author = {Baghery, Karim and Mertens, Axel and Sedaghat, Mahdi},
-}
-
-@misc{noauthor_introducing_2023,
-	title = {Introducing {Lasso} and {Jolt}},
-	url = {https://a16zcrypto.com/posts/article/introducing-lasso-and-jolt/},
-	abstract = {A new approach to SNARK design, which will improve performance, developer experience, and auditability, and by extension, building in web3},
-	language = {en},
-	urldate = {2023-08-14},
-	journal = {a16z crypto},
-	month = aug,
-	year = {2023},
-}
-
-@article{setty_unlocking_nodate-1,
-	title = {Unlocking the lookup singularity with {Lasso}},
-	abstract = {This paper introduces Lasso, a new family of lookup arguments, which allow an untrusted prover to commit to a vector a ∈ Fm and prove that all entries of a reside in some predetermined table t ∈ Fn. Lasso’s performance characteristics unlock the so-called “lookup singularity”. Lasso works with any multilinear polynomial commitment scheme, and provides the following efficiency properties.},
-	language = {en},
-	author = {Setty, Srinath and Thaler, Justin and Wahby, Riad},
-}
-
-@misc{kothapalli_cyclefold_nodate,
-	title = {{CycleFold}: {Folding}-scheme-based recursive arguments over a cycle of elliptic curves},
-	shorttitle = {{CycleFold}},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {This paper introduces CycleFold, a new and conceptually simple approach to instantiate folding-scheme-based recursive arguments over a cycle of elliptic curves, for the purpose of realizing incrementally verifiable computation (IVC). Existing approach to solve this problem originates from BCTV (CRYPTO'14) who describe their approach for a SNARK-based recursive argument, and it was adapted by Nova (CRYPTO'22) to a folding-scheme-based recursive argument. A downside of this approach is that it represents a folding scheme verifier as a circuit on both curves in the cycle. (e.g., with Nova, this requires \${\textbackslash}approx\$10,000 multiplication gates on both curves in the cycle). CycleFold’s starting point is the observation that folding-scheme-based recursive arguments can be efficiently instantiated without a cycle of elliptic curves—except for a few scalar multiplications in their verifiers (2 in Nova, 1 in HyperNova, and 3 in ProtoStar). Accordingly, CycleFold uses the second curve in the cycle to merely represent a single scalar multiplication (\${\textbackslash}approx\$1,000--1,500 multiplication gates). CycleFold then folds invocations of that tiny circuit on the first curve in the cycle. This is nearly an order of magnitude improvement over the prior state-of-the-art in terms of circuit sizes on the second curve. CycleFold is particularly beneficial when instantiating folding-scheme-based recursive arguments over “half pairing” cycles (e.g., BN254/Grumpkin) as it keeps the circuit on the non-pairing-friendly curve minimal. The running instance in a CycleFold-based recursive argument consists of an instance on the first curve and a tiny instance on the second curve. Both instances can be proven using a zkSNARK defined over the scalar field of the first curve. On the conceptual front, with CycleFold, an IVC construction and nor its security proof has to explicitly reason about the cycle of elliptic curves. Finally, due to its simplicity, CycleFold-based recursive argument can be more easily be adapted to support parallel proving with the so-called "binary tree" IVC.},
-	urldate = {2023-08-14},
-	author = {Kothapalli, Abhiram and Setty, Srinath},
-	keywords = {cycles of elliptic curves, recursive arguments, succinct arguments},
-}
-
-@misc{kothapalli_nova_nodate-1,
-	title = {Nova: {Recursive} {Zero}-{Knowledge} {Arguments} from {Folding} {Schemes}},
-	shorttitle = {Nova},
-	url = {https://eprint.iacr.org/undefined/undefined},
-	abstract = {We introduce a new approach to realize incrementally verifiable computation (IVC), in which the prover recursively proves the correct execution of incremental computations of the form \$y=F{\textasciicircum}\{({\textbackslash}ell)\}(x)\$, where \$F\$ is a (potentially non-deterministic) computation, \$x\$ is the input, \$y\$ is the output, and \${\textbackslash}ell {\textgreater} 0\$. Unlike prior approaches to realize IVC, our approach avoids succinct non-interactive arguments of knowledge (SNARKs) entirely and arguments of knowledge in general. Instead, we introduce and employ folding schemes, a weaker, simpler, and more efficiently-realizable primitive, which reduces the task of checking two instances in some relation to the task of checking a single instance. We construct a folding scheme for a characterization of \${\textbackslash}mathsf\{NP\}\$ and show that it implies an IVC scheme with improved efficiency characteristics: (1) the "recursion overhead" (i.e., the number of steps that the prover proves in addition to proving the execution of \$F\$) is a constant and it is dominated by two group scalar multiplications expressed as a circuit (this is the smallest recursion overhead in the literature), and (2) the prover's work at each step is dominated by two multiexponentiations of size \$O({\textbar}F{\textbar})\$, providing the fastest prover in the literature. The size of a proof is \$O({\textbar}F{\textbar})\$ group elements, but we show that using a variant of an existing zkSNARK, the prover can prove the knowledge of a valid proof succinctly and in zero-knowledge with \$O({\textbackslash}log\{{\textbar}F{\textbar}\})\$ group elements. Finally, our approach neither requires a trusted setup nor FFTs, so it can be instantiated efficiently with any cycles of elliptic curves where DLOG is hard.},
-	urldate = {2023-08-14},
-	author = {Kothapalli, Abhiram and Setty, Srinath and Tzialla, Ioanna},
-	keywords = {incrementally verifiable computation, recursive proof composition, zero knowledge arguments},
 }
 
 @misc{nikolaenko_powers--tau_nodate,
@@ -7276,18 +7203,6 @@ View the full USENIX Security '22 program at https://www.usenix.org/conference/u
 	urldate = {2023-08-14},
 	author = {Maram, Deepak and Kelkar, Mahimna and Eyal, Ittay},
 	keywords = {authentication, key management},
-}
-
-@misc{scrypt_recursive_2022,
-	title = {Recursive {Zero}-{Knowledge} {Proofs}},
-	url = {https://xiaohuiliu.medium.com/recursive-zero-knowledge-proofs-27f2d934f953},
-	abstract = {Proof of a proof of a proof …},
-	language = {en},
-	urldate = {2023-08-14},
-	journal = {Medium},
-	author = {sCrypt},
-	month = aug,
-	year = {2022},
 }
 
 @misc{srinivasan_batching_nodate,
