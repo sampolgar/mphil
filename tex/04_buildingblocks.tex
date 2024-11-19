@@ -56,10 +56,6 @@
 \end{itemize}
 
 
-
-
-
-
 \subsection{PS Signature}
 \subsubsection{Syntax}
 \begin{itemize}
@@ -160,8 +156,44 @@ To work with the rerandomized signature, the Commitment Scheme must be rerandomi
 
 
 
+\subsection{Privately Linked Context Credentials}
+The Internet Identity Workshop discussed a problem space summarised by the following problems:
+1. issuing credentials that are both government and privately issued
+2. retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
+3. combining traditional digital identity with decentralized identity
+
+\subsubsection{Hierarchical derived credentials}
 
 
+
+As digital wallets are gradually introduced, one notable problem involves combining 
+As digital identities are introduced, there must be methods to combine the old world and the new world with respect to identities. 
+One problem use-case is organisations such as a university issuing certificates as credentials. 
+Universities want to start issuing credentials to users 
+
+A university, a credential provider, and wants to issue a credential to a user sam.
+
+The University is not yet using decentralized identity but would like to issue a credential to Sam's digital identity wallet. 
+Sam's logged in to the university portal with his classical login. Sam presses "Issue Credential" and starts the credential-issuing process. 
+
+The university wants to check a few things before issuing this credential.
+1. make sure their national credential is valid, that is, it verifies
+2. as it's an anonymous credential, the university wants to make sure the user that's logged into their portal is the same user with the registration credential. The user may selectively disclose their attributes, or prove equality of attributes in zero knowledge, or may have another proof.
+
+The university generates a credentialId and stores it in their system and carries out the following protocol with Sam
+
+Sam wants to keep as many details as secret as possible, and thus, he carries out the following protocol
+1. Sam creates a new commitment Com([pid, 0]r), proves opening of the commitment and equality of pid between rcm and this commitment.
+2. The university generates Com([0,credId]0) and homomorphically creates ccm([pid, credId]r) = Com([pid, 0]r) x Com([0,credId]0). The university then signs ccm([pid, credId]r) with their own signature scheme.
+3. Sam can now take rcm and ccm, sigma(ccm) to the blockchain of nodes.
+4. Sam runs a protocol with the blockchain to be issued a Decentralied version of this credential with full private accountability. 
+
+
+
+
+
+
+\subsection{Zero-Knowledge Proofs}
 
 
 

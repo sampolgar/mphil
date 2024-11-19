@@ -1,8 +1,21 @@
 \section{Abstract}
+Main Research Question: 
 
+\textit{How can credential systems be designed to maintain accountability and sybil resistance with privacy and unlinkability. }
 
+\noindent Sub Research Questions
 
+\textit{How can we design a privacy-preserving credential system that enables hidden linking of government and private credentials while maintaining provable provenance and revocability?}
+
+\textit{How can we efficiently combine credentials for verification while retaining their security properties}
+
+\newpage
 \section{Intro}
+In this section, we discuss the sub-problem:
+\textit{How can we design a privacy-preserving credential system that enables hidden linking of government and private credentials while maintaining provable provenance and revocability?}
+
+
+
 % When answering, discuss how they motivate, in which setting and why it’s important, and what they’re missing / outstanding work.
 % – How used / important is "certified sampling" ?
 % – How is it done (if it exists) ?
@@ -11,70 +24,32 @@
 % https://eprint.iacr.org/2024/1124.pdf#page=14.48
 % https://pages.nist.gov/800-63-4/sp800-63c.html
 
-
-Presenting multiple credentials for verification 
-
 \subsection{Motivation}
-Balancing accountability and privacy in credential systems.
+
+
+\paragraph{Internet Identity Workshop}
+
+The Internet Identity Workshop discussed a problem space summarised by the following problems:
+1. issuing credentials that are both government and privately issued
+2. retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
+3. combining traditional digital identity with decentralized identity
+
 A user has an Identity linked to multiple credentials, such as a driver's license and university card. Users want to authenticate with various Relying Parties (Verifiers) without being linked between multiple uses of the same service (e.g. a user verifying multiple credentials with 1 service such as a bank requiring proof of multiple credentials linked to an identity), and between uses of different services (e.g. a user presenting their drivers license for age verification on multiple services).
 
-\subsection{Literature Review}
+Current decentralized identity systems either don't provide this functionality or provide it at the expense of either accountability or privacy. CanDID stores a map between users multi-layered credentials providing a solution to the problem at the expense of the user's privacy. Other credential systems and pseudonym systems prove equality of hidden attributes in a credential such as name or id, which can more-easily be forged and does not support the hierarchical structure leveraging a highly secure and accountable government identity with not-so secure private credentials.
+
+\paragraph{Identity Provider Features (Pairwise Pseudonyms, Unobservability}
 Identity Providers (IdP's)/SSO systems enable a user with a single identity (uid) to login to multiple services called Relying Parties (RP). User's wanting to authenticate with an RP are redirected to the IdP to login, the IdP then sends a cryptographic token to the RP attesting to the user's permission to login, sharing user identifier uid and optionally user attributes.
 \textbf{Unlinkability:} To prevent different RP's from tracking the user's uid (a privacy problem), pairwise pseudonyms were proposed, and recommended by NIST to improve user privacy, and currently used by Apple's SSO service. Pairwise pseudonyms create a new problem - the record of user id uid and pairwise id ppid needs to be stored on the IdP on a central service and accessed for each login request and therefore every authentication request can be tracked by the IdP. 
 
 OpenID Connect (OIDC) supports pairwise pseudonyms by setting $ppid = H(k, uid, rid)$ where H is a hash function, $k$ is a random key and $rid$ is the relying party. During login, the IdP generates ppid and stores it, then sends $ppid$ instead of $uid$ to the RP. User's cannot generate more than 1 ppid and thus \textbf{pseudonym Sybil Resistance} is upheld. 
 
-\textbf{Observability: } is defined by the notion that each authentication request from a relying party RP to the IdP enables IdP to observe the user's identity usage. Furthermore, to prevent reply attacks, the IdP includes RP specific information in the authentication token to prevent multiple uses or uses for the wrong RP.
-
+Observability is defined by the notion that each authentication request from a relying party RP to the IdP enables IdP to observe the user's identity usage. Furthermore, to prevent reply attacks, the IdP includes RP specific information in the authentication token to prevent multiple uses or uses for the wrong RP.
 
 OPPID \cite{kroschewski_oppid_2024} supports unlinkability (across relying parties), sybil resistance (for each context) and unobservability (which prevents the IdP from learning each RP the user interacts while retaining their requirement to bind their login token to an RP). OPPID enhances privacy in pseudonym login tokens by hiding which RP is being used while retaining existing security requirements.
 
-Breaking from the SSO IdP model, 
-
-
-
-
-
-
-
-
-
-
 
 \subsection{Hierarchical Credentials}
-
-
-
-
-
-Prove credentials have a link between them when there are no equal attributes.
-
-
-This can be done by a user with multiple credentials and proving equality of attributes between credentials, the user needs to generate a non-membership proof with some private cryptographic object. 
-We bypass this and maintain privacy and sybil resistance by ...
-This method uses a PRF derived from msater credential.
-
-Obtain and Issuing
-Scenario 1: to obtain a context credential, 
-
-Scenario 2 (improvement) we are better.
-
-
-Linkable Show and Verify
-Scenario 1: uses equality of commitment
-Scenario 2: uses our method
-
-Improvements
-The concrete 
-
-
-
-
-
-
-
-
-
 
 
 
@@ -104,68 +79,16 @@ Novel Contribution
 \begin{itemize}
     \item CanDID Decentralized Identity records the state i.e. (level1-pk, level2-pk) on the level1 ca. This is not private and requires interacting with level-1 for each credential issued which isn't good because it will overwhelm level-1 ca.
 
+    \item OpenID, Apple SSO, IdP
+
     \item Commitment Equality
 
     \item Link-G16
+
+    \item Anonymous Payment Systems are analogous to Private Identity Systems
     
 \end{itemize}
 
-
-
-(Overview of this paper - this is just for my draft)
-\textbf{Introduction}
-\begin{itemize}
-    \item Problem: Decentralized identity systems need both high-security root credentials and lower-security derived credentials
-    \item Challenge: Creating private, accountable links between credential levels without overwhelming root CA
-    \item Current approaches and their limitations (like the paper you mentioned that records state at level-1)
-    \item Your contribution: A new scheme for privately linking credentials with Sybil resistance
-\end{itemize}
-
-
-
-\noindent \textbf{Background \& Related Work}
-\begin{itemize}
-    \item Foundations in digital credentials
-    \item Anonymous credentials and zero-knowledge proofs
-    \item Existing hierarchical/delegatable credential systems
-    \item PRF-based key derivation schemes
-\end{itemize}
-
-
-\noindent \textbf{System Model \& Requirements}
-\begin{itemize}
-    \item Trust model (level-1 CA, level-2 CAs, users, verifiers)
-    \item Security requirements:
-    \item Privacy (unlinkability between levels)
-    \item Accountability (level-1 credential status checking)
-    \item Sybil resistance
-    \item Performance requirements (minimal level-1 CA interaction)
-\end{itemize}
-
-
-% \noindent \textbf{Protocol Design}
-% \begin{itemize}
-%     \item Level-1 credential issuance
-%     \item Level-2 key derivation and credential issuance
-%     \item Verification protocol including accountability checks
-%     \item Formal protocol description with all algorithms
-% \end{itemize}
-
-
-\noindent \textbf{Security Analysis}
-\begin{itemize}
-    \item Security definitions
-    \item Proofs for privacy, accountability, Sybil resistance
-    \item Comparison with existing approaches
-\end{itemize}
-
-
-\noindent \textbf{Implementation \& Evaluation}
-\begin{itemize}
-    \item Prototype implementation
-    \item Performance measurements
-    \item Comparison with other systems
-\end{itemize}
 
 
 Draft Proposed Flow of information
@@ -217,9 +140,12 @@ This Sybil check is done without revealing which level-1 credential the user has
 The level-2 CA only needs to track pk2s, not any level-1 credential information
 Different level-2 credentials for the same user will have different, unlinkable pk2s due to different credential names in the PRF
 
+\newpage
+\section{Registration}
+
 
 \newpage
-\subsection{Analysis}
+\section{Verification}
 2 methods to privately prove two or more credentials are linked together are proving equality of attributes within commitments and proving that a Level2 credential contains a derivation of the Level1 credential, linking the two together in a hierarchy. 
 We asymptotically compare the 2 approaches modelled using Pedersen Commitments and Sigma Protocols as used in many popular Anonymous Credential schemes.
 
@@ -267,92 +193,242 @@ z_{r_2} = \rho_2 + c \cdot r_2 \<\< \\
 
 
 \newpage
-\subsubsection{Proving derivation of $PRF(x) \to y$}
-We use the Dodis Yampolskiy PRF, given the PRF key $pid$ and input $ctx$ $y \gets PRF_{pid}(ctx)$. Algebraically, the output is $y = g^{\frac{1}{pid + ctx}}$. For this protocol, we refer $w := {\frac{1}{pid + ctx}}$ and thus $y = g^w$. We create a sigma protocol to prove knowledge showing $pid$ from $Com_1$ and $ctx$ from $Com_2$ is used for the output $y$. 
+\section{Methods}
+
+
+% Let $a : \N \mapsto \N \bigcup \{*\}$ and $b : \N \mapsto \N$ be any functions for which $a(\lambda)$ and $b(\lambda)$ are computable in $poly(\lambda)$ time (expect when $a$ takes value $*$).
+% % \begin{definition}
+% %     A function family $F_{(\cdot)}(\cdot) : \bit^{a(\lambda)} \mapsto \bit^{b(\lambda)}$ is a family of $VRFs$ if there exists a PPT algorithm $Gen$ and deterministic algorithms $Prove$ and $Ver$ such that $Gen(\secparam)$ outputs a pair of keys $(sk, pk)$, $Prove_{sk}(x)$ computes $(y, \pi)$ where $\pi$ is the proof of correctness, and $Ver_{pk}(x,y,\pi)$ verifies that $y = e(g,g)^{1/x+sk}$ using the proof $\pi = g^{1/x+sk}$
+% % \end{definition}
+
+\subsection{Pseudo Random Function}
+We use the properties of a pseudo-random function to derive the relationship between a master and context credential. The pseudorandomness property ensures the output $y$ is computationally indistinguishable from random and thus hides the relationship between the user's secret key $sk$ and an input $x$ which could be the context of the new credential we want to privately link to.
+\[
+    PRF_{sk}(x) \to y
+\]
+
+\begin{definition}[Pseudo Random Function]
+    A PRF is a couple of algorithms $(PRF.Gen, f)$ with key space $\setK$, input space $\setX$ and output space $\setY$ such that 
+    \begin{itemize}
+        \item $Gen(\secparam) \to (sk): s \sample S$, sets $sk = s$
+        \item $f:$ $\mathcal{K} \times \mathcal{X} \to \mathcal{Y}$ is a keyed function family
+    \end{itemize}
+\end{definition}
+
+The main security property of a $PRF$ is pseudorandomness, which informally states the output should appear random and not be able to be guessed. Formally, defined as
+
+\begin{definition}[Pseudorandomness]
+    A couple of PPT algorithms $(PRF.Gen, f)$ is a \textit{Pseudo Random Function} if, for any $\PPT$ adversary $\adv$ there exists a negligible function $\epsilon$ such that 
+    \[
+    \advantage{}{}[(\adv)] := 
+        \left|
+    \Pr     \left[ 
+                \mathsf{Exp}^{\mathsf{prf}}(\adv) = 1
+            \right] - \frac{1}{2}
+        \right| \leq \epsilon(\lambda)
+    \]
+\end{definition}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{prf}}(\adv)$}{%
+        b \sample \bit \\
+        \text{Sample } k \sample PRF.Gen(1^{\lambda}) \\
+        \text{Sample } f^* \sample \{g : g : \mathcal{X} \to \mathcal{Y}\} \\
+        \text{Run } b' \gets \adv^{\oracle_{\mathsf{prf}}}(1^{\lambda}) \\
+        \pcreturn b == b'
+    }
+    \procedure[]{$\oracle_{\mathsf{prf}(x)}$}{%
+        \pcif b = 1 \\
+        \t \pcreturn f_k(x) \\
+        \pcelse \\
+        \t \pcreturn f^*(x)
+    }
+\end{pchstack}
+  \caption{The pseudorandomness game with adversary $\adv$ and PRF $(PRF.Gen, f)$}
+  \label{fig:prf}
+\end{figure}
+
+
+\subsection{Verifiable Random Function}
+
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $Gen(\secparam) \to (sk, pk):$ samples $s \sample \Zp^*$, sets $sk = s$ and $pk \gets g^s$, returns $(sk, pk)$
+    \item $Prove_{sk}(x) \to (y, \pi):$ $y \gets e(g,g)^{1/(x+sk)}$, $\pi \gets g^{1/(x+sk)}$ where $y$ is the $PRF$ output and $\pi$ is the proof of correctness
+    \item $Verify_{pk}(x, y, \pi) \to \bit$ to verify $y$ was computed correctly, verify $e(g^x \cdot pk, \pi) = e(g,g)$ and $y = e(g, \pi)$, output 1 for success, 0 for fail
+\end{itemize}
+
+\begin{definition}[Verifiable Random Function]
+
+    A PRF is a triplet of $\PPT$ algorithms $(VRF.Gen, VRF.Eval, VRF.Vfy)$ satisfying:
+    \begin{enumerate}
+        \item Correctness: For any $(pk, sk)$ in the image of $VRF.Gen(\secparam)$ and any $x \in \setX$
+        \[
+        \begin{aligned}
+            (y, \pi) &\gets VRF.Eval_{sk}(x) \\
+            1 &\gets VRF.Vfy_{pk}(x, y, \pi)
+        \end{aligned}
+        \]
+
+
+    \item Unique Provability: For any $pk$ (not necessarily in the range of $VRF.Gen$, any input $x \in \setX$, pair of outputs $y_0, y_1 \in \setY$ and pair of proofs $\pi_0, \pi_1$ the following holds
+    \[
+        \begin{aligned}
+            1 &\gets VRF.Vfy_{pk}(x,y_0,\pi_0) \\
+            1 &\gets VRF.Vfy_{pk}(x,y_1,\pi_1) \\
+            y_0 &= y_1
+        \end{aligned}
+    \]
+
+    \item Pseudorandomness: For any $\PPT$ adversary $\adv$ running the VRF Experiment, there exists a negligible function $\epsilon$ such that 
+    \[
+         \advantage{}{}[(\adv)] := 
+            \left|
+        \Pr     \left[ 
+                    \mathsf{Exp}^{\mathsf{rnd}}(\adv) \to 1
+                \right] - \frac{1}{2}
+            \right| \leq \epsilon(\lambda)
+    \]
+    
+    \end{enumerate}
+
+\end{definition}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{eval}}(\adv)$}{%
+        \text{Sample } b \sample \bit \\
+        pk, sk \sample VRF.Gen(1^{\lambda}) \\
+        \text{set } x^* = \bot \\
+        x^* \gets \adv^{\oracle_{\mathsf{eval}}}(pk) \\
+        \pcif x^* \text{was previously queried:} \\
+        \t \pcreturn 0 \\
+        y_0 \sample \setY \\
+        (y_1, \pi) \gets VRF.Eval(pk, x^*) \\
+        \adv^{\oracle_{\mathsf{eval}}}(sk, y_b) \to b' \\
+        \pcreturn b == b'
+    }
+    \procedure[]{$\oracle_{\mathsf{eval}(x)}$}{%
+        \pcif x \neq x^* \\
+        \t (y, \pi) \gets VRF.Eval_{sk}(x) \\
+        \t \pcreturn (y, \pi) \\
+        \pcelse: \pcreturn \bot \\
+    }
+\end{pchstack}
+  \caption{The pseudorandomness game with adversary $\adv$ and PRF $(PRF.Gen, f)$}
+  \label{fig:prf}
+\end{figure}
+
+\paragraph{Description}
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section{Sam and Tian 15/11}
+
+\subsection{ZKP Sigma Protocol for proving PRF output in G1}
+We have $g^{\frac{1}{m}}$ and $g^m$. We want to prove their relationship is reciprocal. We will use this later when proving the output of the Dodis Yampolskiy VRF $g^{\frac{1}{sk + x}}$
+Let $m_1 = m$, and $m_2 = \frac{1}{m}$. Therefore, we can prove that $m_1 \cdot m_2 = 1$ 
+\[ 
+    \begin{aligned}
+        C_1 &= g^{m_1}h^{r_1} \\
+        C_2 &= g^{m_2}h^{r_2} \\
+        C_3 &= C_1^{m_2}h^{r_3} \\ 
+        C_4 &= h^{r_1m_2 + r_3} \\ 
+    \end{aligned}
+\]
+
+We use $C_1, C_2$ in a zero-knowledge proof protocol to prove the relation with public elements $C_1, C_2, g, h$
 
 \[
 ZKP
     \left\{ 
-    \begin{aligned}
-    (pid, ctx, &w, r_1, r_2, r_3, r_4): \\
-    Com_1 &= g_1^{pid} h^{r_1} \wedge \\
-    Com_2 &= g_2^{ctx}g_3^{w} h^{r_2} \wedge  \\
-    Com_3 &= g_3^{(pid + ctx)} h^{r_3} \wedge \\
-    Com_4 &= g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} \wedge \\
-    w \cdot (pid + ctx) &= 1
-    \end{aligned}
+    (m_1, m_2, r_1, r_2): C_1 = g^{m_1}h^{r_1} \wedge C_2 = g^{m_2}h^{r_2} \wedge m_1 \cdot m_2 = 1
     \right\}
 \]
 
 \pcb{
-Prover[] \< \< \textbf{Verifier}  \\[0.1\baselineskip][\hline]
+\prover[m_1, m_2, r_1, r_2] \< \< \verifier[C_1, C_2, g, h]  \\[0.1\baselineskip][\hline]
 \<\< \\[-0.5\baselineskip]
-pid, ctx, w, r_1, r_2, r_3 \<\< Com_1, Com_2, Com_3, Com_4 \\
-\text{where } w = 1/(pid + ctx) \<\< \\
-\alpha_1, \alpha_2, \alpha_3, \rho_1, \rho_2, \rho_3 \sample \mathbb{Z}_q^6 \<\< \\
-T_1 := g_1^{\rho_1} h^{\alpha_1} \<\< \\
-T_2 := g_2^{\rho_2} g_3^{\rho_3} h^{\alpha_2} \<\< \\
-T_3 := g_3^{\rho_1 + \rho_3} h^{\alpha_3} \<\< \\
-T_4 := g_1^{\rho_1}g_2^{\rho_2}g_3^1h^{\alpha_1 + \alpha_2 + \alpha_3} \<\< \\
-\< \sendmessageright*{T_1, T_2, T_3, T_4} \< \\
-\< \sendmessageleft*{c} \< c \sample \mathbb{Z}_q \\
-z_{pid} = \rho_1 + c \cdot pid \<\< \\
-z_{ctx} = \rho_2 + c \cdot ctx \<\< \\
-z_{w} =   \rho_3 + c \cdot w \<\< \\
-z_{r_1} = \alpha_1 + c \cdot r_1 \<\< \\
-z_{r_2} = \alpha_2 + c \cdot r_2 \<\< \\
-z_{r_3} = \alpha_3 + c \cdot r_3 \<\< \\
-\< \sendmessageright*{z_{pid}, z_{ctx}, z_w, z_{r1}, z_{r2}, z_{r3}} \< \\
-\<\< g_1^{z_{pid}} h^{z_{r1}} \stackrel{?}{=} Com_1^c \cdot T_1 \wedge\\
-\<\< g_2^{z_{ctx}} g_3^{z_{w}} h^{z_{r2}} \stackrel{?}{=} Com_2^c \cdot T_2 \wedge\\
-\<\< g_3^{z_{pid} + z_{ctx}} h^{z_{r3}} \stackrel{?}{=} Com_3^c \cdot T_3 \wedge\\
-\<\< g_1^{z_{pid}} g_2^{z_{ctx}} g_3 h^{z_{r_1} + z_{r2} + z_{r3}} \stackrel{?}{=} Com_4^c \cdot T_4 \wedge \\
-\<\< Com_4 = Com_1 \cdot Com_2 \cdot Com_3
+\pclinecomment{$C_1 = g^{m_1}h^{r_1}, C_2 = g^{m_2}h^{r_2}$} \\
+{\{\rho_i\}_{i=1}^4, \{\beta_i\}_{i=1}^2}  \sample \mathbb{Z}_q^6 \<\< \\
+T_1 \gets g^{\beta_1}h^{\rho_1} \<\< \\
+T_2 \gets g^{\beta_2}h^{\rho_2} \<\< \\
+\pclinecomment{generate interim elements} \\
+C_3 \gets C_1^{m_2}h^{r_3} \<\< \\
+T_3 \gets C_1^{\beta_2}h^{\rho_3} \<\< \\
+r_4 \gets r_1m_2 + r_3 \<\<  \\
+C_4 \gets h^{r4} \<\< \\
+T_4 \gets h^{\rho_4} \<\< \\
+\< \sendmessageright* {\{C_i, T_i\}_{i=1}^4} \< \\
+\< \sendmessageleft*{e} \< e \sample \mathbb{Z}_q \\
+z_{m1} = \beta_1 + e \cdot m_1 \<\< \\
+z_{r1} = \rho_1 + e \cdot r_1 \<\< \\
+z_{m2} = \beta_2 + e \cdot m_2 \<\< \\
+z_{r2} = \rho_2 + e \cdot r_2 \<\< \\
+z_{r3} = \rho_3 + e \cdot r_3 \<\< \\
+z_{r4} = \rho_4 + e \cdot r_4 \<\< \\
+\< \sendmessageright*{\{z_{mi}\}_{i=1}^2, \{z_{ri}\}_{i=1}^4 } \< \\
+\<\< C_1^e \cdot T_1 \stackrel{?}{=} g^{z_{m1}} h^{z_{r1}}\\
+\<\< C_2^e \cdot T_2 \stackrel{?}{=}  g^{z_{m2}} h^{z_{r2}}\\
+\<\< C_3^e \cdot T_3 \stackrel{?}{=}  C_1^{z_{m2}} h^{z_{r3}}\\
+\<\< C_4^e \cdot T_4 \stackrel{?}{=}  h^{z_{r4}}\\
+\<\< C_3/C_4 = g \\
 }
 
-\paragraph{Correctness}
-The prover wants to prove knowledge of $pid$ and $ctx$ and that the PRF value $w$ is correctly computed as  $w = \frac{1}{pid + ctx}$.
+\subsection{Correctness}
+Proof of knowledge of exponents $m1, r1$ by opening $C_1$ 
+\begin{align}
+    C_1^e \cdot T_1 &\stackrel{?}{=} g^{z_{m1}} h^{z_{r1}} \notag \\
+    (g^{m1}h^{r_1})^e \cdot g^{\beta_1}h^{\rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag \\
+    g^{e \cdot m1 + \beta_1}h^{e \cdot r_1 + \rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag 
+\end{align}
+
+Proof of knowledge of exponents $m2, r2$ by opening $C_2$ 
+\begin{align}
+    C_2^e \cdot T_2 &\stackrel{?}{=} g^{z_{m2}} h^{z_{r2}} && \label{eq:ver1} \\
+    (g^{m2}h^{r_2})^e \cdot g^{\beta_2}h^{\rho_2} &= g^{\beta_2 + e \cdot m_2} h^{\rho_2 + e \cdot r_2} \notag \\
+    g^{e \cdot m2 + \beta_2}h^{e \cdot r_2 + \rho_2} &= g^{\beta_2 + e \cdot m_2} h^{\rho_2 + e \cdot r_2} \notag 
+\end{align}
+
+
+Equality of $m2 \in \{C_2, C_3\}$ proven by equality of responses $g^{z_{m2}}$ used in \eqref{eq:ver1} and \eqref{eq:ver2}
+\begin{align}
+    C_3^e \cdot T_3 &\stackrel{?}{=} C_1^{z_{m2}} h^{z_{r3}} \notag \\
+    (C_1^{m2}h^{r_3})^e \cdot C_1^{\beta_2}h^{\rho_3} &= C_1^{\beta_2 + e \cdot m_2} h^{\rho_3 + e \cdot r_3} \label{eq:ver2} \\
+    C_1^{m2 \cdot e + \beta_2}h^{e \cdot r_3 + \rho_3} &= C_1^{\beta_2 + e \cdot m_2} h^{\rho_3 + e \cdot r_3} \notag
+\end{align}
+
+Proof of knowledge of exponent $r4$ by opening $C_4$ 
+\begin{align}
+    C_4^e \cdot T_4 &\stackrel{?}{=} h^{z_{r4}} \notag \\
+    (h^{r_4})^e \cdot h^{\rho_4} &\stackrel{?}{=} h^{\rho_4 + e \cdot r_4} \notag \\
+    h^{e \cdot r_4 + \rho_4} &= h^{\rho_4 + e \cdot r_4} \notag
+\end{align}
+
+Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inverse relation. Recall $C_1 = g^{m_1}h^{r_1}, r_4 = r_1m_2 + r_3$
+\begin{align}
+    \dfrac{C_3}{C_4} = \dfrac{C_1^{m2}h^{r_3}}{h^{r_4}} = \dfrac{(g^{m_1}h^{r_1})^{m2}h^{r_3}}{h^{r_1 \cdot m_2 + r_3}} = \dfrac{g^{m_1\cdot m2}h^{r_1\cdot m2 + r_3}}{h^{r_1 \cdot m_2 + r_3}} = \dfrac{g}{1} = g \notag \\
+\end{align}
+
+\subsection{Soundness}
+
+\subsection{Zero Knowledge}
+
+
+\subsection{ZKP Sigma Protocol for proving PRF output with pairing}
 
 \[
-    \begin{aligned}
-        g_1^{z_{pid}} h^{z_{r1}} \stackrel{?}{=}& \; Com_1^c \cdot T_1 \\
-        g_1^{\rho_1 + c \cdot pid} h^{\alpha_1 + c \cdot r_1} \stackrel{?}{=}& \; (g_1^{pid} h^{r_1})^c \cdot g_1^{\rho_1} h^{\alpha_1} \\
-        g_1^{\rho_1 + c \cdot pid} h^{\alpha_1 + c \cdot r_1} \stackrel{}{=}& \; g_1^{\rho_1 + c \cdot pid} h^{\alpha_1 + c \cdot r_1}\\
-    \end{aligned}
+ZKP
+    \left\{ 
+    (m_1, m_2, r_1, r_2): C_1 = g^{m_1}h^{r_1} \wedge C_2 = g^{m_2}h^{r_2} \wedge m_1 \cdot m_2 = 1
+    \right\}
 \]
-
-\[
-    \begin{aligned}
-      g_2^{z_{ctx}} g_3^{z_{w}} h^{z_{r2}} \stackrel{?}{=}& \; Com_2^c \cdot T_2 \\
-      g_2^{\rho_2 + c \cdot ctx} g_3^{\rho_3 + c \cdot w} h^{\alpha_2 + c \cdot r_2} \stackrel{?}{=}& \; (g_2^{ctx}g_3^{w} h^{r_2})^c \cdot g_2^{\rho_2} g_3^{\rho_3} h^{\alpha_2} \\
-      g_2^{\rho_2 + c \cdot ctx} g_3^{\rho_3 + c \cdot w} h^{\alpha_2 + c \cdot r_2} \stackrel{}{=}& \; g_2^{\rho_2 + c \cdot ctx} g_3^{\rho_3 + c \cdot w} h^{\alpha_2 + c \cdot r_2} \\
-    \end{aligned}
-\]
-
-\[
-    \begin{aligned}
-      g_3^{z_{pid} + z_{ctx}} h^{z_{r3}} \stackrel{?}{=}& \; Com_3^c \cdot T_3 \\
-      g_3^{\rho_1 + c \cdot pid + \rho_2 + c \cdot ctx} h^{\alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; (g_3^{(pid + ctx)}h^{r_3})^c  \cdot g_3^{\rho_1 + \rho_3} h^{\alpha_3} \\
-      g_3^{c (pid + ctx) + \rho_1 + \rho_2} h^{\alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; (g_3^{c(pid + ctx)}h^{c \cdot r_3})  \cdot g_3^{\rho_1 + \rho_3} h^{\alpha_3} \\
-      g_3^{c (pid + ctx) + \rho_1 + \rho_2} h^{\alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; g_3^{c (pid + ctx) + \rho_1 + \rho_2} h^{\alpha_3 + c \cdot r_3} \\
-    \end{aligned}
-\]
-
-\[
-    \begin{aligned}
-      g_1^{z_{pid}} g_2^{z_{ctx}} g_3 h^{z_{r2} + z_{r3}} \stackrel{?}{=}& \; Com_4^c \cdot T_4 \\
-      g_1^{\rho_1 + c \cdot pid} g_2^{\rho_2 + c \cdot ctx} g_3 h^{\alpha_2 + c \cdot r_2 + \alpha_3 + c \cdot r_3} \stackrel{?}{=}& \; (g_1^{pid}g_2^{ctx}g_3h^{r_2 + r_3})^c \cdot g_1^{\rho_1}g_2^{\rho_2}g_3h^{\alpha_2 + \alpha_3}\\
-      g_1^{\rho_1 + c \cdot pid} g_2^{\rho_2 + c \cdot ctx} g_3 h^{c (r_2 + r_3) + \alpha_2 + \alpha_3 } \stackrel{?}{=}& \; (g_1^{c \cdot pid}g_2^{c \cdot ctx}g_3h^{c (r_2 + r_3)}) \cdot g_1^{\rho_1}g_2^{\rho_2}g_3h^{\alpha_2 + \alpha_3}\\
-    \end{aligned}
-\]
-
-It has been proven that $Com_1$ opens with $pid$ and $Com_2$ opens with $w$ and $ctx$ and $Com_3$ opens with both $pid + ctx$. $g_3$ is used for both $w$ and $pid + ctx$.
-\[
-    \begin{aligned}
-        Com_4 =& Com_1 \cdot Com_2 \cdot Com_3 \\
-        g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} =& (g_1^{pid} h^{r_1}) \cdot (g_2^{ctx}g_3^{w} h^{r_2}) \cdot (g_3^{(pid + ctx)}h^{r_3}) \\
-        g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} =& g_1^{pid}g_2^{ctx}g_3^{\frac{1}{(pid + ctx)}}g_3^{(pid + ctx)} h^{r_1}h^{r_2}h^{r_3}\\
-        g_1^{pid}g_2^{ctx}g_3h^{r_1 + r_2 + r_3} =& g_1^{pid}g_2^{ctx}g_3h^{r_1}h^{r_2}h^{r_3}\\
-    \end{aligned}
-\]
-
