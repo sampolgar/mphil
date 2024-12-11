@@ -1,0 +1,1168 @@
+\section{Introduction}
+Digital Identity systems form the foundation of online trust and authentication, processing billions of verifications daily \cite{noauthor_happy_2021, pang_zanzibar_nodate}. Traditional centralized systems, while effective for regulatory compliance \cite{eltayeb_crucial_2024}, suffer from significant privacy and security vulnerabilities. Ongoing data breaches \cite{zhang_data_2022} affect billions of users, demonstrating the risks of storing identity data and centralizing systems. Decentralized Identity (DID) is a loosely defined framework (W3C specification) having evolved over the past 2 decades, offering users greater control over their credentials \cite{soltani_survey_2021}, many concrete implementations struggle to balance privacy with accountability \cite{maram2021candid} for the required feature set. 
+
+
+\noindent Anonymous Credential Systems (ACS) \cite{chaum1985security,hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016, fuchsbauer_structure-preserving_2019} address privacy concerns but face challenges balancing privacy with accountability, orthogonally, unconditionally anonymous payment systems have demonstrated how unconditional anonymity can enable system abuse. Current systems focus on protecting against sybil attacks \cite{crites_syra_2024, rabaninejad_attribute-based_nodate}, enabling revocation \cite{goos_dynamic_2002, robshaw_uc_2016, camenisch_scalable_2016, baldimtsi_accumulators_2017}, rich attribute-based credential authentication \cite{rosenberg_zk-creds_2022, babel_bringing_2023} but very few implement all. The tension between privacy and accountability has become increasingly critical as governments worldwide, particularly the EU's Digital Identity Framework \cite{noauthor_regulation_2024}, move toward privacy-preserving digital identity wallets. These challenges motivate the need for a comprehensive identity system that achieves privacy, accountability, and practical deployment requirements simultaneously.
+
+\subsection{Related Work}
+
+\subsubsection{Decentralized Identity (DID)}
+enables entities to create and manage digital identities without relying on a central authority. W3C specifications for DID and Verifiable Credentials define standards for globally unique, publicly verifiable credentials, allowing a user to prove claims (information) about their identity attributes. DID typically uses Distributed Ledgers and public key cryptography to establish a "web of trust" and maintain revocation registries. 
+
+The DID model consists of 
+\begin{enumerate}
+    \item \textbf{Holders} Identities with Decentralized Identifiers (DID's) who manage their own keys, and credentials, and request access to resources
+    
+    \item \textbf{Issuers} create and sign credentials about identity holders
+    
+    \item \textbf{Verifiers} validate credentials by checking the presented cryptographic information against the registry
+
+    \item  \textbf{Verifiable Data Registry}, often a DLT, is the root of trust, maintaining DID records, keys, and credential schemas, but doesn't store credential data
+    
+    \item \textbf{Identity Wallet}: the user interface for storing, managing, and presenting verifiable credentials
+\end{enumerate}
+ 
+Citations
+- U-Prove, U-Port, Connect.me, Sovrin, PingID, w3c
+
+While the W3C DID specifications outline core functionalities such as cryptographic verification, privacy preservation, selective disclosure, and revocation, it requires a formal security definition and proofs to achieve these properties. Anonymous Credential Systems provide well-established formal security definitions for many properties that DID aims to achieve. Specifically, Correctness, Unforgeability, Anonymity, Sybil Resistance, and Revocation. By building DID systems on top of Anonymous Credential primitives, DID systems can inherit these formal security guarantees. 
+
+\subsubsection{Multi Attribute Anonymous Credentials} 
+Anonymous Credentials are a long line of orthogonal work with the goal of providing privacy/anonymity to online interactions, These are now deployed in a number of real-world systems (U-Prove, Idemix, PrivacyPass).  
+The line of work has improved with features, efficiency, and expressiveness throughout time. 
+Abstractly, they provide private protocols to prove information on committed attributes. 
+Pairing-based blind signatures enabled efficient multi-show credentials (CL, PS, BBS+).
+Other constructions are based on (chase's MAC's, etc) 
+Further work was done to the Anonymous Credential primitive to support delegation, update, and pseudonyms and may also require incorporating other cryptographic primitives to enable revocation, auditing, tracing, and sybil resistance. 
+
+\subsubsection{Anonymous Credential Systems (ACS)} 
+Anonymous Credential Systems implement primitives together in ways that preserve privacy and offer additional functionality required by systems. The combination of multiple primtiives to be used together in a privacy preserving way is complex it itself. 
+
+\noindent \textbf{Accountable Privacy}
+In a parallel industry, fully private financial systems like zcash, monero, and tornado cash where blockchain users can exploit and misuse the system is a big problem and will prevent governments and organisations to deploy private preserving techniques. Innovations in Identity often follow those in financial systems, (Chaum's e-cash and blind signatures, DAC and ZCash for example) as they share similar motivations and infrastructure, spending a coin anonymously is analogous to using an identity anonymously. Therefore, advancements in the field of Accountable Privacy (UTT, other examples), a series of techniques and protocols that balance the tradeoffs between privacy and accountability in financial systems, can inspire and motivate private identity systems.
+
+\noindent \textbf{Privacy Preserving Decentralized Identity Systems}
+CanDID proposed a privacy-preserving decentralized identity system achieving Sybil Resistance, Accountability. 
+They defined a system architecture that has been extended in many different directions, such as \cite{wang2023hades, rathee_zebra_2022} optimising for blockchain performance and additional private-accountability features. \cite{crites_syra_2024, rabaninejad_attribute-based_nodate} optimize for non-interactivity and minimal stored state with the CanDID threshold committee
+
+CanDID leaves integrating Decentralized Identity with Anonymous Credentials as open work.
+
+\noindent \textbf{Decentralized Identity with Anonymous Credentials}
+The strawman approach to combining Decentralized Identity with Anonymous Credentials replaces the existing credential, usually in the form of a signature over attributes, signed by an identity provider and verifiable with their public key, with a blind signature over attributes, which introduces the accountable privacy problems such as how to issue and verify a credential to an anonymous user, and how to retain accountability of an anonymous user, such are the real-world identity system requirements. 
+Compatibility for a decentralized architecture requires decentralized cryptography which has propelled the use of threshold cryptography in anonymous credential schemes and other settings e.g. (Coconut, Threshold BBS+, ...). 
+
+
+\newpage
+\subsection{Technical Challenges}
+Combining different anonymous credential primitives to achieve the feature set that DID requires presents technical challenges - systems either optimize for privacy or accountability. We show in \ref{tab:comparison} our system solves such technical challenges, particularly, there are 3 key challenges we address
+How do we build a Multi-show, Attribute-based Anonymous Credential system satisfying the functionality of a DID system (Sybil Resistance, Anonymity, Revocation, Credential Chaining)
+
+We identify three fundamental technical challenges in building a privacy-preserving DID system with Anonymous Credentials:
+
+\begin{enumerate}
+    \item Sybil-Resistant Anonymous Credentials: Traditional Sybil resistance mechanisms fundamentally conflict with credential anonymity - they either require identity linkage [Identify Citation!] or expensive MPC protocols \cite{maram2021candid}. While recent approaches like \cite{wang2023hades} improve efficiency, they achieve this at the expense of ..... 
+
+    \item Private Credential Chaining: Enabling users to prove ownership of multiple credentials while maintaining unlinkability between presentations. Current solutions either reveal credential relationships \cite{maram2021candid} or require prohibitively expensive zero-knowledge proofs \cite{rabaninejad_attribute-based_2024}.
+
+    Efficient Private Revocation: Interaction with existing revocation approaches either compromise anonymity [cite] or require expensive cryptographic accumulators that limit scalability.
+
+    \item Implementing efficient revocation mechanisms that preserve anonymity. 
+
+\end{enumerate}
+Our work presents novel techniques to address these challenges while maintaining practical efficiency.
+
+
+\subsubsection{Comparison}
+
+
+\begin{table}
+\begin{center}
+\caption{Comparison of our construction over previous work.}
+\label{tab:comparison}
+\begin{tabular}{l|ccccc}
+Features    									& Sybil Resistance		& Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$         & Anonymity$\footnotemark[3]$     & Revocation\\
+\hline
+CanDID \cite{maram2021candid}     				& \ding{51} 	& \ding{55}     & \ding{55}     & \ding{55}		& \ding{51}\\
+SyRA \cite{crites_syra_2024}     				& \ding{51}    	& \ding{55}     & \ding{55}     & \ding{51}		& \ding{55}\\
+S3ID \cite{rabaninejad_attribute-based_nodate}  & \ding{51}    	& \ding{51}     & \ding{51}\footnotemark[4]     & \ding{51}		& \ding{55}\\
+zk-creds \cite{rosenberg_zk-creds_2022}  & \ding{51}    	& \ding{51}     & \ding{51}     & \ding{51}		& \ding{55}\\
+Our Work  										& \ding{51}    	& \ding{51}     & \ding{51}     & \ding{51}		& \ding{51}\\
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+\footnotesize
+$\footnotemark[1]$ Credential Chaining is a user presenting multiple credentials to be verified together for a complex identity statement.
+
+\footnotesize
+$\footnotemark[2]$ M-ABC is a Multi-Show Attribute Based Credential, allowing a user to satisfy rich, attribute-based identity statements 
+
+\footnotesize
+$\footnotemark[3]$ Anonymity is defined in the Anonymous Credential model, no verifier and issuer (collaborating together) may learn more about the user or their credentials other than what the user discloses and what their credentials verify. Multiple credential verifications are unlinkable.
+
+\footnotesize
+$\footnotemark[4]$ Efficient Credential Chaining 
+\end{table}
+
+\todonote{S3ID is inefficient for attribute-based verification, this table doesn't show that}
+
+
+\subsection{Contributions}
+We present a comprehensive privacy-preserving decentralized identity system that improves upon the state of the art, offering accountable privacy, complex identity support, decentralization, and efficient implementation.
+\begin{itemize}
+    
+    \item Support for privately linked "context/pairwise" credentials from different issuers, enabling complex identity verification scenarios and accountability. 
+    
+    \item We show protocols for issuance and verification scenarios and benchmark them
+
+    \item An efficient, customized implementation of PS signatures over commitments for anonymous credentials, with concrete performance benchmarks showing improvements over the existing approach
+    
+    \item Sybil resistance and Revocation with full system privacy
+
+    \item a system that covers all the features in the comparison table \ref{tab:comparison} 
+    
+    \item A complete system implementation in Rust using the Arkworks library, demonstrating practical feasibility (not finished)
+    
+\end{itemize}
+
+
+\subsection{Usage}
+
+
+How do we use credentials today? Gartner says it will open new use cases
+- new loan, need multiple credentials
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\cleardoublepage
+\section{Identity System Overview}
+
+
+\subsection{System Model}
+Our identity system involves users, credential issuers, auditors, and credential verifiers. 
+
+\begin{itemize}
+    \item \textbf{User: }($U$) a user holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. Their $Cred_{master}$ contains 2 unique attributes, an identifier $s$ and a key $k$ and any number of additional attributes. $Cred_{master}$ is a high-security credential issued by a government entity like a digital passport. $Cred_{ctx}$ are credentials issued by any participating credential issuer, for example, a digital driver's license or a bachelor credential issued by the university. 
+
+    \item \textbf{Credential Oracle: } ($CO$) Users interact with Credential Oracles who verify a user's identity and issue digital credentials over their attributes. $CO$'s have a keypair $sk_{CO}, pk_{CO}$
+    
+    \item \textbf{Credential Issuer: } ($I$) There are 2 types of credential issuers. Credential Oracle $CO$'s verify identity and issue pre-credentials and use their own issuing schemes. In this paper, we assume they all run a rerandomizable anonymous credential. A user's Master Credential $Cred_{master}$ is a high-value credential and thus issued by the threshold committee or nodes of a blockchain. To be issued a Master Credential, a user interacts with the Master Credential Oracle to be first issued a pre-credential, then takes it to the Committee to be issued a Master Credential. $sk_{I}, pk_{I}$
+
+    \item \textbf{Auditor: }($A$) The auditor, also a threshold of nodes, holds the shared secret keys for threshold decryption. The user encrypts their key $k$ with the Auditor's public key $TPKE.Enc_{pkA}(k)$ and shares with the credential oracle during issuance. During Revocation, the oracle provides the encryption, receives $k$ and can revoke accordingly. 
+
+    \item \textbf{Verifier: } ($V$) A verifier is any party wanting to verify a user's credential
+    
+\end{itemize}
+
+\subsection{Syntax}
+Syntax of Anonymous Identity System with Sybil Resistance and Revocation
+\begin{itemize}
+    \item $\mathsf{Setup}(\secparam) \to (\ppar, \UL, \RL)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$, empty user list $\UL$ and revocation list $\RL$.
+
+    \item $\mathsf{OrgKeygen}(\ppar, n) \torand (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
+
+    \item $\mathsf{UserKeygen}(\secparam) \torand (\usk)$ is a probabilistic algorithm. Outputs user secret key $\usk$ consisting of PRF key $k$ and identity string $s$
+
+    \item $(\mathsf{Obtain}(usk, \textbf{m}, aux), \mathsf{Issue}(osk, cm, aux)) \to cred:$ An interactive protocol. $Obtain$ is a probabilistic alrogithm run by a user, inputs secret key, credential attribute vector $\textbf{m}$ and auxiliary info. $Issue$ is a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuers secret key $osk$, and auxiliary info. Outputs a credential $cred$ binding $cm$ to the issuer signature.
+
+    \item $(\mathsf{Show}(usk, cred, \phi), \mathsf{Verify}(cred', cm, \pi)) \to \bit$ An interactive protocol. $Show$ is a probabilistic algorithm run by a Prover. Takes secret key, credential, and predicate statement $\phi$. $Verify$ is a deterministic algorithm run by a verifier, takes a randomized credential and commitment $cred', cm'$ and proof $\pi$. Otuputs 1 if verification succeeds, otherwise 0.
+
+    \item $\mathsf{Revoke}(\RL, k') \to \RL'$ revoke is a deterministic algorithm, updates revocation list with revoked key $k'$
+\end{itemize}
+
+
+\subsection{Security Model}
+
+\subsubsection{Security Properties}
+Our private identity system with Sybil Resistance satisfies the following security and privacy properties:
+\begin{enumerate}
+    \item \textbf{Correctness: } For any honestly generated credentials and valid witness values, verification accepts if and only if (1) the credentials were legitimately issued by the credential issuer. (2) the credentials satisfy the verification predicate $\phi$. (3) all commitments are well-formed with respect to their corresponding signed credentials. 
+    
+    \item \textbf{Unforgeability}: No probabilistic polynomial time adversary can (1) forge valid credentials for honest users. (2) use credentials belonging to other users. (3) combine multiple credentials to create new ones. (4) replay a credential show from a different user. 
+    
+    \item \textbf{Anonymity:} Given polynomial-time adversary views of credential verification, the adversary cannot (1) learn any information beyond the public information. (2) link multiple showings of the same credential. (3) Correlate different credentials belonging to the same user.
+    
+    \item \textbf{Sybil resistance}: For any given context, no probabilistic polynomial time adversary can obtain more than 1 valid credential with non-negligible probability 
+
+    \item \textbf{Credential Binding}: For any polynomial-time adversary $\adv$, given a set of credentials $\{cred_1, \dots, cred_n\}$ the probability of producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) the linking proof demonstrates the same $s$ value across all credentials
+
+\end{enumerate}
+
+\subsubsection{Threat Model}
+We assume the threshold committee maintaining the revocation list cannot be fully corrupted.
+
+\begin{itemize}
+    \item Malicious User: attempts to obtain multiple credentials for the same context, tries to forge credentials or share them with others, attempts to link credentials with other credentials not issued to the same master secret key
+    \item Malicious Issuer: attempts to link multiple showing, collude with issuers to deanonymize users, stores presentation proofs to track users
+    \item Malicious Verifier: issue credentials without proper verification, attempts to track credential usage, colludes with issuers or other verifiers
+\end{itemize}
+
+\subsubsection{Trust Model}
+\begin{itemize}
+    \item Credential Oracles: trusted to verify real-world identity before issuing credentials, they aren't trusted for privacy and may be compromised but can't issue credentials without the user participating in their protocol
+
+    \item Auditors: are trusted to only decrypt user keys for legitimate revocation requests, they cannot individually decrypt keys i.e. requires the threshold committee
+
+    \item Threshold Committee: at most t-out-of-n members may be compromised, trusted for revocation list integrity, not trusted for privacy
+
+    \item Network: communication assumed to be over encrypted channels, any storage is not trusted for credential contents
+\end{itemize}
+
+
+
+\subsection{Protocol Description (This section was done previously, needs updating!}
+\todo{Include Sequence Diagrams / diagram demonstrating protocol flow?}
+\subsubsection{Create Registration Credential}
+First, $user$ interacts with $ra$ to generate their identity-based decryption key $dsk$ by running $ibeextract(rpk_{ibe}, pid)$, where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. $user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
+\subsubsection{Create Context Credential}
+A user $user$ with a valid registration credential $rcd$ wants to obtain a context credential $ccd$ and begins by interacting with a credential provider $cp$ to generate a $precred$. $cp$'s are varied and have their own issuance requirements, which can include cryptographic and non-cryptographic requirements.
+Firstly $user$ proves possession of a valid $rcd$ by randomizing their $rcd' = psrerand(rcd)$ and verifying the signature $psverify(rcd')$, then proves knowledge of the opening of the commitment $cmopen(rcm)$ and the credential isn't expired $exp > current_time$ and isn't revoked. $cp$ verifies the proofs and checks $user$ satisfies their credential specific requirements $\phi$ which may include external attribute verification.
+Upon successful verification, $user$ initiates pre-credential generation by sampling fresh randomness $\alpha \sample \Z_p$, and creates $cm_1([s, 0, 0, 0, 0], \alpha)$ and sends it to $cp$, $cp$ generates $cm_2([0, ctx_id, cp_id, exp, attrs],0)$ and combines $cm_1 \cdot cm_2$ for $ccm([s, ctx_id, cp_id, exp, attrs], \alpha)$ where $ctxid$ represents the credential e.g. "driverslicense", $cpid$ is the credential providers identifier and $attrs$ are the attributes. $user$ proves correct pre-credential formation by proving knowledge of $ZKPOK_ComOpen(ccm)$ and equality of $s$ in $ccm$ and $ccm$ $ZKPoK_ComEquality(s, rcm, ccm)$. $cp$ verifies these proofs and signs $ccm$ to create $\sigma_{pre}$ forming $precred = (ccm, \sigma_{pre})$.
+Finally, to obtain the context credential $ccd$, $user$ submits $precred$ to $ra$ along with a nullifier $nullif, vk, y = vrfprove_{s}(ctxid)$. $user$ generates a proof demonstrating 1) valid precred signature verification, 2) knowledge of $s$ in $ccm$, correctness of $nullif$, and equality of $s$ in $ccm$ and $rcm$, and $nullif$ is formed using $ctxid$ from $ccm$.
+$ra$ verifies $\sigma_{pre}$ under $cp's$ public key, validates the proofs, and ensures the nullifier hasn't already been used (Sybil resistance). Upon successful verification, $ra$ signs $ccm$ to create $\sigma_{ctx}$, records $nullif$, returns the context credential $ccd([s, ctxid, cpid], ccm, \sigma_{ctx})$.
+For record-keeping, $ra$ stores Context Credential Information $cci = (ccm, \pi_2, \pi_3, nullif, vk, y)$.
+
+
+\subsubsection{Revocation}
+When $ra$ needs to revoke a user's credential/s (due to user request or credential provider request), $ra$ finds $escrow$ based on the user's $pid$, recall $ra$ has a user list $ul$ = $(pid, escrow)$ and requests the auditor $audit$ to decrypt $s \gets tpkdec_{ask}(escrow)$. $audit$ computes the nullifiers to add to the revocation accumulator. $nullif_{rcd} \gets PRF_s(pid)$ and for each context credential to revoke, $nullif_{ctxid} \gets PRF_s(ctxid)$. $audit$ updates the accumulator $acc' \gets Acc.Add(acc)$
+If the registration credential requires revocation, $audit$ can compute each $nullif \gets PRF_{s}(ctxid) ; \forall ; ctxid ; \in ; ctxl$ and add $(nullif, timestamp, reason)$ to $rl$. For record-keeping, $ra$ stores Revocation Information $ri = (nullif, timestamp, reason)$ allowing $ra$ to track which credentials are revoked and why, $nullif$ in $rl$ ensures revoked credentials can't be verified.
+During credential verification, verifiers check if a credential's nullifier appears in $rl$, if present, the verification fails.
+\subsubsection{Verification}
+A user $user$ wants to prove to any relying party $rely$ they have a valid credential that satisfies a verification statement $\phi$.
+The protocol takes as input $(rcd, ccd, \phi, rpk, acc, n)$ and outputs success or failure.
+$rely$ starts by sending $(\phi, n, acc)$ to $user$ where $\phi$ is a statement that specifies the requirements for a successful verification and $acc$ is the current accumulator value of revoked nullifiers.
+$user$ starts by randomizing their credentials $rcd' = psrerand(rcd)$ and $ccd' = psrerand(ccd)$ and verifies $psverify_{ck_{rcd}}(rcd')$ and $psverify_{ck_{ccd}}(ccd')$. $user$ generate their nullifiers $nullif_{pid} \gets PRF_s(pid)$ and $nullif_{ctx} \gets PRF_s(ctxid)$ and obtains non-membership witnesses $wpid$, $wctx$ for nullifiers against $acc$.
+$user$ generates a zero-knowledge proof $\pi$ showing 1) their credentials are valid, 2) they're not expired $(expiry > current_time)$, 3) their nullifiers are correctly formed from $s$, 4) their nullifiers are not in $acc$ using witnesses $wpid, wctx$, 5) the credential attributes satisfy $\phi$, 6) proof freshness using $n$.
+$user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc$ and validates $attrs_{\phi}$ satisfies $\phi$. Returns accept if all checks pass, reject otherwise.
+
+
+
+
+\cleardoublepage
+\section{Construction of NIZK Proofs}
+\subsection{NIZK for Sybil Resistant Issuance}
+We have $g^{\frac{1}{m}}$ and $g^m$. We want to prove their relationship is reciprocal. We will use this later when proving the output of the Dodis Yampolskiy VRF $g^{\frac{1}{sk + x}}$
+Let $m_1 = m$, and $m_2 = \frac{1}{m}$. Therefore, we can prove that $m_1 \cdot m_2 = 1$ 
+\[ 
+    \begin{aligned}
+        C_1 &= g^{m_1}h^{r_1} \\
+        C_2 &= g^{m_2}h^{r_2} \\
+        C_3 &= C_1^{m_2}h^{r_3} \\ 
+        C_4 &= h^{r_1m_2 + r_3} \\ 
+    \end{aligned}
+\]
+
+We use $C_1, C_2$ in a zero-knowledge proof protocol to prove the relation with public elements $C_1, C_2, g, h$
+
+\[
+ZKP
+    \left\{ 
+    (m_1, m_2, r_1, r_2): C_1 = g^{m_1}h^{r_1} \wedge C_2 = g^{m_2}h^{r_2} \wedge m_1 \cdot m_2 = 1
+    \right\}
+\]
+
+\pcb{
+\prover[m_1, m_2, r_1, r_2] \< \< \verifier[C_1, C_2, g, h]  \\[0.1\baselineskip][\hline]
+\<\< \\[-0.5\baselineskip]
+\pclinecomment{$C_1 = g^{m_1}h^{r_1}, C_2 = g^{m_2}h^{r_2}$} \\
+{\{\rho_i\}_{i=1}^4, \{\beta_i\}_{i=1}^2}  \sample \mathbb{Z}_q^6 \<\< \\
+T_1 \gets g^{\beta_1}h^{\rho_1} \<\< \\
+T_2 \gets g^{\beta_2}h^{\rho_2} \<\< \\
+\pclinecomment{generate interim elements} \\
+C_3 \gets C_1^{m_2}h^{r_3} \<\< \\
+T_3 \gets C_1^{\beta_2}h^{\rho_3} \<\< \\
+r_4 \gets r_1m_2 + r_3 \<\<  \\
+C_4 \gets h^{r4} \<\< \\
+T_4 \gets h^{\rho_4} \<\< \\
+\< \sendmessageright* {\{C_i, T_i\}_{i=1}^4} \< \\
+\< \sendmessageleft*{e} \< e \sample \mathbb{Z}_q \\
+z_{m1} = \beta_1 + e \cdot m_1 \<\< \\
+z_{r1} = \rho_1 + e \cdot r_1 \<\< \\
+z_{m2} = \beta_2 + e \cdot m_2 \<\< \\
+z_{r2} = \rho_2 + e \cdot r_2 \<\< \\
+z_{r3} = \rho_3 + e \cdot r_3 \<\< \\
+z_{r4} = \rho_4 + e \cdot r_4 \<\< \\
+\< \sendmessageright*{\{z_{mi}\}_{i=1}^2, \{z_{ri}\}_{i=1}^4 } \< \\
+\<\< C_1^e \cdot T_1 \stackrel{?}{=} g^{z_{m1}} h^{z_{r1}}\\
+\<\< C_2^e \cdot T_2 \stackrel{?}{=}  g^{z_{m2}} h^{z_{r2}}\\
+\<\< C_3^e \cdot T_3 \stackrel{?}{=}  C_1^{z_{m2}} h^{z_{r3}}\\
+\<\< C_4^e \cdot T_4 \stackrel{?}{=}  h^{z_{r4}}\\
+\<\< C_3/C_4 = g \\
+}
+
+\subsubsection{Completeness}
+Proof of knowledge of exponents $m1, r1$ by opening $C_1$ 
+\begin{align}
+    C_1^e \cdot T_1 &\stackrel{?}{=} g^{z_{m1}} h^{z_{r1}} \notag \\
+    (g^{m1}h^{r_1})^e \cdot g^{\beta_1}h^{\rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag \\
+    g^{e \cdot m1 + \beta_1}h^{e \cdot r_1 + \rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag 
+\end{align}
+
+Proof of knowledge of exponents $m2, r2$ by opening $C_2$ 
+\begin{align}
+    C_2^e \cdot T_2 &\stackrel{?}{=} g^{z_{m2}} h^{z_{r2}} && \label{eq:ver1} \\
+    (g^{m2}h^{r_2})^e \cdot g^{\beta_2}h^{\rho_2} &= g^{\beta_2 + e \cdot m_2} h^{\rho_2 + e \cdot r_2} \notag \\
+    g^{e \cdot m2 + \beta_2}h^{e \cdot r_2 + \rho_2} &= g^{\beta_2 + e \cdot m_2} h^{\rho_2 + e \cdot r_2} \notag 
+\end{align}
+
+
+Equality of $m2 \in \{C_2, C_3\}$ proven by equality of responses $g^{z_{m2}}$ used in \eqref{eq:ver1} and \eqref{eq:ver2}
+\begin{align}
+    C_3^e \cdot T_3 &\stackrel{?}{=} C_1^{z_{m2}} h^{z_{r3}} \notag \\
+    (C_1^{m2}h^{r_3})^e \cdot C_1^{\beta_2}h^{\rho_3} &= C_1^{\beta_2 + e \cdot m_2} h^{\rho_3 + e \cdot r_3} \label{eq:ver2} \\
+    C_1^{m2 \cdot e + \beta_2}h^{e \cdot r_3 + \rho_3} &= C_1^{\beta_2 + e \cdot m_2} h^{\rho_3 + e \cdot r_3} \notag
+\end{align}
+
+Proof of knowledge of exponent $r4$ by opening $C_4$ 
+\begin{align}
+    C_4^e \cdot T_4 &\stackrel{?}{=} h^{z_{r4}} \notag \\
+    (h^{r_4})^e \cdot h^{\rho_4} &\stackrel{?}{=} h^{\rho_4 + e \cdot r_4} \notag \\
+    h^{e \cdot r_4 + \rho_4} &= h^{\rho_4 + e \cdot r_4} \notag
+\end{align}
+
+Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inverse relation. Recall $C_1 = g^{m_1}h^{r_1}, r_4 = r_1m_2 + r_3$
+\begin{align}
+    \dfrac{C_3}{C_4} = \dfrac{C_1^{m2}h^{r_3}}{h^{r_4}} = \dfrac{(g^{m_1}h^{r_1})^{m2}h^{r_3}}{h^{r_1 \cdot m_2 + r_3}} = \dfrac{g^{m_1\cdot m2}h^{r_1\cdot m2 + r_3}}{h^{r_1 \cdot m_2 + r_3}} = \dfrac{g}{1} = g \notag \\
+\end{align}
+
+\subsubsection{Soundness}
+\todonote{Sam todo}
+
+\subsubsection{Zero Knowledge}
+\todonote{Sam todo}
+
+\subsubsection{Analysis G1 Method}
+\begin{itemize}
+    \item \textbf{Prover:} 11 $\G_1$ exponentiations, 4 $\G_1$ additions, 6 $\F_p$ multiplications, 6 $\F_p$ additions
+    \item \textbf{Verifier:} 11 $\G_1$ exponentiations, 7 $\G_1$ additions/subtractions, 
+\end{itemize}
+
+\subsection{NIZK for Credential Chaining}
+\todonote{sam to do}
+
+
+
+
+\subsection{Proof of NIZK}
+
+
+\cleardoublepage
+
+
+\section{Construction of Private Identity System}
+
+
+
+
+\newcommand{\vt}{\mathsf{vt}}
+\newcommand{\wx}{\mathsf{wx}}
+\newcommand{\wxone}{\mathsf{w_1x}}
+\newcommand{\wxtwo}{\mathsf{w_2x}}
+\newcommand{\wxhat}{\mathsf{\hat{w}x}}
+% \newcommand{\x}{\mathsf{x}}
+
+\newcommand{\acu}{\mathsf{ACU}}
+\newcommand{\acusetup}{\mathsf{ACU.Setup}}
+\newcommand{\acuadd}{\mathsf{ACU.Add}}
+\newcommand{\acudel}{\mathsf{ACU.Del}}
+\newcommand{\acuvermem}{\mathsf{ACU.VerMem}}
+\newcommand{\acuvernonmem}{\mathsf{ACU.VerNonMem}}
+
+
+\newcommand{\rev}{\mathsf{REV}}
+\newcommand{\revsetup}{\mathsf{REV.Setup}}
+\newcommand{\revrevoke}{\mathsf{REV.Revoke}}
+\newcommand{\revtokengen}{\mathsf{REV.TokenGen}}
+\newcommand{\revtokenver}{\mathsf{REV.TokenVer}}
+
+\newcommand{\rt}{\mathsf{rt}}
+
+% \newcommand{\tilcm}{\tilde{\mathsf{cm}}}
+\newcommand{\tilcm}{\tilde{cm}}
+
+
+\newcommand{\mb}{\textbf{m}}
+\newcommand{\gb}{\textbf{g}}
+\newcommand{\tilgb}{\tilde{\textbf{g}}}
+\newcommand{\yb}{\textbf{y}}
+\newcommand{\rd}{\Delta_r}
+\newcommand{\td}{\Delta_t}
+\newcommand{\ud}{\Delta_u}
+
+
+\subsection{Commitment}
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $CM.Setup(BG, \secparam, 1^n) \to ck$: Sample $g \sample \G_1, \tilg \sample \G_2$. Sample $\yb \sample \Z_p^{n}$ and compute $(\gb, \tilgb) \gets (g^{\yb}, \tilg^{\yb})$. Output $ck \gets (g, \gb, \tilg, \tilgb)$
+    
+    \item $CM.Com_{ck}(\mb, r) \to (\cm, \tilcm):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$ and $\mb$ as $(m_1, \dots, m_{\ell})$, return $(\cm, \tilcm)$ as $(\gb^{\mb}g^r, \tilgb^{\mb}\tilg^r)$
+
+    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
+\end{itemize}
+
+\subsubsection{Construction}
+
+\begin{itemize}
+    \item $CM.Setup(\secparam, n) \to ck:$ The setup Algorithm generates the commitment key $ck$. Samples $(g, \tilg) \sample \G_1^* \times \G_2^*$ and $n$ scalars $y_i \gets \Z_p$, $Y_i \gets g^{y_i}$, and $\tily_i \gets \tilg^{y_i}$ $\forall \; 1 \leq i \leq n;$ such that $Y_i = g_1^{y_1}\dots g_n^{y_n}$ and $\tily_i = \tilg_1^{y_1}\dots \tilg_n^{y_n}$. Outputs $ck$ a tuple $(g, Y_i, \tilg, \tily_i)$ with commitment keys in both $\G_1$ and $\G_2$ where $e(Y_i,\tilg) = e(g,\tily_i)$
+
+    \item $CM.Com_{ck}(\{m_i\}^n_{i=1}) \to (cm, \tilcm):$ to commit to $n$ messages $m_1, \dots, m_n$, the committer samples $r \sample \Zp$, and parses $ck$ as $(g, Y_i, \tilg, \tily_i)$ and commits to $\{m_i\}^n_{i=1}$ over dual commitments in $\G_1$ and $\G_2$. Computes $g^r, \tilg^r$, Commits to $\{m_i\}^n_{i=1}$ with respect to $ck$ such that $\cm \gets g_1^{m_1}\dots g_n^{m_n} g^r$ and $\tilcm \gets \tilg_1^{m_1} \dots \tilg_n^{m_n}\tilg^r$ Then outputs $(\cm, \tilcm)$ where the equality of commitments can be verified by pairing $e(\cm, \tilg) = e(g, \tilcm)$
+    
+    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ To rerandomize the commitment, the last element $g, \tilg$ is randomized with $\rd$. Compute $g^{\rd}, \tilg^{\rd}$, Compute $\cm'$ = $\cm \cdot g^{\rd}$ as $g_1^{m_1}\dots g_n^{m_n} g^r \cdot g^{\rd}$ which will equal $g_1^{m_1}\dots g_n^{m_n} g^{r + \rd}$ and equivalently for $\tilcm'$. Return the rerandomized commitments $(\cm', \tilcm')$
+    
+\end{itemize}
+
+
+\subsection{PS Signature}
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $PS.KeyGen(\secparam, \ck) \to (\sk, \vk):$ Parse $\ck$ as $ck \gets (g, \gb, \tilg, \tilgb)$. Sample $x \sample \Zp$, set $(\sk, \vk) \gets (g^x, \tilg^x)$
+
+    \item $PS.Sign_{ck}(\sk, \cm) \to \sigma:$ Parse $\ck$ as $\gets (g, \cdot, \tilg, \cdot)$ Sample $u \sample \Zp$, compute $\sigma_1 \gets g^u$, $\sigma_2 \gets (\sk \cdot \cm)^u$
+     and return $\sigma \gets (\sigma_1, \sigma_2)$
+
+     \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma': $ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+
+     \item $PS.Verify_{ck, vk}(\sigma, (\cm, \tilcm)) \to \bit: $ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+     
+\end{itemize}
+\subsubsection{Construction}
+\begin{itemize}
+    \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
+
+    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (X \cdot \cm)^u$ both are notably in $\G_1$ and thus $(X \cdot \cm)^u$ = $(g_1^{m_1u}\dots g_n^{m_nu}g^{xu+ru})$. Returns $\sigma \gets (\sigma_1, \sigma_2)$    
+
+    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+
+    \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+
+\end{itemize}
+
+
+\subsection{PS Signature over Commitment Construction}
+\begin{itemize}
+    \item $PS.Rerand_{ck,vk}(\sigma, \rd, \ud) \to \sigma'$: Rerandomization of the signature must preserve the algebraic properties of the commitment itself to allow the commitment to be used for zero knowledge proof protocols. To do so, the commitment is re-randomized with the random factor $\rd$ such that a commitment and signature pair 
+
+\end{itemize}
+
+\subsection{Zero Knowledge Proof}
+\begin{itemize}
+    \item $ZKP.ComOpen_{ck}(cm, m_i, r) \to \Pi^{cm}$
+    \item $ZKP.ComOpenVfy_{ck}(cm, \Pi^{cm}) \to \bit$
+\end{itemize}
+
+\subsection{Anonymous Credential}
+
+
+\begin{center}
+\begin{tabular}{l@{\hspace{8em}}c@{\hspace{8em}}l}
+\multicolumn{3}{l}{$\underline{OrgKeyGen(1^{\lambda}, 1^n)}$:  Given $\lambda, n > 0$, compute $BG = (p, \G_1, \G_2, \G_T, e, g, \tilg) $}.\\[0.5em]
+\multicolumn{3}{l}{Run $ck \gets CM.Setup(BG, 1^{\lambda}, 1^n)$ which defines $(g, g^{\yb}, \tilg, \tilg^{\yb})$ with $ \yb_{\in[n]}$} \\[0.5em]
+\multicolumn{3}{l}{Run $(sk, vk) \gets PS.KeyGen(ck, 1^{\lambda}, 1^n)$ which defines $sk = X \in \G_1$ and $vk = \tilx \in \G_2$}\\[0.5em]
+\multicolumn{3}{l}{$osk = (g, X), opk = (ck, \tilx, BG)$, return $(osk, opk)$}\\[2em]
+\underline{Obtain(opk, $\mathbf{m}$)} && \underline{Issue(osk, $cm$)} \\[1em]
+\multicolumn{3}{l}{Parse $opk = (ck, \tilx, BG)$, sample $r \sample \Z_p$} \\[0.5em]
+\multicolumn{3}{l}{Compute $(cm, \widehat{cm}) \gets CM.Com(ck, \mathbf{m}, r)$} \\[0.5em]
+\multicolumn{3}{l}{Run $\Pi^{cm} \gets ZKP.ComOpen(ck, cm, \mathbf{m}, r)$} \\[0.5em]
+& $\xrightarrow{\Pi^{cm}}$ & \\[1em]
+\multicolumn{3}{r}{If $ZKP.ComOpenVfy(\Pi^{cm},cm) = 0$, return $\bot$} \\[1em]
+& $\xleftarrow{\sigma = (\sigma_1, \sigma_2)}$ & $\sigma \gets \mathsf{PS.Sign}(osk, cm)$ \\[1em]
+\multicolumn{3}{l}{If $\mathsf{PS.Verify}(opk, cm, \sigma) = 0$, return $\bot$} \\[1em]
+\multicolumn{3}{l}{$Cred \gets (\sigma = (\sigma_1, \sigma_2), opk, cm, \widehat{cm})$} \\[1em]
+\end{tabular}
+\end{center}
+
+\noindent \underline{(Show, Verify)}: Using ..... Show, and Verify interact as follows
+
+
+
+\begin{center}
+    \begin{tabular}{l@{\hspace{8em}}c@{\hspace{8em}}l}
+    \underline{Show($opk, cm, Cred$)} && \underline{Verify($osk, Cred' $)} \\[1em]
+    \end{tabular}
+\end{center}
+
+\newpage
+
+
+\subsection{Sybil Resistance}
+-
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section{Security analysis of identity system}
+
+
+
+
+
+
+\section{Performance Evaluation}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\cleardoublepage
+\section{Appendix, Old Writings}
+\newpage
+
+\subsection{Old Intro}
+
+\textbf{Privately Linked Context Credentials}
+The Internet Identity Workshop discussed a problem space summarised by the following problems:
+1. issuing credentials that are both government and privately issued
+2. retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
+3. combining traditional digital identity with decentralized identity
+
+
+
+
+As digital wallets are gradually introduced, one notable problem involves combining 
+As digital identities are introduced, there must be methods to combine the old world and the new world with respect to identities. 
+One problem use-case is organisations such as a university issuing certificates as credentials. 
+Universities want to start issuing credentials to users 
+
+A university, a credential provider, and wants to issue a credential to a user sam.
+
+The University is not yet using decentralized identity but would like to issue a credential to Sam's digital identity wallet. 
+Sam's logged in to the university portal with his classical login. Sam presses "Issue Credential" and starts the credential-issuing process. 
+
+The university wants to check a few things before issuing this credential.
+1. make sure their national credential is valid, that is, it verifies
+2. as it's an anonymous credential, the university wants to make sure the user that's logged into their portal is the same user with the registration credential. The user may selectively disclose their attributes, or prove equality of attributes in zero knowledge, or may have another proof.
+
+The university generates a credentialId and stores it in their system and carries out the following protocol with Sam
+
+Sam wants to keep as many details as secret as possible, and thus, he carries out the following protocol
+1. Sam creates a new commitment Com([pid, 0]r), proves opening of the commitment and equality of pid between rcm and this commitment.
+2. The university generates Com([0,credId]0) and homomorphically creates ccm([pid, credId]r) = Com([pid, 0]r) x Com([0,credId]0). The university then signs ccm([pid, credId]r) with their own signature scheme.
+3. Sam can now take rcm and ccm, sigma(ccm) to the blockchain of nodes.
+4. Sam runs a protocol with the blockchain to be issued a Decentralied version of this credential with full private accountability. 
+
+
+\subsection{ZKP Sigma Protocol for proving PRF output with pairing}
+
+\[
+ZKP
+    \left\{ 
+    (m_1, m_2, r_1, r_2): C_1 = g_1^{m_1}h_1^{r_1} \in \G_1 \wedge C_2 = g_2^{m_2}h_2^{r_2} \in \G_2 \wedge m_1 \cdot m_2 = 1
+    \right\}
+\]
+
+
+\pcb{
+\prover[m_1, m_2, r_1, r_2] \< \< \verifier[C_1, C_2, g, h]  \\[0.1\baselineskip][\hline]
+\<\< \\[-0.5\baselineskip]
+\pclinecomment{$C_1 = g_1^{m_1}h_1^{r_1}, C_2 = g_2^{m_2}h_2^{r_2}$ } \\
+{\{\rho_i\}_{i=1}^2, \{\beta_i\}_{i=1}^2, \{\gamma_i\}_{i=1}^4}  \sample \mathbb{Z}_q^8 \<\< \\
+T_1 \in \G_1 \gets g_1^{\beta_1}h_1^{\rho_1} \<\< \\
+T_2 \in \G_2 \gets g_2^{\beta_2}h_2^{\rho_2} \<\< \\
+\pclinecomment{generate interim elements} \\
+\alpha_1 \gets m_1 \cdot m_2 \<\< \\
+\alpha_2 \gets m_1 \cdot t_2 \<\< \\
+\alpha_3 \gets t_1 \cdot m_2 \<\< \\
+\alpha_4 \gets t_1 \cdot t_2 \<\< \\
+A_1 \gets e(g_1, g_2) \<\< \\
+A_2 \gets e(g_1, h_2) \<\< \\
+A_3 \gets e(h_1, g_2) \<\< \\
+A_4 \gets e(h_1, h_2) \<\< \\
+\pclinecomment{$C_3 = e(C_1, C_2)$} \\
+C_3 \in \G_T \gets A_1^{\alpha_1} A_2^{\alpha_2} A_3^{\alpha_3}  A_4^{\alpha_4}\<\< \\
+T_3 \in \G_T \gets  A_1^{\gamma_1} A_2^{\gamma_2} A_3^{\gamma_3} A_4^{\gamma_4} \<\< \\
+\< \sendmessageright* {\{C_i, T_i\}_{i=1}^3, \{A_i\}_{i=1}^4} \< \\
+\< \sendmessageleft*{e} \< e \sample \mathbb{Z}_q \\
+\{z_{mi} = \beta_i + e \cdot m_i \}_{i=1}^2 \<\< \\
+\{z_{ri} = \rho_i + e \cdot r_i \}_{i=1}^2 \<\< \\
+\{z_{ai} = \gamma_i + e \cdot \alpha_i \}_{i=1}^4 \<\< \\
+\< \sendmessageright*{\{z_{mi}, z_{ri}\}_{i=1}^2, \{z_{ai}\}_{i=1}^4 } \< \\
+\<\< C_1^e \cdot T_1 \stackrel{?}{=} g_1^{z_{m1}} h_1^{z_{r1}}\\
+\<\< C_2^e \cdot T_2 \stackrel{?}{=}  g_2^{z_{m2}} h_2^{z_{r2}}\\
+\<\< C_3^e \cdot T_3 \stackrel{?}{=}  A_1^{z_{a1}}A_2^{z_{a2}}A_3^{z_{a3}}A_4^{z_{a4}}\\
+\<\< 
+}
+
+
+\newpage
+\subsubsection{Completeness}
+Proof of knowledge of exponents $m1, r1$ by opening $C_1$
+    \begin{align}
+    C_1^e \cdot T_1 &\stackrel{?}{=} g^{z_{m1}} h^{z_{r1}} \notag \\
+    (g^{m1}h^{r_1})^e \cdot g^{\beta_1}h^{\rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag \\
+    g^{e \cdot m1 + \beta_1}h^{e \cdot r_1 + \rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag
+    \end{align}
+
+    
+Proof of knowledge of exponents $m2, r2$ by opening $C_2$
+\begin{align}
+    C_2^e \cdot T_2 &\stackrel{?}{=} \tilg^{z_{m2}} \tilh^{z_{r2}} && \label{eq:ver2} \\
+    (\tilg^{m2}\tilh^{r_2})^e \cdot \tilg^{\beta_2}\tilh^{\rho_2} &= \tilg^{\beta_2 + e \cdot m_2} \tilh^{\rho_2 + e \cdot r_2} \notag \\
+    \tilg^{e \cdot m2 + \beta_2}\tilh^{e \cdot r_2 + \rho_2} &= \tilg^{\beta_2 + e \cdot m_2} \tilh^{\rho_2 + e \cdot r_2} \notag
+    \end{align}
+
+    
+\begin{align}
+    C_3 = e(C_1, \tilde{C_2}) = e(g^{m1} h^{r1}, \tilg^{m2} \tilh^{r2}) \notag \\
+    = e(g^{m1}, \tilg^{m2}) \cdot e(g^{m1},\tilh^{r2}) \cdot e(h^{r1}, g^{m2}) \cdot e(h_1^{r1}, \tilh^{r2})  \notag \\
+    = e(g, \tilg)^{m1\cdot m2} \cdot e(g,\tilh)^{m1 \cdot r2} \cdot e(h, \tilg)^{r1 \cdot m2} \cdot e(h, \tilh)^{r1 \cdot r2}  \notag \\
+\end{align}
+
+
+
+\begin{itemize}
+    \item Prove knowledge of exponents $(m1 \cdot r2), (r1 \cdot m2), (r1 \cdot r2)$ for $C_3$/$e(g,\tilg)$  with respect to base points $e(g,\tilh) e(h, \tilg) e(h, \tilh)$
+    \item $C_3$/$e(g,\tilg)$ 
+    \item 
+\end{itemize}
+
+
+Prove that $e(g, \tilg)^{(m1 \cdot m2)} = e(g, \tilg)$ by computing $C_4 = e(g,\tilh)^{m1 \cdot r2} \cdot e(h, \tilg)^{r1 \cdot m2} \cdot e(h, \tilh)^{r1 \cdot r2}$, proving the opening and equality of $(m1 \cdot r2), (r1 \cdot m2), (r1 \cdot r2)$ with $C_3$, then proving $C_3/C_4 = e(g, \tilg) \cdot e(g,\tilh) \cdot e(h, \tilg) \cdot e(h, \tilh) $
+
+\newpage
+\subsubsection{Analysis Pairing Method}
+\begin{itemize}
+    \item \textbf{Prover:} 2 $\G_1$ exp, 2 $\G_2$ exp, 8 $\G_T$ exp, 1 $\G_1$ add, 1 $\G_2$ add, 6 $\G_T$ mul, 12 $\F_p$ mul, 8 $\F_p$ add, 4 pairing
+    
+    \item \textbf{Verifier:} 3 $\G_1$ exp, 3 $\G_2$ exp, 5 $\G_T$ exp, 2 $\G_1$ add, 2 $\G_2$ add, 4 $\G_T$ mul
+\end{itemize}
+
+\subsubsection{Soundness}
+\todonote{Sam todo}
+
+\subsubsection{Zero Knowledge}
+\todonote{Sam todo}
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Operation} & \textbf{Prover} & \textbf{Verifier} \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Commitment Equality Method}} \\
+\hline
+G1 exponentiations & 4 & 5 \\
+G1 additions & 2 & 4 \\
+Fp multiplications & 3 & 0 \\
+Fp additions & 3 & 0 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{G1 VRF Method}} \\
+\hline
+G1 exponentiations & 11 & 11 \\
+G1 additions & 4 & 7 \\
+Fp multiplications & 6 & 0 \\
+Fp additions & 6 & 0 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Pairing + VRF Method}} \\
+\hline
+G1 exponentiations & 2 & 3 \\
+G2 exponentiations & 2 & 3 \\
+G1 additions & 1 & 2 \\
+G2 additions & 1 & 2 \\
+Fp multiplications & 12 & 0 \\
+Fp additions & 8 & 0 \\
+GT exponentiations & 8 & 5 \\
+GT multiplications & 6 & 4 \\
+Pairings & 4 & 4 \\
+\hline
+\end{tabular}
+\caption{Comparison of computational operations between G1 and Pairing methods}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Operation} & \textbf{Time} \\
+\hline
+Full Pairing & 1.6218 ms \\
+Miller Loop & 0.6931 ms \\
+Final Exponentiation & 0.9287 ms \\
+G1 Mixed Addition (Affine + Jacobian) & 672 ns \\
+G1 Point Doubling (2P) & 414 ns \\
+G2 Mixed Addition (Affine + Jacobian) & 2143 ns \\
+G2 Point Doubling (2P) & 1302 ns \\
+\hline
+Estimated G1 Scalar Mult (255-bit) & 191.59 $\mu$s \\
+\emph{\small(255 doublings + ~128 additions)} & \\
+Estimated G2 Scalar Mult (255-bit) & 606.01 $\mu$s \\
+\emph{\small(255 doublings + ~128 additions)} & \\
+\hline
+\end{tabular}
+\caption{Performance metrics for arkworks BLS12-381 implementation. Scalar multiplication estimates assume naive double-and-add implementation without optimizations.}
+\label{tab:arkworks-performance}
+\end{table}
+\footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
+
+
+\newpage
+\subsection{Research Questions}
+\textbf{Main Research Question: }
+
+\textit{How can credential systems be designed to maintain accountability and sybil resistance with privacy and unlinkability. }
+
+\noindent \textbf{Sub Research Questions}
+
+\textit{How can we design a privacy-preserving credential system that enables hidden linking of government and private credentials while maintaining provable provenance and revocability?}
+
+\textit{How can we efficiently combine credentials for verification while retaining their security properties}
+
+
+\subsection{Methods}
+
+\subsubsection{Notation}
+Let $a : \N \mapsto \N \bigcup \{*\}$ and $b : \N \mapsto \N$ be any functions for which $a(\lambda)$ and $b(\lambda)$ are computable in $poly(\lambda)$ time (expect when $a$ takes value $*$).
+\begin{definition}
+    A function family $F_{(\cdot)}(\cdot) : \bit^{a(\lambda)} \mapsto \bit^{b(\lambda)}$ is a family of $VRFs$ if there exists a PPT algorithm $Gen$ and deterministic algorithms $Prove$ and $Ver$ such that $Gen(\secparam)$ outputs a pair of keys $(sk, pk)$, $Prove_{sk}(x)$ computes $(y, \pi)$ where $\pi$ is the proof of correctness, and $Ver_{pk}(x,y,\pi)$ verifies that $y = e(g,g)^{1/x+sk}$ using the proof $\pi = g^{1/x+sk}$
+\end{definition}
+
+\subsubsection{Notation - another version}
+A probabilistic polynomial time algorithm $\algo(\ins) \rightarrow \out$ receives an input $\ins$ and returns an output $\out$. $r \getsrand \Zp$ r is sampled uniformly from the set of field elements modulo $p$,  $h \gets y$ is a deterministic assignment. $[n]$ denotes a sample space of $\{1,\dots,n\}$. We assume type 3 bilinear pairings, $e: \G_1 \times \G_2 \to \G_t$ over groups of prime order $p$, $g, \tilde{g}$ are uniformly chosen generators for $\G_1, \G_2$ such that $e(g, \tilde{g}) = g_t$. We use bold variables to denote vectors as \vect{m} = $[m_1, \dots, m_{\ell}]$, \textbf{g} $\in \G^{\ell}$, \textbf{x} $\in \Z_p^{\ell}$, $\textbf{g}^{\textbf{x}}$ = $\sum\nolimits_{i=1}^\ell g_i^{x_i}$. We use multiplicative notation for $\G$ points i.e. $g^k = g \cdot g \;  (k \text{ times})$
+
+\subsubsection{Pseudo Random Function}
+We use the properties of a pseudo-random function to derive the relationship between a master and context credential. The pseudorandomness property ensures the output $y$ is computationally indistinguishable from random and thus hides the relationship between the user's secret key $sk$ and an input $x$ which could be the context of the new credential we want to privately link to.
+\[
+    PRF_{sk}(x) \to y
+\]
+
+\begin{definition}[Pseudo Random Function]
+    A PRF is a couple of algorithms $(PRF.Gen, f)$ with key space $\setK$, input space $\setX$ and output space $\setY$ such that 
+    \begin{itemize}
+        \item $Gen(\secparam) \to (sk): s \sample S$, sets $sk = s$
+        \item $f:$ $\mathcal{K} \times \mathcal{X} \to \mathcal{Y}$ is a keyed function family
+    \end{itemize}
+\end{definition}
+
+The main security property of a $PRF$ is pseudorandomness, which informally states the output should appear random and not be able to be guessed. Formally, defined as
+
+\begin{definition}[Pseudorandomness]
+    A couple of PPT algorithms $(PRF.Gen, f)$ is a \textit{Pseudo Random Function} if, for any $\PPT$ adversary $\adv$ there exists a negligible function $\epsilon$ such that 
+    \[
+    \advantage{}{}[(\adv)] := 
+        \left|
+    \Pr     \left[ 
+                \mathsf{Exp}^{\mathsf{prf}}(\adv) = 1
+            \right] - \frac{1}{2}
+        \right| \leq \epsilon(\lambda)
+    \]
+\end{definition}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{prf}}(\adv)$}{%
+        b \sample \bit \\
+        \text{Sample } k \sample PRF.Gen(1^{\lambda}) \\
+        \text{Sample } f^* \sample \{g : g : \mathcal{X} \to \mathcal{Y}\} \\
+        \text{Run } b' \gets \adv^{\oracle_{\mathsf{prf}}}(1^{\lambda}) \\
+        \pcreturn b == b'
+    }
+    \procedure[]{$\oracle_{\mathsf{prf}(x)}$}{%
+        \pcif b = 1 \\
+        \t \pcreturn f_k(x) \\
+        \pcelse \\
+        \t \pcreturn f^*(x)
+    }
+\end{pchstack}
+  \caption{The pseudorandomness game with adversary $\adv$ and PRF $(PRF.Gen, f)$}
+  \label{fig:prf}
+\end{figure}
+
+
+\begin{definition}[Computational Indistinguishability] \\
+    Let $X = \{X(a,n)\}_{a \in \{0,1\}^*; n \in \mathbb{N}}$ and $Y = \{Y(a,n)\}_{a \in \{0,1\}^*; n \in \mathbb{N}}$ be two probability ensembles, where:
+    \begin{itemize}
+        \item Each ensemble is an infinite sequence of random variables
+        \item $a \in \{0,1\}^*$ represents parties' inputs
+        \item $n \in \mathbb{N}$ represents the security parameter
+    \end{itemize}
+    
+    $X$ and $Y$ are said to be computationally indistinguishable, denoted by $X \stackrel{c}{\equiv} Y$, if for every non-uniform polynomial-time algorithm $D$ (called a distinguisher), there exists a negligible function $\mu(\cdot)$ such that for every $a \in \{0,1\}^*$ and every $n \in \mathbb{N}$:
+    
+    \[ |\Pr[D(X(a,n)) = 1] - \Pr[D(Y(a,n)) = 1]| \leq \mu(n) \]
+    
+    \end{definition}
+    
+    \begin{remark}
+    This definition captures the idea that no efficient algorithm can tell the difference between samples from $X$ and samples from $Y$ with non-negligible probability. The term "non-uniform" allows the distinguisher $D$ to have hard-coded advice that may depend on the input length, potentially making it more powerful.
+    \end{remark}
+
+\begin{definition}[Bilinear map]
+    Let $\mathbb{G}_1$, $\mathbb{G}_2$ and $\mathbb{G}_T$ be cyclic groups of prime order $p$, where $\mathbb{G}_1$ and $\mathbb{G}_2$ are multiplicative and $\mathbb{G}_T$ is multiplicative. Let $g$ and $h$ be generators of $\mathbb{G}_1$ and $\mathbb{G}_2$, respectively. We call $e : \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ a bilinear map or pairing if it is efficiently computable and the following holds:
+    
+    \textbf{Bilinearity:} $e(g^a, \tilde{g^b}) = e(g, \tilde{g})^{ab} \quad \forall a,b \in \mathbb{Z}_p$.
+    
+    \textbf{Non-degeneracy:} $e(g, \tilde{g}) \neq 1_{\mathbb{G}_T}$, i.e., $e(g, \tilde{g})$ generates $\mathbb{G}_T$.
+    
+   \noindent If $\mathbb{G}_1 = \mathbb{G}_2$, then $e$ is symmetric (Type-1) and asymmetric (Type-2 or 3) otherwise. For Type-2 pairings, there is an efficiently computable isomorphism $\Psi : \mathbb{G}_2 \rightarrow \mathbb{G}_1$ but none from $\mathbb{G}_1 \rightarrow \mathbb{G}_2$; for Type-3 pairings, no efficiently computable isomorphisms between $\mathbb{G}_1$ and $\mathbb{G}_2$ are known. Type-3 pairings are currently the optimal choice in terms of efficiency for a given security level.
+\end{definition}
+
+\begin{definition}[Commitment scheme]
+    A commitment scheme is a tuple $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ of PPT algorithms where:
+    
+    \begin{itemize}
+        \item $\mathsf{Setup}(1^\lambda) \to \mathsf{ck}$ takes security parameter $\lambda$ (in unary) and generates the commitment key $\mathsf{ck}$;
+        
+        \item $\mathsf{Commit}_{\mathsf{ck}}(m) \to (\cm, r)$ obtains commitment $\cm$ from secret message $m$ and an opening key $r$ which may be the randomness used in the computation.
+        
+        \item $\mathsf{Open}_{\mathsf{ck}}(\cm; m, r) \to b \in \{0, 1\}$ verifies the opening of the commitment $\cm$ to the message $m$ provided with the opening hint $r$, outputting a decision as to whether $\cm$ commits to $m$. 
+    \end{itemize}
+\end{definition}
+
+\begin{definition}[Secret Sharing]
+    A $(t,n)$ secret sharing scheme $\mathsf{SS}$ is a tuple of $\PPT$ algorithms $(\mathsf{Share}, \mathsf{Combine})$ over message space $x \in X$:
+    \begin{itemize}
+        \item $\mathsf{Share}^{t,n}(x, r) \torand ([x]_1, \dots, [x]_n)$ takes input $x \in X$, randomness $r$ and outputs $n$ shares $([x]_1, \dots, [x]_n)$
+        \item $\mathsf{Combine}^{t,n}([x]_i, \dots, [x]_t) \to x'$ takes a threshold of secret shares $[x]_i$ for $i > t$ as input and combines to form $x'$ the representation of the original message $x' \in X$
+    \end{itemize}
+\end{definition}
+
+\begin{definition}[Threshold Public-Key Encryption]
+A Threshold Public-Key Encryption Scheme $\mathsf{TPK}$ is a set of $\PPT$ algorithms $\mathsf{(KeyGen, Enc, Dec, Verify, Combine)}$ over $\messagespace$: 
+    \begin{itemize}
+        \item $\mathsf{TPK.Setup}(\secparam, n, t) \torand \{\pk, \vk, (\sk_1, \dots, \sk_n)\}:$ input the $t$ of $n$ threshold, output $\pk$ the public key, $\vk$ the verification key, and $\sk_i$ the shared secret key for each party.
+        \item $\mathsf{TPK.Enc}(\pk, m, \rho) \torand \beta:$ input message $m$ and randomness $\rho$, output encryption $\beta$
+        \item $\mathsf{TPK.Dec}(\beta, \sk_i)) \to m_i:$ each party decrypts $\beta$ with their shared secret key $\sk_i$
+        \item $\mathsf{TPK.Verify}(\pk, \vk , m_i) \to  \bit:$ input $\pk, \vk$ and share of $m_i$, verify $m_i$ was computed correctly from $\pk, \vk$
+        \item $\mathsf{TPK.Combine}(\pk, \vk, {m_i}_{i \in \setspace \subseteq [n] s.t. |\setspace| \geq t + 1}) \to m:$ recovers message $m$ given $t + 1$ partial decryptions which verify successfully
+    \end{itemize}
+\end{definition}
+
+
+\begin{definition}[Homomorphism]
+    Let $G$ and $H$ be groups. A function $\phi: G \to H$ is called a \textit{homomorphism} if it preserves the group operation. Specifically, for any elements $a, b \in G$, the following equation holds:
+    
+    \[\phi(a \ast b) = \phi(a) \circ \phi(b)\]
+    
+    where $\ast$ denotes the group operation in $G$ and $\circ$ denotes the group operation in $H$.
+    \end{definition}
+    
+    \begin{remark}
+    Note that $\phi$ is not required to be injective (one-to-one) or surjective (onto).
+    \end{remark}
+    
+    \begin{definition}
+    For a homomorphism $\phi: G \to H$, the \textit{image} of $\phi$ is defined as:
+    
+    \[\operatorname{Im}(\phi) = \phi(G) = \{\phi(g) : g \in G\} \subseteq H\]
+    \end{definition}
+
+    \begin{definition}[Image of homomorphism]
+        For a homomorphism $\phi: G \to H$, the \textit{image} of $\phi$ is defined as:
+        
+        \[\operatorname{Im}(\phi) = \{h \in H \mid \exists g \in G \text{ such that } \phi(g) = h\}\]
+        
+        \end{definition}
+
+        \begin{remark}
+            The image of a homomorphism $\phi: G \to H$ can be thought of as the "landing spot" in $H$ for elements coming from $G$. It's the subset of $H$ that includes all possible outputs when $\phi$ is applied to any element in $G$. In essence, $\operatorname{Im}(\phi)$ tells us which elements of $H$ are "reachable" through $\phi$ from some element in $G$.
+        \end{remark}
+
+
+
+
+
+\newpage
+\subsubsection{Verifiable Random Function}
+
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $Gen(\secparam) \to (sk, pk):$ samples $s \sample \Zp^*$, sets $sk = s$ and $pk \gets g^s$, returns $(sk, pk)$
+    \item $Prove_{sk}(x) \to (y, \pi):$ $y \gets e(g,g)^{1/(x+sk)}$, $\pi \gets g^{1/(x+sk)}$ where $y$ is the $PRF$ output and $\pi$ is the proof of correctness
+    \item $Verify_{pk}(x, y, \pi) \to \bit$ to verify $y$ was computed correctly, verify $e(g^x \cdot pk, \pi) = e(g,g)$ and $y = e(g, \pi)$, output 1 for success, 0 for fail
+\end{itemize}
+
+\begin{definition}[Verifiable Random Function]
+
+    A PRF is a triplet of $\PPT$ algorithms $(VRF.Gen, VRF.Eval, VRF.Vfy)$ satisfying:
+    \begin{enumerate}
+        \item Correctness: For any $(pk, sk)$ in the image of $VRF.Gen(\secparam)$ and any $x \in \setX$
+        \[
+        \begin{aligned}
+            (y, \pi) &\gets VRF.Eval_{sk}(x) \\
+            1 &\gets VRF.Vfy_{pk}(x, y, \pi)
+        \end{aligned}
+        \]
+
+
+    \item Unique Provability: For any $pk$ (not necessarily in the range of $VRF.Gen$, any input $x \in \setX$, pair of outputs $y_0, y_1 \in \setY$ and pair of proofs $\pi_0, \pi_1$ the following holds
+    \[
+        \begin{aligned}
+            1 &\gets VRF.Vfy_{pk}(x,y_0,\pi_0) \\
+            1 &\gets VRF.Vfy_{pk}(x,y_1,\pi_1) \\
+            y_0 &= y_1
+        \end{aligned}
+    \]
+
+    \item Pseudorandomness: For any $\PPT$ adversary $\adv$ running the VRF Experiment, there exists a negligible function $\epsilon$ such that 
+    \[
+         \advantage{}{}[(\adv)] := 
+            \left|
+        \Pr     \left[ 
+                    \mathsf{Exp}^{\mathsf{rnd}}(\adv) \to 1
+                \right] - \frac{1}{2}
+            \right| \leq \epsilon(\lambda)
+    \]
+    
+    \end{enumerate}
+
+\end{definition}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{eval}}(\adv)$}{%
+        \text{Sample } b \sample \bit \\
+        pk, sk \sample VRF.Gen(1^{\lambda}) \\
+        \text{set } x^* = \bot \\
+        x^* \gets \adv^{\oracle_{\mathsf{eval}}}(pk) \\
+        \pcif x^* \text{was previously queried:} \\
+        \t \pcreturn 0 \\
+        y_0 \sample \setY \\
+        (y_1, \pi) \gets VRF.Eval(pk, x^*) \\
+        \adv^{\oracle_{\mathsf{eval}}}(sk, y_b) \to b' \\
+        \pcreturn b == b'
+    }
+    \procedure[]{$\oracle_{\mathsf{eval}(x)}$}{%
+        \pcif x \neq x^* \\
+        \t (y, \pi) \gets VRF.Eval_{sk}(x) \\
+        \t \pcreturn (y, \pi) \\
+        \pcelse: \pcreturn \bot \\
+    }
+\end{pchstack}
+  \caption{The pseudorandomness game with adversary $\adv$ and PRF $(PRF.Gen, f)$}
+  \label{fig:prf}
+\end{figure}
+
+
+
+% \newcommand{\vt}{\mathsf{vt}}
+% \newcommand{\wx}{\mathsf{wx}}
+% \newcommand{\wxone}{\mathsf{w_1x}}
+% \newcommand{\wxtwo}{\mathsf{w_2x}}
+% \newcommand{\wxhat}{\mathsf{\hat{w}x}}
+% % \newcommand{\x}{\mathsf{x}}
+
+% \newcommand{\acu}{\mathsf{ACU}}
+% \newcommand{\acusetup}{\mathsf{ACU.Setup}}
+% \newcommand{\acuadd}{\mathsf{ACU.Add}}
+% \newcommand{\acudel}{\mathsf{ACU.Del}}
+% \newcommand{\acuvermem}{\mathsf{ACU.VerMem}}
+% \newcommand{\acuvernonmem}{\mathsf{ACU.VerNonMem}}
+
+
+% \newcommand{\rev}{\mathsf{REV}}
+% \newcommand{\revsetup}{\mathsf{REV.Setup}}
+% \newcommand{\revrevoke}{\mathsf{REV.Revoke}}
+% \newcommand{\revtokengen}{\mathsf{REV.TokenGen}}
+% \newcommand{\revtokenver}{\mathsf{REV.TokenVer}}
+
+% \newcommand{\rt}{\mathsf{rt}}
+
+\subsection{Revocation}
+Credential revocation is a fundamental challenge in identity management systems. While credentials grant users access to services, there must be mechanisms to invalidate them when necessary. Since the introduction of public key infrastructure, numerous solutions have been proposed to handle certificate revocation such as time-based expiration, usage limits (k-times use), and revocation lists. In the latter approach, a trusted authority manages a whitelist of valid credentials or blacklist of revoked ones, requiring users to prove their credential status with respect to the list.
+
+The challenge becomes more complex in privacy-preserving systems as users must be able to prove revocation status without revealing the credential or its attributes. Furthermore, the revocation list should not leak information about which credentials are valid or revoked. 
+
+\subsubsection{Revocation Scheme}
+A revocation scheme enables efficient proofs of credential validity while maintaining privacy of the revocation status. The scheme consists of a revocation authority that manages the revocation state, protocols for revoking credentials, and methods for users to prove their credentials remain valid. A privacy-preserving revocation scheme must satisfy several properties:
+
+\begin{itemize}
+    \item Privacy: Users can prove their credential's status without revealing the credential
+    \item Unlinkability: Multiple proofs by the same user cannot be linked
+    \item Efficiency: Proofs should be succinct and verification efficient
+    \item Dynamic Updates: The system supports real-time credential revocation
+\end{itemize}
+
+\paragraph{Syntax}
+A revocation scheme consists of the following algorithms:
+
+\begin{itemize}
+    \item $\revsetup(\secparam) \torand (\ppar, \sk, \pk, \vt):$ Given security parameter $\secparam$, generates system parameters $\ppar$, authority's secret key $\sk$, public key $\pk$, and initial revocation state $\vt$
+    
+    \item $\revrevoke(\sk, \vt, \cred) \to (\vt', \text{RI}):$ Revokes credential $\cred$, updates revocation state from $\vt$ to $\vt'$, and outputs revocation information RI
+    
+    \item $\revtokengen(\cred, \vt, \text{RI}) \to \rt:$ Generates a revocation token $\rt$ for credential $\cred$ using the current revocation state $\vt$ and revocation information RI
+    
+    \item $\revtokenver(\vt, \cred, \rt) \to \bit:$ Verifies revocation token $\rt$ for credential $\cred$ against revocation state $\vt$
+\end{itemize}
+
+\subsubsection{Accumulator}
+An accumulator allows for compact representation of a set while enabling efficient proofs of membership. Our construction uses a universal accumulator that supports both membership and non-membership proofs. The accumulator maintains a constant-size value regardless of the number of elements in the set, while allowing elements to be dynamically added and removed. For each element, the system can generate succinct witnesses that prove either membership or non-membership in the accumulated set.
+
+\subsubsection{Syntax}
+An accumulator $\acu$ is a set of $\PPT$ algorithms $\acu = \mathsf{Setup, Add, Del, VerMem, VerNonMem}$. 
+\begin{itemize}
+    \item $\acusetup(\secparam) \torand \ppar, \sk, \pk, \vt:$ generates system parameters, takes security parameter $\secparam$ as input, outputs system parameters $\ppar$, secret key $\sk$, public key $\pk$, and initial accumulator value $\vt$
+    
+    \item $\acuadd(\sk, \vt, \x) \to (\vt', \wx):$ adds element $\x$, takes secret key $\sk$, current accumulator value $\vt$, element $\x$ as input. Outputs updated accumulator value $\vt'$, and membership witness $\wx$
+    
+    \item $\acudel(\sk, \vt, \x) \to (\vt', \wxhat):$ Deletes element $\x$, takes secret key $\sk$, current accumulator value $\vt$, element $\x$ as input. Outputs updated accumulator value $\vt'$, non-membership witness $\wxhat$ 
+    
+    \item $\acuvermem(\vt, \x, \wx) \to \bit:$ verifies membership, takes current accumulator value $\vt$, element $\x$, witness $\wx$ as input. Outputs accept/reject
+    
+    \item $\acuvernonmem(\vt, \x, \wxhat) \to \bit:$ Verifies non-membership, takes current accumulator value $\vt$, element $\x$, non-member witness $\wxhat$ as input. Outputs accept/reject
+\end{itemize}
+
+ with additional witness operations $\mathsf{MemWitUpOnAdd/Del, NonMemWitUpOnAdd/Del}$ 
+
+
+ \subsection{Discussion}
+ 
+The Internet Identity Workshop discussed a problem space summarised by the following problems:
+\begin{enumerate}
+    \item issuing credentials that are both government and privately issued
+    \item retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
+    \item combining traditional digital identity with decentralized identity
+\end{enumerate}
+
+A user has an Identity linked to multiple credentials, such as a driver's license and university card. Users want to authenticate with various Relying Parties (Verifiers) without being linked between multiple uses of the same service (e.g. a user verifying multiple credentials with 1 service such as a bank requiring proof of multiple credentials linked to an identity), and between uses of different services (e.g. a user presenting their drivers license for age verification on multiple services).
+
+Current decentralized identity systems either don't provide this functionality or provide it at the expense of either accountability or privacy. CanDID stores a map between users multi-layered credentials providing a solution to the problem at the expense of the user's privacy. Other credential systems and pseudonym systems prove equality of hidden attributes in a credential such as name or id, which can more-easily be forged and does not support the hierarchical structure leveraging a highly secure and accountable government identity with not-so secure private credentials.
+
+
+\noindent \textbf{Credential Chaining}
+
+
+\noindent \textbf{Pseudonym Systems}
+There are 2 main models for Pseudonyms. One where the user has a Master Credential and derives pseudonym, or context credentials from the Master Credential. The applications differ; for example, in \textbf{Model 1}, a user may have their Passport as their Master Credential and wish to use it in a different scenario, such as voting for an election. The user will derive, by themselves, a new credential with the context "voting-2024," which will be verified in the same way as the master credential.
+\textbf{Model 2} differs in application scenarios. A context credential represents a credential from a different issuer, for example, a driver's license. During Context Credential issuance, a user will present their Master Credential which will be used to verify the identity of a user and to link the 2 credentials together. During context credential verification, the user may be requested to present just their Context Credential, or perhaps in a high-security verification setting, where a user may need to prove attributes in multiple credentials both Master and Context will need to be presented together. We optimize for this setting while \emph{preserving privacy.}
+
+
+
+\noindent \textbf{Pseudonym Model 1: Master Credential, One Issuer, derived Pseudonyms}
+
+SyRA and TACT optimize for Non-Interactivity
+They also define context differently to us. Which isn't what CanDID defines context as and doesn't work for the same usescases and CanDID was defined for. 
+
+Previous Methods
+
+\noindent SyRA: Sybil-Resilient Anonymous Signatures  with Applications to Decentralized Identity \cite{crites_syra_2024}
+1. enables users to "derive" unlinkable, sybil resistant pseudonyms (signatures) for a context e.g. PRF(sk, ctx) without interacting with the issuer
+2. does not store a mapping on the issuer
+3. Security properties: Sybil resistance in the context. Anonymity: no information is leaked through their nyms or signatures. Proves UC security for unforgeability, Sybil resilience, privacy, and unlinkability
+4. SyRA leaves support for Identity Attributes for future work.
+
+Summary: First, a protocol with issuer creates a user with secret key $s$. $s$ generates a context specific pseudonym, or tag $T$ "that attaches itself to a signature"?
+
+\begin{itemize}
+    \item Level 1: $Issue_{isk}(s)$: $VRF_{isk}(s) \to T, \pi_{prf}$ such that $\pi_{prf}$ generates the users keys and is symmetric across $\G_1, \G_2$: This algorithm is computed by the issuer with their secret key $isk$ on identity string $s$ Outputs $T = e(g, \tilde{g})^{1/(s + isk)}$ and $\pi_{prf}$ is $usk = g^{1/(s + isk)} \in \G_1$ and $\widehat{usk} = \tilde{g}^{1/(s + isk)} \in \G_2$. Their verify algorithm is the same as the Dodis Yampolskiy and also verifies the asymmetric keys with bilinear pairing.
+    \item Level 2: $Sign_{usk, \widehat{usk}}(ctx, m, ivk)$: $VUF_{usk}(ctx) \to T = e(H(ctx), \widehat{usk})$: This is the "sybil resistant signature". Proof of correctness comes from sigma protocol. During the verify protocol, the 
+\end{itemize}
+
+Conclusion: SyRA creates a signature scheme where a user can "sign" on $ctx, m$ from their secret key based on a VRF of their identity and the issuer's key. This does not account for Attribute-based credentials.
+
+Attribute-Based Threshold Issuance Anonymous Counting Tokens \cite{rabaninejad_attribute-based_nodate}
+What don't they do that we do?
+We avoid Groth Sahai proofs - page 26 they refer to proving the signature scheme with GS proofs. 
+They use Naor Pinkas Reingold PRF and verify signature with GS proofs. 
+They focus only on deriving credentials / pseudonyms from their
+
+\noindent \textbf{Pseudonym Model 2: Master Credential, Multiple Issuers, Different Pseudonyms}
+The Pseudonym Model \cite{goos_pseudonym_2000} presents as an interaction between a User, a Certificate Authority (CA), and a Pseudonym Organisation (O). The user's identity is registered to the CA with their keypair $skU, pkU$, receiving a Master Credential to act as a trust anchor for all pseudonyms. With their Master Credential, Users request \emph{unlinkable} Pseudonyms for other organizations by first proving the knowledge of a Master Credential that verifies with the CA, and the pseudonym requested has the same keypair as the Master Credential. Organizations \emph{blindly} issue Pseudonym credentials on the same keypair as the Master Credential.
+
+
+\begin{itemize}
+    \item \textbf{$MasterCredIssue(skU, pkU, identity, skCA) \to CredM$} is an interactive algorithm run by a user and a credential authority with keypair $skCA, pkCA$. The user is known to the CA and shares their identity and a keypair $skU, pkU$. The $CA$ checks the $skU, pkU$ relation and issues $CredM$, a signature $\sigma_{CA} \gets Sign_{skCA}(pkU)$
+    
+    \item \textbf{$NymGeneration(CredM, pkCA, Nym, skO) \to CredNym$} is an interactive algorithm run by a user and an organization the user wishes to create a pseudonym with. 
+    $Nym1$ is a commitment $Com(skU, pkU, r)$ with randomness $r$, $r$ should be unique per pseudonym. 
+    $U$ generates a zero-knowledge proof of knowledge of a new pseudonym $Nym1$ with $skU, pkU$ corresponding to $CredM$, $CredM$ verifies correctly, and $pkU, skU$ are related. 
+    \[
+    \begin{aligned}
+    ZKP
+    \{ 
+        (skU, pkU, r): Nym &= Com(skU, pkU, r) \; \wedge \\
+        Verify_{pkCA}(CredM) &= 1 \; \wedge \\ 
+        pkU &= g^{skU}
+     \}
+    \end{aligned}
+    \]
+    On successful ZKP verification, algorithm outputs $CredNym \gets Sign_{skO}(Nym)$
+
+    \item \textbf{$NymVerify(CredNym, pkO) \to \bit $} is an interactive algorithm run by a user and a verifier. Recall $CredNym$ is a signature over a commitment $Sign_{skO}(Nym)$. The user randomizes $CredNym' \gets CredNym$ and $Nym' \gets Com(skU, pkU, r)$, and in zero knowledge, proves $CredNym$ verifies correctly with respect to the original signature, and the organisation public key
+        \[
+        \begin{aligned}
+        ZKP
+        \{  
+            (skU, pkU, r, r'): Nym' &= Com(skU, pkU, r') \; \wedge \\
+            \exists \; Nym \text{ such that } Verify_{pkO}(Nym) &= 1 \; \wedge \\ 
+            Nym &= Com(skU, pkU, r) \; \wedge \\
+            pkU &= g^{skU}
+        \}
+        \end{aligned}
+        \]
+\end{itemize}
+
+
