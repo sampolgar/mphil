@@ -90,6 +90,69 @@ keys
 \newcommand{\cred}{\mathsf{cred}}
 
 
+%--------------------------------------------------------
+% Protocol Environment
+%--------------------------------------------------------
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, xcolor, enumitem, mdframed}
+\usepackage[most]{tcolorbox}
+
+\newtcbtheorem[auto counter]{protocol}{Protocol}{
+    colback=white,
+    colframe=black,
+    fonttitle=\bfseries,
+    coltitle=black,
+    attach boxed title to top center={yshift=-2mm},
+    boxed title style={
+        colframe=black,
+        colback=white,
+        boxrule=0.5mm,
+    },
+    enhanced,
+    sharp corners,
+    % Add internal padding
+    top=12pt,
+    bottom=12pt,
+    left=12pt,
+    right=12pt,
+    % Add spacing between paragraphs
+    before skip=2em,
+    after skip=2em,
+    % Increase line spacing within the box
+    before upper={\setlength{\baselineskip}{2em}},
+}{prot}
+
+
+
+%--------------------------------------------------------
+% Construction Environment
+%--------------------------------------------------------
+
+\newtcbtheorem[auto counter]{construction}{Construction }{
+    colback=white,
+    colframe=black,
+    fonttitle=\bfseries,
+    coltitle=black,
+    attach boxed title to top center={yshift=-2mm},
+    boxed title style={
+        colframe=black,
+        colback=white,
+        boxrule=0.5mm,
+    },
+    enhanced,
+    sharp corners,
+    % Add internal padding
+    top=12pt,
+    bottom=12pt,
+    left=12pt,
+    right=12pt,
+    % Add spacing between paragraphs
+    before skip=2em,
+    after skip=2em,
+    % Increase line spacing within the box
+    before upper={\setlength{\baselineskip}{2em}},
+}{construct}
 
 
 %--------------------------------------------------------
