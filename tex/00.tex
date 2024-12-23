@@ -53,6 +53,102 @@ Compatibility for a decentralized architecture requires decentralized cryptograp
 
 
 \newpage
+
+\subsection{Contributions}
+We address the problem space created by the fundamental tension between properties in a private identity system: privacy, accountability, and functionality. 
+To resolve these tensions, we build privacy-preserving protocols that achieve accountability through Sybil resistance and revocation while maintaining functionality via complex identity support - all validated through concrete implementations, benchmarks, and formal security analysis in the game-based model.
+
+
+\begin{itemize}
+    
+    \item Support for privately linked "context/pairwise" credentials from different issuers, enabling complex identity verification scenarios and accountability. 
+    
+    \item We show protocols for issuance and verification scenarios and benchmark them
+
+    \item An efficient, customized implementation of PS signatures over commitments for anonymous credentials, with concrete performance benchmarks showing improvements over the existing approach
+    
+    \item Sybil resistance and Revocation with full system privacy
+
+    \item a system that covers all the features in the comparison table \ref{tab:comparison} 
+    
+    \item A complete system implementation in Rust using the Arkworks library, demonstrating practical feasibility (not finished)
+    
+\end{itemize}
+
+\subsection{Remaining Issues in current system / the gap}
+% Sybil Resistance with multiple credentials, Credential Chaining, Revocation.
+
+
+Evolution of Identity SYstems and the new paradigm
+- Traditional Systems: single identity provider, limited usage scope to single organisation, or multiple approved organisations with SSO ecosystem
+- Transitioning to a decentralized model: a user with multiple credentials from diverse issuers
+- Emergence of credential wallets holding multiple credentials from different sources
+- Novel functionality: combining multiple credentials for complex verifications
+
+Institutional Integration and Challenges
+- Traditional Institutions joining the DID ecosystem
+- Need for minimal infrastructure changes, cryptographic implementations, and supporting infrastructure
+- Balance existing systems with DID capability
+- Requiring interoperability between legacy and new systems
+- Requiring to adhere to regulations
+
+The new Frontier: Credential Oracles and Attestation Services
+- The new paradigm expands beyond traditional credential issuers
+- There is a rise in attestation services like TLS Notary, DECO, ZKPassport, etc
+- There is an emerging theme where attested data can be a credential which presents challenges in
+- - sybil resistance of these attestations and credential types
+- - maintaining accountability in a decentralized system
+- - preserving privacy while enabling verifications and adhering to regulations
+- - revocation capabilities without building new infrastructure
+- - new use cases are showing up, unlocking a users value. Identity using multiple credentials at the same time, Private AI showing up related to identity systems
+
+
+
+Core Challenges
+
+Integration of Privacy Preserving Primitives
+- Combining revocation, sybil resistance and privacy preserving protocols cohesively together while retaining security properties of an identity system
+- Designing efficient zero knowledge proof protocols that enable multiple primitives to work together efficiently
+- Efficient protocol composition
+
+Privacy Vs Accountability in Public Verifier Environment
+- Maintaining unlinkability across multiple credential presentations with accountability
+- Supporting public verifiability and revocation without compromising privacy
+
+Sybil Resistance
+- sybil resistance with credential oracles 
+
+Secure Credential Composition
+- credential chaining for complex verification scenarios while adhereing to regulations
+
+Revocation
+- Efficient non-membership proof for any number of credentials (batch proof)
+
+
+Limitations / Gap
+- Functionality of Private Identity Systems requires combining cryptographic primitives together. Many primitives are implemented in isolation and lose security properties when composed together in a protocol. 
+
+
+Sybil Resistance
+- Efficient, Privacy Preserving Sybil Resistance is challenging
+- Combined with low overhead on computational setup
+- Sybil Resistance is not discussed in the context of Attested Data/Oracle based Credentials 
+
+Gaps in Secure Credential Composition
+- Current SOTA may provide the above properties but do not support efficient composition and support complex verification scenarios
+
+
+Revocation
+- Efficient non-membership proof for any number of credentials (batch proof)
+
+
+
+
+
+
+
+
+
 \subsection{Technical Challenges}
 Combining different anonymous credential primitives to achieve the feature set that DID requires presents technical challenges - systems either optimize for privacy or accountability. We show in \ref{tab:comparison} our system solves such technical challenges, particularly, there are 3 key challenges we address
 How do we build a Multi-show, Attribute-based Anonymous Credential system satisfying the functionality of a DID system (Sybil Resistance, Anonymity, Revocation, Credential Chaining)
@@ -105,53 +201,6 @@ $\footnotemark[4]$ Efficient Credential Chaining
 \end{table}
 
 \todonote{S3ID is inefficient for attribute-based verification, this table doesn't show that}
-
-
-\subsection{Contributions}
-We present a comprehensive privacy-preserving decentralized identity system that improves upon the state of the art, offering accountable privacy, complex identity support, decentralization, and efficient implementation.
-\begin{itemize}
-    
-    \item Support for privately linked "context/pairwise" credentials from different issuers, enabling complex identity verification scenarios and accountability. 
-    
-    \item We show protocols for issuance and verification scenarios and benchmark them
-
-    \item An efficient, customized implementation of PS signatures over commitments for anonymous credentials, with concrete performance benchmarks showing improvements over the existing approach
-    
-    \item Sybil resistance and Revocation with full system privacy
-
-    \item a system that covers all the features in the comparison table \ref{tab:comparison} 
-    
-    \item A complete system implementation in Rust using the Arkworks library, demonstrating practical feasibility (not finished)
-    
-\end{itemize}
-
-
-\subsection{Usage}
-
-
-How do we use credentials today? Gartner says it will open new use cases
-- new loan, need multiple credentials
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -273,10 +322,10 @@ Overview: Users generate credentials from credential oracles, which are attested
 
 
 
+Master Credential issuance is an interactive process between a user 
 
 
-
-First, $user$ interacts with $ra$ to generate their identity-based decryption key $dsk$ by running $ibeextract(rpk_{ibe}, pid)$, where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. $user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
+First, $user$ interacts with $ra$ to generate where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. $user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
 \subsubsection{Create Context Credential}
 A user $user$ with a valid registration credential $rcd$ wants to obtain a context credential $ccd$ and begins by interacting with a credential provider $cp$ to generate a $precred$. $cp$'s are varied and have their own issuance requirements, which can include cryptographic and non-cryptographic requirements.
 Firstly $user$ proves possession of a valid $rcd$ by randomizing their $rcd' = psrerand(rcd)$ and verifying the signature $psverify(rcd')$, then proves knowledge of the opening of the commitment $cmopen(rcm)$ and the credential isn't expired $exp > current_time$ and isn't revoked. $cp$ verifies the proofs and checks $user$ satisfies their credential specific requirements $\phi$ which may include external attribute verification.
