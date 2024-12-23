@@ -177,7 +177,7 @@ How do we use credentials today? Gartner says it will open new use cases
 Our identity system involves users, credential issuers, auditors, and credential verifiers. 
 
 \begin{itemize}
-    \item \textbf{User: }($U$) a user holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. Their $Cred_{master}$ contains 2 unique attributes, an identifier $s$ and a key $k$ and any number of additional attributes. $Cred_{master}$ is a high-security credential issued by a government entity like a digital passport. $Cred_{ctx}$ are credentials issued by any participating credential issuer, for example, a digital driver's license or a bachelor credential issued by the university. 
+    \item \textbf{User: }($U$) a user holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. Their $Cred_{master}$ contains 2 unique attributes, an identifier $s$ and a key $k$ and any number of additional attributes. $Cred_{master}$ is a high-security credential issued by a government entity like a digital passport. $Cred_{ctx}$ are credentials issued by any participating credential issuer, for example, a digital driver's license or a university degree issued by the university. 
 
     \item \textbf{Credential Oracle: } ($CO$) Users interact with Credential Oracles who verify a user's identity and issue digital credentials over their attributes. $CO$'s have a keypair $sk_{CO}, pk_{CO}$
     
@@ -245,51 +245,37 @@ We assume the threshold committee maintaining the revocation list cannot be full
 
 
 
-% Line spacing for the document
-
-\begin{protocol}{MPCitH-VE\textsubscript{R}}
-Converts the MPCitH-IOP prover $\mathcal{P}$ and verifier $\mathcal{V}$ to an MPCitH-VE prover $\mathcal{P}$ and verifier $\mathcal{V}$ using the extractable commitment scheme $\text{ECOM} = (\text{CGen}, \text{Commit}, \text{CExt})$.
-
-\textbf{Parameters:} The number of parties $N$; the number of parallel repetitions $\tau$; ...
-
-\textbf{Key Generation:} $\mathcal{G}(1^\kappa)$ invokes $(\text{pk}, \text{sk}) \leftarrow \text{CGen}(1^\kappa)$ and ...
-
-\textbf{Two-party protocol} $\langle \mathcal{P}(w), \mathcal{V} \rangle (\text{pk}, x)$:
-\begin{enumerate}[label=\arabic*.]
-    \item $\mathcal{P}$ runs $\mathcal{P}$ on input $(x, w)$ ...
-    \item $\mathcal{P}$ separately commits ...
-\end{enumerate}
-
-\end{protocol}
 
 
 
-
-\begin{protocol}
-\textbf{Protocol 2: MPCitH-VE\textsubscript{R}}
-
-Converts the MPCitH-IOP prover $\mathcal{P}$ and verifier $\mathcal{V}$ to an MPCitH-VE prover $\mathcal{P}$ and verifier $\mathcal{V}$ using the extractable commitment scheme $\text{ECOM} = (\text{CGen}, \text{Commit}, \text{CExt})$.
-
-\textbf{Parameters:} The number of parties $N$; the number of parallel repetitions $\tau$; ...
-
-\textbf{Key Generation:} $\mathcal{G}(1^\kappa)$ invokes $(\text{pk}, \text{sk}) \leftarrow \text{CGen}(1^\kappa)$ and ...
-
-\textbf{Two-party protocol} $\langle \mathcal{P}(w), \mathcal{V} \rangle (\text{pk}, x)$:
-\begin{enumerate}[label=\arabic*.]
-    \item $\mathcal{P}$ runs $\mathcal{P}$ on input $(x, w)$ ...
-    \item $\mathcal{P}$ separately commits ...
-\end{enumerate}
-
-\end{protocol}
+\newpage
+\section{Protocol Description}
+Overview: Users generate credentials from credential oracles, which are attested to information about the user from various sources. To register for system use, the user must generate their master credential from the credential oracle associated with the government. During issuance
 
 
 
-
-
-
-\subsection{Protocol Description (This section was done previously, needs updating!}
 \todo{Include Sequence Diagrams / diagram demonstrating protocol flow?}
-\subsubsection{Create Registration Credential}
+\subsection{Registration}
+
+- user interacts with a credential oracle (master credential oracle), and receives a commitment/proof from the oracle with their personal information.
+- The user interacts with the credential issuer, has the commitment/proof from the credential oracle of the users personal information.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 First, $user$ interacts with $ra$ to generate their identity-based decryption key $dsk$ by running $ibeextract(rpk_{ibe}, pid)$, where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. $user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
 \subsubsection{Create Context Credential}
 A user $user$ with a valid registration credential $rcd$ wants to obtain a context credential $ccd$ and begins by interacting with a credential provider $cp$ to generate a $precred$. $cp$'s are varied and have their own issuance requirements, which can include cryptographic and non-cryptographic requirements.
@@ -332,34 +318,139 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
     \textbf{Public parameters:} $g, h \in \G$
 
     \textbf{Inputs:} $C$ such that $C = g^mh^r$, $\Prover$ knows $m, r \in \Z_q$.
+
+    \textbf{Relation:} $\mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}$
     \vspace{1em}
+
     \begin{enumerate}
-        \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha_1}h^{\rho_1}$
+        \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
         
         \item $\Verifier$ sends challenge $c \sample [q-1].$
     
-        \item $\Prover$ sends $s_1 \gets \alpha_1 + cm, s_2 \gets \rho_1 + cr$
+        \item $\Prover$ sends $s \gets \alpha + cm, u \gets \rho + cr$
     
-        \item $\Verifier$ verifies that $g^{s_1}h^{s_2} = C^cT$
+        \item $\Verifier$ verifies that $g^{s}h^{u} = C^cT$
     \end{enumerate}
 \end{construction}
 
-\begin{theorem}
-    Construction \ref{construct:openproof} is a $\Sigma-$construction for the relation: 
-    \[
-    \mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}
-    \]
+\begin{theorem}[Perfect Completeness]
+    Construction \ref{construct:openproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$ with perfect completeness: 
 \end{theorem}
 \begin{proof}
-    It follows from \cite{wahby_doubly-efficient_2018, schnorr_efficient_1991}
+    We prove completeness by showing that for any $(C, g, h, q),(m,r) \in \mathcal{R}$, when both $\Prover$ and $\Verifier$ follow the protocol, $\Verifier$ accepts with $\Pr$ = 1.
 
-    Completeness: 
+    Let $x = (C,g,h,q)$ be common input and $w = (m, r)$ be $\Prover$'s private input. Consider an execution of the protocol where:
+    \begin{enumerate}
+        \item $\Prover$ samples $\alpha, \rho \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
+        \item $\Verifier$ sends challenge $c \sample [q-1]$
+        \item $\Prover$ responds with $s \gets \alpha+m, u \gets \rho+r$
+    \end{enumerate}
+    Verification holds by 
+    \begin{align}
+        g^sh^u &\stackrel{?}{=} C^cT \notag \\
+        g^{\alpha + cm}h^{\rho + cr} &\stackrel{?}{=} (g^mh^r)^cg^{\alpha}h^{\rho} \notag  \\
+        g^{\alpha + cm}h^{\rho + cr} &= g^{mc + \alpha} h^{rc + \rho} \notag 
+    \end{align}
+    Thus, an honest verifier always accepts an honest prover's proof.
 \end{proof}
 
 
+\begin{theorem}[Special Soundness]
+    Construction \ref{construct:openproof} satisfies the special soundness of relation $\mathcal{R}$. 
+\end{theorem}
+\begin{proof}
+    Let $Tr_1 = (T, c, s, u)$ and $Tr_2 = (T,c',s',u')$ be two accepting transcripts for the same initial commitment $T$ where $c \neq c'$. We construct a knowledge extractor $\Extractor$ that extracts the witness $w = (m,r)$ as follows:
+    \begin{enumerate}
+        \item  Since both transcripts are accepting, they satisfy: $g^sh^u = C^cT$ and $g^{s'}h^{u'} = C^{c'}T$.
+        \item Evaluate as a system of linear equations:
+             \begin{align}
+               \frac{g^sh^u}{g^{s'}h^{u'}} &= \frac{C^c}{C^{c'}} \notag \\
+               g^{s-s'}h^{u-u'} &= g^{m(c-c')}h^{r(c-c')} \notag \\
+            \end{align}
+       \item By the homomorphic property of the exponents, we obtain two accepting transcripts 
+       \[
+       s-s' = m(c-c') \qquad u-u' = r(c-c')
+       \] 
+       therefore $\Extractor$ extracts, $m = \frac{s-s'}{c-c'} \qquad r = \frac{u-u'}{c-c'}$ Which satisfies the commitment construction $C = g^mh^r$
+    \end{enumerate}
+
+    This shows that if $\Prover$ can respond correctly to 2 different challenges for the commitment $T$, they must "know" the witness $(m,r)$.
+\end{proof}
+
+\begin{proof}
+    Suppose we have two accepting transcripts for the same commitment $(Comm, Chall, Resp)$
+    $(C, T, c, s, u)$ and $(C,T,c',s',u')$ where $c \neq c'$
+\end{proof}
+
+
+\begin{theorem}[Perfect Zero-Knowledge]
+    Construction 1 is perfect zero-knowledge.
+\end{theorem}
+
+\begin{proof}
+    We show that for any verifier $\Verifier$*, there exists a simulator $\Simulator$ that can generate transcripts that are perfectly indistinguishable from real protocol execution. Let $\texttt{view}_v(x,w)$ denote $\Verifier$'s view in a real protocol execution with common input $x = (C,g,h,q)$ and witness $w = (m,r)$. 
+
+    \noindent \textbf{Simulator Construction: } Given only public input $(C,g,h,q)$, simulator $\Simulator$ operates as follows:
+    \begin{enumerate}
+        \item Sample $s', u', c' \sample [q-1]$ uniformly at random
+        \item  Compute $T' = g^{s'}h^{u'} \cdot C^{-c'}$
+        \item Output transcript $(T', c', (s,u))$
+    \end{enumerate}
+
+    \noindent \textbf{Correctness of Simulation: } The simulated transcript satisfies the verification equation $g^{s'}h^{u'} = C^{c'}T'$, by substituting $T' = g^{s'}h^{u'} \cdot C^{-c'}$ and satisfying $g^{s'}h^{u'} = C^{c'} \cdot g^{s'}h^{u'} \cdot C^{-c'}$
+
+    \noindent \textbf{Perfect Indistinguishability: } For any fixed witness $(m,r)$ where $C = g^mh^r$, we prove 
+    \[
+    \Pr \left[ \Simulator(C, g, h, q) = (T',c',(s',u')) \right] = \Pr \left[ \texttt{view}_v(x,w) = (T,c,(s,u)) \right]
+    \]
+    
 
 
 
+
+\newpage
+    
+    Recall a real transcript:
+    \begin{enumerate}
+        \item $T = g^{\alpha}h^{\rho}$ where $\alpha, \rho \sample [q-1]$ are random
+        \item $c \sample [q-1]$ is a random challenge
+        \item $s = \alpha + cm, u = \rho + mr$. Solving for $\alpha, \rho$, we obtain $\alpha = s - cm, \rho = u - mr$. We use this in the section below.
+    \end{enumerate}
+
+
+    We construct a simulator $\Simulator$ that, given public input $(C, g, h, q)$ generates transcripts indistinguishable from real.  $\Simulator$ operates as follows:
+    \begin{enumerate}
+        \item Samples $s', u', c' \sample [q-1]$ from random
+        \item Computes $T' = g^{s'}h^{u'} \cdot C^{-{c'}} $
+        \begin{align}
+            T' \; &= \; g^{s'}h^{u'} \cdot C^{-{c'}} \notag \\
+            &= g^{s'}h^{u'} \cdot (g^mh^r)^{-{c'}} \notag \\
+            &= g^{s'}h^{u'} \cdot g^{-cm'}h^{-cr'} \notag \\
+            &= g^{s'-mc'}h^{u'-rc'} \notag \\
+        \end{align} 
+        \item Output transcript $(T', c', (s', u'))$ where without $\alpha, \rho$ from the real run, $\Simulator$ recreates the probability distribution for $\alpha = s - mc, \rho = u - rc$
+    \end{enumerate}
+
+    For any fixed witness $(m,r)$, where $C = g^mh^r$,  for any transcript $T, c, (s,u)$, we show that the probability of $S$ outputting the transcript is the same probability of it occurring in protocol execution. 
+\[
+\Pr \left[ \Simulator(C, g, h, q) = (T',c',(s',u')) \right] = \Pr \left[ \langle \Prover(m,r),\Verifier \rangle = (T,c,(s,u)) \right]
+\]
+
+To prove in
+\begin{itemize}
+    \item $\Prover$ samples $\alpha, \rho, c \sample [q-1]$
+    \item $T = g^{\alpha}h^{\rho}$
+    \item $s = \alpha + cm, u = \rho + cr$
+\end{itemize}
+
+For any fixed transcript $(T, c, (s,u))$ we show:
+\begin{enumerate}
+    \item In both real and simulated executions, $c$ is uniformly distributed in $[q-1]$
+    \item Given any fixed $c$
+\end{enumerate}
+
+
+\end{proof}
 
 
 
@@ -598,6 +689,7 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 \end{itemize}
 
 \subsection{NIZK for Credential Chaining}
+\subsection{NIZK for equality of commitments in different groups}
 \todonote{sam to do}
 
 
@@ -1443,3 +1535,32 @@ z_{r4} = \rho_4 + e \cdot r_4 \<\< \\
 \<\< C_4^e \cdot T_4 \stackrel{?}{=}  h^{z_{r4}}\\
 \<\< C_3/C_4 = g \\
 }
+
+
+% \begin{construction}{Opening Proof($C$)}{test}
+%     \vspace{1em}
+%     \textbf{Public parameters:} $g, h \in \G$
+
+%     \textbf{Inputs:} $C$ such that $C = g^mh^r$, $\Prover$ knows $m, r \in \Z_q$.
+%     \vspace{1em}
+%     \begin{enumerate}
+%         \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha_1}h^{\rho_1}$
+        
+%         \item $\Verifier$ sends challenge $c \sample [q-1].$
+    
+%         \item $\Prover$ sends $s_1 \gets \alpha_1 + cm, s_2 \gets \rho_1 + cr$
+    
+%         \item $\Verifier$ verifies that $g^{s_1}h^{s_2} = C^cT$
+%     \end{enumerate}
+% \end{construction}
+
+% \begin{theorem}
+%     Construction \ref{construct:openproof} is a $\Sigma-$protocol for the relation
+%     \[
+%     \mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}
+%     \]
+    
+% \end{theorem}
+% \begin{proof}
+%     It follows from \cite{wahby_doubly-efficient_2018, schnorr_efficient_1991}
+% \end{proof}
