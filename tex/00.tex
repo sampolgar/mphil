@@ -58,96 +58,36 @@ Compatibility for a decentralized architecture requires decentralized cryptograp
 We address the problem space created by the fundamental tension between properties in a private identity system: privacy, accountability, and functionality. 
 To resolve these tensions, we build privacy-preserving protocols that achieve accountability through Sybil resistance and revocation while maintaining functionality via complex identity support - all validated through concrete implementations, benchmarks, and formal security analysis in the game-based model.
 
+\begin{enumerate}
+    
+    \item  A privacy-preserving identity system that enables secure credential chaining across multiple issuers while maintaining unlinkability between presentations. 
 
-\begin{itemize}
+    \item Support for complex identity verification scenarios while preserving privacy
     
-    \item Support for privately linked "context/pairwise" credentials from different issuers, enabling complex identity verification scenarios and accountability. 
-    
-    \item We show protocols for issuance and verification scenarios and benchmark them
+    \item  A complete system implementation using PS Signatures over commitments that achieves sybil resistance and revocation while enabling multi-issuer credential chaining - validated through concrete implementations, benchmarks, and formal security analysis.
 
-    \item An efficient, customized implementation of PS signatures over commitments for anonymous credentials, with concrete performance benchmarks showing improvements over the existing approach
     
-    \item Sybil resistance and Revocation with full system privacy
+\end{enumerate}
 
-    \item a system that covers all the features in the comparison table \ref{tab:comparison} 
-    
-    \item A complete system implementation in Rust using the Arkworks library, demonstrating practical feasibility (not finished)
-    
-\end{itemize}
+
+1. A privacy-preserving identity system that enables secure credential chaining across multiple issuers while maintaining unlinkability between presentations.
+
+2. Support for verifiable credential linking between government and private issuers, enabling complex identity verification scenarios while preserving privacy.
+
+3.
 
 \subsection{Remaining Issues in current system / the gap}
-% Sybil Resistance with multiple credentials, Credential Chaining, Revocation.
 
+Digital identity is undergoing a fundamental transformation, evolving across three frontiers: decentralization, mandatory institutional adoption, and the emergence of attestation services.    
+Identity systems are evolving from trusted, single-issuer models where a user authenticates with a single authority toward a decentralized paradigm where users publicly verify any multitude of credentials, manage multiple credentials for diverse issuers with their digital wallets.
 
-Evolution of Identity SYstems and the new paradigm
-- Traditional Systems: single identity provider, limited usage scope to single organisation, or multiple approved organisations with SSO ecosystem
-- Transitioning to a decentralized model: a user with multiple credentials from diverse issuers
-- Emergence of credential wallets holding multiple credentials from different sources
-- Novel functionality: combining multiple credentials for complex verifications
+\noindent As traditional organizations increasingly adopt decentralized identity capabilities and while it's also being mandated in the EU, they seek solutions that minimize changes to their existing infrastructure while enabling new DID capabilities and maintaining regulatory compliance. Beyond traditional organisations, a new frontier of credential issuance is emerging through automated attestation services like TLS Notary, Chainlink's DECO, Brave Browser's distefano, and Sui Labs zkLogin which enable verifiable data to become a credential. This transformation, while powerful, introduces challenges to identity systems run by governments and trusted organisations  who require sybil resistance protecation and revocation while maintaining privacy in a system where traditional infrastructure assumptions such as ease of revocation no longer hold.
 
-Institutional Integration and Challenges
-- Traditional Institutions joining the DID ecosystem
-- Need for minimal infrastructure changes, cryptographic implementations, and supporting infrastructure
-- Balance existing systems with DID capability
-- Requiring interoperability between legacy and new systems
-- Requiring to adhere to regulations
+\noindent \textbf{Core Challenges} Evolving from single-issuer to multi-issuer, multi-credential environments introduces several challenges. While existing solutions support private identity systems with anonymity, sybil resistance and revocation for single issuers. The introduction of multiple credentials and their sources transforms solved problems into new challenges. A decentralized system for the frontier of credentials must maintain anonymity across credential presentations, implement cross credential sybil resistance and efficient revocation checks without centralized trust.
 
-The new Frontier: Credential Oracles and Attestation Services
-- The new paradigm expands beyond traditional credential issuers
-- There is a rise in attestation services like TLS Notary, DECO, ZKPassport, etc
-- There is an emerging theme where attested data can be a credential which presents challenges in
-- - sybil resistance of these attestations and credential types
-- - maintaining accountability in a decentralized system
-- - preserving privacy while enabling verifications and adhering to regulations
-- - revocation capabilities without building new infrastructure
-- - new use cases are showing up, unlocking a users value. Identity using multiple credentials at the same time, Private AI showing up related to identity systems
+\noindent Additionally, composing privacy-preserving primitives together to achieve the properties we require introduces complexity. While individual primitives for anonymous credentials, Sybil resistance, and revocation are well understood in isolation, the integration highlights the trilemma of accountable privacy systems - the tension between privacy, accountability, and functionality. The core challenge lies in designing efficient zero knowledge proof systems that combine these primitives in protocols that maintain the security and privacy properties of our system with practical efficiency.
 
-
-
-Core Challenges
-
-Integration of Privacy Preserving Primitives
-- Combining revocation, sybil resistance and privacy preserving protocols cohesively together while retaining security properties of an identity system
-- Designing efficient zero knowledge proof protocols that enable multiple primitives to work together efficiently
-- Efficient protocol composition
-
-Privacy Vs Accountability in Public Verifier Environment
-- enabling mass-scale public verifiability without centralised trust while distributing trust
-- Maintaining unlinkability across multiple credential presentations with accountability
-- Supporting public verifiability and revocation without compromising privacy
-
-Sybil Resistance
-- sybil resistance with credential oracles 
-
-Secure Credential Composition
-- credential chaining for complex verification scenarios while adhereing to regulations
-
-Revocation
-- Efficient non-membership proof for any number of credentials (batch proof)
-
-
-Limitations / Gap
-- Functionality of Private Identity Systems requires combining cryptographic primitives together. Many primitives are implemented in isolation and lose security properties when composed together in a protocol. 
-
-
-Sybil Resistance
-- Efficient, Privacy Preserving Sybil Resistance is challenging
-- Combined with low overhead on computational setup i.e. many issuers don't need to run revocation list themselves
-- Sybil Resistance is not discussed in the context of Attested Data/Oracle based Credentials 
-
-
-Revocation
-- Efficient non-membership proof for any number of credentials (batch proof)
-
-Gaps in Secure Credential Composition
-- Current SOTA may provide the above properties but do not support efficient composition and support complex verification scenarios
-
-
-
-
-
-
-
+\noindent Thirdly arises when users verify attributes from multiple credentials. Secure credential composition is required, while allowing flexible zero knowledge proof attribute attestations and selective disclosure. Lastly, users with multiple credentials require to privately prove their credentials are not revoked, introducing a scaling challenge - enabling efficient zero-knowledge batch proofs of non-membership while maintaining privacy and practical verification times. 
 
 
 
@@ -156,14 +96,14 @@ Gaps in Secure Credential Composition
 Combining different anonymous credential primitives to achieve the feature set that DID requires presents technical challenges - systems either optimize for privacy or accountability. We show in \ref{tab:comparison} our system solves such technical challenges, particularly, there are 3 key challenges we address
 How do we build a Multi-show, Attribute-based Anonymous Credential system satisfying the functionality of a DID system (Sybil Resistance, Anonymity, Revocation, Credential Chaining)
 
-We identify three fundamental technical challenges in building a privacy-preserving DID system with Anonymous Credentials:
+\noindent We identify three fundamental technical challenges in building a privacy-preserving DID system with Anonymous Credentials:
 
 \begin{enumerate}
     \item Sybil-Resistant Anonymous Credentials: Traditional Sybil resistance mechanisms fundamentally conflict with credential anonymity - they either require identity linkage citation or expensive MPC protocols \cite{maram2021candid}. While recent approaches like \cite{wang2023hades} improve efficiency, they achieve this at the expense of
 
     \item Private Credential Chaining: Enabling users to prove ownership of multiple credentials while maintaining unlinkability between presentations. Current solutions either reveal credential relationships \cite{maram2021candid} or require prohibitively expensive zero-knowledge proofs \cite{rabaninejad_attribute-based_2024}.
 
-    Efficient Private Revocation: Interaction with existing revocation approaches either compromise anonymity or require expensive cryptographic accumulators that limit scalability.
+    \item Efficient Private Revocation: Interaction with existing revocation approaches either compromise anonymity or require expensive cryptographic accumulators that limit scalability.
 
     \item Implementing efficient revocation mechanisms that preserve anonymity. 
 
@@ -178,14 +118,14 @@ Our work presents novel techniques to address these challenges while maintaining
 \begin{center}
 \caption{Comparison of our construction over previous work.}
 \label{tab:comparison}
-\begin{tabular}{l|ccccc}
-Features    									& Sybil Resistance		& Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$         & Anonymity$\footnotemark[3]$     & Revocation\\
+\begin{tabular}{l|cccccc}
+Features    									& Multi Issuer & Sybil Resistance  & Revocation & Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$   & Anonymity$\footnotemark[3]$   \\
 \hline
-CanDID \cite{maram2021candid}     				& \ding{51} 	& \ding{55}     & \ding{55}     & \ding{55}		& \ding{51}\\
-SyRA \cite{crites_syra_2024}     				& \ding{51}    	& \ding{55}     & \ding{55}     & \ding{51}		& \ding{55}\\
-S3ID \cite{rabaninejad_attribute-based_nodate}  & \ding{51}    	& \ding{51}     & \ding{51}\footnotemark[4]     & \ding{51}		& \ding{55}\\
-zk-creds \cite{rosenberg_zk-creds_2022}  & \ding{51}    	& \ding{51}     & \ding{51}     & \ding{51}		& \ding{55}\\
-Our Work  										& \ding{51}    	& \ding{51}     & \ding{51}     & \ding{51}		& \ding{51}\\
+
+CanDID \cite{maram2021candid}     				& \ding{51}     & \ding{51} 	& \ding{51}  &  \ding{55}     & \ding{55}                     & \ding{55}		\\
+SyRA \cite{crites_syra_2024}     				& \ding{55}     & \ding{51}    	& \ding{55}  &  \ding{55}     & \ding{55}                     & \ding{51}		\\
+S3ID \cite{rabaninejad_attribute-based_nodate}  & \ding{51}     & \ding{51}    	& \ding{55}  &  \ding{51}     & \ding{55}\footnotemark[4]     & \ding{51}		\\
+Our Work  										& \ding{51}     & \ding{51}    	& \ding{51}  &  \ding{51}     & \ding{51}                     & \ding{51}		\\
 \end{tabular}
 \end{center}
 
@@ -200,7 +140,10 @@ $\footnotemark[2]$ M-ABC is a Multi-Show Attribute Based Credential, allowing a 
 $\footnotemark[3]$ Anonymity is defined in the Anonymous Credential model, no verifier and issuer (collaborating together) may learn more about the user or their credentials other than what the user discloses and what their credentials verify. Multiple credential verifications are unlinkable.
 
 \footnotesize
-$\footnotemark[4]$ Efficient Credential Chaining 
+$\footnotemark[4]$ While possible in S3ID, they mention 
+
+\footnotesize
+$\footnotemark[5]$ Multi-issuer means supporting credentials from different authorities that can be cryptographically linked while preserving privacy
 \end{table}
 
 \todonote{S3ID is inefficient for attribute-based verification, this table doesn't show that}
