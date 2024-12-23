@@ -112,6 +112,7 @@ Integration of Privacy Preserving Primitives
 - Efficient protocol composition
 
 Privacy Vs Accountability in Public Verifier Environment
+- enabling mass-scale public verifiability without centralised trust while distributing trust
 - Maintaining unlinkability across multiple credential presentations with accountability
 - Supporting public verifiability and revocation without compromising privacy
 
@@ -131,15 +132,17 @@ Limitations / Gap
 
 Sybil Resistance
 - Efficient, Privacy Preserving Sybil Resistance is challenging
-- Combined with low overhead on computational setup
+- Combined with low overhead on computational setup i.e. many issuers don't need to run revocation list themselves
 - Sybil Resistance is not discussed in the context of Attested Data/Oracle based Credentials 
+
+
+Revocation
+- Efficient non-membership proof for any number of credentials (batch proof)
 
 Gaps in Secure Credential Composition
 - Current SOTA may provide the above properties but do not support efficient composition and support complex verification scenarios
 
 
-Revocation
-- Efficient non-membership proof for any number of credentials (batch proof)
 
 
 
