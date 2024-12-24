@@ -55,28 +55,20 @@ Compatibility for a decentralized architecture requires decentralized cryptograp
 \newpage
 
 \subsection{Contributions}
-We address the problem space created by the fundamental tension between properties in a private identity system: privacy, accountability, and functionality. 
-To resolve these tensions, we build privacy-preserving protocols that achieve accountability through Sybil resistance and revocation while maintaining functionality via complex identity support - all validated through concrete implementations, benchmarks, and formal security analysis in the game-based model.
+
+We present a privacy-preserving decentralized identity system for multi-issuer environments. Our system combines anonymous credential primitives with decentralized identity architecture, achieving security and privacy properties that are challenging to realize when naively combining these building blocks. Our main contributions are:
 
 \begin{enumerate}
     
-    \item  A privacy-preserving identity system that enables secure credential chaining across multiple issuers while maintaining unlinkability between presentations. 
+    \item  A privacy-preserving identity system that enables secure credential chaining and complex anonymous identity verification across multiple issuers.
 
-    \item Support for complex identity verification scenarios while preserving privacy
+    \item A novel zero-knowledge building block that enables private proofs of VRF derivations from committed messages.
     
     \item  A complete system implementation using PS Signatures over commitments that achieves sybil resistance and revocation while enabling multi-issuer credential chaining - validated through concrete implementations, benchmarks, and formal security analysis.
 
-    
 \end{enumerate}
 
-
-1. A privacy-preserving identity system that enables secure credential chaining across multiple issuers while maintaining unlinkability between presentations.
-
-2. Support for verifiable credential linking between government and private issuers, enabling complex identity verification scenarios while preserving privacy.
-
-3.
-
-\subsection{Remaining Issues in current system / the gap}
+\subsection{Gap Analysis}
 
 Digital identity is undergoing a fundamental transformation, evolving across three frontiers: decentralization, mandatory institutional adoption, and the emergence of attestation services.    
 Identity systems are evolving from trusted, single-issuer models where a user authenticates with a single authority toward a decentralized paradigm where users publicly verify any multitude of credentials, manage multiple credentials for diverse issuers with their digital wallets.
@@ -99,6 +91,16 @@ How do we build a Multi-show, Attribute-based Anonymous Credential system satisf
 \noindent We identify three fundamental technical challenges in building a privacy-preserving DID system with Anonymous Credentials:
 
 \begin{enumerate}
+    
+    \item employing an anonymous credential scheme
+
+    \item proof protocols
+
+    \item batch revocation
+
+
+
+
     \item Sybil-Resistant Anonymous Credentials: Traditional Sybil resistance mechanisms fundamentally conflict with credential anonymity - they either require identity linkage citation or expensive MPC protocols \cite{maram2021candid}. While recent approaches like \cite{wang2023hades} improve efficiency, they achieve this at the expense of
 
     \item Private Credential Chaining: Enabling users to prove ownership of multiple credentials while maintaining unlinkability between presentations. Current solutions either reveal credential relationships \cite{maram2021candid} or require prohibitively expensive zero-knowledge proofs \cite{rabaninejad_attribute-based_2024}.
