@@ -85,32 +85,22 @@ Identity systems are evolving from trusted, single-issuer models where a user au
 
 
 \subsection{Technical Challenges}
-Combining different anonymous credential primitives to achieve the feature set that DID requires presents technical challenges - systems either optimize for privacy or accountability. We show in \ref{tab:comparison} our system solves such technical challenges, particularly, there are 3 key challenges we address
-How do we build a Multi-show, Attribute-based Anonymous Credential system satisfying the functionality of a DID system (Sybil Resistance, Anonymity, Revocation, Credential Chaining)
 
-\noindent We identify three fundamental technical challenges in building a privacy-preserving DID system with Anonymous Credentials:
+Building a privacy-preserving decentralized identity system requires balancing competing requirements: adhereing to strong security and privacy properties while retaining accountability measures and providing efficient verification of complex identity statements. While individual cryptographic primitives exist for many of these properties in isolation, combining them while maintaining security and efficiency introduces technical challenges, we identity three fundamental challenges below: 
 
 \begin{enumerate}
+
+    \item \textbf{Efficient Rerandomizable Signatures over Commitments} A key technical challenge was designing a signature scheme that efficiently supports both rerandomization and zero-knowledge proofs over-committed attributes. While existing schemes like BBS+, CL, and standard PS provide these properties, we use a customized PS signature with the lowest overhead in the randomization step. %what I want to say here is that after the randomization step, we are given a commitment in G1 which is easy and efficient to work with, rather than some other construction which needs custom proofs and new security proofs for each system built with it. 
+    Unlike BBS+ and CL04, we maintain compatibility with standard Pedersen Commitments, enabling efficient proofs from standard techniques in the literature.
     
-    \item employing an anonymous credential scheme
 
-    \item proof protocols
-
-    \item batch revocation
+    \item \textbf{Sybil-Resistant Context Credential Construction} Designing an efficient mechanism to link context credentials to a master credential while preserving privacy, our solution uses a novel building block that combines a VRF with committed attributes - the user's Master Credential contains a commitment with their VRF key and generates a context credential nullifier with a VRF parameterized by the key and input the context string. 
+    The complexity lies in efficiently proving in zero knowledge this nullifier was correctly derived from the committed key present in a valid, unrevoked master credential. This construction enables strong sybil resistance while maintaining unlinkability between presentations.
 
 
-
-
-    \item Sybil-Resistant Anonymous Credentials: Traditional Sybil resistance mechanisms fundamentally conflict with credential anonymity - they either require identity linkage citation or expensive MPC protocols \cite{maram2021candid}. While recent approaches like \cite{wang2023hades} improve efficiency, they achieve this at the expense of
-
-    \item Private Credential Chaining: Enabling users to prove ownership of multiple credentials while maintaining unlinkability between presentations. Current solutions either reveal credential relationships \cite{maram2021candid} or require prohibitively expensive zero-knowledge proofs \cite{rabaninejad_attribute-based_2024}.
-
-    \item Efficient Private Revocation: Interaction with existing revocation approaches either compromise anonymity or require expensive cryptographic accumulators that limit scalability.
-
-    \item Implementing efficient revocation mechanisms that preserve anonymity. 
+    \item \textbf{Efficient Multi-Credential Proofs and Revocation} enabling efficient proofs over multiple credentials while ensuring practical revocation. Our construction leverages Sigma protocols and Pedersen commitments, which, although they scale linearly with the credential attributes, they are extremely efficient in practice and support the most expressive statements. We integrate existing efficient revocation mechanisms that support batch non-membership proofs, allowing multiple credentials to be efficiently verified simultaneously while maintaining anonymity through zero-knowledge proof protocols. 
 
 \end{enumerate}
-Our work presents novel techniques to address these challenges while maintaining practical efficiency.
 
 
 \subsubsection{Comparison}
@@ -169,23 +159,154 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 \cleardoublepage
 \section{Identity System Overview}
 
+\subsection{Entities}
+Our identity system involves users, credential issuers, auditors, and credential verifiers.
 
-\subsection{System Model}
-Our identity system involves users, credential issuers, auditors, and credential verifiers. 
+\noindent \textbf{User} ($U$) holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. The master credential contains a unique identifier $s$, a VRF key $k$, and additional attributes, and is issued by a government entity. Context credentials are issued by participating organizations like universities or licensing authorities.
+
+\noindent \textbf{Credential Oracle} ($CO$) verifies user identity and issues digital credentials. The Master Credential Oracle operates with keypair $(SK_{m}, PK_{m})$ for issuing root credentials, while Context Credential Oracles use $(SK_{c}, PK_{c})$ for issuing domain-specific credentials.
+
+\noindent \textbf{Auditor} ($A$) consists of a threshold of nodes holding encryption and accumulator keypairs; for simplicity, we refer to both as $(sk_A, pk_A)$. Users encrypt their VRF keys under the auditors' public key, as in key escrow schemes. Auditors can decrypt this key during revocation. The Auditor updates the revocation list. 
+
+\noindent \textbf{Verifier} ($V$) represents any party wishing to verify a user's credentials.
+
+
+\subsection{Data Objects}
+
+We now describe the data objects that form our privacy-preserving decentralized identity system. At its core, a Master Credential serves as a root of trust, from which Context Credentials can be derived. During Context Credential issuance, users generate a deterministic nullifier unique to each context using their Master Credential's secrets and the context string, enabling privacy-preserving credential linking.
+
+\subsubsection{Master Credential $Cred_m$}: 
+A master credential is a high-security root credential issued by a government entity containing:
 
 \begin{itemize}
-    \item \textbf{User: }($U$) a user holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. Their $Cred_{master}$ contains 2 unique attributes, an identifier $s$ and a key $k$ and any number of additional attributes. $Cred_{master}$ is a high-security credential issued by a government entity like a digital passport. $Cred_{ctx}$ are credentials issued by any participating credential issuer, for example, a digital driver's license or a university degree issued by the university. 
+    \item Identity string $s$: a unique identifier
+    \item VRF key $k$: used to generate context-specific nullifiers
+    \item Context type $ctx$: always set to "master" for master credentials
+    \item Additional attributes $attrs$: including expiry date, date of birth, etc.
+    \item Credential Structure:
+    \begin{itemize}
+        \item Master Commitment $C_m = Com([s, k, ctx, attrs],r)$: A Pedersen commitment to the credential attributes using randomness $r$
+        \item Oracle signature $\sigma_m$: A rerandomizable signature over $C_m$, verifiable under $PK_m$
+    \end{itemize}
+\end{itemize}
 
-    \item \textbf{Credential Oracle: } ($CO$) Users interact with Credential Oracles who verify a user's identity and issue digital credentials over their attributes. $CO$'s have a keypair $sk_{CO}, pk_{CO}$
-    
-    \item \textbf{Credential Issuer: } ($I$) There are 2 types of credential issuers. Credential Oracle $CO$'s verify identity and issue pre-credentials and use their own issuing schemes. In this paper, we assume they all run a rerandomizable anonymous credential. A user's Master Credential $Cred_{master}$ is a high-value credential and thus issued by the threshold committee or nodes of a blockchain. To be issued a Master Credential, a user interacts with the Master Credential Oracle to be first issued a pre-credential, then takes it to the Committee to be issued a Master Credential. $sk_{I}, pk_{I}$
+\subsubsection{Master Credential Oracle Data Record:} Following successful master credential issuance, the oracle maintains a record containing:
+\begin{itemize}
+    \item Commitment-Signature Pair $(C_m, Cred_m)$:
+    \begin{itemize}
+        \item Master commitment $C_m = Com([s,k,ctx,attrs],r)$: the Pedersen commitment over credential attributes
+        \item Oracle Signature $Cred_m$ The signature over commitment $C_m$
+    \end{itemize}
+    \item Key Encryption and Proof:
+    \begin{itemize}
+        \item Encrypted VRF Key $CT_k$: the threshold encryption of the user's VRF key, encrypted with the Auditor's public key $TPKE.Enc_{PK_a}(k)$
+        \item Consistency proof $\Pi_{CT}$: The zero-knowledge proof that $CT_k$ encrypts the committed key $k$
+    \end{itemize}
+\end{itemize}
 
-    \item \textbf{Auditor: }($A$) The auditor, also a threshold of nodes, holds the shared secret keys for threshold decryption. The user encrypts their key $k$ with the Auditor's public key $TPKE.Enc_{pkA}(k)$ and shares with the credential oracle during issuance. During Revocation, the oracle provides the encryption, receives $k$ and can revoke accordingly. 
 
-    \item \textbf{Verifier: } ($V$) A verifier is any party wanting to verify a user's credential
+\subsubsection{Context Credential $Cred_c$}: 
+A user interacts with the Context Credential oracle to obtain a context-specific credential, which contains:
+\begin{itemize}
+    \item Identity string $s$: The user's unique identifier from their master credential
+    \item Nullifier $\tau$: A deterministic value generated from $(s, ctx)$
+    \item Context string $ctx$: A hashed identifier of the credential type (e.g., $dmv$, $universityofsydney$)
+    \item Attribute list $attrs$: Additional credential-specific information such as expiry date
+    \item $\sigma_c$ the rerandomizable signature over $C_c$ from the context credential oracle that proves the user has been issued $Cred_c$ over $C_c$
+    \item Credential Structure:
+    \begin{itemize}
+        \item Context commitment $C_c$: A Pedersen commitment $Com([s, \tau, ctx, attrs],r')$ to the credential attributes using randomness $r'$
+        \item Oracle signature $\sigma_c$: A rerandomizable signature over $C_c$, verifiable under $PK_c$
+    \end{itemize}
     
 \end{itemize}
 
+
+\subsubsection{Context Credential Oracle Data Record:} During credential issuance, the oracle maintains a record of the interaction containing:
+\begin{itemize}
+    \item Master Credential Verification: 
+        \begin{itemize}
+            \item Randomized credential $Cred_m'$: a rerandomized version of the master credential
+            \item Randomized commitment $C_m'$: the corresponding rerandomized commitment
+            \item Opening proof $\Pi_{ComOpen}$: Zero-knowledge proof of correct commitment opening
+            \item Revocation proof $\Pi_{NonRevoked}$:  Zero-knowledge proof that the credential has not been revoked
+        \end{itemize}
+    \item Nullifier Components:
+    \begin{itemize}
+        \item Context nullifier $\tau$: The value $VRF(k,ctx)$ derived from the user's committed VRF key and credential context
+        \item Derivation proof $\Pi_{\tau}$: Zero-knowledge proof establishing that
+        \begin{itemize}
+            \item The VRF computation is correct
+            \item The key $k$ matches the one committed in $Cred_m$
+            \item The context string $ctx$ is correctly incorporated
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Revocation List:} 
+\begin{itemize}
+    \item Accumulator Structure:
+    \begin{itemize}
+        \item Accumulator value $A$: The current state of the accumulator representing non-revoked credentials
+        \item Secret key $sk_A$: The accumulator manager's key for updates
+        \item Auxiliary information $aux$: Additional data needed for witness updates
+    \end{itemize}
+    \item Revoked Elements:
+    \begin{itemize}
+        \item Master revocations $k$: VRF keys of revoked master credentials
+        \item Context revocations $\tau$: Nullifiers of revoked context credentials
+        \item Timestamp $t$: Time of revocation
+        \item Reason code $rc$: Justification for revocation
+    \end{itemize}
+    \item Witness Management:
+    \begin{itemize}
+        \item Non-membership witness $w$: Proof that a credential is not in the revocation set
+        \item Update information $upd$: Data for users to update their witnesses after accumulator changes
+    \end{itemize}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+\newpage
+\subsection{Protocols}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 \subsection{Syntax}
 Syntax of Anonymous Identity System with Sybil Resistance and Revocation
 \begin{itemize}
@@ -247,33 +368,37 @@ We assume the threshold committee maintaining the revocation list cannot be full
 
 \newpage
 \section{Protocol Description}
-Overview: Users generate credentials from credential oracles, which are attested to information about the user from various sources. To register for system use, the user must generate their master credential from the credential oracle associated with the government. During issuance
+Our identity system establishes a secure framework for issuing and managing privacy-preserving credentials across multiple authorities while maintaining accountability. The system involves four key entities: users, credential oracles (which verify and attest to user attributes), a threshold committee of auditors (who manage revocation), and credential verifiers.
+
+\noindent At the core of our system is a master credential issued by a government credential oracle, which serves as a root of trust. This credential contains two crucial committed elements: a secret identifier $s$ that enables secure credential linking, and a committed VRF key $k$ that generates context-specific nullifiers. These nullifiers serve dual purposes: preventing Sybil attacks at credential oracles and enabling efficient revocation. During master credential issuance, the VRF key is verifiably encrypted to a threshold of auditors, the ciphertext is stored in the government system which associates a plaintext user profile to their ciphertext for revocation.
 
 
-
-\todo{Include Sequence Diagrams / diagram demonstrating protocol flow?}
-\subsection{Registration}
-
-- user interacts with a credential oracle (master credential oracle), and receives a commitment/proof from the oracle with their personal information.
-- The user interacts with the credential issuer, has the commitment/proof from the credential oracle of the users personal information.
+\noindent Users can obtain context credentials from various credential oracles by proving possession of a valid, unrevoked master credential and deriving a unique nullifier using their VRF key and the credential context. This design allows credential oracles to restrict issuance to users with trusted government-issued credentials, ensuring their credentials are only issued to verified identities. The system supports expressive verification statements that can combine attributes across multiple credentials. Since master credentials are government-issued and require stringent security checks, verifiers can leverage this trust by incorporating master credential validity, expiration, and revocation checks into their verification statements, inheriting the strong security properties of government-issued credentials. This enables credential oracles to maintain trust by ensuring their credentials become unusable if the underlying government credential is revoked.
 
 
+\noindent The system supports flexible revocation through two mechanisms: targeted revocation of specific credentials via their nullifiers, and complete revocation of all user credentials by recovering their VRF key through the threshold committee. Government systems can initiate revocation by using plaintext identifiers, with auditors managing the conversion to the appropriate nullifiers. This approach maintains privacy while enabling practical accountability and administration.
 
 
+\subsection{Master Credential Issuance}
 
-
-
-
-
-
-
-
+% Defines how components interact with each other, how they communicate. Includes message flow, algorithms and security properties needed
+% Crypto algorithms are specified with methods based off the paper prerequisites
+% Each interaction, entities are detailed with responsibilities and trust relationship
+% Security properties are analysed to demonstrate how the protocol achieves the system/security/privacy properties
 
 
 Master Credential issuance is an interactive process between a user 
 
 
 First, $user$ interacts with $ra$ to generate where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. $user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
+
+
+
+
+
+
+
+
 \subsubsection{Create Context Credential}
 A user $user$ with a valid registration credential $rcd$ wants to obtain a context credential $ccd$ and begins by interacting with a credential provider $cp$ to generate a $precred$. $cp$'s are varied and have their own issuance requirements, which can include cryptographic and non-cryptographic requirements.
 Firstly $user$ proves possession of a valid $rcd$ by randomizing their $rcd' = psrerand(rcd)$ and verifying the signature $psverify(rcd')$, then proves knowledge of the opening of the commitment $cmopen(rcm)$ and the credential isn't expired $exp > current_time$ and isn't revoked. $cp$ verifies the proofs and checks $user$ satisfies their credential specific requirements $\phi$ which may include external attribute verification.
