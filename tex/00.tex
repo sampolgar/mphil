@@ -284,28 +284,6 @@ A user interacts with the Context Credential oracle to obtain a context-specific
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \newpage
 \subsection{Syntax}
 Syntax of Anonymous Identity System with Sybil Resistance and Revocation
@@ -381,16 +359,117 @@ Our identity system establishes a secure framework for issuing and managing priv
 
 \subsection{Master Credential Issuance}
 
-% Defines how components interact with each other, how they communicate. Includes message flow, algorithms and security properties needed
-% Crypto algorithms are specified with methods based off the paper prerequisites
-% Each interaction, entities are detailed with responsibilities and trust relationship
-% Security properties are analysed to demonstrate how the protocol achieves the system/security/privacy properties
+\begin{protocol}{Master Credential Issuance}{issuemastercred}
+    \vspace{1em}
+    \textbf{Entities:}
+        \begin{itemize}
+            \item User(U): enters the protocol with their identity $s$ and identity attributes $attrs$ having been verified by their government identity system
+            \item Master Credential Oracle $O_m$: has their keypair $SK_m, PK_m$ derived from $PS.Keygen$
+            \item Auditor $(A)$ has their threshold encryption keypair $SK_A, PK_A$ from $TPKE.Keygen$
+        \end{itemize}
+
+    \textbf{Inputs:} $C$ such that $C = g^mh^r$, $\Prover$ knows $m, r \in \Z_q$.
+
+    \textbf{Relation:} $\mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}$
+    \vspace{1em}
+
+    \begin{enumerate}
+        \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
+        
+        \item $\Verifier$ sends challenge $c \sample [q-1].$
+    
+        \item $\Prover$ sends $s \gets \alpha + cm, u \gets \rho + cr$
+    
+        \item $\Verifier$ verifies that $g^{s}h^{u} = C^cT$
+    \end{enumerate}
+\end{protocol}
+
+\subsubsection{Entities:}
+\begin{itemize}
+    \item User(U): enters the protocol with their identity $s$ and identity attributes $attrs$ having been verified by their government identity system
+    \item Master Credential Oracle $O_m$: has their keypair $SK_m, PK_m$ derived from $PS.Keygen$
+    \item Auditor $(A)$ has their threshold encryption keypair $SK_A, PK_A$ from $TPKE.Keygen$
+\end{itemize}
+
+\subsubsection{Initial Setup:}
+\begin{itemize}
+    \item $s$ is the user's unique, personal identifier
+    \item system parameters $pp$ include the public parameters for the commitment scheme $ck$, and for the signature scheme $\widehat{X}$
+\end{itemize}
+
+Step 1: VRF Key Generation
+\begin{itemize}
+    \item Sample $k_1 \sample \Z_p$
+    \item Compute commitment $C_1 = Com([0,k_1,0,0],r)$
+    \item Generate zero-knowledge proof of zeros for position that proves the knowledge of the opening of $C_1$, the first, third and fourth positions contain 0 and the second contains $k_1$
+    \item send $C_1, \Pi_1$ to MCO
+\end{itemize}
+
+Step 2. Master Credential Oracle $O_m$
+\begin{itemize}
+    \item verifies $\Pi_1$, if verification fails, abort
+    \item samples $k_2 \sample \Z_p$
+    \item compute $C_2 = Com([s, k_2, "master", attrs],0)$
+    \item compute $C_m = C_1 \cdot C_2$ = $Com([s, k_1 + k_2, "master", attrs],r)$
+    \item returns $C_m, k_2$ to $U$
+\end{itemize}
+
+Step 3. User
+- computes VRF key $k = k_1 + k_2$
+- generates ciphertext for escrow $CT_k \gets TPKE.Enc(PK_A, k)$
+- generates proof $\Pi_{CT}$ demonstrating $CT_k$ is an encryption of $k$ matching $k$ in the commitment AND $k = k_1 + k_2$ and $k \in Cm$, $k_1 \in C_1$, $k_2 \in C_2$
+
+Step 4. MCO
+- verify $\Pi_{CT}$
+- Generate PS Signature $\sigma_m \gets PS.Sign(SK_m, C_m)$
+- Store $(C_m, \sigma_m, CT_k, k2)$ to user
+- return $(C_m, \sigma_m, k2)$ to user
+
+Step 5. User
+Verify $PS.Verify(PK_m, C_m, \sigma_m) = 1$
+Store master credential $Cred_m = (C_m, \sigma_m)$
 
 
-Master Credential issuance is an interactive process between a user 
+
+Master Credential Issuance is an interactive process between a user and a master credential oracle; at the end of a successful protocol run, the user should obtain their master credential, and the credential oracle should obtain the data record. 
+
+Security / Privacy requirements
+- Sybil Resistance: handled by the master credential oracle
+- Anonymity: the master credential oracle learns the user who, but doesn't learn the user's PRF key
+- Unforgeable: the user's interaction with the oracle means the user can't 
+- Correctness: Well-formed commitments (PoK Zero's to prove that the commitment given opens to zero in every other spot other than the prf key and randomness)
+
+Message Flow Structure
+- Identity Verification: The oracle verifies the users identity outside of our protocol, for example, a user logged in to their current government account
+- Key Gen: 
+- Cred Issuance
 
 
-First, $user$ interacts with $ra$ to generate where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. $user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+First, $user$ interacts with $ra$ to generate where $pid$ is their personal identifier as listed in their trusted identity system, this step implies sybil resistant check for $pid$ in $rcd$. 
+
+$user$ then initiates PRF key generation by sampling $s_1 \sample \Z_p$ and generating a commitment $cm_1([0, s_1, 0, 0], \alpha) = g_1^0g_2^sg_3^0g_4^0h^{\alpha}$ which is sent to $ra$. 
+
+Upon receiving $cm_1$, $ra$ samples $s_2 \sample \Z_p$ and generates $cm_2([pid, s_2, dsk, exp ], 0) = g_1^{pid}g_2^{s_2}g_3^{dsk}g_4^{exp}h^0$ where $exp$ is the credential expiry. 
+
+This interaction hides the PRF key $s$ from $ra$ but allows $ra$ to be involved in its issuance to prevent replay attacks. Finally, $ra$ computes $rcm = cm_1 \cdot cm_2 = rcm([pid, s, dsk, exp ], \alpha)$ where $s = s_1 \cdot s_2$. 
+
+
+For accountability, $user$ escrows their PRF key by computing ciphertext $escrow \gets tpkeenc_{apk}(s)$ and generates a zero-knowledge proof $\pi$ demonstrating 1) knowledge of the PRF key $s$ in $escrow$ ciphertext, 2) $s$ knowledge of the same $s$ within the commitment $rcm$, and  3) $s$ in 1) and 2) are equal, ensuring the escrowed key matches the key in the credential. 
+
+Finally, $ra$ signs the commitment $rcm$ to create $\sigma$ and constructs $rcd = cred([pid, s, dsk, exp, rcm, \sigma])$ which is returned to $user$. For record-keeping, $ra$ stores User Registration Information $uri =(rcm, \pi, escrow)$ and for accountability, $ra$ stores $(pid, escrow)$ in their user list $ul$.
 
 
 
