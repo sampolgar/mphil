@@ -162,13 +162,13 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 \subsection{Entities}
 Our identity system involves users, credential issuers, auditors, and credential verifiers.
 
-\noindent \textbf{User} ($U$) holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. The master credential contains a unique identifier $s$, a VRF key $k$, and additional attributes, and is issued by a government entity. Context credentials are issued by participating organizations like universities or licensing authorities.
+\noindent \textbf{User} ($\User$) holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. The master credential contains a unique identifier $s$, a VRF key $k$, and additional attributes, and is issued by a government entity. Context credentials are issued by participating organizations like universities or licensing authorities.
 
-\noindent \textbf{Credential Oracle} ($CO$) verifies user identity and issues digital credentials. The Master Credential Oracle operates with keypair $(SK_{m}, PK_{m})$ for issuing root credentials, while Context Credential Oracles use $(SK_{c}, PK_{c})$ for issuing domain-specific credentials.
+\noindent \textbf{Credential Oracle} ($\MCO, \CCO$) verifies user identity and issues digital credentials. The Master Credential Oracle $\MCO$ operates with keypair $(SK_{m}, PK_{m})$ for issuing root credentials, while Context Credential Oracles $\CCO$ use $(SK_{c}, PK_{c})$ for issuing domain-specific credentials.
 
-\noindent \textbf{Auditor} ($A$) consists of a threshold of nodes holding encryption and accumulator keypairs; for simplicity, we refer to both as $(sk_A, pk_A)$. Users encrypt their VRF keys under the auditors' public key, as in key escrow schemes. Auditors can decrypt this key during revocation. The Auditor updates the revocation list. 
+\noindent \textbf{Auditor} ($\Auditor$) consists of a threshold of nodes holding encryption and accumulator keypairs; for simplicity, we refer to both as $(sk_A, pk_A)$. Users encrypt their VRF keys under the auditors' public key, as in key escrow schemes. Auditors can decrypt this key during revocation. The Auditor updates the revocation list. 
 
-\noindent \textbf{Verifier} ($V$) represents any party wishing to verify a user's credentials.
+\noindent \textbf{Verifier} ($\Verifier$) represents any party wishing to verify a user's credentials.
 
 
 \subsection{Data Objects}
@@ -358,31 +358,58 @@ Our identity system establishes a secure framework for issuing and managing priv
 
 
 \subsection{Master Credential Issuance}
+% Intro
+The master credential issuance protocol enables a user to obtain their root credential from the Master Credential Oracle $\MCO$ while preserving the privacy of their VRF key $k$ and ensuring accountability. The protocol combines Threshold Encryption, Verifiable Random Function, Zero Knowledge Proofs, and Rerandomizable PS Signatures over commitments to achieve Sybil Resistance, Revocation, and partial credential anonymity.
 
-\begin{protocol}{Master Credential Issuance}{issuemastercred}
-    \vspace{1em}
-    \textbf{Entities:}
-        \begin{itemize}
-            \item User(U): enters the protocol with their identity $s$ and identity attributes $attrs$ having been verified by their government identity system
-            \item Master Credential Oracle $O_m$: has their keypair $SK_m, PK_m$ derived from $PS.Keygen$
-            \item Auditor $(A)$ has their threshold encryption keypair $SK_A, PK_A$ from $TPKE.Keygen$
-        \end{itemize}
 
-    \textbf{Inputs:} $C$ such that $C = g^mh^r$, $\Prover$ knows $m, r \in \Z_q$.
 
-    \textbf{Relation:} $\mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}$
-    \vspace{1em}
+\begin{center}
+\begin{tabular}{l@{\hspace{8em}}c@{\hspace{8em}}l}
+\multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
+\underline{User($s$)} && \underline{MCO($SK_M$)} \\[0.5em]
+\multicolumn{3}{l}{$k_1 \gets \Z_p$, $C_1 \gets Com([0,k_1,0,0],r)$}\\[0.5em]
+\multicolumn{3}{l}{$\Pi_1 \gets ZKPoK.Prove_{Zeros}(C_1)(k_1, r)$} \\[1em]
+& $\xrightarrow{C_1, \Pi_1}$ & \\[1em]
+\multicolumn{3}{r}{If $ZKPoK.Verify_{Zeros}(\Pi_1, C_1) = 0, $ return $ \bot$} \\[0.5em]
+\multicolumn{3}{r}{$k_2 \gets \Z_p, C_2 \gets Com([s, k_2, "master", attrs], 0)$} \\[0.5em]
+\multicolumn{3}{r}{$C_m \gets C_1 \cdot C_2 = Com([s,k_1+k_2,"master", attrs], r)$} \\[1em]
+& $\xleftarrow{C_2, C_m, k_2}$ & \\[1em]
+\multicolumn{3}{l}{} \\[0.5em]
+\multicolumn{3}{l}{} \\[0.5em]
+\multicolumn{3}{l}{} \\[0.5em]
+\multicolumn{3}{l}{Compute $(cm, \widehat{cm}) \gets CM.Com(ck, \mathbf{m}, r)$} \\[0.5em]
+\multicolumn{3}{l}{Run $\Pi^{cm} \gets ZKP.ComOpen(ck, cm, \mathbf{m}, r)$} \\[0.5em]
+& $\xrightarrow{\Pi^{cm}}$ & \\[1em]
+\multicolumn{3}{r}{If $ZKP.ComOpenVfy(\Pi^{cm},cm) = 0$, return $\bot$} \\[1em]
+& $\xleftarrow{\sigma = (\sigma_1, \sigma_2)}$ & $\sigma \gets \mathsf{PS.Sign}(osk, cm)$ \\[1em]
+\multicolumn{3}{l}{If $\mathsf{PS.Verify}(opk, cm, \sigma) = 0$, return $\bot$} \\[1em]
+\multicolumn{3}{l}{$Cred \gets (\sigma = (\sigma_1, \sigma_2), opk, cm, \widehat{cm})$} \\[1em]
+\end{tabular}
+\end{center}
 
-    \begin{enumerate}
-        \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
-        
-        \item $\Verifier$ sends challenge $c \sample [q-1].$
-    
-        \item $\Prover$ sends $s \gets \alpha + cm, u \gets \rho + cr$
-    
-        \item $\Verifier$ verifies that $g^{s}h^{u} = C^cT$
-    \end{enumerate}
-\end{protocol}
+\noindent \underline{(Show, Verify)}: Using ..... Show, and Verify interact as follows
+
+
+
+\begin{center}
+    \begin{tabular}{l@{\hspace{8em}}c@{\hspace{8em}}l}
+    \underline{Show($opk, cm, Cred$)} && \underline{Verify($osk, Cred' $)} \\[1em]
+    \end{tabular}
+\end{center}
+
+\newpage
+
+
+\subsection{Sybil Resistance}
+-
+
+
+
+
+
+
+
+
 
 \subsubsection{Entities:}
 \begin{itemize}
