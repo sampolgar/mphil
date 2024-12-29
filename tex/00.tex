@@ -1,8 +1,19 @@
-\section{Introduction}
+\section{Introduction}\label{sec:intro}
 Digital Identity systems form the foundation of online trust and authentication, processing billions of verifications daily \cite{noauthor_happy_2021, pang_zanzibar_nodate}. Traditional centralized systems, while effective for regulatory compliance \cite{eltayeb_crucial_2024}, suffer from significant privacy and security vulnerabilities. Ongoing data breaches \cite{zhang_data_2022} affect billions of users, demonstrating the risks of storing identity data and centralizing systems. Decentralized Identity (DID) is a loosely defined framework (W3C specification) having evolved over the past 2 decades, offering users greater control over their credentials \cite{soltani_survey_2021}, many concrete implementations struggle to balance privacy with accountability \cite{maram2021candid} for the required feature set. 
 
 
 \noindent Anonymous Credential Systems (ACS) \cite{chaum1985security,hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016, fuchsbauer_structure-preserving_2019} address privacy concerns but face challenges balancing privacy with accountability, orthogonally, unconditionally anonymous payment systems have demonstrated how unconditional anonymity can enable system abuse. Current systems focus on protecting against sybil attacks \cite{crites_syra_2024, rabaninejad_attribute-based_nodate}, enabling revocation \cite{goos_dynamic_2002, robshaw_uc_2016, camenisch_scalable_2016, baldimtsi_accumulators_2017}, rich attribute-based credential authentication \cite{rosenberg_zk-creds_2022, babel_bringing_2023} but very few implement all. The tension between privacy and accountability has become increasingly critical as governments worldwide, particularly the EU's Digital Identity Framework \cite{noauthor_regulation_2024}, move toward privacy-preserving digital identity wallets. These challenges motivate the need for a comprehensive identity system that achieves privacy, accountability, and practical deployment requirements simultaneously.
+
+\subsection{Paper Layout}
+Section \ref{sec:intro} introduces the problem, the gap, and relatex work. Section \ref{sec:overview} is the system overview, 3 describes 
+
+\begin{enumerate}
+    \item section \ref{sec:protocoldescription} is the full construction of the multi-issuer, multi-credential anonymous credential scheme using sigma proofs as a black-box
+    \item section \ref{sec:sigmaproofs} outlines the sigma proofs within the construction
+    \item section \ref{sec:identitysystem} builds a private identity system from  
+\end{enumerate}
+
+Section \ref{sec:protocoldescription}
 
 \subsection{Related Work}
 
@@ -157,14 +168,14 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 
 
 \cleardoublepage
-\section{Identity System Overview}
+\section{Identity System Overview}\label{sec:overview}
 
 \subsection{Entities}
 Our identity system involves users, credential issuers, auditors, and credential verifiers.
 
 \noindent \textbf{User} ($\User$) holds a master credential $Cred_{master}$ and any number of context credentials $Cred_{ctx}$ in their identity wallet. The master credential contains a unique identifier $s$, a VRF key $k$, and additional attributes, and is issued by a government entity. Context credentials are issued by participating organizations like universities or licensing authorities.
 
-\noindent \textbf{Credential Oracle} ($\MCO, \CCO$) verifies user identity and issues digital credentials. The Master Credential Oracle $\MCO$ operates with keypair $(SK_{m}, PK_{m})$ for issuing root credentials, while Context Credential Oracles $\CCO$ use $(SK_{c}, PK_{c})$ for issuing domain-specific credentials.
+\noindent \textbf{Credential Oracle} ($\MCO, \CCO$) verifies user identity and issues digital credentials. The Master Credential Oracle $\MCO$ operates with keypair $(SK_{m}, PK_{m})$ for issuing "root" credentials, while Context Credential Oracles $\CCO$ use $(SK_{c}, PK_{c})$ for issuing domain-specific credentials.
 
 \noindent \textbf{Auditor} ($\Auditor$) consists of a threshold of nodes holding encryption and accumulator keypairs; for simplicity, we refer to both as $(sk_A, pk_A)$. Users encrypt their VRF keys under the auditors' public key, as in key escrow schemes. Auditors can decrypt this key during revocation. The Auditor updates the revocation list. 
 
@@ -349,7 +360,7 @@ We assume the threshold committee maintaining the revocation list cannot be full
 
 
 \newpage
-\section{Protocol Description}
+\section{Protocol Description}\label{sec:protocoldescription}
 Our identity system establishes a secure framework for issuing and managing privacy-preserving credentials across multiple authorities while maintaining accountability. The system involves four key entities: users, credential oracles (which verify and attest to user attributes), a threshold committee of auditors (who manage revocation), and credential verifiers.
 
 \noindent At the core of our system is a master credential issued by a government credential oracle, which serves as a root of trust. This credential contains two crucial committed elements: a secret identifier $s$ that enables secure credential linking, and a committed VRF key $k$ that generates context-specific nullifiers. These nullifiers serve dual purposes: preventing Sybil attacks at credential oracles and enabling efficient revocation. During master credential issuance, the VRF key is verifiably encrypted to a threshold of auditors, the ciphertext is stored in the government system which associates a plaintext user profile to their ciphertext for revocation.
@@ -403,7 +414,7 @@ During VRF key issuance, the anonymity of the master credential is preserved via
 
 
 \newpage
-\subsubsection{Create Context Credential}
+\subsection{Create Context Credential}
 
 Context Credential Issuance enables a user to obtain a context-specific credential while proving ownership of a valid master credential. The user first constructs a commitment to their context credential attributes, including their identity $s$ and a deterministic nullifier derived from their VRF key $k$ and the credential context $ctx$. Through zero-knowledge proofs, the user demonstrates their master credential is valid and unrevoked, and proves the context commitment is well-formed with the same identity $s$. The nullifier $\tau$ = $VRF(k,ctx)$ prevents multiple credentials for the same context while maintaining privacy. Upon successful verification, the Context Credential Oracle signs the commitment and records the nullifier.
 
@@ -413,23 +424,36 @@ Context Credential Issuance enables a user to obtain a context-specific credenti
 \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_c \gets CM.Setup(BG, \secparam, n)$} \\[1em]
 \multicolumn{3}{l}{Credential Oracle: $(SK_c, PK_c) \gets PS.KeyGen(ck_c)$} \\[1em]
 \underline{User($Cred_m, s, k$)} && \underline{CCO($SK_c$)} \\[0.5em]
-\multicolumn{3}{l}{$\tau \gets VRF(k, ctx)$} \\[1em]
-\multicolumn{3}{l}{$r* \sample Z_p, \; C_c \gets Com([s,H(\tau),ctx,attrs],r*)$} \\[1em]
+\multicolumn{3}{l}{$\delta \gets VRF(k, ctx)$} \\[1em]
+\multicolumn{3}{l}{$r* \sample Z_p, \; C_c \gets Com([s,\delta,ctx,attrs],r*)$} \\[1em]
+\multicolumn{3}{l}{$\Pi_4 \gets ZKPoK.Prove_{selective-disclosure}(C_c,\delta,ctx,attrs)(s, r*)$} \\[1em]
 \multicolumn{3}{l}{$r' \sample \Z_p, Cred_{m}' \gets Cred.Rerand(Cred_{m}, r')$} \\[1em]
-\multicolumn{3}{l}{$\Pi_4 \gets ZKSoK.Prove(Cred_m')(s,k,master,attrs,r')$} \\[1em]
+\multicolumn{3}{l}{$\Pi_5 \gets ZKSoK.Prove(Cred_m')(s,k,master,attrs,r')$} \\[1em]
 \multicolumn{3}{l}{Parse $Cred_m'$ as $C_m', \sigma_m'$} \\[1em]
-\multicolumn{3}{l}{$\Pi_5 \gets ZKPoK.Prove_{reciprocal}(C_m', C_c,ctx)(s,k,r',r*)$}  \\[1em]
-\multicolumn{3}{l}{} \\[1em]
-\multicolumn{3}{l}{} \\[1em]
-\multicolumn{3}{l}{} \\[1em]
-\multicolumn{3}{l}{} \\[1em]
+\multicolumn{3}{l}{$\Pi_6 \gets ZKPoK.Prove_{reciprocal}(C_m', C_c,ctx)(s,k,r',r*)$}  \\[1em]
+\multicolumn{3}{l}{$\Pi_7 \gets ZKPoK.Prove_{equality}(C_m', C_c)(s, r)$} \\[1em]
+\multicolumn{3}{l}{$\Pi_8 \gets ZKPoK.Prove_{revocation}(Cred_m', \RL)(k)$} \\[1em]
+& $\xrightarrow{Cred_m', C_c, \Pi_4, \Pi_5, \Pi_6, \Pi_7, \Pi_8}$ & \\[1em]
+\multicolumn{3}{r}{If} \\[1em]
+\multicolumn{3}{r}{$ZKPok.Verify_{selective-disclosure}(\Pi_4, C_c)(\delta, ctx, attrs)$ = 1 $\; \wedge$} \\[1em]
+\multicolumn{3}{r}{$ZKSoK.Verify(\Pi_5, Cred_m')$ = 1 $\; \wedge$} \\[1em]
+\multicolumn{3}{r}{$ZKPoK.Verify_{reciprocal}(\Pi_6, C_m', C_c, ctx)$ = 1 $\; \wedge$} \\[1em]
+\multicolumn{3}{r}{$ZKPoK.Verify_{equality}(\Pi_7, C_m', C_c)$ = 1 $\; \wedge$} \\[1em]
+\multicolumn{3}{r}{$ZKPoK.Verify_{revocation}(\Pi_8, Cred_m')$ = 0} \\[1em]
+\multicolumn{3}{r}{$\sigma_c \gets PS.Sign(SK_c, C_c)$} \\[1em]
+\multicolumn{3}{r}{Store Data Record CCO $(C_c, \sigma_c, \delta, \Pi_4, \Pi_5, \Pi_6, \Pi_7, \Pi_8  )$} \\[1em]
+& $\xleftarrow{\sigma_c}$& \\[1em]
+\multicolumn{3}{l}{If $PS.Verify(PK_c,\sigma_c, C_c) = 1$, Store $Cred_c(\sigma_c, C_c)$} \\[1em]
 \end{tabular}
 \end{center}
 
 
 
-
-
+\subsubsection{Informal Security Analysis}
+Sybil Resistance: The deterministic nullifier $\delta \gets VRF(k,ctx)$ binds each context credential to a unique (user, context) pair, preventing multiple credentials for the same context. The reciprocal proof $\Pi_6$ ensures correct nullifier derivation from the master key $k$. 
+Credential Binding: Context Credentials are bound to master credentials through shared identity $s$ and $\Pi_7$. The selective disclosure proof $\Pi_4$ ensures correct commitment structure without revealing private values. 
+Privacy: The protocol only reveals $ctx$ and $attrs$ to CCO to allow identity verification while hiding $s$. The Master Credential $Cred_m$ remains unlinkable by being  rerandomized and proven in zero knowledge it verifies with the Master Credential Oracles public key.
+Revocation: The proof $\Pi_8$ demonstrates $Cred_m$ is not revoked, ensuring only valid master credentials can be used.
 
 
 
@@ -445,14 +469,6 @@ Context Credential Issuance enables a user to obtain a context-specific credenti
 
 
 \newpage
-\subsubsection{Create Context Credential}
-A user $user$ with a valid registration credential $rcd$ wants to obtain a context credential $ccd$ and begins by interacting with a credential provider $cp$ to generate a $precred$. $cp$'s are varied and have their own issuance requirements, which can include cryptographic and non-cryptographic requirements.
-Firstly $user$ proves possession of a valid $rcd$ by randomizing their $rcd' = psrerand(rcd)$ and verifying the signature $psverify(rcd')$, then proves knowledge of the opening of the commitment $cmopen(rcm)$ and the credential isn't expired $exp > current_time$ and isn't revoked. $cp$ verifies the proofs and checks $user$ satisfies their credential specific requirements $\phi$ which may include external attribute verification.
-Upon successful verification, $user$ initiates pre-credential generation by sampling fresh randomness $\alpha \sample \Z_p$, and creates $cm_1([s, 0, 0, 0, 0], \alpha)$ and sends it to $cp$, $cp$ generates $cm_2([0, ctx_id, cp_id, exp, attrs],0)$ and combines $cm_1 \cdot cm_2$ for $ccm([s, ctx_id, cp_id, exp, attrs], \alpha)$ where $ctxid$ represents the credential e.g. "driverslicense", $cpid$ is the credential providers identifier and $attrs$ are the attributes. $user$ proves correct pre-credential formation by proving knowledge of $ZKPOK_ComOpen(ccm)$ and equality of $s$ in $ccm$ and $ccm$ $ZKPoK_ComEquality(s, rcm, ccm)$. $cp$ verifies these proofs and signs $ccm$ to create $\sigma_{pre}$ forming $precred = (ccm, \sigma_{pre})$.
-Finally, to obtain the context credential $ccd$, $user$ submits $precred$ to $ra$ along with a nullifier $nullif, vk, y = vrfprove_{s}(ctxid)$. $user$ generates a proof demonstrating 1) valid precred signature verification, 2) knowledge of $s$ in $ccm$, correctness of $nullif$, and equality of $s$ in $ccm$ and $rcm$, and $nullif$ is formed using $ctxid$ from $ccm$.
-$ra$ verifies $\sigma_{pre}$ under $cp's$ public key, validates the proofs, and ensures the nullifier hasn't already been used (Sybil resistance). Upon successful verification, $ra$ signs $ccm$ to create $\sigma_{ctx}$, records $nullif$, returns the context credential $ccd([s, ctxid, cpid], ccm, \sigma_{ctx})$.
-For record-keeping, $ra$ stores Context Credential Information $cci = (ccm, \pi_2, \pi_3, nullif, vk, y)$.
-
 
 \subsubsection{Revocation}
 When $ra$ needs to revoke a user's credential/s (due to user request or credential provider request), $ra$ finds $escrow$ based on the user's $pid$, recall $ra$ has a user list $ul$ = $(pid, escrow)$ and requests the auditor $audit$ to decrypt $s \gets tpkdec_{ask}(escrow)$. $audit$ computes the nullifiers to add to the revocation accumulator. $nullif_{rcd} \gets PRF_s(pid)$ and for each context credential to revoke, $nullif_{ctxid} \gets PRF_s(ctxid)$. $audit$ updates the accumulator $acc' \gets Acc.Add(acc)$
@@ -469,7 +485,7 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 
 
-\section{Construction of NIZK Proofs}
+\section{Construction of NIZK Proofs}\label{sec:sigmaproofs}
 % Recall definitions and introduction here: https://infoscience.epfl.ch/server/api/core/bitstreams/fc1cfb22-d943-4c96-a942-d715b76e6cc4/content#page=6.31
 
 
@@ -869,7 +885,7 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 \cleardoublepage
 
 
-\section{Construction of Private Identity System}
+\section{Construction of Private Identity System}\label{sec:identitysystem}
 
 
 
