@@ -5,15 +5,14 @@ Digital Identity systems form the foundation of online trust and authentication,
 \noindent Anonymous Credential Systems (ACS) \cite{chaum1985security,hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016, fuchsbauer_structure-preserving_2019} address privacy concerns but face challenges balancing privacy with accountability, orthogonally, unconditionally anonymous payment systems have demonstrated how unconditional anonymity can enable system abuse. Current systems focus on protecting against sybil attacks \cite{crites_syra_2024, rabaninejad_attribute-based_nodate}, enabling revocation \cite{goos_dynamic_2002, robshaw_uc_2016, camenisch_scalable_2016, baldimtsi_accumulators_2017}, rich attribute-based credential authentication \cite{rosenberg_zk-creds_2022, babel_bringing_2023} but very few implement all. The tension between privacy and accountability has become increasingly critical as governments worldwide, particularly the EU's Digital Identity Framework \cite{noauthor_regulation_2024}, move toward privacy-preserving digital identity wallets. These challenges motivate the need for a comprehensive identity system that achieves privacy, accountability, and practical deployment requirements simultaneously.
 
 \subsection{Paper Layout}
-Section \ref{sec:intro} introduces the problem, the gap, and relatex work. Section \ref{sec:overview} is the system overview, 3 describes 
 
 \begin{enumerate}
-    \item section \ref{sec:protocoldescription} is the full construction of the multi-issuer, multi-credential anonymous credential scheme using sigma proofs as a black-box
+    \item section \ref{sec:multiissuermulticred} is the full construction of the multi-issuer, multi-credential anonymous credential scheme using sigma proofs as a black-box
     \item section \ref{sec:sigmaproofs} outlines the sigma proofs within the construction
-    \item section \ref{sec:identitysystem} builds a private identity system from  
+    \item section \ref{sec:identitysystem} builds a private identity system from constructions in section \ref{sec:multiissuermulticred} and section \ref{sec:sigmaproofs}
+    \item section \ref{sec:evaluation}
 \end{enumerate}
 
-Section \ref{sec:protocoldescription}
 
 \subsection{Related Work}
 
@@ -360,7 +359,7 @@ We assume the threshold committee maintaining the revocation list cannot be full
 
 
 \newpage
-\section{Protocol Description}\label{sec:protocoldescription}
+\section{Multi Issuer Multi Credential Anonymous Credentials}\label{sec:multiissuermulticred}
 Our identity system establishes a secure framework for issuing and managing privacy-preserving credentials across multiple authorities while maintaining accountability. The system involves four key entities: users, credential oracles (which verify and attest to user attributes), a threshold committee of auditors (who manage revocation), and credential verifiers.
 
 \noindent At the core of our system is a master credential issued by a government credential oracle, which serves as a root of trust. This credential contains two crucial committed elements: a secret identifier $s$ that enables secure credential linking, and a committed VRF key $k$ that generates context-specific nullifiers. These nullifiers serve dual purposes: preventing Sybil attacks at credential oracles and enabling efficient revocation. During master credential issuance, the VRF key is verifiably encrypted to a threshold of auditors, the ciphertext is stored in the government system which associates a plaintext user profile to their ciphertext for revocation.
@@ -887,9 +886,6 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 
 \section{Construction of Private Identity System}\label{sec:identitysystem}
 
-
-
-
 \newcommand{\vt}{\mathsf{vt}}
 \newcommand{\wx}{\mathsf{wx}}
 \newcommand{\wxone}{\mathsf{w_1x}}
@@ -1054,14 +1050,13 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 
 
 \newpage
-\section{Security analysis of identity system}
 
 
 
 
 
 
-\section{Performance Evaluation}
+\section{Performance Evaluation}\label{sec:evaluation}
 
 
 
