@@ -6,11 +6,14 @@ Digital Identity systems form the foundation of online trust and authentication,
 
 \subsection{Paper Layout}
 
+Short Summary: We build a new anonymous credential building block for multi-issuer, multi-credential systems. We use it to build a new private digital identity system with sybil resistance and revocation.
+
+
 \begin{enumerate}
-    \item section \ref{sec:multiissuermulticred} is the full construction of the multi-issuer, multi-credential anonymous credential scheme using sigma proofs as a black-box
-    \item section \ref{sec:sigmaproofs} outlines the sigma proofs within the construction
-    \item section \ref{sec:identitysystem} builds a private identity system from constructions in section \ref{sec:multiissuermulticred} and section \ref{sec:sigmaproofs}
-    \item section \ref{sec:evaluation}
+    \item section \ref{sec:multiissuermulticred} is the new anonymous credential system building block for multi-issuer, multi-credential
+    \item section \ref{sec:sigmaproofs} outlines all sigma zkp's used
+    \item section \ref{sec:identitysystem} builds a private identity system from the building block in section \ref{sec:multiissuermulticred} and proofs in \ref{sec:sigmaproofs}
+    \item section \ref{sec:evaluation} shows privacy and sybil resistance can be low-overhead, also shows our benchmarks for proving complex statements about credentials is more efficient than SOTA
 \end{enumerate}
 
 
@@ -1057,6 +1060,11 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 
 
 \section{Performance Evaluation}\label{sec:evaluation}
+What is the takeaway message from the evaluation?
+\begin{itemize}
+    \item For non-private system, we enable privacy with little overhead. Our building block sigma protocol for private sybil resistance adds negligible overhead. 
+    \item For private system, but better efficiency, we have a SOTA paper TACT/S3ID (in the comparison table). Their paper does multi-attribute/multi-issuer credentials (they issue 1 credential per attribute), but their benchmarks don't show the complexity in verifying credentials together, or proving statements about their credential which they say would have non-negligible impact and theirs is lower bound. For us, by using simpler and well-known construction, we are more efficient (need to test this but I think so due to their construction) and better functionality. 
+\end{itemize}
 
 
 
