@@ -212,7 +212,7 @@ A master credential is a high-security root credential issued by a government en
     \end{itemize}
     \item Key Encryption and Proof:
     \begin{itemize}
-        \item Encrypted VRF Key $CT_k$: the threshold encryption of the user's VRF key, encrypted with the Auditor's public key $TPKE.Enc_{PK_a}(k)$
+        \item Encrypted VRF Key $CT_k$: the encryption of the user's VRF key, encrypted with the Auditor's public key $Enc_{PK_a}(k)$
         \item Consistency proof $\Pi_{CT}$: The zero-knowledge proof that $CT_k$ encrypts the committed key $k$
     \end{itemize}
 \end{itemize}
@@ -333,8 +333,7 @@ Our private identity system with Sybil Resistance satisfies the following securi
 \end{enumerate}
 
 \subsubsection{Threat Model}
-We assume the threshold committee maintaining the revocation list cannot be fully corrupted.
-% look at Arke for a good threat model!
+We assume the auditors maintaining the revocation cannot be corrupted.
 
 
 \begin{itemize}
@@ -349,9 +348,7 @@ We assume the threshold committee maintaining the revocation list cannot be full
 \begin{itemize}
     \item Credential Oracles: trusted to verify real-world identity before issuing credentials, they aren't trusted for privacy and may be compromised but can't issue credentials without the user participating in their protocol
 
-    \item Auditors: are trusted to only decrypt user keys for legitimate revocation requests, they cannot individually decrypt keys i.e. requires the threshold committee
-
-    \item Threshold Committee: at most t-out-of-n members may be compromised, trusted for revocation list integrity, not trusted for privacy
+    \item Auditors: are trusted to only decrypt user keys for legitimate revocation requests
 
     \item Network: communication assumed to be over encrypted channels, any storage is not trusted for credential contents
 \end{itemize}
@@ -363,19 +360,19 @@ We assume the threshold committee maintaining the revocation list cannot be full
 
 \newpage
 \section{Multi Issuer Multi Credential Anonymous Credentials}\label{sec:multiissuermulticred}
-Our identity system establishes a secure framework for issuing and managing privacy-preserving credentials across multiple authorities while maintaining accountability. The system involves four key entities: users, credential oracles (which verify and attest to user attributes), a threshold committee of auditors (who manage revocation), and credential verifiers.
+Our identity system establishes a secure framework for issuing and managing privacy-preserving credentials across multiple authorities while maintaining accountability. The system involves four key entities: users, credential oracles (which verify and attest to user attributes), auditor (who manage revocation), and credential verifiers.
 
-\noindent At the core of our system is a master credential issued by a government credential oracle, which serves as a root of trust. This credential contains two crucial committed elements: a secret identifier $s$ that enables secure credential linking, and a committed VRF key $k$ that generates context-specific nullifiers. These nullifiers serve dual purposes: preventing Sybil attacks at credential oracles and enabling efficient revocation. During master credential issuance, the VRF key is verifiably encrypted to a threshold of auditors, the ciphertext is stored in the government system which associates a plaintext user profile to their ciphertext for revocation.
+\noindent At the core of our system is a master credential issued by a government credential oracle, which serves as a root of trust. This credential contains two crucial committed elements: a secret identifier $s$ that enables secure credential linking, and a committed VRF key $k$ that generates context-specific nullifiers. These nullifiers serve dual purposes: preventing Sybil attacks at credential oracles and enabling efficient revocation. During master credential issuance, the VRF key is verifiably encrypted, the ciphertext is stored in the government system which associates a plaintext user profile to their ciphertext for revocation.
 
 
 \noindent Users can obtain context credentials from various credential oracles by proving possession of a valid, unrevoked master credential and deriving a unique nullifier using their VRF key and the credential context. This design allows credential oracles to restrict issuance to users with trusted government-issued credentials, ensuring their credentials are only issued to verified identities. The system supports expressive verification statements that can combine attributes across multiple credentials. Since master credentials are government-issued and require stringent security checks, verifiers can leverage this trust by incorporating master credential validity, expiration, and revocation checks into their verification statements, inheriting the strong security properties of government-issued credentials. This enables credential oracles to maintain trust by ensuring their credentials become unusable if the underlying government credential is revoked.
 
 
-\noindent The system supports flexible revocation through two mechanisms: targeted revocation of specific credentials via their nullifiers, and complete revocation of all user credentials by recovering their VRF key through the threshold committee. Government systems can initiate revocation by using plaintext identifiers, with auditors managing the conversion to the appropriate nullifiers. This approach maintains privacy while enabling practical accountability and administration.
+\noindent The system supports flexible revocation through two mechanisms: targeted revocation of specific credentials via their nullifiers, and complete revocation of all user credentials by recovering their VRF key through the auditors. Government systems can initiate revocation by using plaintext identifiers, with auditors managing the conversion to the appropriate nullifiers. This approach maintains privacy while enabling practical accountability and administration.
 
 \newpage
 \subsection{Master Credential Issuance}
-The master credential issuance protocol enables a user to obtain their root credential from the Master Credential Oracle $\MCO$ while preserving the privacy of their VRF key $k$ and ensuring accountability. The protocol combines Threshold Encryption, Verifiable Random Function, Zero Knowledge Proofs, and Rerandomizable PS Signatures over commitments to achieve Sybil Resistance, Revocation, and Anonymity.
+The master credential issuance protocol enables a user to obtain their root credential from the Master Credential Oracle $\MCO$ while preserving the privacy of their VRF key $k$ and ensuring accountability. The protocol combines verifiable encryption, Verifiable Random Function, Zero Knowledge Proofs, and Rerandomizable PS Signatures over commitments to achieve Sybil Resistance, Revocation, and Anonymity.
 
 \begin{center}
 \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
@@ -394,7 +391,7 @@ The master credential issuance protocol enables a user to obtain their root cred
 & $\xleftarrow{C_2, C_m, s, k_2}$ & \\[1em]
 \multicolumn{3}{l}{$k \gets k_1 + k_2$} \\[1em]
 \multicolumn{3}{l}{$\Pi_2 \gets ZKPoK.Prove_{addition}(C_1, C_2, C_m)(k_1, k_2, k, r)$} \\[1em]
-\multicolumn{3}{l}{$\tau \gets TPKE.Enc(PK_A, k)$} \\[1em]
+\multicolumn{3}{l}{$\tau \gets Enc(PK_A, k)$} \\[1em]
 \multicolumn{3}{l}{$\Pi_3 \gets ZKPOK.Prove_{enc}(C_m)(\tau, k, r)$} \\[1em]
 & $\xrightarrow{C_1, C_2, C_m, \Pi_2, \Pi_3, \tau}$ &\\[1em]
 \multicolumn{3}{r}{If $ZKPOK.Verify_{addition}(\Pi_2, C_1, C_2, C_m) = 0, \;$ return $\bot$} \\[0.5em]
@@ -411,13 +408,12 @@ The master credential issuance protocol enables a user to obtain their root cred
 The two-party process between the user and master credential oracle ensures sybil resistance of unique identifier $s$; the oracle has access to the user information and checks duplicate issuance within their own identity system. 
 During VRF key issuance, the anonymity of the master credential is preserved via the secrecy of the VRF key $k$. During the two-party computation, the user's share $k_1$ remains hidden to $\MCO$ via the hiding property of the commitment $C_1$, and malicious commitment usage is prevented by the soundness property of $\Pi_1$. 
 
-\noindent The user combines  $k_1 + k_2$ to form their VRF key, $\Pi_2$ proves $k_1$ is correctly derived from $C_1$, $k_2$ is derived from $C_2$ and $k$ combines $k_1 + k_2$, $\MCO$'s input to $k$ prevents forgery attempts on the key $k$. The hiding property of the commitments and zero-knowledge property of the proofs ensures correct protocol adherence while maintaining private computation. Revocation is enabled by threshold encryption of the VRF key $k$ with the public key of the Auditor $PK_A$. $\Pi_3$ proves that $\tau$ is an encryption of the committed key $k$. $\tau$ is stored with the credential oracle maintaining privacy during normal operation. Finally, the protocol prevents replay attacks by using interactive zero-knowledge proofs requiring a challenge from the verifier, fresh commitment randomness, and $\MCO$'s input of their share of the VRF key $k_2$ preventing existing transcript reuse.
+\noindent The user combines  $k_1 + k_2$ to form their VRF key, $\Pi_2$ proves $k_1$ is correctly derived from $C_1$, $k_2$ is derived from $C_2$ and $k$ combines $k_1 + k_2$, $\MCO$'s input to $k$ prevents forgery attempts on the key $k$. The hiding property of the commitments and zero-knowledge property of the proofs ensures correct protocol adherence while maintaining private computation. Revocation is enabled by encryption of the VRF key $k$ with the public key of the Auditor $PK_A$. $\Pi_3$ proves that $\tau$ is an encryption of the committed key $k$. $\tau$ is stored with the credential oracle maintaining privacy during normal operation. Finally, the protocol prevents replay attacks by using interactive zero-knowledge proofs requiring a challenge from the verifier, fresh commitment randomness, and $\MCO$'s input of their share of the VRF key $k_2$ preventing existing transcript reuse.
 
 
 
 \newpage
 \subsection{Create Context Credential}
-
 Context Credential Issuance enables a user to obtain a context-specific credential while proving ownership of a valid master credential. The user first constructs a commitment to their context credential attributes, including their identity $s$ and a deterministic nullifier derived from their VRF key $k$ and the credential context $ctx$. Through zero-knowledge proofs, the user demonstrates their master credential is valid and unrevoked, and proves the context commitment is well-formed with the same identity $s$. The nullifier $\tau$ = $VRF(k,ctx)$ prevents multiple credentials for the same context while maintaining privacy. Upon successful verification, the Context Credential Oracle signs the commitment and records the nullifier.
 
 \begin{center}
@@ -434,34 +430,37 @@ Context Credential Issuance enables a user to obtain a context-specific credenti
 \multicolumn{3}{l}{Parse $Cred_m'$ as $C_m', \sigma_m'$} \\[1em]
 \multicolumn{3}{l}{$\Pi_6 \gets ZKPoK.Prove_{reciprocal}(C_m', C_c,ctx)(s,k,r',r*)$}  \\[1em]
 \multicolumn{3}{l}{$\Pi_7 \gets ZKPoK.Prove_{equality}(C_m', C_c)(s, r)$} \\[1em]
-\multicolumn{3}{l}{$\Pi_8 \gets ZKPoK.Prove_{revocation}(Cred_m', \RL)(k)$} \\[1em]
-& $\xrightarrow{Cred_m', C_c, \Pi_4, \Pi_5, \Pi_6, \Pi_7, \Pi_8}$ & \\[1em]
+& $\xrightarrow{Cred_m', C_c, \Pi_4, \Pi_5, \Pi_6, \Pi_7}$ & \\[1em]
 \multicolumn{3}{r}{If} \\[1em]
 \multicolumn{3}{r}{$ZKPok.Verify_{selective-disclosure}(\Pi_4, C_c)(\delta, ctx, attrs)$ = 1 $\; \wedge$} \\[1em]
 \multicolumn{3}{r}{$ZKSoK.Verify(\Pi_5, Cred_m')$ = 1 $\; \wedge$} \\[1em]
 \multicolumn{3}{r}{$ZKPoK.Verify_{reciprocal}(\Pi_6, C_m', C_c, ctx)$ = 1 $\; \wedge$} \\[1em]
 \multicolumn{3}{r}{$ZKPoK.Verify_{equality}(\Pi_7, C_m', C_c)$ = 1 $\; \wedge$} \\[1em]
-\multicolumn{3}{r}{$ZKPoK.Verify_{revocation}(\Pi_8, Cred_m')$ = 0} \\[1em]
 \multicolumn{3}{r}{$\sigma_c \gets PS.Sign(SK_c, C_c)$} \\[1em]
-\multicolumn{3}{r}{Store Data Record CCO $(C_c, \sigma_c, \delta, \Pi_4, \Pi_5, \Pi_6, \Pi_7, \Pi_8  )$} \\[1em]
+\multicolumn{3}{r}{Store Data Record CCO $(C_c, \sigma_c, \delta, \Pi_4, \Pi_5, \Pi_6, \Pi_7 )$} \\[1em]
 & $\xleftarrow{\sigma_c}$& \\[1em]
 \multicolumn{3}{l}{If $PS.Verify(PK_c,\sigma_c, C_c) = 1$, Store $Cred_c(\sigma_c, C_c)$} \\[1em]
 \end{tabular}
 \end{center}
 
 
-
 \subsubsection{Informal Security Analysis}
 Sybil Resistance: The deterministic nullifier $\delta \gets VRF(k,ctx)$ binds each context credential to a unique (user, context) pair, preventing multiple credentials for the same context. The reciprocal proof $\Pi_6$ ensures correct nullifier derivation from the master key $k$. 
 Credential Binding: Context Credentials are bound to master credentials through shared identity $s$ and $\Pi_7$. The selective disclosure proof $\Pi_4$ ensures correct commitment structure without revealing private values. 
 Privacy: The protocol only reveals $ctx$ and $attrs$ to CCO to allow identity verification while hiding $s$. The Master Credential $Cred_m$ remains unlinkable by being  rerandomized and proven in zero knowledge it verifies with the Master Credential Oracles public key.
-Revocation: The proof $\Pi_8$ demonstrates $Cred_m$ is not revoked, ensuring only valid master credentials can be used.
 
 
 
 
 
 
+\subsubsection{Verification}
+A user $user$ wants to prove to any relying party $rely$ they have a valid credential that satisfies a verification statement $\phi$.
+The protocol takes as input $(rcd, ccd, \phi, rpk, acc, n)$ and outputs success or failure.
+$rely$ starts by sending $(\phi, n, acc)$ to $user$ where $\phi$ is a statement that specifies the requirements for a successful verification and $acc$ is the current accumulator value of revoked nullifiers.
+$user$ starts by randomizing their credentials $rcd' = psrerand(rcd)$ and $ccd' = psrerand(ccd)$ and verifies $psverify_{ck_{rcd}}(rcd')$ and $psverify_{ck_{ccd}}(ccd')$. $user$ generate their nullifiers $nullif_{pid} \gets PRF_s(pid)$ and $nullif_{ctx} \gets PRF_s(ctxid)$ and obtains non-membership witnesses $wpid$, $wctx$ for nullifiers against $acc$.
+$user$ generates a zero-knowledge proof $\pi$ showing 1) their credentials are valid, 2) they're not expired $(expiry > current_time)$, 3) their nullifiers are correctly formed from $s$, 4) their nullifiers are not in $acc$ using witnesses $wpid, wctx$, 5) the credential attributes satisfy $\phi$, 6) proof freshness using $n$.
+$user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc$ and validates $attrs_{\phi}$ satisfies $\phi$. Returns accept if all checks pass, reject otherwise.
 
 
 
@@ -472,17 +471,7 @@ Revocation: The proof $\Pi_8$ demonstrates $Cred_m$ is not revoked, ensuring onl
 
 \newpage
 
-\subsubsection{Revocation}
-When $ra$ needs to revoke a user's credential/s (due to user request or credential provider request), $ra$ finds $escrow$ based on the user's $pid$, recall $ra$ has a user list $ul$ = $(pid, escrow)$ and requests the auditor $audit$ to decrypt $s \gets tpkdec_{ask}(escrow)$. $audit$ computes the nullifiers to add to the revocation accumulator. $nullif_{rcd} \gets PRF_s(pid)$ and for each context credential to revoke, $nullif_{ctxid} \gets PRF_s(ctxid)$. $audit$ updates the accumulator $acc' \gets Acc.Add(acc)$
-If the registration credential requires revocation, $audit$ can compute each $nullif \gets PRF_{s}(ctxid) ; \forall ; ctxid ; \in ; ctxl$ and add $(nullif, timestamp, reason)$ to $rl$. For record-keeping, $ra$ stores Revocation Information $ri = (nullif, timestamp, reason)$ allowing $ra$ to track which credentials are revoked and why, $nullif$ in $rl$ ensures revoked credentials can't be verified.
-During credential verification, verifiers check if a credential's nullifier appears in $rl$, if present, the verification fails.
-\subsubsection{Verification}
-A user $user$ wants to prove to any relying party $rely$ they have a valid credential that satisfies a verification statement $\phi$.
-The protocol takes as input $(rcd, ccd, \phi, rpk, acc, n)$ and outputs success or failure.
-$rely$ starts by sending $(\phi, n, acc)$ to $user$ where $\phi$ is a statement that specifies the requirements for a successful verification and $acc$ is the current accumulator value of revoked nullifiers.
-$user$ starts by randomizing their credentials $rcd' = psrerand(rcd)$ and $ccd' = psrerand(ccd)$ and verifies $psverify_{ck_{rcd}}(rcd')$ and $psverify_{ck_{ccd}}(ccd')$. $user$ generate their nullifiers $nullif_{pid} \gets PRF_s(pid)$ and $nullif_{ctx} \gets PRF_s(ctxid)$ and obtains non-membership witnesses $wpid$, $wctx$ for nullifiers against $acc$.
-$user$ generates a zero-knowledge proof $\pi$ showing 1) their credentials are valid, 2) they're not expired $(expiry > current_time)$, 3) their nullifiers are correctly formed from $s$, 4) their nullifiers are not in $acc$ using witnesses $wpid, wctx$, 5) the credential attributes satisfy $\phi$, 6) proof freshness using $n$.
-$user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc$ and validates $attrs_{\phi}$ satisfies $\phi$. Returns accept if all checks pass, reject otherwise.
+
 
 
 
@@ -888,6 +877,12 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 
 
 \section{Construction of Private Identity System}\label{sec:identitysystem}
+
+\subsubsection{Revocation}
+When $ra$ needs to revoke a user's credential/s (due to user request or credential provider request), $ra$ finds $escrow$ based on the user's $pid$, recall $ra$ has a user list $ul$ = $(pid, escrow)$ and requests the auditor $audit$ to decrypt $s \gets tpkdec_{ask}(escrow)$. $audit$ computes the nullifiers to add to the revocation accumulator. $nullif_{rcd} \gets PRF_s(pid)$ and for each context credential to revoke, $nullif_{ctxid} \gets PRF_s(ctxid)$. $audit$ updates the accumulator $acc' \gets Acc.Add(acc)$
+If the registration credential requires revocation, $audit$ can compute each $nullif \gets PRF_{s}(ctxid) ; \forall ; ctxid ; \in ; ctxl$ and add $(nullif, timestamp, reason)$ to $rl$. For record-keeping, $ra$ stores Revocation Information $ri = (nullif, timestamp, reason)$ allowing $ra$ to track which credentials are revoked and why, $nullif$ in $rl$ ensures revoked credentials can't be verified.
+During credential verification, verifiers check if a credential's nullifier appears in $rl$, if present, the verification fails.
+
 
 \newcommand{\vt}{\mathsf{vt}}
 \newcommand{\wx}{\mathsf{wx}}
