@@ -1,9 +1,4 @@
-%!TEX root=../main.tex
-
-% Packages
-%
-
-\usepackage{amsmath} %\usepackage{amsthm}
+\usepackage{amsmath} 
 \usepackage{wasysym} 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -58,6 +53,46 @@ keys
 
 \newtoggle{notes}
 \toggletrue{notes} % set to false to remove colored notes from the paper
+
+
+%--------------------------------------------------------
+% Custom - commitment and PS sigs
+%--------------------------------------------------------
+
+\newcommand{\vt}{\mathsf{vt}}
+\newcommand{\wx}{\mathsf{wx}}
+\newcommand{\wxone}{\mathsf{w_1x}}
+\newcommand{\wxtwo}{\mathsf{w_2x}}
+\newcommand{\wxhat}{\mathsf{\hat{w}x}}
+% \newcommand{\x}{\mathsf{x}}
+
+\newcommand{\acu}{\mathsf{ACU}}
+\newcommand{\acusetup}{\mathsf{ACU.Setup}}
+\newcommand{\acuadd}{\mathsf{ACU.Add}}
+\newcommand{\acudel}{\mathsf{ACU.Del}}
+\newcommand{\acuvermem}{\mathsf{ACU.VerMem}}
+\newcommand{\acuvernonmem}{\mathsf{ACU.VerNonMem}}
+
+
+\newcommand{\rev}{\mathsf{REV}}
+\newcommand{\revsetup}{\mathsf{REV.Setup}}
+\newcommand{\revrevoke}{\mathsf{REV.Revoke}}
+\newcommand{\revtokengen}{\mathsf{REV.TokenGen}}
+\newcommand{\revtokenver}{\mathsf{REV.TokenVer}}
+
+\newcommand{\rt}{\mathsf{rt}}
+
+% \newcommand{\tilcm}{\tilde{\mathsf{cm}}}
+\newcommand{\tilcm}{\tilde{cm}}
+
+
+\newcommand{\mb}{\textbf{m}}
+\newcommand{\gb}{\textbf{g}}
+\newcommand{\tilgb}{\tilde{\textbf{g}}}
+\newcommand{\yb}{\textbf{y}}
+\newcommand{\rd}{\Delta_r}
+\newcommand{\td}{\Delta_t}
+\newcommand{\ud}{\Delta_u}
 
 
 %--------------------------------------------------------
@@ -177,11 +212,8 @@ keys
 % General notations
 %--------------------------------------------------------
 
-% \let\vec\mathbf
 \newcommand{\bit}{\ensuremath{\{0,1\}}\xspace}
 \newcommand{\getsr}{\leftarrow_{r}}
-% \newcommand{\poly}{\ensuremath{\mathsf{poly}}\xspace}
-
 
 % Table Edit
 
@@ -227,9 +259,6 @@ keys
 \newcommand{\AdvC}{\ensuremath{\mathcal{C}}\xspace}
 \newcommand{\AdvD}{\ensuremath{\mathcal{D}}\xspace}
 
-% \newcommand{\adv}{\ensuremath{\mathsf{Adv}}\xspace}
-% \newcommand{\oracle}{\ensuremath{\mathcal{O}}\xspace}
-
 %--------------------------------------------------------
 % Classes, sets, groups
 %--------------------------------------------------------
@@ -266,22 +295,9 @@ keys
 \newcommand{\ZKVerify}{\ensuremath{\mathsf{ZK.Verify}}\xspace}
 \newcommand{\ZKSoK}{\ensuremath{\mathsf{ZKSoK}}\xspace}
 \newcommand{\ZKAoK}{\ensuremath{\mathsf{ZKAoK}}\xspace}
-% \newcommand{\Z}{\mathbb{Z}}
-% \newcommand{\F}{\mathbb{F}}
-% \newcommand{\N}{\mathbb{N}}
-% \newcommand{\R}{\mathbb{R}}
-% \newcommand{\G}{\mathbb{G}}
-% \newcommand{\Gt}{\mathbb{G}_{\mathsf{T}}}
-% \newcommand{\Hset}{\mathbb{H}}
-% \newcommand{\Zn}{\mathbb{Z}_n}
-% \newcommand{\Group}{\mathbb{G}}
-
 
 \newcommand{\proverS}{\ensuremath{\mathsf{P}_{\Sigma}}\xspace}
 \newcommand{\verifierS}{\ensuremath{\mathsf{V}_{\Sigma}}\xspace}
-% \newcommand{\prover}{\ensuremath{\mathsf{P}}\xspace}
-% \newcommand{\verifier}{\ensuremath{\mathsf{V}}\xspace}
-% \newcommand{\sender}{\ensuremath{\mathsf{S}}\xspace}
 \newcommand{\receiver}{\ensuremath{\mathsf{R}}\xspace}
 \newcommand{\ZK}{\textsf{ZK}\xspace}
 \newcommand{\zk}{\textsf{zk}\xspace}
@@ -489,7 +505,7 @@ keys
 % \newcommand{\negl}{\textit{negl($\lambda$)}}
 
 % \newcommand{\adversary}{\ensuremath{\mathcal{A}}}
-% \newcommand{\oracle}{\ensuremath{\mathcal{O}}}
+\renewcommand{\oracle}{\ensuremath{\mathcal{O}}}
 \newcommand{\challenger}{\ensuremath{\mathcal{C}}}
 \newcommand{\Extractor}{\ensuremath{\mathcal{E}}}
 \newcommand{\Simulator}{\ensuremath{\mathcal{S}}}

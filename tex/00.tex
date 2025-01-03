@@ -101,6 +101,8 @@ Identity systems are evolving from trusted, single-issuer models where a user au
 
 Building a privacy-preserving decentralized identity system requires balancing competing requirements: adhereing to strong security and privacy properties while retaining accountability measures and providing efficient verification of complex identity statements. While individual cryptographic primitives exist for many of these properties in isolation, combining them while maintaining security and efficiency introduces technical challenges, we identity three fundamental challenges below: 
 
+\todonote{Rewrite this - start with rerand sigs over commitments, then extending that for multi-issuer, multi-cred, then using that for identity system}
+
 \begin{enumerate}
 
     \item \textbf{Efficient Rerandomizable Signatures over Commitments} A key technical challenge was designing a signature scheme that efficiently supports both rerandomization and zero-knowledge proofs over-committed attributes. While existing schemes like BBS+, CL, and standard PS provide these properties, we use a customized PS signature with the lowest overhead in the randomization step. %what I want to say here is that after the randomization step, we are given a commitment in G1 which is easy and efficient to work with, rather than some other construction which needs custom proofs and new security proofs for each system built with it. 
@@ -159,10 +161,67 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 
 
 
+\section{Preliminaries}\label{sec:preliminaries}
 
 
+\section{Rerandomizable Signatures on Commitments}\label{sec:sigs}
+\subsection{Commitment}
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $CM.Setup(BG, \secparam, 1^n) \to ck$: Sample $g \sample \G_1, \tilg \sample \G_2$. Sample $\yb \sample \Z_p^{n}$ and compute $(\gb, \tilgb) \gets (g^{\yb}, \tilg^{\yb})$. Output $ck \gets (g, \gb, \tilg, \tilgb)$
+    
+    \item $CM.Com_{ck}(\mb, r) \to (\cm, \tilcm):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$ and $\mb$ as $(m_1, \dots, m_{\ell})$, return $(\cm, \tilcm)$ as $(\gb^{\mb}g^r, \tilgb^{\mb}\tilg^r)$
+
+    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
+\end{itemize}
+
+\subsubsection{Construction}
+
+\begin{itemize}
+    \item $CM.Setup(\secparam, n) \to ck:$ The setup Algorithm generates the commitment key $ck$. Samples $(g, \tilg) \sample \G_1^* \times \G_2^*$ and $n$ scalars $y_i \gets \Z_p$, $Y_i \gets g^{y_i}$, and $\tily_i \gets \tilg^{y_i}$ $\forall \; 1 \leq i \leq n;$ such that $Y_i = g_1^{y_1}\dots g_n^{y_n}$ and $\tily_i = \tilg_1^{y_1}\dots \tilg_n^{y_n}$. Outputs $ck$ a tuple $(g, Y_i, \tilg, \tily_i)$ with commitment keys in both $\G_1$ and $\G_2$ where $e(Y_i,\tilg) = e(g,\tily_i)$
+
+    \item $CM.Com_{ck}(\{m_i\}^n_{i=1}) \to (cm, \tilcm):$ to commit to $n$ messages $m_1, \dots, m_n$, the committer samples $r \sample \Zp$, and parses $ck$ as $(g, Y_i, \tilg, \tily_i)$ and commits to $\{m_i\}^n_{i=1}$ over dual commitments in $\G_1$ and $\G_2$. Computes $g^r, \tilg^r$, Commits to $\{m_i\}^n_{i=1}$ with respect to $ck$ such that $\cm \gets g_1^{m_1}\dots g_n^{m_n} g^r$ and $\tilcm \gets \tilg_1^{m_1} \dots \tilg_n^{m_n}\tilg^r$ Then outputs $(\cm, \tilcm)$ where the equality of commitments can be verified by pairing $e(\cm, \tilg) = e(g, \tilcm)$
+    
+    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ To rerandomize the commitment, the last element $g, \tilg$ is randomized with $\rd$. Compute $g^{\rd}, \tilg^{\rd}$, Compute $\cm'$ = $\cm \cdot g^{\rd}$ as $g_1^{m_1}\dots g_n^{m_n} g^r \cdot g^{\rd}$ which will equal $g_1^{m_1}\dots g_n^{m_n} g^{r + \rd}$ and equivalently for $\tilcm'$. Return the rerandomized commitments $(\cm', \tilcm')$
+    
+\end{itemize}
+
+\subsubsection{Security}
 
 
+\subsection{PS Signature}
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $PS.KeyGen(\secparam, \ck) \to (\sk, \vk):$ Parse $\ck$ as $ck \gets (g, \gb, \tilg, \tilgb)$. Sample $x \sample \Zp$, set $(\sk, \vk) \gets (g^x, \tilg^x)$
+
+    \item $PS.Sign_{ck}(\sk, \cm) \to \sigma:$ Parse $\ck$ as $\gets (g, \cdot, \tilg, \cdot)$ Sample $u \sample \Zp$, compute $\sigma_1 \gets g^u$, $\sigma_2 \gets (\sk \cdot \cm)^u$
+     and return $\sigma \gets (\sigma_1, \sigma_2)$
+
+     \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma': $ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+
+     \item $PS.Verify_{ck, vk}(\sigma, (\cm, \tilcm)) \to \bit: $ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+     
+\end{itemize}
+\subsubsection{Construction}
+\begin{itemize}
+    \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
+
+    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (X \cdot \cm)^u$ both are notably in $\G_1$ and thus $(X \cdot \cm)^u$ = $(g_1^{m_1u}\dots g_n^{m_nu}g^{xu+ru})$. Returns $\sigma \gets (\sigma_1, \sigma_2)$    
+
+    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+
+    \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+
+\end{itemize}
+
+\subsubsection{Security}
+
+
+\subsection{PS Signature over Commitment Construction}
+\begin{itemize}
+    \item $PS.Rerand_{ck,vk}(\sigma, \rd, \ud) \to \sigma'$: Rerandomization of the signature must preserve the algebraic properties of the commitment itself to allow the commitment to be used for zero knowledge proof protocols. To do so, the commitment is re-randomized with the random factor $\rd$ such that a commitment and signature pair 
+
+\end{itemize}
 
 
 
@@ -170,7 +229,8 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 
 
 \cleardoublepage
-\section{Identity System Overview}\label{sec:overview}
+
+\section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:multiissuermulticred}
 
 \subsection{Entities}
 Our identity system involves users, credential issuers, auditors, and credential verifiers.
@@ -286,8 +346,7 @@ A user interacts with the Context Credential oracle to obtain a context-specific
 
 
 
-\newpage
-\subsection{Protocols}
+
 
 
 
@@ -299,7 +358,6 @@ A user interacts with the Context Credential oracle to obtain a context-specific
 
 \newpage
 \subsection{Syntax}
-Syntax of Anonymous Identity System with Sybil Resistance and Revocation
 \begin{itemize}
     \item $\mathsf{Setup}(\secparam) \to (\ppar, \UL, \RL)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$, empty user list $\UL$ and revocation list $\RL$.
 
@@ -318,23 +376,20 @@ Syntax of Anonymous Identity System with Sybil Resistance and Revocation
 \subsection{Security Model}
 
 \subsubsection{Security Properties}
-Our private identity system with Sybil Resistance satisfies the following security and privacy properties:
+Our Multi Issuer, Multi Credential Anonymous Credential system satisfies the following security and privacy properties:
 \begin{enumerate}
     \item \textbf{Correctness: } For any honestly generated credentials and valid witness values, verification accepts if and only if (1) the credentials were legitimately issued by the credential issuer. (2) the credentials satisfy the verification predicate $\phi$. (3) all commitments are well-formed with respect to their corresponding signed credentials. 
     
     \item \textbf{Unforgeability}: No probabilistic polynomial time adversary can (1) forge valid credentials for honest users. (2) use credentials belonging to other users. (3) combine multiple credentials to create new ones. (4) replay a credential show from a different user. 
     
     \item \textbf{Anonymity:} Given polynomial-time adversary views of credential verification, the adversary cannot (1) learn any information beyond the public information. (2) link multiple showings of the same credential. (3) Correlate different credentials belonging to the same user.
-    
-    \item \textbf{Sybil resistance}: For any given context, no probabilistic polynomial time adversary can obtain more than 1 valid credential with non-negligible probability 
 
     \item \textbf{Credential Binding}: For any polynomial-time adversary $\adv$, given a set of credentials $\{cred_1, \dots, cred_n\}$ the probability of producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) the linking proof demonstrates the same $s$ value across all credentials
 
 \end{enumerate}
 
 \subsubsection{Threat Model}
-We assume the auditors maintaining the revocation cannot be corrupted.
-
+We assume the auditor maintaining the revocation cannot be corrupted.
 
 \begin{itemize}
     \item Malicious Credential Oracle: A malicious credential oracle could "falsely issue attestations and impersonate any user it desires. Fortunately, recent work on authenticating web data has shown privacy-preserving, untrusted and correct credential oracles can be realized in practice [DECO, distefano, etc]. Additionally, we mitigate the threat level by confining each credential oracle to a unique domain." - from Arke. 
@@ -354,12 +409,55 @@ We assume the auditors maintaining the revocation cannot be corrupted.
 \end{itemize}
 
 
+We extend the formalized model for anonymous credentials based off the approach here \cite{fuchsbauer_structure-preserving_2019}. 
+
+\subsubsection{Global Variables}
+1. the challenger computes the osk/opk at the start of the experiment, or the adversary outputs opk. 
+2. the anonymity game is won by guessing the bit b, similar to decisional problems, 
+3. the adversary is a PPT algorithm $\Adv$
+4. there are HU and CU for honest and corrupt users
+5. lists UPK, USK, CRED, OWNR to track user and public keys, issued credentials and attributes
+6. J-LoR, I-LoR - I or J Left or Right. 
+
+The challenger sets up each experiment by computing $osk, opk$ or the adversary $\Adv$ outputs $opk$. The anonymity game is won by guessing the bit $b$. The adversary $\Adv$ is a $\PPT$ algorithm. 
+$HU$ and $CU$ track the honest and corrupt users. $UPK$, $UID$, $CRED$, $ATTR$, $OWNR$ track the user public and user id, the oracles $O$ have access to 
 
 
 
 
-\newpage
-\section{Multi Issuer Multi Credential Anonymous Credentials}\label{sec:multiissuermulticred}
+CRED stores id, attrs, cred, uid each time cred is issued for id
+
+\subsubsection{Oracles}
+
+\begin{itemize}
+    \item $\oracle_{HU}(i)$ takes a user identity $i$ as input. If $i \in HU \cup CU$, it returns $\bot$. Otherwise, it creates a new honest user $i$ by running $(USK[i], UPK[i]) \sample UserKeyGen(opk)$ adding $i$ to $HU$, returning $UPK[i]$
+    
+    \item $\oracle_{CU}(i, upk)$
+\end{itemize}
+
+
+
+\begin{definition}[Correctness]
+    An ABC system is correct if....
+\end{definition}
+\begin{definition}[Unforgeability]
+    An ABC system is Unforgeable if....
+\end{definition}
+\begin{definition}[Anonymous]
+    An ABC system is Anonymous if....
+\end{definition}
+\begin{definition}[Credential Binding]
+    An ABC system is credential binding if....
+\end{definition}
+
+
+
+
+
+
+
+
+
 Our identity system establishes a secure framework for issuing and managing privacy-preserving credentials across multiple authorities while maintaining accountability. The system involves four key entities: users, credential oracles (which verify and attest to user attributes), auditor (who manage revocation), and credential verifiers.
 
 \noindent At the core of our system is a master credential issued by a government credential oracle, which serves as a root of trust. This credential contains two crucial committed elements: a secret identifier $s$ that enables secure credential linking, and a committed VRF key $k$ that generates context-specific nullifiers. These nullifiers serve dual purposes: preventing Sybil attacks at credential oracles and enabling efficient revocation. During master credential issuance, the VRF key is verifiably encrypted, the ciphertext is stored in the government system which associates a plaintext user profile to their ciphertext for revocation.
@@ -464,6 +562,7 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 
 
+\subsection{Security Experiments}
 
 
 
@@ -876,7 +975,69 @@ Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inve
 \cleardoublepage
 
 
-\section{Construction of Private Identity System}\label{sec:identitysystem}
+\section{Private Identity System from MIMC-ABC}\label{sec:identitysystem}
+
+We use the Multi Issuer Multi Credential Anonymous Credential system to implement a privacy-preserving digital identity system
+
+\subsection{Entities}
+We extend the MCAC-ABC by including an Auditor responsible for revocation.
+
+\noindent \textbf{Auditor} ($\Auditor$) consists of a threshold of nodes holding encryption and accumulator keypairs; for simplicity, we refer to both as $(sk_A, pk_A)$. Users encrypt their VRF keys under the auditors' public key, as in key escrow schemes. Auditors can decrypt this key during revocation. The Auditor updates the revocation list. 
+
+\subsection{Data Objects}
+
+We extend the Anonymous Credential data objects with a revocation list managed by the auditor
+
+\subsubsection{Revocation List:} 
+\begin{itemize}
+    \item Accumulator Structure:
+    \begin{itemize}
+        \item Accumulator value $A$: The current state of the accumulator representing non-revoked credentials
+        \item Secret key $sk_A$: The accumulator manager's key for updates
+        \item Auxiliary information $aux$: Additional data needed for witness updates
+    \end{itemize}
+    \item Revoked Elements:
+    \begin{itemize}
+        \item Master revocations $k$: VRF keys of revoked master credentials
+        \item Context revocations $\tau$: Nullifiers of revoked context credentials
+        \item Timestamp $t$: Time of revocation
+        \item Reason code $rc$: Justification for revocation
+    \end{itemize}
+    \item Witness Management:
+    \begin{itemize}
+        \item Non-membership witness $w$: Proof that a credential is not in the revocation set
+        \item Update information $upd$: Data for users to update their witnesses after accumulator changes
+    \end{itemize}
+\end{itemize}
+
+\subsection{Syntax}
+\todonote{Sam to update this to include master and context cred and revocation}
+
+Syntax of Anonymous Identity System with Sybil Resistance and Revocation
+\begin{itemize}
+    \item $\mathsf{Setup}(\secparam) \to (\ppar, \UL, \RL)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$, empty user list $\UL$ and revocation list $\RL$.
+
+    \item $\mathsf{OrgKeygen}(\ppar, n) \torand (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
+
+    \item $\mathsf{UserKeygen}(\secparam) \torand (\usk)$ is a probabilistic algorithm. Outputs user secret key $\usk$ consisting of PRF key $k$ and identity string $s$
+
+    \item $(\mathsf{Obtain Master}(usk, \textbf{m}, aux), \mathsf{Issue Master}(osk, cm, aux)) \to cred:$ An interactive protocol. $Obtain$ is a probabilistic alrogithm run by a user, inputs secret key, credential attribute vector $\textbf{m}$ and auxiliary info. $Issue$ is a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuers secret key $osk$, and auxiliary info. Outputs a credential $cred$ binding $cm$ to the issuer signature.
+
+    \item $(\mathsf{Obtain Context}(usk, \textbf{m}, aux), \mathsf{Issue Context}(osk, cm, aux)) \to cred:$ An interactive protocol. $Obtain$ is a probabilistic alrogithm run by a user, inputs secret key, credential attribute vector $\textbf{m}$ and auxiliary info. $Issue$ is a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuers secret key $osk$, and auxiliary info. Outputs a credential $cred$ binding $cm$ to the issuer signature.
+
+    \item $(\mathsf{Show}(usk, cred, \phi), \mathsf{Verify}(cred', cm, \pi)) \to \bit$ An interactive protocol. $Show$ is a probabilistic algorithm run by a Prover. Takes secret key, credential, and predicate statement $\phi$. $Verify$ is a deterministic algorithm run by a verifier, takes a randomized credential and commitment $cred', cm'$ and proof $\pi$. Otuputs 1 if verification succeeds, otherwise 0.
+
+    \item $\mathsf{Revoke}(\RL, k') \to \RL'$ revoke is a deterministic algorithm, updates revocation list with revoked key $k'$
+\end{itemize}
+
+\subsection{Security Model}
+\begin{itemize}
+    \item \textbf{Sybil resistance}: For any given context, no probabilistic polynomial time adversary can obtain more than 1 valid credential with non-negligible probability 
+    
+    \item \textbf{Revocability}: For any given context, no probabilistic polynomial time adversary use a revoked credential 
+\end{itemize}
+
+\subsubsection{Sybil Resistance}
 
 \subsubsection{Revocation}
 When $ra$ needs to revoke a user's credential/s (due to user request or credential provider request), $ra$ finds $escrow$ based on the user's $pid$, recall $ra$ has a user list $ul$ = $(pid, escrow)$ and requests the auditor $audit$ to decrypt $s \gets tpkdec_{ask}(escrow)$. $audit$ computes the nullifiers to add to the revocation accumulator. $nullif_{rcd} \gets PRF_s(pid)$ and for each context credential to revoke, $nullif_{ctxid} \gets PRF_s(ctxid)$. $audit$ updates the accumulator $acc' \gets Acc.Add(acc)$
@@ -884,99 +1045,47 @@ If the registration credential requires revocation, $audit$ can compute each $nu
 During credential verification, verifiers check if a credential's nullifier appears in $rl$, if present, the verification fails.
 
 
-\newcommand{\vt}{\mathsf{vt}}
-\newcommand{\wx}{\mathsf{wx}}
-\newcommand{\wxone}{\mathsf{w_1x}}
-\newcommand{\wxtwo}{\mathsf{w_2x}}
-\newcommand{\wxhat}{\mathsf{\hat{w}x}}
-% \newcommand{\x}{\mathsf{x}}
-
-\newcommand{\acu}{\mathsf{ACU}}
-\newcommand{\acusetup}{\mathsf{ACU.Setup}}
-\newcommand{\acuadd}{\mathsf{ACU.Add}}
-\newcommand{\acudel}{\mathsf{ACU.Del}}
-\newcommand{\acuvermem}{\mathsf{ACU.VerMem}}
-\newcommand{\acuvernonmem}{\mathsf{ACU.VerNonMem}}
 
 
-\newcommand{\rev}{\mathsf{REV}}
-\newcommand{\revsetup}{\mathsf{REV.Setup}}
-\newcommand{\revrevoke}{\mathsf{REV.Revoke}}
-\newcommand{\revtokengen}{\mathsf{REV.TokenGen}}
-\newcommand{\revtokenver}{\mathsf{REV.TokenVer}}
-
-\newcommand{\rt}{\mathsf{rt}}
-
-% \newcommand{\tilcm}{\tilde{\mathsf{cm}}}
-\newcommand{\tilcm}{\tilde{cm}}
 
 
-\newcommand{\mb}{\textbf{m}}
-\newcommand{\gb}{\textbf{g}}
-\newcommand{\tilgb}{\tilde{\textbf{g}}}
-\newcommand{\yb}{\textbf{y}}
-\newcommand{\rd}{\Delta_r}
-\newcommand{\td}{\Delta_t}
-\newcommand{\ud}{\Delta_u}
 
 
-\subsection{Commitment}
-\subsubsection{Syntax}
+
+
+
+
+
+
+\newpage
+\section{Performance Evaluation}\label{sec:evaluation}
+What is the takeaway message from the evaluation?
 \begin{itemize}
-    \item $CM.Setup(BG, \secparam, 1^n) \to ck$: Sample $g \sample \G_1, \tilg \sample \G_2$. Sample $\yb \sample \Z_p^{n}$ and compute $(\gb, \tilgb) \gets (g^{\yb}, \tilg^{\yb})$. Output $ck \gets (g, \gb, \tilg, \tilgb)$
-    
-    \item $CM.Com_{ck}(\mb, r) \to (\cm, \tilcm):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$ and $\mb$ as $(m_1, \dots, m_{\ell})$, return $(\cm, \tilcm)$ as $(\gb^{\mb}g^r, \tilgb^{\mb}\tilg^r)$
-
-    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
+    \item For non-private system, we enable privacy with little overhead. Our building block sigma protocol for private sybil resistance adds negligible overhead. 
+    \item For private system, but better efficiency, we have a SOTA paper TACT/S3ID (in the comparison table). Their paper does multi-attribute/multi-issuer credentials (they issue 1 credential per attribute), but their benchmarks don't show the complexity in verifying credentials together, or proving statements about their credential which they say would have non-negligible impact and theirs is lower bound. For us, by using simpler and well-known construction, we are more efficient (need to test this but I think so due to their construction) and better functionality. 
 \end{itemize}
 
-\subsubsection{Construction}
-
-\begin{itemize}
-    \item $CM.Setup(\secparam, n) \to ck:$ The setup Algorithm generates the commitment key $ck$. Samples $(g, \tilg) \sample \G_1^* \times \G_2^*$ and $n$ scalars $y_i \gets \Z_p$, $Y_i \gets g^{y_i}$, and $\tily_i \gets \tilg^{y_i}$ $\forall \; 1 \leq i \leq n;$ such that $Y_i = g_1^{y_1}\dots g_n^{y_n}$ and $\tily_i = \tilg_1^{y_1}\dots \tilg_n^{y_n}$. Outputs $ck$ a tuple $(g, Y_i, \tilg, \tily_i)$ with commitment keys in both $\G_1$ and $\G_2$ where $e(Y_i,\tilg) = e(g,\tily_i)$
-
-    \item $CM.Com_{ck}(\{m_i\}^n_{i=1}) \to (cm, \tilcm):$ to commit to $n$ messages $m_1, \dots, m_n$, the committer samples $r \sample \Zp$, and parses $ck$ as $(g, Y_i, \tilg, \tily_i)$ and commits to $\{m_i\}^n_{i=1}$ over dual commitments in $\G_1$ and $\G_2$. Computes $g^r, \tilg^r$, Commits to $\{m_i\}^n_{i=1}$ with respect to $ck$ such that $\cm \gets g_1^{m_1}\dots g_n^{m_n} g^r$ and $\tilcm \gets \tilg_1^{m_1} \dots \tilg_n^{m_n}\tilg^r$ Then outputs $(\cm, \tilcm)$ where the equality of commitments can be verified by pairing $e(\cm, \tilg) = e(g, \tilcm)$
-    
-    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ To rerandomize the commitment, the last element $g, \tilg$ is randomized with $\rd$. Compute $g^{\rd}, \tilg^{\rd}$, Compute $\cm'$ = $\cm \cdot g^{\rd}$ as $g_1^{m_1}\dots g_n^{m_n} g^r \cdot g^{\rd}$ which will equal $g_1^{m_1}\dots g_n^{m_n} g^{r + \rd}$ and equivalently for $\tilcm'$. Return the rerandomized commitments $(\cm', \tilcm')$
-    
-\end{itemize}
-
-\subsubsection{Security}
 
 
-\subsection{PS Signature}
-\subsubsection{Syntax}
-\begin{itemize}
-    \item $PS.KeyGen(\secparam, \ck) \to (\sk, \vk):$ Parse $\ck$ as $ck \gets (g, \gb, \tilg, \tilgb)$. Sample $x \sample \Zp$, set $(\sk, \vk) \gets (g^x, \tilg^x)$
-
-    \item $PS.Sign_{ck}(\sk, \cm) \to \sigma:$ Parse $\ck$ as $\gets (g, \cdot, \tilg, \cdot)$ Sample $u \sample \Zp$, compute $\sigma_1 \gets g^u$, $\sigma_2 \gets (\sk \cdot \cm)^u$
-     and return $\sigma \gets (\sigma_1, \sigma_2)$
-
-     \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma': $ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
-
-     \item $PS.Verify_{ck, vk}(\sigma, (\cm, \tilcm)) \to \bit: $ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
-     
-\end{itemize}
-\subsubsection{Construction}
-\begin{itemize}
-    \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
-
-    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (X \cdot \cm)^u$ both are notably in $\G_1$ and thus $(X \cdot \cm)^u$ = $(g_1^{m_1u}\dots g_n^{m_nu}g^{xu+ru})$. Returns $\sigma \gets (\sigma_1, \sigma_2)$    
-
-    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
-
-    \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
-
-\end{itemize}
-
-\subsubsection{Security}
 
 
-\subsection{PS Signature over Commitment Construction}
-\begin{itemize}
-    \item $PS.Rerand_{ck,vk}(\sigma, \rd, \ud) \to \sigma'$: Rerandomization of the signature must preserve the algebraic properties of the commitment itself to allow the commitment to be used for zero knowledge proof protocols. To do so, the commitment is re-randomized with the random factor $\rd$ such that a commitment and signature pair 
 
-\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+\cleardoublepage
+\section{Appendix, Old Writings}
+\newpage
+
 
 \subsection{Zero Knowledge Proof}
 \begin{itemize}
@@ -1014,73 +1123,6 @@ During credential verification, verifiers check if a credential's nullifier appe
     \underline{Show($opk, cm, Cred$)} && \underline{Verify($osk, Cred' $)} \\[1em]
     \end{tabular}
 \end{center}
-
-\newpage
-
-
-\subsection{Sybil Resistance}
--
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-
-
-
-
-
-
-\section{Performance Evaluation}\label{sec:evaluation}
-What is the takeaway message from the evaluation?
-\begin{itemize}
-    \item For non-private system, we enable privacy with little overhead. Our building block sigma protocol for private sybil resistance adds negligible overhead. 
-    \item For private system, but better efficiency, we have a SOTA paper TACT/S3ID (in the comparison table). Their paper does multi-attribute/multi-issuer credentials (they issue 1 credential per attribute), but their benchmarks don't show the complexity in verifying credentials together, or proving statements about their credential which they say would have non-negligible impact and theirs is lower bound. For us, by using simpler and well-known construction, we are more efficient (need to test this but I think so due to their construction) and better functionality. 
-\end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\cleardoublepage
-\section{Appendix, Old Writings}
-\newpage
 
 \subsection{Old Intro}
 
