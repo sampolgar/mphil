@@ -266,7 +266,7 @@ Our Multi Issuer, Multi Credential Anonymous Credential system satisfies the fol
     
     \item \textbf{Anonymity:} Given polynomial-time adversary views of credential verification, no adversary can (1) learn information beyond the public predicate $\phi$. (2) link multiple showings of the same credential. (3) For any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
 
-    \item \textbf{Credential Binding}: For any polynomial-time adversary $\Adv$, given a set of credentials $\{cred_1, \dots, cred_n\}$, producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) The proof π must demonstrate consistency of $s$ across all credential combinations used
+    \item \textbf{Credential Binding}: For any polynomial-time adversary $\Adv$, given a set of credentials $\{cred_1, \dots, cred_n \}$, producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) The proof $\pi$ must demonstrate consistency of $s$ across all credential combinations used
 
 \end{enumerate}
 
@@ -326,21 +326,43 @@ where Verify is executed by $\mathcal{A}$.
 \noindent $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi)$ - By calling this challenge oracle, $\mathcal{A}$ attempts to distinguish between two credential sets in an anonymous showing. Each $\mathsf{Creds}_b = (\mathsf{cred}_{b,1},\ldots,\mathsf{cred}_{b,n})$ represents a tuple of credentials, where each credential contains a commitment to its attributes. The oracle enforces that credentials within each tuple belong to the same user (binding) while maintaining unlinkability across showings. The predicate $\phi: \mathsf{COM}^n \rightarrow \{0,1\}$ validates statements over committed attributes. If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $\mathcal{J}_{\mathsf{LoR}} \neq \{\mathsf{Creds}_0, \mathsf{Creds}_1\}$, returns $\bot$. Otherwise, verifies single ownership and honest user conditions, then executes:
 $(S, \cdot) \sample (\mathsf{Show}(\mathsf{opk}, \phi, \mathsf{Creds}_b), \cdot)$
 
+\begin{definition}[MIMC-ABC Correctness]
+A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correct if for all security parameters $\lambda > 0$, the following properties hold for all honestly generated credentials where attributes are committed using commitment scheme $\mathsf{Com}$
 
+\begin{enumerate}
+    \item Individual Validity: For each credential $cred_i $with commitment $cm_i$ = $Com(attrs_i; r_i)$, the credential verifies independently under its issuer's public key$ opk_i$
 
+    \item Multi-Issuer Composition: For any set of credentials ${cred_1,...,cred_n}$ with corresponding commitments ${cm_1,...,cm_n} $belonging to the same user, any valid predicate $\phi$ over their committed attributes verifies successfully
 
+    \item Commitment Binding: The showing protocol preserves the binding between credentials and their committed attributes while maintaining zero-knowledge
+\end{enumerate}
 
+More formally:
+\[ \Pr \left[\begin{array}{l}
+    (osk_i, opk_i) \sample OrgKeyGen(\secparam \text{ for } i \in [n],\\
+    (usk, upk) \sample UserKeyGen(opk),\\
+    (cm_i, r_i) \sample Com(\mathbf{attrs}_i) \text{ for } i \in [n],\\
+    (\mathsf{cred}_i, \top) \sample (Obtain(usk, opk_i, cm_i),\\
+    \quad Issue(upk, osk_i, cm_i)) \text{ for } i \in [n],\\
+    (\top, 1) \sample (Show(opk, φ, \{\mathsf{cred}_i\}_{i \in [n]}),\\
+    \quad Verify(opk, φ))
+\end{array}\right] = 1 \]
+\end{definition}
 
 \begin{definition}[Correctness]
-An ABC system is correct if for all $\lambda \in $ for all credential tuples (cred₁,...,credₙ) honestly generated via ObtIss, and for all valid predicates φ, the following holds:
-\begin{enumerate}
-    \item Individual Validity: Each credential verifies independently
-    \item Composition Validity: Any valid combination of credentials from the same user verifies successfully
-    \item Attribute Preservation: The showing protocol preserves committed attributes
-\end{enumerate}
-More formally, for any PPT adversary $\Adv$, we require:
-\[ Pr[Exp^{corr}_{\mathcal{ABC},\mathcal{A}}(1^\lambda) = 1] = 1 \]
+A Multi-Issuer Multi-Credential Attribute based Anonymous Credential System (MIMC-ABC) is correct if for all $k > 0$, all $t > 0$ and all $A$
+A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correct if for all κ > 0, all t > 0 and all 
+\[ \Pr \left[\begin{array}{l}
+    (osk_i, opk_i) \sample OrgKeyGen(1^k, 1^t) \text{ for } i \in [n],\\
+    (usk, upk) \sample UserKeyGen(opk),\\
+    (\mathsf{cred}_i, \top) \sample (Obtain(usk, opk_i, \mathbf{A}_i),\\
+    \quad Issue(upk, osk_i, \mathbf{A}_i)) \text{ for } i \in [n],\\
+    (\top, 1) \sample (Show(opk, φ, \{\mathsf{cred}_i\}_{i \in [n]}),\\
+    \quad Verify(opk, φ))
+\end{array}\right] = 1 \]
 \end{definition}
+
+
 
 
 
