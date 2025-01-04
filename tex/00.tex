@@ -266,108 +266,65 @@ Our Multi Issuer, Multi Credential Anonymous Credential system satisfies the fol
     
     \item \textbf{Anonymity:} Given polynomial-time adversary views of credential verification, no adversary can (1) learn information beyond the public predicate $\phi$. (2) link multiple showings of the same credential. (3) For any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
 
-    \item \textbf{Credential Binding}: For any polynomial-time adversary $\adv$, given a set of credentials $\{cred_1, \dots, cred_n\}$, producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) The proof π must demonstrate consistency of $s$ across all credential combinations used
+    \item \textbf{Credential Binding}: For any polynomial-time adversary $\Adv$, given a set of credentials $\{cred_1, \dots, cred_n\}$, producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) The proof π must demonstrate consistency of $s$ across all credential combinations used
 
 \end{enumerate}
 
-We extend the formalized model for anonymous credentials based on the approach here \cite{fuchsbauer_structure-preserving_2019}. 
+\section{Model and Definitions}
+We begin by presenting a model for privacy-preserving credential systems that supports multiple issuers and credential composition, extending the anonymous credential framework pioneered by \cite{hutchison_signature_2004}, extended in group signatures \cite{hutchison_foundations_2005} and modelled in an Attribute Based Anonymous Credential System \cite{fuchsbauer_structure-preserving_2019}.
 
-\subsubsection{Global Variables}
-1. the challenger computes the osk/opk at the start of the experiment, or the adversary outputs opk. 
-2. the anonymity game is won by guessing the bit b, similar to decisional problems, 
-3. the adversary is a PPT algorithm $\Adv$
-4. there are HU and CU for honest and corrupt users
-5. lists UPK, USK, CRED, OWNR to track user and public keys, issued credentials and attributes
-6. J-LoR, I-LoR - I or J Left or Right. 
+\subsection{Global Variables}
+At the beginning of each experiment, the following state is maintained:
 
-The challenger sets up each experiment by computing $osk, opk$ or the adversary $\Adv$ outputs $opk$. The anonymity game is won by guessing the bit $b$. The adversary $\Adv$ is a $\PPT$ algorithm. 
-$HU$ and $CU$ track the honest and corrupt users. $UPK$, $UID$, $CRED$, $ATTR$, $OWNR$ track the user public and user id, the oracles $O$ have access to 
+\noindent \textbf{System Parameters:} For each issuer $i$, either the experiment computes an issuer keypair $(\mathsf{osk}_i, \mathsf{opk}_i)$ or the adversary outputs $\mathsf{opk}_i$. In the anonymity game, there is a challenge bit $b$, which the adversary must guess.
 
-
-
-
-CRED stores id, attrs, cred, uid each time cred is issued for id
-
-\subsubsection{Oracles}
-
-Anonymity is formalized through a left-or-right indistinguishability game following the paradigm introduced in \cite{vaudenay_security_2006}. There are two challenge oracles $(I_{LoR}, J_{LoR})$ with lists $(I_{LoR}, J_{LoR})$. $I_{LoR}$ indexing user identities, $J_{LoR}$ indexing their corresponding credentials. The adversary issues challenge queries by selecting 2 honest users $(i_0, i_1)$ and their credentials $(j_0, j_1)$ and attempts to distinguish which user's credential was used in the verification protocol. For each challenge phase, both credentials must satisfy the verifications statement $\phi$. The scheme maintains anonymity if no adversary can succeed with non-negligible probability, and better than randomly guessing.
-
+\noindent \textbf{User Management:} The system maintains:
 \begin{itemize}
-    \item $\oracle_{HU}(i)$ takes a user identity $i$ as input. If $i \in HU \cup CU$, it returns $\bot$. Otherwise, it creates a new honest user $i$ by running $(USK[i], UPK[i]) \sample UserKeyGen(opk)$ adding $i$ to $HU$, returning $UPK[i]$
-    
-    \item $\oracle_{CU}(i, upk)$ takes as input a user identity $i$ and optionally a user public key $upk$; if user $i$ does not exist, a new corrupt user with public key $upk$ is registered, while if $i$ is honest, its secret key and credentials are leaked
-
-    If $i \in CU$ or if $i \in I_{LoR}$
-
-    \item $\oracle_{ObtIss}(i, \textbf{m})$ 
-
-
-    \item $\oracle_{LoR}$
-    OLoR is the challenge oracle that formalizes anonymity for multiple credential showings. It models an adversary's attempt to distinguish which of two honest users is presenting a set of credentials that satisfy some predicate $\phi$.
-
-    
-
-    
-    
-    % https://claude.ai/chat/d6f264cd-4cf4-45ad-ae98-be8204443936
-    We extend the challenge oracle of \cite{fuchsbauer_structure-preserving_2019} for multi-credential verification. 
-    
-    
-
-%     OLoR({j0[k]}k∈[n], {j1[k]}k∈[n], φ) is the challenge oracle in the anonymity game where the adversary must distinguish (multiple) showings of credential sets CRED[j0[k]] and CRED[j1[k]]. The oracle takes two sequences of issuance indices {j0[k]}k∈[n], {j1[k]}k∈[n] and a predicate φ. If JLoR ≠ ∅ and JLoR ≠ {{j0[k]}k, {j1[k]}k}, it returns ⊥. Let i0 ← OWNR[j0[1]] and i1 ← OWNR[j1[1]]. 
-    
-%     For k ∈ [2,n], if OWNR[j0[k]] ≠ i0 or OWNR[j1[k]] ≠ i1, return ⊥. If JLoR = ∅, then it sets JLoR ← {{j0[k]}k, {j1[k]}k} and ILoR ← {i0, i1}. If i0, i1 ∉ HU or ¬(φ({ATTR[j0[k]]}k) ∧ φ({ATTR[j1[k]]}k)), it returns ⊥. Else, it runs
-% (S, ·) ←$ (Show(opk, φ, {CRED[jb[k]]}k), ·),
-
+\item Sets $\mathsf{HU}$ and $\mathsf{CU}$ of honest and corrupted users
+\item Lists $\mathsf{UPK}$, $\mathsf{USK}$ tracking user keypairs
+\item Lists $\mathsf{CRED}$, $\mathsf{COM}$, $\mathsf{OWNR}$ recording credentials, their commitments, and ownership
 \end{itemize}
 
+\noindent \textbf{Challenge State:} For the anonymity game, sets $\mathcal{J}_{\mathsf{LoR}}$ and $\mathcal{I}_{\mathsf{LoR}}$ track credential tuples and corresponding users during challenge phases.
 
-
-
-
-\begin{figure}[t]
-\centering
-\fbox{
-\begin{minipage}{0.95\textwidth}
-\textbf{Oracle} $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi)$
-
-\smallskip
-\textit{Input:}
-\begin{itemize}
-    \item Two credential tuples $\mathsf{Creds}_b = (cred_{b,1},...,cred_{b,n})$ for $b \in \{0,1\}$
-    \item A verification predicate $\phi: \mathsf{ATTR}^n \rightarrow \{0,1\}$ that validates multiple credential attributes
-\end{itemize}
-
-\textit{Pre-conditions:}
+\noindent  Our model extends traditional ABC systems in two crucial ways:
 \begin{enumerate}
-    \item No active challenge: $\mathcal{J}_{\mathsf{LoR}} = \emptyset$ or $\mathcal{J}_{\mathsf{LoR}} = \{\mathsf{Creds}_0, \mathsf{Creds}_1\}$
-    
-    \item Single ownership: For each credential tuple, extract owners
-    \begin{itemize}
-        \item Let $i_b \gets \mathsf{OWNR}(cred_{b,1})$ for $b \in \{0,1\}$
-        \item Require $\forall k \in [2,n]: \mathsf{OWNR}(cred_{b,k}) = i_b$
-    \end{itemize}
-    
-    \item Honest users: $i_0, i_1 \in \mathsf{HU}$
-    
-    \item Valid predicate satisfaction: 
-    \begin{itemize}
-        \item Let $\mathsf{attrs}_b = (\mathsf{ATTR}(cred_{b,1}),...,\mathsf{ATTR}(cred_{b,n}))$
-        \item Require $\phi(\mathsf{attrs}_0) = 1 \wedge \phi(\mathsf{attrs}_1) = 1$
-    \end{itemize}
+    \item \textit{Multi-Issuer Support:} Users can obtain and compose credentials from different issuers while maintaining privacy across contexts
+    \item \textit{Credential Composition:} Users can prove statements about multiple credentials while preserving unlinkability both within and across showings
 \end{enumerate}
 
-\textit{If any pre-condition fails, return $\bot$. Otherwise:}
-\begin{enumerate}
-    \item Set $\mathcal{J}_{\mathsf{LoR}} \gets \{\mathsf{Creds}_0, \mathsf{Creds}_1\}$
-    \item Set $\mathcal{I}_{\mathsf{LoR}} \gets \{i_0, i_1\}$
-    \item Execute $(S, \cdot) \sample (\mathsf{Show}(opk, \phi, \mathsf{Creds}_b), \cdot)$
-\end{enumerate}
-\end{minipage}
-}
-\caption{Challenge Oracle for Multi-Credential Anonymity}
-\label{fig:oracle-lor}
-\end{figure}
+\noindent  \textbf{The Oracles.} The security properties are defined via experiments where an adversary $\mathcal{A}$ interacts with the following oracles:
+
+\noindent $\mathcal{O}_{\mathsf{HU}}(i)$ - By calling this honest user oracle with identity $i \in \mathbb{N}$, $\mathcal{A}$ can add $i$ to the set $\mathsf{HU}$ of honest users. The oracle generates $(\mathsf{usk}[i], \mathsf{upk}[i]) \sample \mathsf{UserKeyGen}(\mathsf{opk})$, adds $i$ to $\mathsf{HU}$, and returns $\mathsf{upk}[i]$.
+
+\noindent $\mathcal{O}_{\mathsf{CU}}(i, \mathsf{upk})$ - By calling this corrupt user oracle with identity $i$ and optional public key $\mathsf{upk}$, $\mathcal{A}$ can either register a new corrupt user (if $i \notin \mathsf{HU}$) or corrupt an honest user (if $i \in \mathsf{HU}$). In the latter case, $\mathcal{A}$ receives $\mathsf{usk}[i]$ and all credentials.
+
+\noindent $\mathcal{O}_{\mathsf{ObtIss}}(i, \mathbf{attrs}, aux)$ - By calling this obtain-issue oracle with identity $i$, attribute vector $\mathbf{attrs}$, and auxiliary information $aux$, $\mathcal{A}$ initiates an honest credential issuance. If $i \notin \mathsf{HU}$, returns $\bot$. Otherwise, computes $(\mathsf{cm}, r) \sample \mathsf{Com}(\mathbf{attrs})$ and runs:
+\[
+(\mathsf{cred}, \top) \sample (\mathsf{Obtain}(\mathsf{usk}[i], \mathsf{opk}, \mathsf{cm}, r), \mathsf{Issue}(\mathsf{upk}[i], \mathsf{osk}, \mathsf{cm}))
+\]
+If $\mathsf{cred} = \bot$, returns $\bot$. Else appends $(i, \mathsf{cred}, \mathsf{cm})$ to $(\mathsf{OWNR}, \mathsf{CRED}, \mathsf{COM})$.
+
+\noindent  $\mathcal{O}_{\mathsf{Obtain}}(i, \mathsf{cm})$ - Models a malicious issuer interacting with an honest user $i \in \mathsf{HU}$. Takes a commitment $\mathsf{cm}$ to attributes. If $i \notin \mathsf{HU}$, returns $\bot$. Runs:
+\[
+(\mathsf{cred}, \cdot) \sample (\mathsf{Obtain}(\mathsf{USK}[i], \mathsf{opk}, \mathsf{cm}), \cdot)
+\]
+where Issue is executed by $\mathcal{A}$. On success, appends $(i, \mathsf{cred}, \mathsf{cm})$ to $(\mathsf{OWNR}, \mathsf{CRED}, \mathsf{COM})$.
+
+\noindent  $\mathcal{O}_{\mathsf{Issue}}(i, \mathsf{cm})$ - Models a malicious user interacting with an honest issuer. Takes identity $i$ and commitment $\mathsf{cm}$. If $i \notin \mathsf{CU}$, returns $\bot$. Runs:
+\[
+(\cdot, I) \sample (\cdot, \mathsf{Issue}(\mathsf{UPK}[i], \mathsf{osk}, \mathsf{cm}))
+\]
+where Obtain is executed by $\mathcal{A}$. If $I$ = $\bot$, it returns $\bot$. Else, it appends $(i, \bot, \mathsf{cm}$ to $(\mathsf{OWNR}, \mathsf{CRED}, \mathsf{COM})$ and returns $\bot$.
+
+\noindent  $\mathcal{O}_{\mathsf{Show}}(\mathsf{cred}, \phi)$ - Models credential verification with malicious verifier. Takes credential $\mathsf{cred}$ and predicate $\phi$. Let $i \gets \mathsf{OWNR}[\mathsf{cred}]$. If $i \notin \mathsf{HU}$, returns $\bot$. Runs:
+\[
+(S, \cdot) \sample (\mathsf{Show}(\mathsf{opk}, \phi, \mathsf{cred}), \cdot)
+\]
+where Verify is executed by $\mathcal{A}$.
+
+\noindent $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi)$ - By calling this challenge oracle, $\mathcal{A}$ attempts to distinguish between two credential sets in an anonymous showing. Each $\mathsf{Creds}_b = (\mathsf{cred}_{b,1},\ldots,\mathsf{cred}_{b,n})$ represents a tuple of credentials, where each credential contains a commitment to its attributes. The oracle enforces that credentials within each tuple belong to the same user (binding) while maintaining unlinkability across showings. The predicate $\phi: \mathsf{COM}^n \rightarrow \{0,1\}$ validates statements over committed attributes. If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $\mathcal{J}_{\mathsf{LoR}} \neq \{\mathsf{Creds}_0, \mathsf{Creds}_1\}$, returns $\bot$. Otherwise, verifies single ownership and honest user conditions, then executes:
+$(S, \cdot) \sample (\mathsf{Show}(\mathsf{opk}, \phi, \mathsf{Creds}_b), \cdot)$
 
 
 
@@ -375,14 +332,30 @@ Anonymity is formalized through a left-or-right indistinguishability game follow
 
 
 \begin{definition}[Correctness]
-    An ABC system is correct if....
+An ABC system is correct if for all $\lambda \in $ for all credential tuples (cred₁,...,credₙ) honestly generated via ObtIss, and for all valid predicates φ, the following holds:
+\begin{enumerate}
+    \item Individual Validity: Each credential verifies independently
+    \item Composition Validity: Any valid combination of credentials from the same user verifies successfully
+    \item Attribute Preservation: The showing protocol preserves committed attributes
+\end{enumerate}
+More formally, for any PPT adversary $\Adv$, we require:
+\[ Pr[Exp^{corr}_{\mathcal{ABC},\mathcal{A}}(1^\lambda) = 1] = 1 \]
 \end{definition}
+
+
+
 \begin{definition}[Unforgeability]
     An ABC system is Unforgeable if....
 \end{definition}
+
+
+
 \begin{definition}[Anonymous]
     An ABC system is Anonymous if....
 \end{definition}
+
+
+
 \begin{definition}[Credential Binding]
     An ABC system is credential binding if....
 \end{definition}
