@@ -330,51 +330,143 @@ $(S, \cdot) \sample (\mathsf{Show}(\mathsf{opk}, \phi, \mathsf{Creds}_b), \cdot)
 A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correct if for all security parameters $\lambda > 0$, the following properties hold for all honestly generated credentials where attributes are committed using commitment scheme $\mathsf{Com}$
 
 \begin{enumerate}
-    \item Individual Validity: For each credential $cred_i $with commitment $cm_i$ = $Com(attrs_i; r_i)$, the credential verifies independently under its issuer's public key$ opk_i$
+    \item Individual Validity: For each credential $cred_i $with commitment $cm_i$ = $Com(attrs_i; r_i)$, the credential verifies independently under its issuer's public key $opk_i$
 
     \item Multi-Issuer Composition: For any set of credentials ${cred_1,...,cred_n}$ with corresponding commitments ${cm_1,...,cm_n} $belonging to the same user, any valid predicate $\phi$ over their committed attributes verifies successfully
 
     \item Commitment Binding: The showing protocol preserves the binding between credentials and their committed attributes while maintaining zero-knowledge
 \end{enumerate}
 
-More formally:
-\[ \Pr \left[\begin{array}{l}
-    (osk_i, opk_i) \sample OrgKeyGen(\secparam \text{ for } i \in [n],\\
-    (usk, upk) \sample UserKeyGen(opk),\\
-    (cm_i, r_i) \sample Com(\mathbf{attrs}_i) \text{ for } i \in [n],\\
-    (\mathsf{cred}_i, \top) \sample (Obtain(usk, opk_i, cm_i),\\
-    \quad Issue(upk, osk_i, cm_i)) \text{ for } i \in [n],\\
-    (\top, 1) \sample (Show(opk, φ, \{\mathsf{cred}_i\}_{i \in [n]}),\\
-    \quad Verify(opk, φ))
-\end{array}\right] = 1 \]
-\end{definition}
-
-\begin{definition}[Correctness]
-A Multi-Issuer Multi-Credential Attribute based Anonymous Credential System (MIMC-ABC) is correct if for all $k > 0$, all $t > 0$ and all $A$
-A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correct if for all κ > 0, all t > 0 and all 
-\[ \Pr \left[\begin{array}{l}
-    (osk_i, opk_i) \sample OrgKeyGen(1^k, 1^t) \text{ for } i \in [n],\\
-    (usk, upk) \sample UserKeyGen(opk),\\
-    (\mathsf{cred}_i, \top) \sample (Obtain(usk, opk_i, \mathbf{A}_i),\\
-    \quad Issue(upk, osk_i, \mathbf{A}_i)) \text{ for } i \in [n],\\
-    (\top, 1) \sample (Show(opk, φ, \{\mathsf{cred}_i\}_{i \in [n]}),\\
-    \quad Verify(opk, φ))
-\end{array}\right] = 1 \]
+\noindent More formally:
+\[
+        \Pr
+            \left [
+            \begin{array}{l}
+                (osk_i, opk_i) \sample OrgKeyGen(\secparam \text{ for } i \in [n]),\\
+                (usk, upk) \sample UserKeyGen(opk),\\
+                (cm_i, r_i) \sample Com(\mathbf{attrs}_i) \text{ for } i \in [n],\\
+                (\mathsf{cred}_i, \top) \sample (Obtain(usk, opk_i, cm_i),\\
+                \quad Issue(upk, osk_i, cm_i)) \text{ for } i \in [n],\\
+            \end{array}
+                : 
+                \begin{array}{l}
+                    (\top, 1) \sample (Show(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}),\\
+                    \quad Verify(opk, \phi))
+                \end{array}
+                \right ]
+             = 1
+\]
 \end{definition}
 
 
+\newpage
+\begin{definition}[MIMC-ABC Unforgeability]
+A Multi-Issuer Multi-Credential Anonymous Credential system provides unforgeability if no probabilistic polynomial-time adversary $\mathcal{A}$ can:
+\begin{enumerate}
+    \item forge valid credentials for honest users
+    \item use credentials belonging to other users
+    \item combine multiple credentials to create new ones
+    \item replay a credential showing from a different user
+\end{enumerate}
 
+\noindent More formally, for any PPT adversary $\mathcal{A}$, the following probability is negligible in $\lambda$:
+\[ \Pr[\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
+\end{definition}
 
+\begin{definition}[MIMC-ABC Unforgeability]
+The experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
 
-\begin{definition}[Unforgeability]
-    An ABC system is Unforgeable if....
+\begin{enumerate}
+    \item Setup Phase:
+    \begin{itemize}
+        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$
+        \item Initialize $\mathsf{HU, CU} \gets \emptyset$
+        \item Initialize $\mathsf{CRED, COM, OWNR} \gets \emptyset$
+    \end{itemize}
+
+    \item Query Phase: $\mathcal{A}^{\mathcal{O}}(1^\lambda, \{opk_i\}_{i \in [n]})$ where $\mathcal{O}$ includes:
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}, \mathcal{O}_{\mathsf{CU}}$ (user management)
+        \item $\mathcal{O}_{\mathsf{ObtIss}}, \mathcal{O}_{\mathsf{Obtain}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
+        \item $\mathcal{O}_{\mathsf{Show}}$ (showing protocol)
+    \end{itemize}
+
+    \item Forgery Phase: $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [k]}, \phi, \pi)$
+
+    \item The experiment returns 1 if:
+    \begin{itemize}
+        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [k]}, \pi) = 1$ and
+        \item At least one of the following holds:
+            \begin{enumerate}
+                \item $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$ (credential forgery)
+                \item $\exists i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ (mixed ownership)
+                \item $\mathsf{OWNR}(\mathsf{cred}_1) \in \mathsf{HU}$ (honest user credential misuse)
+            \end{enumerate}
+    \end{itemize}
+\end{enumerate}
 \end{definition}
 
 
+\newpage
+\begin{definition}[MIMC-ABC Anonymity]
+A Multi-Issuer Multi-Credential Anonymous Credential system provides anonymity if no probabilistic polynomial-time adversary $\mathcal{A}$ can:
 
-\begin{definition}[Anonymous]
-    An ABC system is Anonymous if....
+\begin{enumerate}
+    \item learn any information beyond the public information
+    \item link multiple showings of the same credential
+    \item correlate different credentials belonging to the same user
+    \item identify which credentials were issued by the same issuer
+\end{enumerate}
+
+More formally, for any PPT adversary $\mathcal{A}$, the following advantage is negligible in $\lambda$:
+\[ \mathsf{Adv}^{\mathsf{anon}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) := |\Pr[\mathsf{Exp}^{\mathsf{anon\mbox{-}1}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] - \Pr[\mathsf{Exp}^{\mathsf{anon\mbox{-}0}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1]| \leq \mathsf{negl}(\lambda) \]
 \end{definition}
+
+
+\noindent \textbf{MIMC-ABC Anonymity Experiment.} 
+The experiment $\mathsf{Exp}^{\mathsf{anon\mbox{-}b}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
+
+\begin{enumerate}
+    \item Setup Phase:
+    \begin{itemize}
+        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$
+        \item Initialize $\mathsf{HU, CU} \gets \emptyset$
+        \item Initialize $\mathsf{CRED, COM, OWNR} \gets \emptyset$
+        \item Initialize $\mathcal{J}_{\mathsf{LoR}}, \mathcal{I}_{\mathsf{LoR}} \gets \emptyset$
+        \item Sample challenge bit $b \sample \{0,1\}$
+    \end{itemize}
+
+    \item Query Phase: $\mathcal{A}^{\mathcal{O}}(1^\lambda, \{opk_i\}_{i \in [n]})$ where $\mathcal{O}$ includes:
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}, \mathcal{O}_{\mathsf{CU}}$ (user management)
+        \item $\mathcal{O}_{\mathsf{ObtIss}}, \mathcal{O}_{\mathsf{Obtain}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
+        \item $\mathcal{O}_{\mathsf{Show}}$ (showing protocol)
+        \item $\mathcal{O}_{\mathsf{LoR}}$ (challenge oracle)
+    \end{itemize}
+
+    \item Challenge Phase: 
+    $\mathcal{A}$ can query $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi)$ where:
+    \begin{itemize}
+        \item $\mathsf{Creds}_b = (\mathsf{cred}_{b,1},...,\mathsf{cred}_{b,n})$ for $b \in \{0,1\}$
+        \item Credentials in each tuple must belong to the same user
+        \item Both credential sets must satisfy predicate $\phi$
+    \end{itemize}
+
+    \item $\mathcal{A}$ outputs a guess $b' \in \{0,1\}$
+
+    \item The experiment returns 1 if $b = b'$
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -385,7 +477,7 @@ A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correc
 
 
 
-
+\newpage
 \subsection{Intuition of our Construction}
 \subsubsection{Example}
 \subsubsection{Outline}
