@@ -467,12 +467,30 @@ The experiment $\mathsf{Exp}^{\mathsf{anon\mbox{-}b}}_{\mathsf{MIMC\mbox{-}ABC},
 
 
 
+\newpage
+\noindent \textbf{Credential Binding.} For any PPT adversary $\mathcal{A}$, given a set of credentials $\{\mathsf{cred}_1,...,\mathsf{cred}_n\}$, the probability of producing a valid proof $\pi$ for statement $\phi$ is negligible unless:
 
+\begin{enumerate}
+    \item all credentials were legitimately issued to the same user with master secret key $s$
+    \item the user knows the opening of all credential commitments
+    \item the linking proof demonstrates the same $s$ value across all credentials
+\end{enumerate}
 
+More formally, for any PPT adversary $\mathcal{A}$, we define the experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ as follows:
 
-\begin{definition}[Credential Binding]
-    An ABC system is credential binding if....
-\end{definition}
+The challenger generates $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$ for each issuer $i \in [n]$. Sets $\mathsf{HU, CU} \gets \emptyset$, $\mathsf{CRED, COM, OWNR} \gets \emptyset$. 
+
+$\mathcal{A}$ receives $\{opk_i\}_{i \in [n]}$ and access to oracles $\mathcal{O}_{\mathsf{HU}}$, $\mathcal{O}_{\mathsf{CU}}$, $\mathcal{O}_{\mathsf{ObtIss}}$, $\mathcal{O}_{\mathsf{Obtain}}$, $\mathcal{O}_{\mathsf{Issue}}$, and $\mathcal{O}_{\mathsf{Show}}$.
+
+Finally, $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [n]}, \phi, \pi)$. The experiment returns 1 if:
+\begin{itemize}
+    \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}, \pi) = 1$ and
+    \item $\exists i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ or
+    \item $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$
+\end{itemize}
+
+The advantage of $\mathcal{A}$ is defined as:
+\[ \mathsf{Adv}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) := \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
 
 
 
