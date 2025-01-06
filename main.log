@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.7.23)  23 OCT 2024 06:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.7.23)  5 JAN 2025 14:55
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/Users/spol2078/Documents/repos/accountable-linked-anonymity/main
-(/Users/spol2078/Documents/repos/accountable-linked-anonymity/main.tex
+**/Users/spol2078/Documents/repos/mphil/main
+(/Users/spol2078/Documents/repos/mphil/main.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
 (./llncs.cls
@@ -220,6 +220,11 @@ LaTeX Info: Redefining \Relbar on input line 971.
 \mathdisplay@stack=\toks27
 LaTeX Info: Redefining \[ on input line 2953.
 LaTeX Info: Redefining \] on input line 2954.
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/wasysym/wasysym.sty
+Package: wasysym 2020/01/19 v2.4 Wasy-2 symbol support package
+\symwasy=\mathgroup4
+LaTeX Font Info:    Overwriting symbol font `wasy' in version `bold'
+(Font)                  U/wasy/m/n --> U/wasy/b/n on input line 93.
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/base/inputenc.sty
 Package: inputenc 2021/02/14 v1.3d Input encoding file
 \inpenc@prehook=\toks28
@@ -555,8 +560,8 @@ Package: xspace 2014/10/28 v1.13 Space after command names (DPC,MH)
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
-\symAMSa=\mathgroup4
-\symAMSb=\mathgroup5
+\symAMSa=\mathgroup5
+\symAMSb=\mathgroup6
 LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
@@ -672,21 +677,21 @@ Package: paralist 2017/01/22 v2.7 Extended list environments
 \pl@lab=\toks48
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/jknapltx/mathrsfs.sty
 Package: mathrsfs 1996/01/01 Math RSFS package v1.0 (jk)
-\symrsfs=\mathgroup6
+\symrsfs=\mathgroup7
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/relsize/relsize.sty
 Package: relsize 2013/03/29 ver 4.1
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/stmaryrd/stmaryrd.sty
 Package: stmaryrd 1994/03/03 St Mary's Road symbol package
-\symstmry=\mathgroup7
+\symstmry=\mathgroup8
 LaTeX Font Info:    Overwriting symbol font `stmry' in version `bold'
 (Font)                  U/stmry/m/n --> U/stmry/b/n on input line 89.
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/todonotes/todonotes.sty
 Package: todonotes 2024/01/05 v1.1.7 Todonotes source and documentation.
 Package: todonotes 2024/01/05
- (/usr/local/texlive/2024/texmf-dist/tex/latex/xkeyval/xkeyval.sty
-Package: xkeyval 2022/06/16 v2.9 package option processing (HA)
 
-(/usr/local/texlive/2024/texmf-dist/tex/generic/xkeyval/xkeyval.tex (/usr/local/texlive/2024/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+(/usr/local/texlive/2024/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2022/06/16 v2.9 package option processing (HA)
+ (/usr/local/texlive/2024/texmf-dist/tex/generic/xkeyval/xkeyval.tex (/usr/local/texlive/2024/texmf-dist/tex/generic/xkeyval/xkvutils.tex
 \XKV@toks=\toks49
 \XKV@tempa@toks=\toks50
 )
@@ -829,31 +834,247 @@ Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
 \@bb@com@tmpoffset=\skip90
 \@bb@tmplength@b=\skip91
 \c@pcstartgamecounter=\count385
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/enumitem/enumitem.sty
+Package: enumitem 2019/06/20 v3.9 Customized lists
+\labelindent=\skip92
+\enit@outerparindent=\dimen328
+\enit@toks=\toks53
+\enit@inbox=\box120
+\enit@count@id=\count386
+\enitdp@description=\count387
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/mdframed/mdframed.sty
+Package: mdframed 2013/07/01 1.9b: mdframed
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/zref/zref-abspage.sty
+Package: zref-abspage 2023-09-14 v2.35 Module abspage for zref (HO)
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/zref/zref-base.sty
+Package: zref-base 2023-09-14 v2.35 Module base for zref (HO)
+ (/usr/local/texlive/2024/texmf-dist/tex/generic/etexcmds/etexcmds.sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
 )
-\symMnLargeSymbols=\mathgroup8
+Package zref Info: New property list: main on input line 767.
+Package zref Info: New property: default on input line 768.
+Package zref Info: New property: page on input line 769.
+)
+\c@abspage=\count388
+Package zref Info: New property: abspage on input line 67.
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/needspace/needspace.sty
+Package: needspace 2010/09/12 v1.3d reserve vertical space
+)
+\mdf@templength=\skip93
+\c@mdf@globalstyle@cnt=\count389
+\mdf@skipabove@length=\skip94
+\mdf@skipbelow@length=\skip95
+\mdf@leftmargin@length=\skip96
+\mdf@rightmargin@length=\skip97
+\mdf@innerleftmargin@length=\skip98
+\mdf@innerrightmargin@length=\skip99
+\mdf@innertopmargin@length=\skip100
+\mdf@innerbottommargin@length=\skip101
+\mdf@splittopskip@length=\skip102
+\mdf@splitbottomskip@length=\skip103
+\mdf@outermargin@length=\skip104
+\mdf@innermargin@length=\skip105
+\mdf@linewidth@length=\skip106
+\mdf@innerlinewidth@length=\skip107
+\mdf@middlelinewidth@length=\skip108
+\mdf@outerlinewidth@length=\skip109
+\mdf@roundcorner@length=\skip110
+\mdf@footenotedistance@length=\skip111
+\mdf@userdefinedwidth@length=\skip112
+\mdf@needspace@length=\skip113
+\mdf@frametitleaboveskip@length=\skip114
+\mdf@frametitlebelowskip@length=\skip115
+\mdf@frametitlerulewidth@length=\skip116
+\mdf@frametitleleftmargin@length=\skip117
+\mdf@frametitlerightmargin@length=\skip118
+\mdf@shadowsize@length=\skip119
+\mdf@extratopheight@length=\skip120
+\mdf@subtitleabovelinewidth@length=\skip121
+\mdf@subtitlebelowlinewidth@length=\skip122
+\mdf@subtitleaboveskip@length=\skip123
+\mdf@subtitlebelowskip@length=\skip124
+\mdf@subtitleinneraboveskip@length=\skip125
+\mdf@subtitleinnerbelowskip@length=\skip126
+\mdf@subsubtitleabovelinewidth@length=\skip127
+\mdf@subsubtitlebelowlinewidth@length=\skip128
+\mdf@subsubtitleaboveskip@length=\skip129
+\mdf@subsubtitlebelowskip@length=\skip130
+\mdf@subsubtitleinneraboveskip@length=\skip131
+\mdf@subsubtitleinnerbelowskip@length=\skip132
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/mdframed/md-frame-0.mdf
+File: md-frame-0.mdf 2013/07/01\ 1.9b: md-frame-0
+)
+\mdf@frametitlebox=\box121
+\mdf@footnotebox=\box122
+\mdf@splitbox@one=\box123
+\mdf@splitbox@two=\box124
+\mdf@splitbox@save=\box125
+\mdfsplitboxwidth=\skip133
+\mdfsplitboxtotalwidth=\skip134
+\mdfsplitboxheight=\skip135
+\mdfsplitboxdepth=\skip136
+\mdfsplitboxtotalheight=\skip137
+\mdfframetitleboxwidth=\skip138
+\mdfframetitleboxtotalwidth=\skip139
+\mdfframetitleboxheight=\skip140
+\mdfframetitleboxdepth=\skip141
+\mdfframetitleboxtotalheight=\skip142
+\mdffootnoteboxwidth=\skip143
+\mdffootnoteboxtotalwidth=\skip144
+\mdffootnoteboxheight=\skip145
+\mdffootnoteboxdepth=\skip146
+\mdffootnoteboxtotalheight=\skip147
+\mdftotallinewidth=\skip148
+\mdfboundingboxwidth=\skip149
+\mdfboundingboxtotalwidth=\skip150
+\mdfboundingboxheight=\skip151
+\mdfboundingboxdepth=\skip152
+\mdfboundingboxtotalheight=\skip153
+\mdf@freevspace@length=\skip154
+\mdf@horizontalwidthofbox@length=\skip155
+\mdf@verticalmarginwhole@length=\skip156
+\mdf@horizontalspaceofbox=\skip157
+\mdfsubtitleheight=\skip158
+\mdfsubsubtitleheight=\skip159
+\c@mdfcountframes=\count390
+
+****** mdframed patching \endmdf@trivlist
+
+****** -- success******
+
+\mdf@envdepth=\count391
+\c@mdf@env@i=\count392
+\c@mdf@env@ii=\count393
+\c@mdf@zref@counter=\count394
+Package zref Info: New property: mdf@pagevalue on input line 895.
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
+Package: tcolorbox 2024/01/10 version 6.2.0 text color boxes
+\tcb@titlebox=\box126
+\tcb@upperbox=\box127
+\tcb@lowerbox=\box128
+\tcb@phantombox=\box129
+\c@tcbbreakpart=\count395
+\c@tcblayer=\count396
+\c@tcolorbox@number=\count397
+\l__tcobox_tmpa_box=\box130
+\l__tcobox_tmpa_dim=\dimen329
+\tcb@temp=\box131
+\tcb@temp=\box132
+\tcb@temp=\box133
+\tcb@temp=\box134
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbraster.code.tex
+Library (tcolorbox): 'tcbraster.code.tex' version '6.2.0'
+\c@tcbrastercolumn=\count398
+\c@tcbrasterrow=\count399
+\c@tcbrasternum=\count400
+\c@tcbraster=\count401
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '6.2.0'
+(/usr/local/texlive/2024/texmf-dist/tex/latex/tikzfill/tikzfill.image.sty
+Package: tikzfill.image 2023/08/08 v1.0.1 Image filling library for TikZ
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/tikzfill/tikzfill-common.sty
+Package: tikzfill-common 2023/08/08 v1.0.1 Auxiliary code for tikzfill
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tikzfill/tikzlibraryfill.image.code.tex
+File: tikzlibraryfill.image.code.tex 2023/08/08 v1.0.1 Image filling library
+\l__tikzfill_img_box=\box135
+)) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbskinsjigsaw.code.tex
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '6.2.0'
+)) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbbreakable.code.tex
+Library (tcolorbox): 'tcbbreakable.code.tex' version '6.2.0'
+(/usr/local/texlive/2024/texmf-dist/tex/latex/pdfcol/pdfcol.sty
+Package: pdfcol 2022-09-21 v1.7 Handle new color stacks for pdfTeX (HO)
+)
+Package pdfcol Info: New color stack `tcb@breakable' = 1 on input line 23.
+\tcb@testbox=\box136
+\tcb@totalupperbox=\box137
+\tcb@totallowerbox=\box138
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbhooks.code.tex
+Library (tcolorbox): 'tcbhooks.code.tex' version '6.2.0'
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbtheorems.code.tex
+Library (tcolorbox): 'tcbtheorems.code.tex' version '6.2.0'
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbfitting.code.tex
+Library (tcolorbox): 'tcbfitting.code.tex' version '6.2.0'
+\tcbfitdim=\dimen330
+\tcb@lowerfitdim=\dimen331
+\tcb@upperfitdim=\dimen332
+\tcb@cur@hbadness=\count402
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcblistingsutf8.code.tex
+Library (tcolorbox): 'tcblistingsutf8.code.tex' version '6.2.0'
+(/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcblistings.code.tex
+Library (tcolorbox): 'tcblistings.code.tex' version '6.2.0'
+(/usr/local/texlive/2024/texmf-dist/tex/latex/listings/listings.sty
+\lst@mode=\count403
+\lst@gtempboxa=\box139
+\lst@token=\toks54
+\lst@length=\count404
+\lst@currlwidth=\dimen333
+\lst@column=\count405
+\lst@pos=\count406
+\lst@lostspace=\dimen334
+\lst@width=\dimen335
+\lst@newlines=\count407
+\lst@lineno=\count408
+\lst@maxwidth=\dimen336
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/listings/lstpatch.sty
+File: lstpatch.sty 2024/02/21 1.10 (Carsten Heinz)
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2024/02/21 1.10 (Carsten Heinz)
+\c@lstnumber=\count409
+\lst@skipnumbers=\count410
+\lst@framebox=\box140
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/listings/listings.cfg
+File: listings.cfg 2024/02/21 1.10 listings configuration
+))
+Package: listings 2024/02/21 1.10 (Carsten Heinz)
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcblistingscore.code.tex
+Library (tcolorbox): 'tcblistingscore.code.tex' version '6.2.0'
+(/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbprocessing.code.tex
+Library (tcolorbox): 'tcbprocessing.code.tex' version '6.2.0'
+)
+\c@tcblisting=\count411
+)) (/usr/local/texlive/2024/texmf-dist/tex/latex/listingsutf8/listingsutf8.sty
+Package: listingsutf8 2019-12-10 v1.5 Allow UTF-8 in listings input (HO)
+ (/usr/local/texlive/2024/texmf-dist/tex/generic/stringenc/stringenc.sty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO)
+))) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbexternal.code.tex
+Library (tcolorbox): 'tcbexternal.code.tex' version '6.2.0'
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbmagazine.code.tex
+Library (tcolorbox): 'tcbmagazine.code.tex' version '6.2.0'
+) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbvignette.code.tex
+Library (tcolorbox): 'tcbvignette.code.tex' version '6.2.0'
+(/usr/local/texlive/2024/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibraryfadings.code.tex
+File: tikzlibraryfadings.code.tex 2023-01-15 v3.1.10 (3.1.10)
+ (/usr/local/texlive/2024/texmf-dist/tex/generic/pgf/libraries/pgflibraryfadings.code.tex
+File: pgflibraryfadings.code.tex 2023-01-15 v3.1.10 (3.1.10)
+))) (/usr/local/texlive/2024/texmf-dist/tex/latex/tcolorbox/tcbposter.code.tex
+Library (tcolorbox): 'tcbposter.code.tex' version '6.2.0'
+))
+\c@tcb@cnt@protocol=\count412
+\c@tcb@cnt@construction=\count413
+\symMnLargeSymbols=\mathgroup9
 LaTeX Font Info:    Overwriting symbol font `MnLargeSymbols' in version `bold'
-(Font)                  OMX/MnSymbolE/m/n --> OMX/MnSymbolE/b/n on input line 472.
+(Font)                  OMX/MnSymbolE/m/n --> OMX/MnSymbolE/b/n on input line 568.
 ) (./main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 43.
-LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -889,24 +1110,24 @@ LaTeX Font Info:    ... okay on input line 43.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-Package hyperref Info: Link coloring OFF on input line 43.
+Package hyperref Info: Link coloring OFF on input line 21.
 (./main.out) (./main.out)
 \@outlinefile=\write4
 \openout4 = `main.out'.
 
  (/usr/local/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count386
-\scratchdimen=\dimen328
-\scratchbox=\box120
-\nofMPsegments=\count387
-\nofMParguments=\count388
-\everyMPshowfont=\toks53
-\MPscratchCnt=\count389
-\MPscratchDim=\dimen329
-\MPnumerator=\count390
-\makeMPintoPDFobject=\count391
-\everyMPtoPDFconversion=\toks54
+\scratchcounter=\count414
+\scratchdimen=\dimen337
+\scratchbox=\box141
+\nofMPsegments=\count415
+\nofMParguments=\count416
+\everyMPshowfont=\toks55
+\MPscratchCnt=\count417
+\MPscratchDim=\dimen338
+\MPnumerator=\count418
+\makeMPintoPDFobject=\count419
+\everyMPtoPDFconversion=\toks56
 ) (/usr/local/texlive/2024/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
@@ -914,40 +1135,29 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 ))
 Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 45.
+\c@lstlisting=\count420
+LaTeX Font Info:    Trying to load font information for U+wasy on input line 26.
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/wasysym/uwasy.fd
+File: uwasy.fd 2020/01/19 v2.4 Wasy-2 symbol font definitions
+)
+LaTeX Font Info:    Trying to load font information for U+msa on input line 26.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 45.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 26.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for U+rsfs on input line 45.
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 26.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/jknapltx/ursfs.fd
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 )
-LaTeX Font Info:    Trying to load font information for U+stmry on input line 45.
- (/usr/local/texlive/2024/texmf-dist/tex/latex/stmaryrd/Ustmry.fd) (./tex/00-intro.tex [1
+LaTeX Font Info:    Trying to load font information for U+stmry on input line 26.
+ (/usr/local/texlive/2024/texmf-dist/tex/latex/stmaryrd/Ustmry.fd) [1
 
-{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}]) (./tex/01-preliminaries.tex) (./tex/00-overview.tex
-Package hyperref Info: bookmark level for unknown todo defaults to 0 on input line 45.
- [2]
-
-LaTeX Font Warning: Font shape `U/stmry/b/n' undefined
-(Font)              using `U/stmry/m/n' instead on input line 56.
-
-[3] [4]) (./tex/00-syntax.tex) (./tex/00-security_intro.tex [5]) (./tex/00-security_games.tex) (./tex/01-commitment.tex [6]
-Overfull \hbox (6.3879pt too wide) in paragraph at lines 58--61
-[]\T1/cmr/bx/n/10 (Vector Com-mit-ment scheme). \T1/cmr/m/it/10 A vec-tor com-mit-ment scheme is com-mit-ment scheme
- []
-
-[7]) (./tex/01-signature.tex [8]) (./tex/01-encryption.tex
-Overfull \hbox (11.72256pt too wide) in paragraph at lines 7--8
-[]$[][]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 x; r\OT1/cmr/m/n/10 ) [] ([\OML/cmm/m/it/10 x\OT1/cmr/m/n/10 ][]\OML/cmm/m/it/10 ; [] ; \OT1/cmr/m/n/10 [\OML/cmm/m/it/10 x\OT1/cmr/m/n/10 ][])$ \T1/cmr/m/it/10 takes in-put $\OML/cmm/m/it/10 x \OMS/cmsy/m/n/10 2 \OML/cmm/m/it/10 X$\T1/cmr/m/it/10 , ran-dom-ness $\OML/cmm/m/it/10 r$ \T1/cmr/m/it/10 and out-puts $\OML/cmm/m/it/10 n$ \T1/cmr/m/it/10 shares $\OT1/cmr/m/n/10 ([\OML/cmm/m/it/10 x\OT1/cmr/m/n/10 ][]\OML/cmm/m/it/10 ; [] ; \OT1/cmr/m/n/10 [\OML/cmm/m/it/10 x\OT1/cmr/m/n/10 ][])$ 
- []
-
-) (./tex/01-prf.tex [9] [10]) (./tex/ZZ-securityproofs.tex [11] [12] [13]) (./main.bbl) [14] (./main.aux)
+{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}] (./tex/01.tex [2] [3] [4]) (./main.bbl) [5] (./main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -957,25 +1167,22 @@ L3 programming layer <2024-02-20>
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.50002pt have occurred.
 
-
-LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 29F153EF715843149824EF60675ABC3B;151.
+(rerunfilecheck)             Checksum: B45F87B9F633B05423588CB86EA8897B;224.
  ) 
 Here is how much of TeX's memory you used:
- 29183 strings out of 474116
- 539441 string characters out of 5743682
- 1970187 words of memory out of 5000000
- 50791 multiletter control sequences out of 15000+600000
- 589650 words of font info for 116 fonts, out of 8000000 for 9000
+ 36685 strings out of 474116
+ 723622 string characters out of 5743682
+ 1948187 words of memory out of 5000000
+ 58363 multiletter control sequences out of 15000+600000
+ 578069 words of font info for 94 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 107i,28n,120p,1315b,1592s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmss8.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmss9.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbi0700.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbi1000.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx0700.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx0900.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm0500.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm0600.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm0700.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfti0900.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb>
-Output written on main.pdf (14 pages, 536279 bytes).
+ 107i,12n,120p,615b,1358s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm0700.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfti0900.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb>
+Output written on main.pdf (5 pages, 236632 bytes).
 PDF statistics:
- 451 PDF objects out of 1000 (max. 8388607)
- 359 compressed objects within 4 object streams
- 172 named destinations out of 1000 (max. 500000)
- 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 191 PDF objects out of 1000 (max. 8388607)
+ 124 compressed objects within 2 object streams
+ 29 named destinations out of 1000 (max. 500000)
+ 165 words of extra memory for PDF output out of 10000 (max. 10000000)
 

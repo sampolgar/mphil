@@ -4,7 +4,7 @@ Digital Identity systems form the foundation of online trust and authentication,
 
 \noindent Anonymous Credential Systems (ACS) \cite{chaum1985security,hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016, fuchsbauer_structure-preserving_2019} address privacy concerns but face challenges balancing privacy with accountability, orthogonally, unconditionally anonymous payment systems have demonstrated how unconditional anonymity can enable system abuse. Current systems focus on protecting against sybil attacks \cite{crites_syra_2024, rabaninejad_attribute-based_nodate}, enabling revocation \cite{goos_dynamic_2002, robshaw_uc_2016, camenisch_scalable_2016, baldimtsi_accumulators_2017}, rich attribute-based credential authentication \cite{rosenberg_zk-creds_2022, babel_bringing_2023} but very few implement all. The tension between privacy and accountability has become increasingly critical as governments worldwide, particularly the EU's Digital Identity Framework \cite{noauthor_regulation_2024}, move toward privacy-preserving digital identity wallets. These challenges motivate the need for a comprehensive identity system that achieves privacy, accountability, and practical deployment requirements simultaneously.
 
-\subsection{Paper Layout}
+\subsection{Organization}
 
 Short Summary: We build a new anonymous credential building block for multi-issuer, multi-credential systems. We use it to build a new private digital identity system with sybil resistance and revocation.
 
@@ -889,6 +889,34 @@ For any fixed transcript $(T, c, (s,u))$ we show:
 \begin{proof}
     Folklore
 \end{proof}
+
+\begin{theorem}[Perfect Completeness]
+    Construction \ref{construct:zeroproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$ with perfect completeness: 
+\end{theorem}
+\begin{proof}
+    We prove completeness by showing that for any $(C, g, h, q),(m,r) \in \mathcal{R}$, when both $\Prover$ and $\Verifier$ follow the protocol, $\Verifier$ accepts with $\Pr$ = 1.
+
+    Let $x = (C,g,h,q)$ be common input and $w = (m, r)$ be $\Prover$'s private input. Consider an execution of the protocol where:
+    \begin{enumerate}
+        \item $\Prover$ samples $\alpha, \rho \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
+        \item $\Verifier$ sends challenge $c \sample [q-1]$
+        \item $\Prover$ responds with $s \gets \alpha+m, u \gets \rho+r$
+    \end{enumerate}
+    Verification holds by 
+    \begin{align}
+        g^sh^u &\stackrel{?}{=} C^cT \notag \\
+        g^{\alpha + cm}h^{\rho + cr} &\stackrel{?}{=} (g^mh^r)^cg^{\alpha}h^{\rho} \notag  \\
+        g^{\alpha + cm}h^{\rho + cr} &= g^{mc + \alpha} h^{rc + \rho} \notag 
+    \end{align}
+    Thus, an honest verifier always accepts an honest prover's proof.
+\end{proof}
+
+
+
+
+
+
+
 
 
 

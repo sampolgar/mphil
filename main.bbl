@@ -1,9 +1,9 @@
 \newcommand{\etalchar}[1]{$^{#1}$}
-\begin{thebibliography}{TBA{\etalchar{+}}22}
+\begin{thebibliography}{BCK{\etalchar{+}}22}
 
-\bibitem[TBA{\etalchar{+}}22]{tomescu2022utt}
-A.~Tomescu, A.~Bhat, B.~Applebaum, I.~Abraham, G.~Gueta, B.~Pinkas, and A.~Yanai.
-\newblock Utt: Decentralized ecash with accountable privacy.
-\newblock {\em Cryptology ePrint Archive}, 2022.
+\bibitem[BCK{\etalchar{+}}22]{bellare_better_2022-1}
+M.~Bellare, E.~Crites, C.~Komlo, M.~Maller, S.~Tessaro, and C.~Zhu.
+\newblock Better than {Advertised} {Security} for {Non}-interactive {Threshold} {Signatures}.
+\newblock In {\em Advances in {Cryptology} – {CRYPTO} 2022}, pages 517--550, Cham, 2022. Springer Nature Switzerland.
 
 \end{thebibliography}
