@@ -614,219 +614,192 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 
 
-\section{Construction of NIZK Proofs}\label{sec:sigmaproofs}
+\section{Construction of $\Sigma$-protocols}\label{sec:sigmaproofs}
 % Recall definitions and introduction here: https://infoscience.epfl.ch/server/api/core/bitstreams/fc1cfb22-d943-4c96-a942-d715b76e6cc4/content#page=6.31
-
-
-
 
 
 Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g, g_1, \dots, g_n$
 
+\begin{enumerate}
+    \item Completeness: an honest prover who knows the opening will always convince the verifier.
+    
+    \item Special Soundness: Show that given two accepting transcripts $(T, c, \{s\}_{i=1}^n, u)$ and $(T, c', \{s'\}_{i=1}^n, u')$ for $c \neq c'$ we can extract a valid witness.
+    
+    \item Honest Verifier Zero Knowledge: construct a simulator that given a challenge $c$, produces transcripts indistinguishable from real protocol runs.
+\end{enumerate}
+
+
+
+
+
+
+
+
+
 
 \newpage
 
-\begin{construction}{Opening Proof($C$)}{openproof}
+\begin{construction}{ZKPoK for Pedersen Commitment Opening}{openproof}
     \vspace{1em}
-    \textbf{Public parameters:} $g, h \in \G$
+    \textbf{Public parameters:}  $g_1, \dots, g_n, h \in \G$
 
-    \textbf{Inputs:} $C$ such that $C = g^mh^r$, $\Prover$ knows $m, r \in \Z_q$.
+    \textbf{Inputs:} $\cm$ such that $\cm = \prod_{i=1}^ng_i^{m_i}h^r$, \;    $\Prover$ knows $\{m\}_{i=1}^n, r \in \Z_q^{n+1}$.
 
-    \textbf{Relation:} $\mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}$
     \vspace{1em}
 
     \begin{enumerate}
-        \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
+        \item $\Prover$ samples $\alpha_i \sample \Z_p$ for $i \in [1,n]$, $\rho \sample \Z_p$, computes $T \gets (\prod_{i=1}^ng_i^{\alpha_i})\cdot h^{\rho}$, sends $T$ to $\Verifier$
         
-        \item $\Verifier$ sends challenge $c \sample [q-1].$
+        \item $\Verifier$ sends challenge $c \sample \Z_p$
     
-        \item $\Prover$ sends $s \gets \alpha + cm, u \gets \rho + cr$
+        \item $\Prover$ computes responses $s_i \gets \alpha_i + cm_i$ for $i \in [1,n]$, and $u \gets \rho + cr$. Sends $\{s_i\}_{i=1}^n$ and $u$ to $\Verifier$
     
-        \item $\Verifier$ verifies that $g^{s}h^{u} = C^cT$
+        \item $\Verifier$ verifies that $ (\prod_{i=1}^ng_i^{s_i})\cdot h^u = \cm^cT$
     \end{enumerate}
 \end{construction}
 
 \begin{theorem}[Perfect Completeness]
-    Construction \ref{construct:openproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$ with perfect completeness: 
+    Construction \ref{construct:openproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$
+    \[
+        \mathcal{R} = \left\{ (\cm,g_1,\dots,g_n,h),(m_1,\dots,m_n,r) \; | \; \cm = \prod_{i=1}^ng_i^{m_i}h^r \right\}
+    \]
+    with perfect completeness: 
 \end{theorem}
-\begin{proof}
-    We prove completeness by showing that for any $(C, g, h, q),(m,r) \in \mathcal{R}$, when both $\Prover$ and $\Verifier$ follow the protocol, $\Verifier$ accepts with $\Pr$ = 1.
 
-    Let $x = (C,g,h,q)$ be common input and $w = (m, r)$ be $\Prover$'s private input. Consider an execution of the protocol where:
+
+\begin{proof}
+    We prove completeness by showing that for any valid inputs and witnesses, when both $\Prover$ and $\Verifier$ follow the protocol, $\Verifier$ accepts with $\Pr$ = 1.
+    Consider an execution of the protocol where:
     \begin{enumerate}
-        \item $\Prover$ samples $\alpha, \rho \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
-        \item $\Verifier$ sends challenge $c \sample [q-1]$
-        \item $\Prover$ responds with $s \gets \alpha+m, u \gets \rho+r$
+        \item $\Prover$ samples $\alpha_i \sample \Z_p$ for $i \in [1,n]$, $\rho \sample \Z_p$ and sends $T \gets (\prod_{i=1}^n g_i^{\alpha_i})h^{\rho}$
+        \item $\Verifier$ sends challenge $c \sample \Z_p$
+        \item $\Prover$ responds with $s_i \gets \alpha_i + cm_i$ for $i \in [1,n]$, $u \gets \rho + cr$
     \end{enumerate}
     Verification holds by 
     \begin{align}
-        g^sh^u &\stackrel{?}{=} C^cT \notag \\
-        g^{\alpha + cm}h^{\rho + cr} &\stackrel{?}{=} (g^mh^r)^cg^{\alpha}h^{\rho} \notag  \\
-        g^{\alpha + cm}h^{\rho + cr} &= g^{mc + \alpha} h^{rc + \rho} \notag 
+        (\prod_{i=1}^n g_i^{s_i})h^u &\stackrel{?}{=} \cm^cT \notag \\
+        (\prod_{i=1}^n g_i^{\alpha_i + cm_i})h^{\rho + cr} &\stackrel{?}{=} (\prod_{i=1}^n g_i^{m_i}h^r)^c(\prod_{i=1}^n g_i^{\alpha_i})h^{\rho} \notag  \\
+        (\prod_{i=1}^n g_i^{\alpha_i + cm_i})h^{\rho + cr} &= (\prod_{i=1}^n g_i^{cm_i + \alpha_i})h^{cr + \rho} \notag 
     \end{align}
     Thus, an honest verifier always accepts an honest prover's proof.
 \end{proof}
 
 
+
+
 \begin{theorem}[Special Soundness]
-    Construction \ref{construct:openproof} satisfies the special soundness of relation $\mathcal{R}$. 
+    Construction 1 satisfies the special soundness of relation $\mathcal{R}$. 
 \end{theorem}
 \begin{proof}
-    Let $Tr_1 = (T, c, s, u)$ and $Tr_2 = (T,c',s',u')$ be two accepting transcripts for the same initial commitment $T$ where $c \neq c'$. We construct a knowledge extractor $\Extractor$ that extracts the witness $w = (m,r)$ as follows:
+    Let $Tr_1 = (T, c, \{s_i\}_{i=1}^n, u)$ and $Tr_2 = (T, c', \{s'_i\}_{i=1}^n, u')$ be two accepting transcripts for the same initial commitment $T$ where $c \neq c'$. We construct a knowledge extractor $\Extractor$ that extracts the witness $w = (\{m_i\}_{i=1}^n,r)$ as follows:
     \begin{enumerate}
-        \item  Since both transcripts are accepting, they satisfy: $g^sh^u = C^cT$ and $g^{s'}h^{u'} = C^{c'}T$.
+        \item Since both transcripts are accepting, they satisfy: 
+        $(\prod_{i=1}^n g_i^{s_i})h^u = \cm^cT$ and $(\prod_{i=1}^n g_i^{s'_i})h^{u'} = \cm^{c'}T$
+        
         \item Evaluate as a system of linear equations:
              \begin{align}
-               \frac{g^sh^u}{g^{s'}h^{u'}} &= \frac{C^c}{C^{c'}} \notag \\
-               g^{s-s'}h^{u-u'} &= g^{m(c-c')}h^{r(c-c')} \notag \\
+               \frac{(\prod_{i=1}^n g_i^{s_i})h^u}{(\prod_{i=1}^n g_i^{s'_i})h^{u'}} &= \frac{\cm^c}{\cm^{c'}} \notag \\
+               (\prod_{i=1}^n g_i^{s_i-s'_i})h^{u-u'} &= (\prod_{i=1}^n g_i^{m_i(c-c')})h^{r(c-c')} \notag
             \end{align}
-       \item By the homomorphic property of the exponents, we obtain two accepting transcripts 
-       \[
-       s-s' = m(c-c') \qquad u-u' = r(c-c')
-       \] 
-       therefore $\Extractor$ extracts, $m = \frac{s-s'}{c-c'} \qquad r = \frac{u-u'}{c-c'}$ Which satisfies the commitment construction $C = g^mh^r$
-    \end{enumerate}
-
-    This shows that if $\Prover$ can respond correctly to 2 different challenges for the commitment $T$, they must "know" the witness $(m,r)$.
-\end{proof}
-
-\begin{proof}
-    Suppose we have two accepting transcripts for the same commitment $(Comm, Chall, Resp)$
-    $(C, T, c, s, u)$ and $(C,T,c',s',u')$ where $c \neq c'$
-\end{proof}
-
-
-\begin{theorem}[Perfect Zero-Knowledge]
-    Construction 1 is perfect zero-knowledge.
-\end{theorem}
-
-\begin{proof}
-    We show that for any verifier $\Verifier$*, there exists a simulator $\Simulator$ that can generate transcripts that are perfectly indistinguishable from real protocol execution. Let $\texttt{view}_v(x,w)$ denote $\Verifier$'s view in a real protocol execution with common input $x = (C,g,h,q)$ and witness $w = (m,r)$. 
-
-    \noindent \textbf{Simulator Construction: } Given only public input $(C,g,h,q)$, simulator $\Simulator$ operates as follows:
-    \begin{enumerate}
-        \item Sample $s', u', c' \sample [q-1]$ uniformly at random
-        \item  Compute $T' = g^{s'}h^{u'} \cdot C^{-c'}$
-        \item Output transcript $(T', c', (s,u))$
-    \end{enumerate}
-
-    \noindent \textbf{Correctness of Simulation: } The simulated transcript satisfies the verification equation $g^{s'}h^{u'} = C^{c'}T'$, by substituting $T' = g^{s'}h^{u'} \cdot C^{-c'}$ and satisfying $g^{s'}h^{u'} = C^{c'} \cdot g^{s'}h^{u'} \cdot C^{-c'}$
-
-    \noindent \textbf{Perfect Indistinguishability: } For any fixed witness $(m,r)$ where $C = g^mh^r$, we prove 
-    \[
-    \Pr \left[ \Simulator(C, g, h, q) = (T',c',(s',u')) \right] = \Pr \left[ \texttt{view}_v(x,w) = (T,c,(s,u)) \right]
-    \]
-    
-
-
-
-
-\newpage
-    
-    Recall a real transcript:
-    \begin{enumerate}
-        \item $T = g^{\alpha}h^{\rho}$ where $\alpha, \rho \sample [q-1]$ are random
-        \item $c \sample [q-1]$ is a random challenge
-        \item $s = \alpha + cm, u = \rho + mr$. Solving for $\alpha, \rho$, we obtain $\alpha = s - cm, \rho = u - mr$. We use this in the section below.
-    \end{enumerate}
-
-
-    We construct a simulator $\Simulator$ that, given public input $(C, g, h, q)$ generates transcripts indistinguishable from real.  $\Simulator$ operates as follows:
-    \begin{enumerate}
-        \item Samples $s', u', c' \sample [q-1]$ from random
-        \item Computes $T' = g^{s'}h^{u'} \cdot C^{-{c'}} $
-        \begin{align}
-            T' \; &= \; g^{s'}h^{u'} \cdot C^{-{c'}} \notag \\
-            &= g^{s'}h^{u'} \cdot (g^mh^r)^{-{c'}} \notag \\
-            &= g^{s'}h^{u'} \cdot g^{-cm'}h^{-cr'} \notag \\
-            &= g^{s'-mc'}h^{u'-rc'} \notag \\
-        \end{align} 
-        \item Output transcript $(T', c', (s', u'))$ where without $\alpha, \rho$ from the real run, $\Simulator$ recreates the probability distribution for $\alpha = s - mc, \rho = u - rc$
-    \end{enumerate}
-
-    For any fixed witness $(m,r)$, where $C = g^mh^r$,  for any transcript $T, c, (s,u)$, we show that the probability of $S$ outputting the transcript is the same probability of it occurring in protocol execution. 
-\[
-\Pr \left[ \Simulator(C, g, h, q) = (T',c',(s',u')) \right] = \Pr \left[ \langle \Prover(m,r),\Verifier \rangle = (T,c,(s,u)) \right]
-\]
-
-To prove in
-\begin{itemize}
-    \item $\Prover$ samples $\alpha, \rho, c \sample [q-1]$
-    \item $T = g^{\alpha}h^{\rho}$
-    \item $s = \alpha + cm, u = \rho + cr$
-\end{itemize}
-
-For any fixed transcript $(T, c, (s,u))$ we show:
-\begin{enumerate}
-    \item In both real and simulated executions, $c$ is uniformly distributed in $[q-1]$
-    \item Given any fixed $c$
-\end{enumerate}
-
-
-\end{proof}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\begin{construction}{Multi-Message Opening Proof($C$)}{mmopenproof}
-    \vspace{1em}
-    \textbf{Public parameters:} $g_1, \dots, g_n, h \in \G$
-
-    \textbf{Inputs:} $C$ such that $C = g_1^{m_1}\dots g_n^{m_n}h^r$, $\Prover$ knows $m_1, \dots, m_n, r \in \Z_q$.
-    \vspace{1em}
-        \begin{enumerate}
-            \item $\Prover$ samples $\alpha_1, \dots, \alpha_n, \rho \sample [q-1]$ and sends $T \gets g_1^{\alpha_1} \dots g_n^{\alpha_n}h^{\rho}$
             
-            \item $\Verifier$ sends challenge $c \sample [q-1].$
-        
-            \item $\Prover$ sends $s_1 \gets \alpha_1 + cm_1, \dots, s_n \gets \alpha_n + cm_n, u \gets \rho + cr$
-        
-            \item $\Verifier$ verifies that $g_1^{s_1} \dots g_n^{s_n} h^{u} = C^cT$
-        \end{enumerate}
-\end{construction}
-
-
-\begin{theorem}
-    Construction \ref{construct:mmopenproof} is a $\Sigma-$construction for the relation: 
-    \[
-    \mathcal{R} = \left\{ (C,g_1,\dots, g_n, h, q),(m_1, \dots ,m_n,r) \; | \; C = g^{m_1}\dots g^{m_n}h^r \right\}
-    \]    
-\end{theorem}
-\begin{proof}
-  By extension, it follows from Protocol \ref{prot:openproof}
+       \item By the homomorphic property of the exponents and the uniqueness of discrete logarithm representations, we obtain the system of equations:
+       \[
+       s_i-s'_i = m_i(c-c') \text{ for } i \in [1,n] \qquad u-u' = r(c-c')
+       \] 
+       therefore $\Extractor$ extracts: 
+       \[
+       m_i = \frac{s_i-s'_i}{c-c'} \text{ for } i \in [1,n] \qquad r = \frac{u-u'}{c-c'}
+       \]
+       Which satisfies the commitment construction $\cm = (\prod_{i=1}^n g_i^{m_i})h^r$
+    \end{enumerate}
+    This shows that if $\Prover$ can respond correctly to 2 different challenges for the commitment $T$, they must "know" all messages $\{m_i\}_{i=1}^n$ and the randomness $r$.
 \end{proof}
 
 
 
+\begin{remark}
+    The special soundness property of our protocol relies on the same discrete logarithm assumption as the binding property of Pedersen commitments. Specifically, if an adversary could find two different openings $(\{m_i\}_{i=1}^n, r) \neq (\{m'_i\}_{i=1}^n, r')$ for the same commitment $\cm$, they could use these to compute discrete logarithms between the generators $(g_1,\ldots,g_n,h)$. Our extractor demonstrates that producing two valid transcripts for different challenges is equivalent to breaking this binding property.
+\end{remark}
 
+
+
+\begin{theorem}[Honest-Verifier Zero-Knowledge]
+    Construction 1 is honest-verifier zero-knowledge.
+\end{theorem}
+\begin{proof}
+    We construct a simulator $\Simulator$ that, given only public input $\cm$ and a challenge $c$, produces transcripts that are identically distributed to those of real protocol executions. $\Simulator$ works as follows:
+    \begin{enumerate}
+        \item On input $(\cm, c)$, $\Simulator$ samples:
+            \begin{itemize}
+                \item $s_i \sample \Z_p$ for $i \in [1,n]$
+                \item $u \sample \Z_p$
+            \end{itemize}
+            
+        \item Computes $T \gets (\prod_{i=1}^n g_i^{s_i})h^u\cm^{-c}$
+        
+        \item Outputs transcript $(T, c, \{s_i\}_{i=1}^n, u)$
+    \end{enumerate}
+
+    To show perfect HVZK, we prove the distribution of simulated transcripts is identical to real transcripts:
+    \begin{itemize}
+        \item In real protocol: 
+            \begin{itemize}
+                \item $s_i = \alpha_i + cm_i$ where $\alpha_i \sample \Z_p$
+                \item $u = \rho + cr$ where $\rho \sample \Z_p$
+            \end{itemize}
+        \item Since $\alpha_i, \rho$ are uniform in $\Z_p$, the real $s_i, u$ are uniformly distributed in $\Z_p$
+        \item In simulation, $s_i, u$ are sampled uniformly from $\Z_p$
+        \item Therefore, $(s_i, u)$ have identical distributions in both cases
+        \item Given fixed $(s_i, u)$, $T$ is uniquely determined by the verification equation in both real and simulated transcripts
+    \end{itemize}
+    Thus, the simulated transcripts are perfectly indistinguishable from real protocol transcripts.
+\end{proof}
+
+\begin{corollary}[Proving Zero Values]
+    
+\end{corollary}
+
+\begin{corollary}[Equality of messages within commitments]
+    
+\end{corollary}
+
+% Corollary 1: To prove that mᵢ = 0 for some index i, run Construction 2 with modified 
+% commitment key ck' = (g, g₁,...,gᵢ₋₁,gᵢ₊₁,...,gₗ) omitting gᵢ.
+
+
+% Corollary 1.1: Proving Zero Values:
+% By omitting generators gᵢ from the commitment key, Construction 1 
+% proves that corresponding mᵢ = 0...
+
+
+% Corollary 1.2: Multi-Message Application
+% [If needed, specific details about multi-message case]
+
+
+
+% For commitments cm₁ = g₁ᵐh₁ʳ¹ and cm₂ = g₂ᵐh₂ʳ², prove knowledge of 
+% (m,r₁,r₂) by running Construction 1 with linked responses:
+% - Use same α for g₁ᵐ and g₂ᵐ terms
+% - Different ρ₁,ρ₂ for h₁ʳ¹,h₂ʳ² terms
+% - Response s used in both verification equations
+% This proves m values are equal without revealing m.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 \begin{construction}{Equality Proof($C_1, C_2$)}{equalityproof}
     \vspace{1em}
     \textbf{Public Parameters:} $g_1, g_2, h_1, h_2 \in \G$
@@ -863,12 +836,17 @@ For any fixed transcript $(T, c, (s,u))$ we show:
 
 \begin{construction}{Proof of Zero($C$)}{zeroproof}
     \vspace{1em}
-    \textbf{Public Parameters:} $g_1, g_2, h_1\in \G$
+    \textbf{Public Parameters:} Commitment key $ck = g_1, \dots, g_i, h\in \G$. 
+    
+    For proof of zeros, $ck' = ck$ with a specific generator $g_i$ removed
 
     \textbf{Inputs:} $C$ such that $C = g_1^{m_1}g_2^0h^{r}$, $\Prover$ knows $m_1, r_1 \in \Z_q$.
+
+    \textbf{Relation:} $\mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}$
     \vspace{1em}
+    
         \begin{enumerate}
-        \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T_1 \gets g_1^{\alpha_1}g_2h_1^{\rho_1}$ 
+        \item $\Prover$ samples $\alpha_1, \dots, \alpha_i, \rho \sample [q-1]$ and sends $T \gets \prod_{i=1}^n g_i^{\alpha_i}h^{\rho}$
 
         \item $\Verifier$ sends challenge $c \sample [q-1]$
 
