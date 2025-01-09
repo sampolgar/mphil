@@ -755,13 +755,63 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
     Thus, the simulated transcripts are perfectly indistinguishable from real protocol transcripts.
 \end{proof}
 
-\begin{corollary}[Proving Zero Values]
-    
+
+\begin{corollary}[Proof of Zero Values]
+    Let $I \subseteq [1,n]$ be a set of indices. Given a commitment $\cm$ and commitment key $\ck$, we construct modified public parameters $\ck'$ by removing the generators $g_i$ for all $i \in I$ from $\ck$. Using $\ck'$ with Construction 1 proves that $m_i = 0$ for all $i \in I$ while maintaining the properties of a $\Sigma$-protocol.
 \end{corollary}
 
-\begin{corollary}[Equality of messages within commitments]
+\begin{proof}
+    Consider commitment $\cm = (\prod_{i=1}^n g_i^{m_i})h^r$. When proving with modified generators, the prover must demonstrate knowledge of opening $(\{m_i\}_{i \notin I}, r)$ such that:
+    \[
+    \cm = (\prod_{i \notin I} g_i^{m_i})h^r
+    \]
     
+    If this equation holds and $\cm$ was constructed using all generators, then necessarily $m_i = 0$ for all $i \in I$, as otherwise the verification would fail.
+
+    We now show the protocol maintains all properties of a $\Sigma$-protocol:
+
+    Completeness: For any valid commitment $\cm$ where $m_i = 0$ for all $i \in I$, the protocol succeeds with probability 1. The prover samples $\alpha_i \sample \Z_p$ for $i \notin I$ and $\rho \sample \Z_p$, computes $T = (\prod_{i \notin I} g_i^{\alpha_i})h^{\rho}$, and responds to challenge $c$ with $s_i = \alpha_i + cm_i$ for $i \notin I$ and $u = \rho + cr$. Verification holds because:
+    \[
+    (\prod_{i \notin I} g_i^{s_i})h^u = (\prod_{i \notin I} g_i^{\alpha_i + cm_i})h^{\rho + cr} = \cm^c \cdot T
+    \]
+
+    Special Soundness: Given two accepting transcripts $(T, c, \{s_i\}_{i \notin I}, u)$ and $(T, c', \{s'_i\}_{i \notin I}, u')$ with $c \neq c'$, the extractor from Theorem 1 works on the reduced generator set to extract valid openings $m_i = \frac{s_i-s'_i}{c-c'}$ for $i \notin I$ and $r = \frac{u-u'}{c-c'}$. Since these values must satisfy the verification equation with the full generator set, all omitted indices must correspond to zero values.
+
+    HVZK: The simulator from Theorem 1 operates identically on the reduced generator set, producing perfectly indistinguishable transcripts.
+\end{proof}
+
+
+
+\begin{corollary}[Equality of Committed Values]
+    Construction 1 can be used to prove equality of messages in two Pedersen commitments. Specifically, for commitments $\cm_1 = g_1^m h_1^{r_1}$ and $\cm_2 = g_2^m h_2^{r_2}$, we can prove knowledge of $(m, r_1, r_2)$ satisfying the relation:
+    \[
+    \mathcal{R} = \left\{ ((\cm_1, \cm_2, g_1, g_2, h_1, h_2), (m,r_1,r_2)) \; | \; \cm_1 = g_1^{m}h_1^{r_1} \; \wedge \; \cm_2 = g_2^{m}h_2^{r_2} \right\}
+    \]    
 \end{corollary}
+
+\begin{proof}
+    We instantiate Construction 1 with generators $(g_1, g_2, h_1, h_2)$ and prove knowledge of opening:
+    \[
+    \cm = (g_1^m h_1^{r_1}, g_2^m h_2^{r_2})
+    \]
+    
+\noindent    The protocol runs as follows:
+    \begin{enumerate}
+        \item $\Prover$ samples $\alpha, \rho_1, \rho_2 \sample \Z_p$ and sends $T_1 \gets g_1^{\alpha}h_1^{\rho_1}, T_2 \gets g_2^{\alpha}h_2^{\rho_2}$
+        \item $\Verifier$ sends challenge $c \sample \Z_p$
+        \item $\Prover$ sends $s \gets \alpha + cm, u_1 \gets \rho_1 + cr_1, u_2 \gets \rho_2 + cr_2$
+        \item $\Verifier$ checks $g_1^s h_1^{u_1} = \cm_1^c T_1 \wedge g_2^s h_2^{u_2} = \cm_2^c T_2$
+    \end{enumerate}
+
+\noindent Security follows from Theorem 1:
+    \begin{itemize}
+        \item Completeness: Inherits directly as this is a specific instantiation
+        \item Special Soundness: The extractor obtains a single $m$ from $s$ and corresponding $r_1, r_2$ from $u_1, u_2$
+        \item HVZK: The simulator from Theorem 1 extends naturally by sampling a single $s$ for both equations
+    \end{itemize}
+    
+    Crucially, using the same $\alpha$ for both $T_1$ and $T_2$ ensures the extracted message $m$ must be identical in both commitments.
+\end{proof}
 
 % Corollary 1: To prove that mᵢ = 0 for some index i, run Construction 2 with modified 
 % commitment key ck' = (g, g₁,...,gᵢ₋₁,gᵢ₊₁,...,gₗ) omitting gᵢ.
@@ -797,97 +847,6 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
 
 
 
-
-
-\newpage
-\begin{construction}{Equality Proof($C_1, C_2$)}{equalityproof}
-    \vspace{1em}
-    \textbf{Public Parameters:} $g_1, g_2, h_1, h_2 \in \G$
-
-    \textbf{Inputs:} $C_1, C_2$ such that $C_1 = g_1^{m_1}h_1^{r_1}, C_2 = g_2^{m_1}h_2^{r_2}$, $\Prover$ knows $m_1, r_1, r_2 \in \Z_q$.
-    \vspace{1em}
-        \begin{enumerate}
-            \item $\Prover$ samples $\alpha_1, \rho_1, \rho_2 \sample [q-1]$ and sends $T_1 \gets g_1^{\alpha_1}h_1^{\rho_1}$ and $T_2 \gets g_2^{\alpha_1}h_2^{\rho_2}$
-            \item $\Verifier$ sends challenge $c \sample [q-1]$
-            \item $\Prover$ sends $s \gets \alpha_1 + cm_1, u_1 \gets \rho_1 + cr_1, u_2 \gets \rho_2 + cr_2$
-            \item $\Verifier$ verifies that $g_1^sh_1^{u_1} = C_1^cT_1 \; \wedge \; g_2^sh_2^{u_2} = C_2^cT_2$
-        \end{enumerate}
-\end{construction}
-    
-
-\begin{theorem}
-    Construction~\ref{construct:equalityproof} is a $\Sigma-$Construction for the relation: 
-    \[
-    \mathcal{R} = \left\{ (C_1, C_2,g_1,g_2,h_1,h_2, q),(m_1,r_1,r_2) \; | \; C_1 = g_1^{m_1}h_1^{r_1} \; \wedge \; C_2 = g_2^{m_1}h_2^{r_2} \right\}
-    \]    
-\end{theorem}
-
-\begin{proof}
-    Folklore
-\end{proof}
-
-
-
-
-
-
-
-
-
-\begin{construction}{Proof of Zero($C$)}{zeroproof}
-    \vspace{1em}
-    \textbf{Public Parameters:} Commitment key $ck = g_1, \dots, g_i, h\in \G$. 
-    
-    For proof of zeros, $ck' = ck$ with a specific generator $g_i$ removed
-
-    \textbf{Inputs:} $C$ such that $C = g_1^{m_1}g_2^0h^{r}$, $\Prover$ knows $m_1, r_1 \in \Z_q$.
-
-    \textbf{Relation:} $\mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}$
-    \vspace{1em}
-    
-        \begin{enumerate}
-        \item $\Prover$ samples $\alpha_1, \dots, \alpha_i, \rho \sample [q-1]$ and sends $T \gets \prod_{i=1}^n g_i^{\alpha_i}h^{\rho}$
-
-        \item $\Verifier$ sends challenge $c \sample [q-1]$
-
-        \item $\Prover$ sends $s \gets \alpha_1 + cm_1, u_1 \gets \rho_1 + cr_1$
-
-        \item $\Verifier$ verifies that $g_1^sg_2^ch_1^{\rho_1} = C_1^cT_1$
-    \end{enumerate}
-\end{construction}
-    
-
-\begin{theorem}
-    Construction~\ref{construct:zeroproof} is a $\Sigma-$Construction for the relation: 
-    \[
-    \mathcal{R} = \left\{ (C_1, C_2,g_1,g_2,h_1,h_2, q),(m_1,r_1,r_2) \; | \; C_1 = g_1^{m_1}h_1^{r_1} \; \wedge \; C_2 = g_2^{m_1}h_2^{r_2} \right\}
-    \]    
-\end{theorem}
-
-\begin{proof}
-    Folklore
-\end{proof}
-
-\begin{theorem}[Perfect Completeness]
-    Construction \ref{construct:zeroproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$ with perfect completeness: 
-\end{theorem}
-\begin{proof}
-    We prove completeness by showing that for any $(C, g, h, q),(m,r) \in \mathcal{R}$, when both $\Prover$ and $\Verifier$ follow the protocol, $\Verifier$ accepts with $\Pr$ = 1.
-
-    Let $x = (C,g,h,q)$ be common input and $w = (m, r)$ be $\Prover$'s private input. Consider an execution of the protocol where:
-    \begin{enumerate}
-        \item $\Prover$ samples $\alpha, \rho \sample [q-1]$ and sends $T \gets g^{\alpha}h^{\rho}$
-        \item $\Verifier$ sends challenge $c \sample [q-1]$
-        \item $\Prover$ responds with $s \gets \alpha+m, u \gets \rho+r$
-    \end{enumerate}
-    Verification holds by 
-    \begin{align}
-        g^sh^u &\stackrel{?}{=} C^cT \notag \\
-        g^{\alpha + cm}h^{\rho + cr} &\stackrel{?}{=} (g^mh^r)^cg^{\alpha}h^{\rho} \notag  \\
-        g^{\alpha + cm}h^{\rho + cr} &= g^{mc + \alpha} h^{rc + \rho} \notag 
-    \end{align}
-    Thus, an honest verifier always accepts an honest prover's proof.
-\end{proof}
 
 
 
