@@ -814,16 +814,9 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
 \end{proof}
 
 \begin{corollary}[Proof of Multiplicative Inverse]
-    Construction 1 can be used to prove that two committed values are multiplicative inverses. Specifically, for commitments $\cm_1 = g^{m_1}h^{r_1}$ and $C_2 = g^{m_2}h^{r_2}$, we can prove knowledge of $(m_1, m_2, r_1, r_2)$ satisfying the relation:
+    Construction 1 can be used to prove that two committed values are multiplicative inverses. Specifically, for commitments $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$, we can prove knowledge of $(m_1, m_2, r_1, r_2)$ satisfying the relation:
     \[
-    \mathcal{R} = \left\{ ((C_1, C_2, g, h), (m_1, m_2, r_1, r_2)) \; | \; C_1 = g^{m_1}h^{r_1} \; \wedge \; C_2 = g^{m_2}h^{r_2} \; \wedge \; m_1 \cdot m_2 = 1 \right\}
-    \]    
-\end{corollary}
-
-\begin{corollary}[Proof of Reciprocal Exponents]
-    Construction 1 can be used to prove that two committed values are multiplicative inverses. Specifically, for commitments $C_1 = g^{m_1}h^{r_1}$ and $C_2 = g^{m_2}h^{r_2}$, we can prove knowledge of $(m_1, m_2, r_1, r_2)$ satisfying the relation:
-    \[
-    \mathcal{R} = \left\{ ((C_1, C_2, g, h), (m_1, m_2, r_1, r_2)) \; | \; C_1 = g^{m_1}h^{r_1} \; \wedge \; C_2 = g^{m_2}h^{r_2} \; \wedge \; m_1 \cdot m_2 = 1 \right\}
+    \mathcal{R} = \left\{ ((\cm_1, \cm_2, g, h), (m_1, m_2, r_1, r_2)) \; | \; \cm_1 = g^{m_1}h^{r_1} \; \wedge \; \cm_2 = g^{m_2}h^{r_2} \; \wedge \; m_1 \cdot m_2 = 1 \right\}
     \]    
 \end{corollary}
 
@@ -833,8 +826,8 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
         \item $\Prover$ samples $\alpha_1, \alpha_2, \rho_1, \rho_2, \rho_3, \rho_4 \sample \Z_q$ and computes:
             \begin{itemize}
                 \item $T_1 \gets g^{\alpha_1}h^{\rho_1}$, $T_2 \gets g^{\alpha_2}h^{\rho_2}$
-                \item $C_3 \gets C_1^{m_2}h^{\rho_3}$, $C_4 \gets h^{\rho_4}$
-                \item $T_3 \gets C_1^{\alpha_2}h^{\rho_3}$, $T_4 \gets h^{\rho_4}$
+                \item $\cm_3 \gets \cm_1^{m_2}h^{\rho_3}$, $\cm_4 \gets h^{\rho_4}$
+                \item $T_3 \gets \cm_1^{\alpha_2}h^{\rho_3}$, $T_4 \gets h^{\rho_4}$
             \end{itemize}
         
         \item $\Verifier$ sends challenge $c \sample \Z_q$
@@ -847,159 +840,72 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
             \end{itemize}
             
         \item $\Verifier$ checks:
-            \begin{align*}
-                g^{s_1}h^{u_1} &= C_1^cT_1 \\
-                g^{s_2}h^{u_2} &= C_2^cT_2 \\
-                C_1^{s_2}h^{u_3} &= C_3^cT_3 \\
-                h^{u_4} &= C_4^cT_4 \\
-                C_3/C_4 &= g
-            \end{align*}
+         \begin{itemize}
+            \item $g^{s_1}h^{u_1} = \cm_1^cT_1$ $\;\; \wedge \;\;$ $g^{s_2}h^{u_2} = \cm_2^cT_2$ $\; \; \wedge \;\;$ $\cm_1^{s_2}h^{u_3} = \cm_3^cT_3$ $\;\; \wedge \;\;$ $h^{u_4} = \cm_4^cT_4$ $\;\; \wedge \;\;$ $\cm_3 / \cm_4 = g$
+         \end{itemize}
     \end{enumerate}
 
-    Security follows from Theorem 1 as we are effectively running multiple instances of the base protocol with additional algebraic constraints. The final check $C_3/C_4 = g$ ensures $m_1 \cdot m_2 = 1$ because:
+    \noindent Security follows from Theorem 1 as we are effectively running multiple instances of the base protocol with additional algebraic constraints. The final check $\cm_3/\cm_4 = g$ ensures $m_1 \cdot m_2 = 1$ because:
     \begin{itemize}
-        \item $C_3 = C_1^{m_2}h^{\rho_3} = g^{m_1m_2}h^{r_1m_2 + \rho_3}$
-        \item $C_4 = h^{\rho_4}$
-        \item Therefore $C_3/C_4 = g^{m_1m_2}h^{r_1m_2 + \rho_3 - \rho_4}$
-        \item If this equals $g$, then $m_1m_2 = 1$
+        \item $\cm_3 = \cm_1^{m_2}h^{\rho_3} = g^{m_1m_2}h^{r_1m_2 + \rho_3}$
+        \item $\cm_4 = h^{\rho_4}$
+        \item Therefore $\cm_3/\cm_4 = g^{m_1m_2}h^{r_1m_2 + \rho_3 - \rho_4}$
+        \item If this equals $g$, then $m_1 \cdot m_2 = 1$
     \end{itemize}
 \end{proof}
 
 
+Special Soundness: Given two accepting transcripts $(T_1,T_2,T_3,T_4,c,s_1,s_2,u_1,u_2,u_3,u_4)$ and $(T_1,T_2,T_3,T_4,c',s'_1,s'_2,u'_1,u'_2,u'_3,u'_4)$ for $c \neq c'$, we can extract a valid witness $(m_1,m_2,r_1,r_2,r_3,r_4)$ as follows:
 
+For $i \in \{1,2\}$:
+\begin{align*}
+m_i &= \frac{s_i - s'_i}{c - c'} \\
+r_i &= \frac{u_i - u'_i}{c - c'} 
+\end{align*}
 
+For $i \in \{3,4\}$:
+\[
+r_i = \frac{u_i - u'_i}{c - c'}
+\]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\begin{construction}{Proof of reciprocal exponents equals 1($C_1, C_2$)}{recipexpproof}
-    \vspace{1em}
-    \textbf{Public Parameters:} $g, h \in \G$
-
-    \textbf{Inputs:} $C_1, C_2$ such that $C_1 = g^{m_1}h^{r_1}$, $C_2 = g^{m_2}h^{r_2}$. $\Prover$ knows $m_1, m_2, r_1, r_2 \in \Z_q$.
-    \vspace{1em}
-        \begin{enumerate}
-        \item $\Prover$ samples $\alpha_1, \alpha_2, \rho_1, \dots, \rho_4 \sample [q-1]$ and computes blinding commitments for $C_1, C_2$
-
-        $T_1 \gets g^{\alpha_1}h^{\rho_1}$ \qquad $T_2 \gets g^{\alpha_2}h^{\rho_2}$
-        
-        \vspace{1em}
-
-        and interim commitments $C_3, C_4$ and their blinding commitments $T_3, T_4$
-
-        $C_3 \gets C_1^{m_2}h^{r_3}$ \qquad $C_4 \gets h^{r_4}$ \qquad $T_3 \gets C_1^{\alpha_2}h^{\rho_3}$ \qquad $T_4 \gets h^{\rho_4}$
-
-        \vspace{1em}
-
-        \item $\Verifier$ sends challenge $c \sample [q-1]$
-
-        \item $\Prover$ responds with 
-
-        $s_1 \gets \alpha_1 + cm_1$  \qquad $s_2 \gets \alpha_2 + cm_2$
-
-        $u_1 \gets \rho_1 + cr_1$ \qquad $u_2 \gets \rho_2 + cr_2$ \qquad  $u_3 \gets \alpha_3 + cr_3$ \qquad  $u_4 \gets \alpha_4 + cr_4$
-
-        \item $\Verifier$ verifies that 
-        
-        $g^{s_1}h^{u_1} = C_1^c T_1$ \qquad $g^{s_2}h^{u_2} = C_2^c T_2$ \qquad $C_1^{s_2}h^{u_3} = C_3^c T_3$
-        
-        $h^{u_4} = C_4^c T_4$ \qquad  $C_3/C_4 = g$
-    \end{enumerate}
-\end{construction}
-    
-
-\begin{theorem}
-    Protocol~\ref{construct:recipexpproof} is a $\Sigma-$protocol for the relation: 
-     \[
-    \mathcal{R} = \left\{ (C_1, C_2, g, h, q),(m_1, m_2, r_1, r_2) \; | \; C_1 = g^{m_1}h^{r_1} \wedge C_2 = g^{m_2}h^{r_2} \wedge m_1 \cdot m_2 = 1 \right\}
-    \]  
-\end{theorem}
-
-\begin{proof}
-    Completeness. 
-\end{proof}
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsubsection{Completeness}
-Proof of knowledge of exponents $m1, r1$ by opening $C_1$ 
-\begin{align}
-    C_1^e \cdot T_1 &\stackrel{?}{=} g^{z_{m1}} h^{z_{r1}} \notag \\
-    (g^{m1}h^{r_1})^e \cdot g^{\beta_1}h^{\rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag \\
-    g^{e \cdot m1 + \beta_1}h^{e \cdot r_1 + \rho_1} &= g^{\beta_1 + e \cdot m_1} h^{\rho_1 + e \cdot r_1} \notag 
-\end{align}
-
-Proof of knowledge of exponents $m2, r2$ by opening $C_2$ 
-\begin{align}
-    C_2^e \cdot T_2 &\stackrel{?}{=} g^{z_{m2}} h^{z_{r2}} && \label{eq:ver1} \\
-    (g^{m2}h^{r_2})^e \cdot g^{\beta_2}h^{\rho_2} &= g^{\beta_2 + e \cdot m_2} h^{\rho_2 + e \cdot r_2} \notag \\
-    g^{e \cdot m2 + \beta_2}h^{e \cdot r_2 + \rho_2} &= g^{\beta_2 + e \cdot m_2} h^{\rho_2 + e \cdot r_2} \notag 
-\end{align}
-
-
-Equality of $m2 \in \{C_2, C_3\}$ proven by equality of responses $g^{z_{m2}}$ used in \eqref{eq:ver1} and \eqref{eq:ver2}
-\begin{align}
-    C_3^e \cdot T_3 &\stackrel{?}{=} C_1^{z_{m2}} h^{z_{r3}} \notag \\
-    (C_1^{m2}h^{r_3})^e \cdot C_1^{\beta_2}h^{\rho_3} &= C_1^{\beta_2 + e \cdot m_2} h^{\rho_3 + e \cdot r_3} \label{eq:ver2} \\
-    C_1^{m2 \cdot e + \beta_2}h^{e \cdot r_3 + \rho_3} &= C_1^{\beta_2 + e \cdot m_2} h^{\rho_3 + e \cdot r_3} \notag
-\end{align}
-
-Proof of knowledge of exponent $r4$ by opening $C_4$ 
-\begin{align}
-    C_4^e \cdot T_4 &\stackrel{?}{=} h^{z_{r4}} \notag \\
-    (h^{r_4})^e \cdot h^{\rho_4} &\stackrel{?}{=} h^{\rho_4 + e \cdot r_4} \notag \\
-    h^{e \cdot r_4 + \rho_4} &= h^{\rho_4 + e \cdot r_4} \notag
-\end{align}
-
-Prove that $C_3/C_4 = g$ implies $g^{\frac{m1}{m2}} = 1$ which proves their inverse relation. Recall $C_1 = g^{m_1}h^{r_1}, r_4 = r_1m_2 + r_3$
-\begin{align}
-    \dfrac{C_3}{C_4} = \dfrac{C_1^{m2}h^{r_3}}{h^{r_4}} = \dfrac{(g^{m_1}h^{r_1})^{m2}h^{r_3}}{h^{r_1 \cdot m_2 + r_3}} = \dfrac{g^{m_1\cdot m2}h^{r_1\cdot m2 + r_3}}{h^{r_1 \cdot m_2 + r_3}} = \dfrac{g}{1} = g \notag \\
-\end{align}
-
-\subsubsection{Soundness}
-\todonote{Sam todo}
-
-\subsubsection{Zero Knowledge}
-\todonote{Sam todo}
-
-\subsubsection{Analysis G1 Method}
+The extracted values satisfy the relation $\mathcal{R}$ because:
 \begin{itemize}
-    \item \textbf{Prover:} 11 $\G_1$ exponentiations, 4 $\G_1$ additions, 6 $\F_p$ multiplications, 6 $\F_p$ additions
-    \item \textbf{Verifier:} 11 $\G_1$ exponentiations, 7 $\G_1$ additions/subtractions, 
+    \item From verification equations 1 and 2, we obtain valid openings of $\cm_1$ and $\cm_2$
+    \item From equation 3, we get that $\cm_3 = \cm_1^{m_2}h^{r_3}$
+    \item From equation 4, we get that $\cm_4 = h^{r_4}$
+    \item The final check $\cm_3/\cm_4 = g$ ensures $m_1 \cdot m_2 = 1$
 \end{itemize}
 
-\subsection{NIZK for Credential Chaining}
-\subsection{NIZK for equality of commitments in different groups}
-\todonote{sam to do}
+Honest-Verifier Zero-Knowledge: We construct a simulator $\Simulator$ that produces transcripts indistinguishable from real protocol runs:
+
+\begin{enumerate}
+    \item On input $(\cm_1,\cm_2,c)$, $\Simulator$ samples:
+        \begin{itemize}
+            \item $s_1,s_2 \sample \Z_q$
+            \item $u_1,u_2,u_3,u_4 \sample \Z_q$
+        \end{itemize}
+    
+    \item Computes:
+        \begin{itemize}
+            \item $T_1 \gets g^{s_1}h^{u_1}\cm_1^{-c}$
+            \item $T_2 \gets g^{s_2}h^{u_2}\cm_2^{-c}$
+            \item $T_3 \gets \cm_1^{s_2}h^{u_3}\cm_3^{-c}$
+            \item $T_4 \gets h^{u_4}\cm_4^{-c}$
+        \end{itemize}
+        where $\cm_3,\cm_4$ are computed such that $\cm_3/\cm_4 = g$
+    
+    \item Outputs $(T_1,T_2,T_3,T_4,c,s_1,s_2,u_1,u_2,u_3,u_4)$
+\end{enumerate}
+
+The simulated transcript is perfectly indistinguishable from real transcripts because:
+\begin{itemize}
+    \item $s_1,s_2,u_1,u_2,u_3,u_4$ are uniformly random in both real and simulated transcripts
+    \item Given these values, $T_1,T_2,T_3,T_4$ are uniquely determined by the verification equations
+    \item The relation $\cm_3/\cm_4 = g$ is maintained in both real and simulated transcripts
+\end{itemize}
 
 
 
-
-\subsection{Proof of NIZK}
 
 
 \cleardoublepage
