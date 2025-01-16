@@ -332,7 +332,7 @@ A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correc
 \begin{enumerate}
     \item Individual Validity: For each credential $cred_i $with commitment $cm_i$ = $Com(attrs_i; r_i)$, the credential verifies independently under its issuer's public key $opk_i$
 
-    \item Multi-Issuer Composition: For any set of credentials ${cred_1,...,cred_n}$ with corresponding commitments ${cm_1,...,cm_n} $belonging to the same user, any valid predicate $\phi$ over their committed attributes verifies successfully
+    \item Multi-Issuer Composition: For any set of credentials ${cred_1,...,cred_n}$ with corresponding commitments ${cm_1,...,cm_n} $belonging to the same user, any valid predicate $\phi$ over their committed attributes verifies successfully and $\phi$ enforces the user owning credentials
 
     \item Commitment Binding: The showing protocol preserves the binding between credentials and their committed attributes while maintaining zero-knowledge
 \end{enumerate}
@@ -373,7 +373,7 @@ A Multi-Issuer Multi-Credential Anonymous Credential system provides unforgeabil
 \[ \Pr[\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
 \end{definition}
 
-\begin{definition}[MIMC-ABC Unforgeability]
+\noindent \textbf{MIMC-ABC Unforgeability} 
 The experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
 
 \begin{enumerate}
@@ -404,7 +404,6 @@ The experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A
             \end{enumerate}
     \end{itemize}
 \end{enumerate}
-\end{definition}
 
 
 \newpage
@@ -418,7 +417,7 @@ A Multi-Issuer Multi-Credential Anonymous Credential system provides anonymity i
     \item identify which credentials were issued by the same issuer
 \end{enumerate}
 
-More formally, for any PPT adversary $\mathcal{A}$, the following advantage is negligible in $\lambda$:
+\noindent More formally, for any PPT adversary $\mathcal{A}$, the following advantage is negligible in $\lambda$:
 \[ \mathsf{Adv}^{\mathsf{anon}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) := |\Pr[\mathsf{Exp}^{\mathsf{anon\mbox{-}1}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] - \Pr[\mathsf{Exp}^{\mathsf{anon\mbox{-}0}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1]| \leq \mathsf{negl}(\lambda) \]
 \end{definition}
 
@@ -468,7 +467,8 @@ The experiment $\mathsf{Exp}^{\mathsf{anon\mbox{-}b}}_{\mathsf{MIMC\mbox{-}ABC},
 
 
 \newpage
-\noindent \textbf{Credential Binding.} For any PPT adversary $\mathcal{A}$, given a set of credentials $\{\mathsf{cred}_1,...,\mathsf{cred}_n\}$, the probability of producing a valid proof $\pi$ for statement $\phi$ is negligible unless:
+\begin{definition}[Credential Binding]
+For any PPT adversary $\mathcal{A}$, given a set of credentials $\{\mathsf{cred}_1,...,\mathsf{cred}_n\}$, the probability of producing a valid proof $\pi$ for statement $\phi$ is negligible unless:
 
 \begin{enumerate}
     \item all credentials were legitimately issued to the same user with master secret key $s$
@@ -476,21 +476,40 @@ The experiment $\mathsf{Exp}^{\mathsf{anon\mbox{-}b}}_{\mathsf{MIMC\mbox{-}ABC},
     \item the linking proof demonstrates the same $s$ value across all credentials
 \end{enumerate}
 
-More formally, for any PPT adversary $\mathcal{A}$, we define the experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ as follows:
+\noindent More formally, for any $\PPT$ adversary $\Adv$, $\mathsf{Adv}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$ is defined as:
+\[ \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
+\end{definition}
 
-The challenger generates $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$ for each issuer $i \in [n]$. Sets $\mathsf{HU, CU} \gets \emptyset$, $\mathsf{CRED, COM, OWNR} \gets \emptyset$. 
+\noindent \textbf{MIMC-ABC Credential Binding Experiment} The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
+\begin{enumerate}
+    \item Setup Phase:
+    \begin{itemize}
+        \item The challenger generates $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$ for each issuer $i \in [n]$
+        \item Initializes $\mathsf{HU, CU} \gets \emptyset$, 
+        \item Initializes $\mathsf{CRED, COM, OWNR} \gets \emptyset$. 
+    \end{itemize}
 
-$\mathcal{A}$ receives $\{opk_i\}_{i \in [n]}$ and access to oracles $\mathcal{O}_{\mathsf{HU}}$, $\mathcal{O}_{\mathsf{CU}}$, $\mathcal{O}_{\mathsf{ObtIss}}$, $\mathcal{O}_{\mathsf{Obtain}}$, $\mathcal{O}_{\mathsf{Issue}}$, and $\mathcal{O}_{\mathsf{Show}}$.
+    % is it the same as the anonymity exp where adversary has access to the public keys?
+    \item Query Phase: $\Adv^{\oracle}(\secparam, \{opk_i\}_{i \in [n]})$ where $\oracle$ includes 
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}$, $\mathcal{O}_{\mathsf{CU}}$
+        \item $\mathcal{O}_{\mathsf{ObtIss}}$, $\mathcal{O}_{\mathsf{Obtain}}$
+        \item $\mathcal{O}_{\mathsf{Issue}}$, and $\mathcal{O}_{\mathsf{Show}}$
+    \end{itemize}
 
-Finally, $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [n]}, \phi, \pi)$. The experiment returns 1 if:
-\begin{itemize}
-    \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}, \pi) = 1$ and
-    \item $\exists i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ or
-    \item $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$
-\end{itemize}
+    \item $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [n]}, \phi, \pi)$. 
+    \item The experiment returns 1 if:
+    \begin{itemize}
+        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}, \pi) = 1$ $\wedge$
+        \item $\exists \{i,j\}: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ or $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$
+    \end{itemize}
+\end{enumerate}
 
-The advantage of $\mathcal{A}$ is defined as:
-\[ \mathsf{Adv}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) := \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
+
+
+
+
+
 
 
 
