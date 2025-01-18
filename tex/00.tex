@@ -112,7 +112,6 @@ Building a privacy-preserving decentralized identity system requires balancing c
     \item \textbf{Sybil-Resistant Context Credential Construction} Designing an efficient mechanism to link context credentials to a master credential while preserving privacy, our solution uses a novel building block that combines a VRF with committed attributes - the user's Master Credential contains a commitment with their VRF key and generates a context credential nullifier with a VRF parameterized by the key and input the context string. 
     The complexity lies in efficiently proving in zero knowledge this nullifier was correctly derived from the committed key present in a valid, unrevoked master credential. This construction enables strong sybil resistance while maintaining unlinkability between presentations.
 
-
     \item \textbf{Efficient Multi-Credential Proofs and Revocation} enabling efficient proofs over multiple credentials while ensuring practical revocation. Our construction leverages Sigma protocols and Pedersen commitments, which, although they scale linearly with the credential attributes, they are extremely efficient in practice and support the most expressive statements. We integrate existing efficient revocation mechanisms that support batch non-membership proofs, allowing multiple credentials to be efficiently verified simultaneously while maintaining anonymity through zero-knowledge proof protocols. 
 
 \end{enumerate}
@@ -162,68 +161,11 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 
 
 \section{Preliminaries}\label{sec:preliminaries}
+\subsection{Notation}
+Let $\N$ is the set of positive integers $\{1,2,3,\ldots\}$. If $x$ is a string, then $|x|$ is its length, if $S$ is a set, $|S|$ denotes its size. If $\lambda \in \N$, then $\secparam$ denotes the string of $\lambda$ ones. If $n$ is an integer, then $[n] = \{1, \ldots,n\}.$ If $S$ is a set, then $s \sample S$ denotes the operation of picking an element $s$ of $S$ uniformly at random. $\$$ denotes randomized algorithm output. We use $z \gets A()$ and $z = A()$ interchangably for deterministic assignment where $z$ is the output of a deterministic algorithm $A$ and $z \gets A(x,y,\ldots)$ is the output of a deterministic algorithm with inputs $x,y,\ldots$. 
 
-
-\section{Rerandomizable Signatures on Commitments}\label{sec:sigs}
-\subsection{Commitment}
-\subsubsection{Syntax}
-\begin{itemize}
-    \item $CM.Setup(BG, \secparam, 1^n) \to ck$: Sample $g \sample \G_1, \tilg \sample \G_2$. Sample $\yb \sample \Z_p^{n}$ and compute $(\gb, \tilgb) \gets (g^{\yb}, \tilg^{\yb})$. Output $ck \gets (g, \gb, \tilg, \tilgb)$
-    
-    \item $CM.Com_{ck}(\mb, r) \to (\cm, \tilcm):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$ and $\mb$ as $(m_1, \dots, m_{\ell})$, return $(\cm, \tilcm)$ as $(\gb^{\mb}g^r, \tilgb^{\mb}\tilg^r)$
-
-    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
-\end{itemize}
-
-\subsubsection{Construction}
-
-\begin{itemize}
-    \item $CM.Setup(\secparam, n) \to ck:$ The setup Algorithm generates the commitment key $ck$. Samples $(g, \tilg) \sample \G_1^* \times \G_2^*$ and $n$ scalars $y_i \gets \Z_p$, $Y_i \gets g^{y_i}$, and $\tily_i \gets \tilg^{y_i}$ $\forall \; 1 \leq i \leq n;$ such that $Y_i = g_1^{y_1}\dots g_n^{y_n}$ and $\tily_i = \tilg_1^{y_1}\dots \tilg_n^{y_n}$. Outputs $ck$ a tuple $(g, Y_i, \tilg, \tily_i)$ with commitment keys in both $\G_1$ and $\G_2$ where $e(Y_i,\tilg) = e(g,\tily_i)$
-
-    \item $CM.Com_{ck}(\{m_i\}^n_{i=1}) \to (cm, \tilcm):$ to commit to $n$ messages $m_1, \dots, m_n$, the committer samples $r \sample \Zp$, and parses $ck$ as $(g, Y_i, \tilg, \tily_i)$ and commits to $\{m_i\}^n_{i=1}$ over dual commitments in $\G_1$ and $\G_2$. Computes $g^r, \tilg^r$, Commits to $\{m_i\}^n_{i=1}$ with respect to $ck$ such that $\cm \gets g_1^{m_1}\dots g_n^{m_n} g^r$ and $\tilcm \gets \tilg_1^{m_1} \dots \tilg_n^{m_n}\tilg^r$ Then outputs $(\cm, \tilcm)$ where the equality of commitments can be verified by pairing $e(\cm, \tilg) = e(g, \tilcm)$
-    
-    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ To rerandomize the commitment, the last element $g, \tilg$ is randomized with $\rd$. Compute $g^{\rd}, \tilg^{\rd}$, Compute $\cm'$ = $\cm \cdot g^{\rd}$ as $g_1^{m_1}\dots g_n^{m_n} g^r \cdot g^{\rd}$ which will equal $g_1^{m_1}\dots g_n^{m_n} g^{r + \rd}$ and equivalently for $\tilcm'$. Return the rerandomized commitments $(\cm', \tilcm')$
-    
-\end{itemize}
-
-\subsubsection{Security}
-
-
-\subsection{PS Signature}
-\subsubsection{Syntax}
-\begin{itemize}
-    \item $PS.KeyGen(\secparam, \ck) \to (\sk, \vk):$ Parse $\ck$ as $ck \gets (g, \gb, \tilg, \tilgb)$. Sample $x \sample \Zp$, set $(\sk, \vk) \gets (g^x, \tilg^x)$
-
-    \item $PS.Sign_{ck}(\sk, \cm) \to \sigma:$ Parse $\ck$ as $\gets (g, \cdot, \tilg, \cdot)$ Sample $u \sample \Zp$, compute $\sigma_1 \gets g^u$, $\sigma_2 \gets (\sk \cdot \cm)^u$
-     and return $\sigma \gets (\sigma_1, \sigma_2)$
-
-     \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma': $ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
-
-     \item $PS.Verify_{ck, vk}(\sigma, (\cm, \tilcm)) \to \bit: $ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
-     
-\end{itemize}
-\subsubsection{Construction}
-\begin{itemize}
-    \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
-
-    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (X \cdot \cm)^u$ both are notably in $\G_1$ and thus $(X \cdot \cm)^u$ = $(g_1^{m_1u}\dots g_n^{m_nu}g^{xu+ru})$. Returns $\sigma \gets (\sigma_1, \sigma_2)$    
-
-    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
-
-    \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
-
-\end{itemize}
-
-\subsubsection{Security}
-
-
-\subsection{PS Signature over Commitment Construction}
-\begin{itemize}
-    \item $PS.Rerand_{ck,vk}(\sigma, \rd, \ud) \to \sigma'$: Rerandomization of the signature must preserve the algebraic properties of the commitment itself to allow the commitment to be used for zero knowledge proof protocols. To do so, the commitment is re-randomized with the random factor $\rd$ such that a commitment and signature pair 
-
-\end{itemize}
-
-
+% maybe need to rewrite
+We write $A(x,y,\ldots : \oracle_1, \oracle_2, \ldots)$ as an algorithm taking $(x,y,\ldots)$ as input with access to oracles $(\oracle_1, \oracle_2, \ldots)$ and $z \sample A(x,y,\ldots : \oracle_1, \oracle_2, \ldots)$ as the assignment of the output of $A$ to $z$.
 
 
 
@@ -287,7 +229,7 @@ At the beginning of each experiment, the following state is maintained:
 
 \noindent \textbf{Challenge State:} For the anonymity game, sets $\mathcal{J}_{\mathsf{LoR}}$ and $\mathcal{I}_{\mathsf{LoR}}$ track credential tuples and corresponding users during challenge phases.
 
-\noindent  Our model extends traditional ABC systems in two crucial ways:
+\noindent  Our model extends the ABC system from \cite{fuchsbauer_structure-preserving_2019} in two ways:
 \begin{enumerate}
     \item \textit{Multi-Issuer Support:} Users can obtain and compose credentials from different issuers while maintaining privacy across contexts
     \item \textit{Credential Composition:} Users can prove statements about multiple credentials while preserving unlinkability both within and across showings
@@ -515,7 +457,61 @@ For any PPT adversary $\mathcal{A}$, given a set of credentials $\{\mathsf{cred}
 
 
 \newpage
+\section{MIMC-ABC Construction}\label{sec:mimcabc-construction}
 \subsection{Intuition of our Construction}
+\subsection{Commitment}
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $CM.Setup(BG, \secparam, 1^n) \to ck$: Sample $g \sample \G_1, \tilg \sample \G_2$. Sample $\yb \sample \Z_p^{n}$ and compute $(\gb, \tilgb) \gets (g^{\yb}, \tilg^{\yb})$. Output $ck \gets (g, \gb, \tilg, \tilgb)$
+    
+    \item $CM.Com_{ck}(\mb, r) \to (\cm, \tilcm):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$ and $\mb$ as $(m_1, \dots, m_{\ell})$, return $(\cm, \tilcm)$ as $(\gb^{\mb}g^r, \tilgb^{\mb}\tilg^r)$
+
+    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
+\end{itemize}
+
+\subsubsection{Construction}
+
+\begin{itemize}
+    \item $CM.Setup(\secparam, n) \to ck:$ The setup Algorithm generates the commitment key $ck$. Samples $(g, \tilg) \sample \G_1^* \times \G_2^*$ and $n$ scalars $y_i \gets \Z_p$, $Y_i \gets g^{y_i}$, and $\tily_i \gets \tilg^{y_i}$ $\forall \; 1 \leq i \leq n;$ such that $Y_i = g_1^{y_1}\dots g_n^{y_n}$ and $\tily_i = \tilg_1^{y_1}\dots \tilg_n^{y_n}$. Outputs $ck$ a tuple $(g, Y_i, \tilg, \tily_i)$ with commitment keys in both $\G_1$ and $\G_2$ where $e(Y_i,\tilg) = e(g,\tily_i)$
+
+    \item $CM.Com_{ck}(\{m_i\}^n_{i=1}) \to (cm, \tilcm):$ to commit to $n$ messages $m_1, \dots, m_n$, the committer samples $r \sample \Zp$, and parses $ck$ as $(g, Y_i, \tilg, \tily_i)$ and commits to $\{m_i\}^n_{i=1}$ over dual commitments in $\G_1$ and $\G_2$. Computes $g^r, \tilg^r$, Commits to $\{m_i\}^n_{i=1}$ with respect to $ck$ such that $\cm \gets g_1^{m_1}\dots g_n^{m_n} g^r$ and $\tilcm \gets \tilg_1^{m_1} \dots \tilg_n^{m_n}\tilg^r$ Then outputs $(\cm, \tilcm)$ where the equality of commitments can be verified by pairing $e(\cm, \tilg) = e(g, \tilcm)$
+    
+    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ To rerandomize the commitment, the last element $g, \tilg$ is randomized with $\rd$. Compute $g^{\rd}, \tilg^{\rd}$, Compute $\cm'$ = $\cm \cdot g^{\rd}$ as $g_1^{m_1}\dots g_n^{m_n} g^r \cdot g^{\rd}$ which will equal $g_1^{m_1}\dots g_n^{m_n} g^{r + \rd}$ and equivalently for $\tilcm'$. Return the rerandomized commitments $(\cm', \tilcm')$
+    
+\end{itemize}
+
+
+\subsection{PS Signature}
+\subsubsection{Syntax}
+\begin{itemize}
+    \item $PS.KeyGen(\secparam, \ck) \to (\sk, \vk):$ Parse $\ck$ as $ck \gets (g, \gb, \tilg, \tilgb)$. Sample $x \sample \Zp$, set $(\sk, \vk) \gets (g^x, \tilg^x)$
+
+    \item $PS.Sign_{ck}(\sk, \cm) \to \sigma:$ Parse $\ck$ as $\gets (g, \cdot, \tilg, \cdot)$ Sample $u \sample \Zp$, compute $\sigma_1 \gets g^u$, $\sigma_2 \gets (\sk \cdot \cm)^u$
+     and return $\sigma \gets (\sigma_1, \sigma_2)$
+
+     \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma': $ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+
+     \item $PS.Verify_{ck, vk}(\sigma, (\cm, \tilcm)) \to \bit: $ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+     
+\end{itemize}
+\subsubsection{Construction}
+\begin{itemize}
+    \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
+
+    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (X \cdot \cm)^u$ both are notably in $\G_1$ and thus $(X \cdot \cm)^u$ = $(g_1^{m_1u}\dots g_n^{m_nu}g^{xu+ru})$. Returns $\sigma \gets (\sigma_1, \sigma_2)$    
+
+    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+
+    \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+
+\end{itemize}
+
+
+\subsection{PS Signature over Commitment Construction}
+\begin{itemize}
+    \item $PS.Rerand_{ck,vk}(\sigma, \rd, \ud) \to \sigma'$: Rerandomization of the signature must preserve the algebraic properties of the commitment itself to allow the commitment to be used for zero knowledge proof protocols. To do so, the commitment is re-randomized with the random factor $\rd$ such that a commitment and signature pair 
+
+\end{itemize}
 \subsubsection{Example}
 \subsubsection{Outline}
 \subsubsection{Freshness}
@@ -636,8 +632,18 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 \section{Construction of $\Sigma$-protocols}\label{sec:sigmaproofs}
 % Recall definitions and introduction here: https://infoscience.epfl.ch/server/api/core/bitstreams/fc1cfb22-d943-4c96-a942-d715b76e6cc4/content#page=6.31
 
+We use the notation of Camenisch and Stadler to represent proofs of knowledge of discrete logarithms relations and the validity of statements about discrete logarithms. 
 
-Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g, g_1, \dots, g_n$
+\[
+    \mathcal{R} = \left\{ (\alpha, \beta, \gamma) | \; y = g^{\alpha}h^{\beta} \; \wedge \; \tilde{y} = \tilde{g}^{\alpha}h^{\gamma} \right\}
+\]
+
+The relation $\mathcal{R}$ denotes a zero knowledge proof ofknowledge of private integers $\alpha, \beta, \gamma$ such that $\tilde{y} = \tilde{g}^{\alpha}h^{\gamma}$ holds. $y, g, h$ are elements of some group $\G$ and $\tilde{y}, \tilde{g}, \tilde{h}$ are elements of some group $\tilde{\G}$. 
+
+
+
+% $<g>, <h>$ - what does this mean? refer to CL04
+
 
 \begin{enumerate}
     \item Completeness: an honest prover who knows the opening will always convince the verifier.
@@ -678,7 +684,7 @@ Preliminaries: Let $\G$ be a cyclic group of prime order $q$ with generators $g,
 \end{protocol}
 
 \begin{theorem}[Perfect Completeness]
-    Construction \ref{construct:openproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$
+    Construction \ref{prot:openproof} is a $\Sigma-$protocol for the relation $\mathcal{R}$
     \[
         \mathcal{R} = \left\{ (\cm,g_1,\dots,g_n,h),(m_1,\dots,m_n,r) \; | \; \cm = (\prod_{i=1}^ng_i^{m_i})h^r \right\}
     \]

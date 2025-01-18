@@ -1,9 +1,133 @@
 \newcommand{\etalchar}[1]{$^{#1}$}
-\begin{thebibliography}{BCK{\etalchar{+}}22}
+\begin{thebibliography}{WGW{\etalchar{+}}23}
+
+\bibitem[ASM06]{hutchison_constant-size_2006}
+M.~H. Au, W.~Susilo, and Y.~Mu.
+\newblock Constant-{Size} {Dynamic} k-{TAA}.
+\newblock {\em Security and Cryptography for Networks}, 4116:111--125, 2006.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[BCD{\etalchar{+}}17]{baldimtsi_accumulators_2017}
+F.~Baldimtsi, J.~Camenisch, M.~Dubovitskaya, A.~Lysyanskaya, L.~Reyzin, K.~Samelin, and S.~Yakoubov.
+\newblock Accumulators with {Applications} to {Anonymity}-{Preserving} {Revocation}, 2017.
+\newblock Publication info: Published elsewhere. Minor revision. IEEE European Symposium on Security and Privacy 2017.
 
 \bibitem[BCK{\etalchar{+}}22]{bellare_better_2022-1}
 M.~Bellare, E.~Crites, C.~Komlo, M.~Maller, S.~Tessaro, and C.~Zhu.
 \newblock Better than {Advertised} {Security} for {Non}-interactive {Threshold} {Signatures}.
 \newblock In {\em Advances in {Cryptology} – {CRYPTO} 2022}, pages 517--550, Cham, 2022. Springer Nature Switzerland.
+
+\bibitem[BS23]{babel_bringing_2023}
+M.~Babel and J.~Sedlmeir.
+\newblock Bringing data minimization to digital wallets at scale with general-purpose zero-knowledge proofs, January 2023.
+\newblock arXiv:2301.00823 [cs].
+
+\bibitem[BSZ05]{hutchison_foundations_2005}
+M.~Bellare, H.~Shi, and C.~Zhang.
+\newblock Foundations of {Group} {Signatures}: {The} {Case} of {Dynamic} {Groups}.
+\newblock In {\em Topics in {Cryptology} – {CT}-{RSA} 2005}, pages 136--153, Berlin, Heidelberg, 2005. Springer Berlin Heidelberg.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[CDH16]{camenisch_scalable_2016}
+J.~Camenisch, M.~Drijvers, and J.~Hajny.
+\newblock Scalable {Revocation} {Scheme} for {Anonymous} {Credentials} {Based} on n-times {Unlinkable} {Proofs}.
+\newblock In {\em Proceedings of the 2016 {ACM} on {Workshop} on {Privacy} in the {Electronic} {Society}}, pages 123--133, Vienna Austria, October 2016. ACM.
+
+\bibitem[CDR16]{robshaw_uc_2016}
+J.~Camenisch, M.~Dubovitskaya, and A.~Rial.
+\newblock {UC} {Commitments} for {Modular} {Protocol} {Design} and {Applications} to {Revocation} and {Attribute} {Tokens}.
+\newblock In {\em Advances in {Cryptology} – {CRYPTO} 2016}, pages 208--239. Springer Berlin Heidelberg, Berlin, Heidelberg, 2016.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[Cha85]{chaum1985security}
+D.~Chaum.
+\newblock Security without identification: Transaction systems to make big brother obsolete.
+\newblock {\em Communications of the ACM}, 28(10):1030--1044, 1985.
+
+\bibitem[CKS24]{crites_syra_2024}
+E.~Crites, A.~Kiayias, and A.~Sarencheh.
+\newblock {SyRA}: {Sybil}-{Resilient} {Anonymous} {Signatures} with {Applications} to {Decentralized} {Identity}, 2024.
+\newblock Publication info: Preprint.
+
+\bibitem[CL02]{goos_dynamic_2002}
+J.~Camenisch and A.~Lysyanskaya.
+\newblock Dynamic {Accumulators} and {Application} to {Efficient} {Revocation} of {Anonymous} {Credentials}.
+\newblock In {\em Advances in {Cryptology} — {CRYPTO} 2002}, pages 61--76. Springer Berlin Heidelberg, Berlin, Heidelberg, 2002.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[CL04]{hutchison_signature_2004}
+J.~Camenisch and A.~Lysyanskaya.
+\newblock Signature {Schemes} and {Anonymous} {Credentials} from {Bilinear} {Maps}.
+\newblock {\em Advances in Cryptology – CRYPTO 2004}, 3152:56--72, 2004.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[Elt24]{eltayeb_crucial_2024}
+O.~E.~O. Eltayeb.
+\newblock The {Crucial} {Significance} of {Governance}, {Risk} and {Compliance} in {Identity} and {Access} {Management}.
+\newblock {\em Journal of Ecohumanism}, 3(4):2395--2405, August 2024.
+
+\bibitem[FHS19]{fuchsbauer_structure-preserving_2019}
+G.~Fuchsbauer, C.~Hanser, and D.~Slamanig.
+\newblock Structure-{Preserving} {Signatures} on {Equivalence} {Classes} and {Constant}-{Size} {Anonymous} {Credentials}.
+\newblock {\em Journal of Cryptology}, 32(2):498--546, April 2019.
+
+\bibitem[LRSW00]{goos_pseudonym_2000}
+A.~Lysyanskaya, R.~L. Rivest, A.~Sahai, and S.~Wolf.
+\newblock Pseudonym {Systems}.
+\newblock In {\em Selected {Areas} in {Cryptography}}, pages 184--199. Springer Berlin Heidelberg, Berlin, Heidelberg, 2000.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[MMZ{\etalchar{+}}21]{maram2021candid}
+D.~Maram, H.~Malvai, F.~Zhang, N.~Jean-Louis, A.~Frolov, T.~Kell, T.~Lobban, C.~Moy, A.~Juels, and A.~Miller.
+\newblock Candid: Can-do decentralized identity with legacy compatibility, sybil-resistance, and accountability.
+\newblock In {\em 2021 IEEE Symposium on Security and Privacy (SP)}, pages 1348--1366. IEEE, 2021.
+
+\bibitem[noa21]{noauthor_happy_2021}
+Happy 10th {Birthday} – {AWS} {Identity} and {Access} {Management} {\textbar} {AWS} {News} {Blog}, May 2021.
+\newblock Section: Launch.
+
+\bibitem[noa24]{noauthor_regulation_2024}
+Regulation ({EU}) 2024/1183 of the {European} {Parliament} and of the {Council} of 11 {April} 2024 amending {Regulation} ({EU}) {No} 910/2014 as regards establishing the {European} {Digital} {Identity} {Framework}, April 2024.
+\newblock Doc ID: 32024R1183 Doc Sector: 3 Doc Title: Regulation (EU) 2024/1183 of the European Parliament and of the Council of 11 April 2024 amending Regulation (EU) No 910/2014 as regards establishing the European Digital Identity Framework Doc Type: R Usr\_lan: en.
+
+\bibitem[PCB{\etalchar{+}}]{pang_zanzibar_nodate}
+R.~Pang, R.~Caceres, M.~Burrows, Z.~Chen, P.~Dave, N.~Germer, A.~Golynski, K.~Graney, N.~Kang, L.~Kissner, J.~L. Korn, A.~Parmar, C.~D. Richards, and M.~Wang.
+\newblock Zanzibar: {Google}’s {Consistent}, {Global} {Authorization} {System}.
+
+\bibitem[PS16]{sako_short_2016}
+D.~Pointcheval and O.~Sanders.
+\newblock Short {Randomizable} {Signatures}.
+\newblock {\em Topics in Cryptology - CT-RSA 2016}, 9610:111--126, 2016.
+\newblock Series Title: Lecture Notes in Computer Science.
+
+\bibitem[RARM]{rabaninejad_attribute-based_nodate}
+R.~Rabaninejad, B.~Abdolmaleki, S.~Ramacher, and A.~Michalas.
+\newblock Attribute-{Based} {Threshold} {Issuance} {Anonymous} {Counting} {Tokens} and {Its} {Application} to {Sybil}-{Resistant} {Self}-{Sovereign} {Identity}.
+
+\bibitem[RPX{\etalchar{+}}22]{rathee_zebra_2022}
+D.~Rathee, G.~V. Policharla, T.~Xie, R.~Cottone, and D.~Song.
+\newblock {ZEBRA}: {SNARK}-based {Anonymous} {Credentials} for {Practical}, {Private} and {Accountable} {On}-chain {Access} {Control}, 2022.
+\newblock Publication info: Preprint.
+
+\bibitem[RWGM22]{rosenberg_zk-creds_2022}
+M.~Rosenberg, J.~White, C.~Garman, and I.~Miers.
+\newblock zk-creds: {Flexible} {Anonymous} {Credentials} from {zkSNARKs} and {Existing} {Identity} {Infrastructure}, 2022.
+\newblock Publication info: Published elsewhere. Major revision. 2023 IEEE Symposium on Security and Privacy (SP).
+
+\bibitem[SNA21]{soltani_survey_2021}
+R.~Soltani, U.~T. Nguyen, and A.~An.
+\newblock A {Survey} of {Self}-{Sovereign} {Identity} {Ecosystem}.
+\newblock {\em Security and Communication Networks}, 2021:1--26, July 2021.
+\newblock arXiv:2111.02003 [cs].
+
+\bibitem[WGW{\etalchar{+}}23]{wang2023hades}
+K.~Wang, J.~Gao, Q.~Wang, J.~Zhang, Y.~Li, Z.~Guan, and Z.~Chen.
+\newblock Hades: Practical decentralized identity with full accountability and fine-grained sybil-resistance.
+\newblock In {\em Proceedings of the 39th Annual Computer Security Applications Conference}, pages 216--228, 2023.
+
+\bibitem[ZYD{\etalchar{+}}22]{zhang_data_2022}
+X.~Zhang, M.~M. Yadollahi, S.~Dadkhah, H.~Isah, D.~P. Le, and A.~A. Ghorbani.
+\newblock Data breach: analysis, countermeasures and challenges.
+\newblock {\em International Journal of Information and Computer Security}, 19(3/4):402, 2022.
 
 \end{thebibliography}
