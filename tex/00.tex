@@ -479,6 +479,16 @@ Note that like unforgeability, the binding game lacks access to $\mathcal{O}_{\m
 \end{enumerate}
 This captures the essential requirement that credentials can only be combined in proofs if they share the same underlying user identity, analogous to the binding property in commitment schemes but extended to the multi-credential setting.
 
+We define Binding Constraint and then use it in the Credential Binding game. 
+\begin{definition}[Binding Constraint]
+A predicate $\phi$ contains a binding constraint if it requires proving equality of user identifiers across credentials. Formally, $\phi \in \Phi_{\mathsf{binding}}$ if:
+\begin{enumerate}
+    \item $\phi: \mathsf{CRED}^k \rightarrow \{0,1\}$ where $k \geq 2$
+    \item For credentials $\{\mathsf{cred}_i\}_{i \in [n]}$ with user identifiers $\{s_i\}_{i \in [n]}$:
+        \[ \phi(\{\mathsf{cred}_i\}_{i \in [n]}) = 1 \implies s_1 = s_2 = ... = s_n \]
+    \item The proof $\pi$ must demonstrate knowledge of openings that satisfy this equality
+\end{enumerate}
+\end{definition}
 
 \begin{definition}[MIMC-ABC Credential Binding]
 A Multi-Issuer Multi-Credential Anonymous Credential system provides credential binding if no probabilistic polynomial-time adversary $\mathcal{A}$ can successfully combine credentials from different user identities into a valid proof. Specifically, $\mathcal{A}$ cannot:
@@ -509,18 +519,28 @@ The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{
         \item $\mathcal{O}_{\mathsf{ObtIss}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
     \end{itemize}
 
-    \item Challenge Phase: $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [k]}, \phi, \pi)$
+    \item Challenge Phase: $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [n]}, \phi, \pi)$
 
     \item The experiment returns 1 if:
-    \begin{itemize}
-        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [k]}, \pi) = 1$ $\wedge$
-        \item At least one of the following holds:
+    \begin{enumerate}
+        \item $\phi \in \Phi_{\mathsf{binding}}$
+        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}, \pi) = 1$
+        \item At least one of:
             \begin{enumerate}
-                \item $\exists i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ (inconsistent ownership)
-                \item $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$ (credential forgery)
+                \item $\exists \; i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ - credentials from different owners
+                \item $\exists \; i: \mathsf{cred}_i \notin \mathsf{CRED}$ - a forged credential
+                \item $\exists \; i: \mathsf{OWNR}(\mathsf{cred}_i) \notin \mathsf{CU}$ - using honest user's credential
             \end{enumerate}
-    \end{itemize}
+    \end{enumerate}
 \end{enumerate}
+
+
+
+
+
+
+
+
 
 
 
@@ -535,6 +555,35 @@ The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{
 \newpage
 \section{MIMC-ABC Construction}\label{sec:mimcabc-construction}
 \subsection{Intuition of our Construction}
+
+Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
+
+combining three cryptographic primitives in a novel way that preserves privacy 
+\begin{enumerate}
+    \item \textbf{Modified Rerandomizable Pointcheval-Sanders Signatures:} 
+    We employ a modified PS Signature scheme optimized for anonymous credentials. Our construction provides constant-size signatures and verification cost via a pairing-based construction. Standard PS Signature rerandomization changes the underlying Pedersen commitment structure, which requires customized proofs of knowledge as they must simultaneously prove knowledge of a signature and attributes. We use a trick from \cite{tomescu2022utt} to enable simultaneous randomization of the signature and underlying commitment; the key is that signature verification yields a verified Pedersen commitment to use directly in standardized zero-knowledge proof protocols rather than bespoke versions with questionable security. Furthermore, this simplifies compound proof statements about multiple credentials as standard sigma protocols are well-studied. 
+
+
+    \item \textbf{Commitment Scheme: } We leverage pedersen commitments for their properties: perfect hiding, computational binding, position binding, and homomorphism. The binding property coupled with proof soundness is used to prove unforgeability, the hiding property maintains zero knowledge to prove anonymity. Position binding enables efficient equality proofs across different credentials which is used to prove multiple independently issued credentials belong to the same user. Homomorphic properties enable complex interactive protocols where commitments are combined to prove certain relations hold. We use dual pedersen commitments as in \cite{tomescu2022utt} to commit to attributes in different groups to be used in conjunction with the pairing-based PS signature. 
+
+    \item \textbf{Zero-Knowledge Proofs} 
+    Our construction liberally employs Sigma protocols for proving statements about committed attributes. While proofs scale linearly with attribute size and number of credentials to verify, Sigma protocols provide the most efficient proof mechanism in practice, making the overhead negligible. The combination of Sigma protocols and Pedersen commitments enables: Selective attribute disclosure, complex predicate proofs over committed values, Support for AND/OR/NOT logic, Range proofs and set membership.
+        
+\end{enumerate}
+
+For Example 
+$\phi$ the verification statement required by an employer during recruitment process for a new job requires a user to prove the following:
+1. a valid master credential
+2. a valid drivers license
+3. an Australian University Degree
+and show the university degree name
+
+The user has previously obtained credentials, uses our modified PS signature scheme to rerandomize their credentials, and employs sigma protocols to prove valid master credential with respect to master credential issuer, etc
+
+
+
+
+
 \subsection{Commitment}
 \subsubsection{Syntax}
 \begin{itemize}
@@ -544,6 +593,15 @@ The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{
 
     \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
 \end{itemize}
+
+Security
+
+Hiding
+Binding
+Position Binding: used for equality proofs
+Homomorphism
+
+
 
 \subsubsection{Construction}
 
