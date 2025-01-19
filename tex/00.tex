@@ -215,6 +215,8 @@ Our Multi Issuer, Multi Credential Anonymous Credential system satisfies the fol
 
     % \item \textbf{Credential Binding}: For any polynomial-time adversary $\Adv$, given a set of credentials $\{cred_1, \dots, cred_n \}$, producing a valid proof $\pi$ for a statement $\phi$ that links the credentials is negligible unless (1) all credentials were legitimately issued to the same user with master secret key $s$, (2) the user knows the opening of all credential commitments, (3) The proof $\pi$ must demonstrate consistency of $s$ across all credential combinations used
 
+    \item \textbf{Credential Binding}: A malicious user cannot produce valid proofs linking credentials unless they were legitimately issued to the same user identifier. Specifically, an adversary cannot: combine credentials from different users into a valid multi-credential proof, even if each credential is individually valid. Can't create a valid linking proof without knowing the user secret for all constituent credentials, and can't forge proofs that falsely demonstrate credential ownership consistency
+
 \end{enumerate}
 
 \section{Model and Definitions}
@@ -276,6 +278,7 @@ where Verify is executed by $\mathcal{A}$.
 
 \noindent $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi)$ - By calling this challenge oracle, $\mathcal{A}$ attempts to distinguish between two credential sets in an anonymous showing. Each $\mathsf{Creds}_b = (\mathsf{cred}_{b,1},\ldots,\mathsf{cred}_{b,n})$ represents a tuple of credentials, where each credential contains a commitment to its attributes. The oracle enforces that credentials within each tuple belong to the same user (binding) while maintaining unlinkability across showings. The predicate $\phi: \mathsf{COM}^n \rightarrow \{0,1\}$ validates statements over committed attributes. If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $\mathcal{J}_{\mathsf{LoR}} \neq \{\mathsf{Creds}_0, \mathsf{Creds}_1\}$, returns $\bot$. Otherwise, verifies single ownership and honest user conditions, then executes:
 $(S, \cdot) \sample (\mathsf{Show}(\mathsf{opk}, \phi, \mathsf{Creds}_b), \cdot)$
+
 
 \subsubsection{Correctness}
 \begin{definition}[MIMC-ABC Correctness]
@@ -377,6 +380,16 @@ The experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A
 \end{enumerate}
 
 
+
+
+
+
+
+
+
+
+
+
 \newpage
 \subsubsection{Anonymity}
 Anonymity models security against malicious issuers and verifiers. The definition gives the adversary $\Adv$ (representing malicious issuer and verifier) access to oracles
@@ -448,51 +461,67 @@ The experiment $\mathsf{Exp}^{\mathsf{anon\mbox{-}b}}_{\mathsf{MIMC\mbox{-}ABC},
 
 
 
-
-
-
-
-
-
-
 \newpage
-\begin{definition}[Credential Binding]
-For any PPT adversary $\mathcal{A}$, given a set of credentials $\{\mathsf{cred}_1,...,\mathsf{cred}_n\}$, the probability of producing a valid proof $\pi$ for statement $\phi$ is negligible unless:
+\subsubsection{Credential Binding}
+Credential binding models security against malicious users attempting to combine credentials across different user identities. The definition gives the adversary (representing malicious users) access to oracles
+\begin{itemize}
+    \item $\mathcal{O}_{\mathsf{HU}}$ to create honest users, $\mathcal{O}_{\mathsf{CU}}$ to corrupt users
+    \item $\mathcal{O}_{\mathsf{ObtIss}}$ Complete honest Obtain-Issue protocol execution between honest user and issuer
+    \item $\mathcal{O}_{\mathsf{Issue}}$ Protocol interaction where $\Adv$ plays malicious user to obtain credentials from honest issuer
+\end{itemize}
+Note that like unforgeability, the binding game lacks access to $\mathcal{O}_{\mathsf{Obtain}}$ as it models malicious user behavior. We also omit $\mathcal{O}_{\mathsf{Show}}$ since observing honest showings does not help in violating binding property.
 
+\noindent The game proceeds as follows:
 \begin{enumerate}
-    \item all credentials were legitimately issued to the same user with master secret key $s$
-    \item the user knows the opening of all credential commitments
-    \item the linking proof demonstrates the same $s$ value across all credentials
+    \item Each honest issuer generates keys $(osk_i, opk_i) \gets \mathsf{OrgKeyGen(\secparam)}$
+    \item $\Adv$ can create/corrupt users and obtain credentials legitimately from honest issuers
+    \item $\Adv$ wins if it produces a valid proof linking credentials that were issued to different user identifiers
+\end{enumerate}
+This captures the essential requirement that credentials can only be combined in proofs if they share the same underlying user identity, analogous to the binding property in commitment schemes but extended to the multi-credential setting.
+
+
+\begin{definition}[MIMC-ABC Credential Binding]
+A Multi-Issuer Multi-Credential Anonymous Credential system provides credential binding if no probabilistic polynomial-time adversary $\mathcal{A}$ can successfully combine credentials from different user identities into a valid proof. Specifically, $\mathcal{A}$ cannot:
+\begin{enumerate}
+    \item produce a valid proof linking credentials issued to different user identifiers
+    \item create a valid multi-credential proof without knowing all constituent credential openings
+    \item forge proofs that falsely demonstrate credential ownership consistency across issuers
 \end{enumerate}
 
-\noindent More formally, for any $\PPT$ adversary $\Adv$, $\mathsf{Adv}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$ is defined as:
+\noindent More formally, for any PPT adversary $\mathcal{A}$, the following probability is negligible in $\lambda$:
 \[ \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
 \end{definition}
 
-\noindent \textbf{MIMC-ABC Credential Binding Experiment} The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
+\noindent \textbf{MIMC-ABC Credential Binding} 
+The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
+
 \begin{enumerate}
     \item Setup Phase:
     \begin{itemize}
-        \item The challenger generates $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$ for each issuer $i \in [n]$
-        \item Initializes $\mathsf{HU, CU} \gets \emptyset$, 
-        \item Initializes $\mathsf{CRED, COM, OWNR} \gets \emptyset$. 
+        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$
+        \item Initialize $\mathsf{HU, CU} \gets \emptyset$
+        \item Initialize $\mathsf{CRED, COM, OWNR} \gets \emptyset$
     \end{itemize}
 
-    % is it the same as the anonymity exp where adversary has access to the public keys?
-    \item Query Phase: $\Adv^{\oracle}(\secparam, \{opk_i\}_{i \in [n]})$ where $\oracle$ includes 
+    \item Query Phase: $\mathcal{A}^{\mathcal{O}}(1^\lambda, \{opk_i\}_{i \in [n]})$ where $\mathcal{O}$ includes:
     \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}$, $\mathcal{O}_{\mathsf{CU}}$
-        \item $\mathcal{O}_{\mathsf{ObtIss}}$, $\mathcal{O}_{\mathsf{Obtain}}$
-        \item $\mathcal{O}_{\mathsf{Issue}}$, and $\mathcal{O}_{\mathsf{Show}}$
+        \item $\mathcal{O}_{\mathsf{HU}}, \mathcal{O}_{\mathsf{CU}}$ (user management)
+        \item $\mathcal{O}_{\mathsf{ObtIss}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
     \end{itemize}
 
-    \item $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [n]}, \phi, \pi)$. 
+    \item Challenge Phase: $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [k]}, \phi, \pi)$
+
     \item The experiment returns 1 if:
     \begin{itemize}
-        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}, \pi) = 1$ $\wedge$
-        \item $\exists \{i,j\}: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ or $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$
+        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [k]}, \pi) = 1$ $\wedge$
+        \item At least one of the following holds:
+            \begin{enumerate}
+                \item $\exists i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ (inconsistent ownership)
+                \item $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$ (credential forgery)
+            \end{enumerate}
     \end{itemize}
 \end{enumerate}
+
 
 
 
