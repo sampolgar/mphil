@@ -295,118 +295,151 @@ Define the assumptions we use
 
 
 \newpage
-\section{Rerandomizable Vector Commitments}
+\section{Dual Rerandomizable Vector Commitments}
+We now introduce a specialized commitment scheme based on \cite{tomescu2022utt} as the building block for our anonymous credential system. Our construction extends the classical Pedersen Commitment scheme with three properties that are required for our multi-issuer, multi-credential setting construction:
+\begin{enumerate}
+    \item \textbf{Position Binding: } we need to commit to a vector of attributes $\{m_1, \ldots, m_n\}$ while ensuring the individual positions within the commitment remain binding. Position binding is useful when proving relations about specific committed attributes across multiple credentials
+    
+    \item \textbf{Symmetry across elliptic curve groups: } in order to support our pairing-based signatures and efficient zero-knowledge proofs, we require commitments to be represented and verified in both $\G_1, \G_2$ curve groups. 
+    
+    \item \textbf{Rerandomization: } we need the ability to rerandomize commitments while preserving their structure which supports unlinkability in credential presentations
+\end{enumerate}
+
+Furthermore, our scheme often leverages Pedersen Commitments homomorphic properties, allowing us to combine multiple commitments with group operations. This enables us to bind credential attributes and hide secrets while maintaining privacy. 
+
 
 \begin{definition}[Rerandomizable Vector Commitment scheme] 
-    A randomizable vector commitment scheme \cite{catalano_vector_2011} is a tuple $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open}, \mathsf{Rerand})$ of PPT algorithms where:
+    A rerandomizable vector commitment scheme $\mathsf{RVC}$ is a tuple $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open}, \mathsf{Rerand})$ of PPT algorithms where:
     
     \begin{itemize}
         \item $\mathsf{Setup}(1^\lambda, 1^n) \to \mathsf{ck}$ probabilistic algorithm that takes as input the security parameter $\lambda$ and vector length $n$ both in unary. It outputs the commitment key $\mathsf{ck}$ of length $n$
         
         \item $\mathsf{Commit}(\mathsf{ck}, \vect{m}) \to (\cm, r)$: probabilistic algorithm takes as input the commitment key $\mathsf{ck}$ and message vector $\vect{m} \in \mathcal{M}^n$ . Outputs the commitment $\cm$ and opening key $r$
 
-        \item $\mathsf{Rerand}(\mathsf{ck, cm}, r) \to (cm', r')$: probabilistic algorithm, takes as input the commitment key $\mathsf{ck}$, commitment $\mathsf{cm}$ and randomness $r$, outputs randomized commitment $\cm'$ and new randomness $r'$
+        \item $\mathsf{Open}(\mathsf{ck, cm}, \vec{m}, r) \to \bit$: deterministic algorithm, takes as input the commitment key $\mathsf{ck}$, commitment $\mathsf{cm}$, messages $\vec{m}$ and randomness $r$, outputs 1 if success, 0 for failure
+
+        \item $\mathsf{Rerand}(\mathsf{ck, cm}) \to (cm', r')$: probabilistic algorithm, takes as input the commitment key $\mathsf{ck}$, commitment $\mathsf{cm}$ outputs randomized commitment $\cm'$ and new randomness $r'$. 
         
     \end{itemize}
 \end{definition}
 
-A rerandomizable vector commitment scheme is secure if it's correct, hiding, binding, position binding, and rerandomizable. 
-We use standard definitions for correctness, hiding, and binding.
+\noindent A rerandomizable vector commitment scheme is secure if it's correct, hiding, binding, position binding, rerandomizable, and symmetric group correct. We use standard definitions for correctness, hiding, and binding.
 
-\begin{definition}[Correctness]
-    
+
+\begin{definition}[Correctness] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is correct if for all $n \in \N$ and all $\vec{m} \in \mathcal{M}^n$:
+        \[
+        \Pr
+            \left [
+                \begin{array}{l}
+                    \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
+                    (\cm, r) \gets \mathsf{Commit}(\mathsf{ck}, \vec{m}) \\
+                \end{array}
+                : 1 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}, r)
+            \right ] = 1
+    \]
 \end{definition}
 
 
 
-\begin{definition}[Hiding]
-    
+\begin{definition}[Hiding] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is hiding if for all $\PPT$ adversaries $\Adv$ and all message vectors $\vec{m}_0, \vec{m}_1$ of equal length, there is a negligible function $\negl$ such that:
+\[
+    \left |
+        \Pr
+            \left [
+                \begin{array}{l}
+                    \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
+                    (\vec{m}_0, \vec{m}_1) \gets \mathcal{A}(\mathsf{ck}) \\
+                    b \sample \bit \\
+                    (\cm_b, r) \gets \mathsf{Commit}(\mathsf{ck}, \vec{m}_b) \\
+                    b' \gets \Adv(\mathsf{ck}, \cm_b) \\
+                \end{array}
+                : b' = b
+                \right ]
+                - \frac{1}{2}
+    \right | \leq \negl
+\]
+\end{definition}
+ \noindent and where $|\vec{m}_0| = |\vec{m}_1|$:
+
+
+\begin{definition}[Binding] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is binding if for all $\PPT$ adversaries $\Adv$ and all message vectors $\vec{m}_0, \vec{m}_1$ of equal length, there is a negligible function $\negl$ such that:
+    \[
+        \Pr
+        \left [
+            \begin{array}{l}
+            \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
+            (\cm, \vec{m}_0, \vec{m}_1, r_0, r_1) \gets \Adv(\mathsf{ck}) \\
+            b_0 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}_0, r_0) \\
+            b_1 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}_1, r_1) \\
+            \end{array}
+            : b_0 = b_1 = 1 \land \vec{m}_0 \neq  \vec{m}_1
+        \right ] \leq \negl
+    \]
 \end{definition}
 
 
-\begin{definition}[Binding]
-    
+
+\begin{definition}[Hiding under Rerandomization]
+Do I need to add this definition? something like, the randomized commitment is correct and its indistinguishable from a fresh commitment from the same message vector and randomness
+    % Rerandomizability: For any commitment C with opening r, Rerand(C, r) produces a new commitment C′ that is indistinguishable from a fresh commitment to the same message vector
 \end{definition}
 
 
 
 \begin{definition}[Position Binding]
-    
-\end{definition}
-
-\noindent Correctness holds if for all $ck$ output by Setup and all messages $m$ from message space $M$, Open = 1 with probability 1 when $\mathsf{Commit}_{\mathsf{ck}}(m) \to (C, r)$ and $\mathsf{Open}_{\mathsf{ck}}(C; m, r) \to b \in \{0, 1\}$
-
-\begin{definition}[A commitment scheme is hiding and binding]
-\end{definition}
-
-\noindent A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is hiding if for all $\PPT$ adversaries $\Adv$:
-
-\[
-    \left |
-        \Pr
-            \left [
-                b_0 = b_1 : 
-                \begin{array}{l}
-                    \mathsf{ck} \gets \mathsf{Setup}(1^\lambda) \\
-                    (m_0, m_1, r) \gets \Adv(\mathsf{ck}) \\
-                    b \gets \bit \\
-                    (C_b, r_b) \gets \mathsf{Commit}_{\mathsf{ck}}(m_b) \\
-                    b' \gets \Adv(\mathsf{ck}, r, C_b) \\
-                \end{array}
-                \right ]
-                - 1/2
-    \right | = \negl
-\]
-
-
-\noindent A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is binding if for all $\PPT$ adversaries $\Adv$:
-
-\[
-    \Pr
-    \left [
-        b_0 = b_1 \neq 0 \wedge m_0 \neq m_1:
-        \begin{array}{l}
-        \mathsf{ck} \gets \mathsf{Setup}(1^\lambda) \\
-        (C, m_0, m_1, r_0, r_1) \gets \Adv(\mathsf{ck}) \\
-        b_0 \gets \mathsf{Open}_{\mathsf{ck}}(C, m_0, r_0) \\
-        b_1 \gets \mathsf{Open}_{\mathsf{ck}}(C, m_1, r_1) \\
-        \end{array}
-    \right ] \leq \negl
-\]
-
-
-
-Informally, $C$ is binding if no adversary can open $C$ with 2 different messages and opening key with greater than negligible probability.  
-
-\begin{definition}[Vector Commitment scheme]
-    A vector commitment scheme is commitment scheme for a vector of messages denoted by $\textbf{m} = (m_1, \dots, m_{\ell}) \in M$ satisfying a position binding property:
-    \begin{itemize}
-        \item $\mathsf{Open}_{\mathsf{ck}}(, C, \mathbf{m}, i, \pi) \to b \in \bit$ verifies the opening of the commitment $C$ to the message vector $\mathbf{m}, $ vector position $ i$, and opening proof $\pi$
-    \end{itemize}
-\end{definition}
-
+A rerandomizable vector commitment scheme $\mathsf{RVC}$ is position binding if for all $\PPT$ adversaries $\Adv$ and where $\vec{m}, \vec{m}'$ are vectors that differ only at position $i$, there is a negligible function $\negl$ such that:
 \[
     \Pr
     \left[
-    \begin{array}{l}
-        1 \gets \mathsf{Open}_{\mathsf{ck}}(C, \mathbf{m}_0, i, \pi_0) \\
-        1 \gets \mathsf{Open}_{\mathsf{ck}}(C, \mathbf{m}_1, i, \pi_1) \\
-        m_0 \neq m_1
-    \end{array}
-    \;\middle|\;
-    \begin{array}{l}
-        \mathsf{ck} \gets \mathsf{Setup}(1^\lambda) \\
-        (C, \mathbf{m}, \mathbf{m}', i, \pi_0, \pi_1) \gets \Adv(\ck)
-    \end{array}
-    \right] = \negl
+        \begin{array}{l}
+        \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
+        (\cm, i, m, m', r, r') \sample \mathcal{A}(\mathsf{ck}) \\
+        b \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}, r) \\
+        b' \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}', r') \\
+        \end{array}
+        : \begin{array}{l}
+            b = b' = 1 \land \\
+            m_i \neq m'_i \land \\
+            0 \leq i < n
+          \end{array}
+    \right] \leq \negl
 \]
 
+\end{definition}
+
+
+
+\begin{definition}[Symmetric Group Correctness]
+A rerandomizable vector commitment scheme $\mathsf{RVC}$ satisfies symmetric group correctness if for all $n \in \mathbb{N}$ and all $\vec{m} \in \mathcal{M}^n$:
+  \[
+        \Pr\left[
+        \begin{array}{l}
+            \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
+            (\cm, \widehat{\cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m})
+        \end{array}
+        : e(\cm, \widehat{g}) = e(g, \widehat{cm})
+        \right] = 1
+    \]
+    \[
+        \Pr\left[
+        \begin{array}{l}
+            (\cm', \widehat{\cm'}, r') \sample \mathsf{Rerand}(\mathsf{ck}, \cm, \widehat{\cm}, r)
+        \end{array}
+        : e(\cm', \widehat{g}) = e(g, \widehat{\cm'})
+        \right] = 1
+    \]
+\noindent where $g, \widehat{g}$ are the generators specified in $\mathsf{ck}$ for $\G_1, \G_2$ respectively.
+\end{definition}
+
+
+
+
+
+
+
+\newpage
 \subsection{Construction}
-Pedersen commitment schemes are the basis of our signature/credential scheme. 
 
-
-
-\begin{definition}[Rerandomizable Symmetric Pedersen Vector Commitment Scheme]
 We instantiate the Pedersen Vector Commitment over both $\G_1 and \G_2$ for use within the PS signature. We denote $\cm \in \G_1, \tilde{\cm} \in \G_2$ and verify $\cm \equiv \tilde{\cm}$ by asserting $e(\cm, \tilde{g}) = e(g, \tilde{\cm})$. 
 Let $\G_1, \G_2$ be cyclic groups of large prime order $p$ with an efficient Type 3 pairing $e : \G_1 \times \G_2 \to \G_t$. 
 For a vector of messages $\mathbf{m} = (m_1, \ldots, m_\ell) \in \F_q^\ell$, the rerandomizable Pedersen vector commitment scheme consists of the following PPT algorithms:
@@ -420,18 +453,17 @@ For a vector of messages $\mathbf{m} = (m_1, \ldots, m_\ell) \in \F_q^\ell$, the
     compute $\mathsf{cm'} = \mathsf{cm} \cdot g^r$', $\tilde{\mathsf{cm'}} = \tilde{\mathsf{cm}} \cdot g^r$', output $\mathsf{cm'}, \tilde{\mathsf{cm'}}$
 \end{itemize}
 
+% The scheme satisfies the following properties:
+% \begin{itemize}
+%     \item Correctness: For all $\mathsf{ck}$ output by $\mathsf{Setup}$, all message vectors $\mathbf{m}$, and all $i \in \{1,\ldots,\ell\}$, if $(C, r) \gets \mathsf{Commit}_\mathsf{ck}(\mathbf{m})$, then $\mathsf{Open}_\mathsf{ck}(C, \mathbf{m}, i, (r, m_i)) = 1$ with probability 1.
+    
+%     \item Hiding: The commitment $C$ reveals no information about the committed message vector $\mathbf{m}$.
+    
+%     \item Binding: It is computationally infeasible to find two different message vectors $\mathbf{m} \neq \mathbf{m}'$ and openings $r, r'$ such that $\mathsf{Commit}_\mathsf{ck}(\mathbf{m}) = \mathsf{Commit}_\mathsf{ck}(\mathbf{m}')$.
+    
+%     \item Rerandomizability: For any commitment $C$ with opening $r$, $\mathsf{Rerand}(C, r)$ produces a new commitment $C'$ that is indistinguishable from a fresh commitment to the same message vector.
+% \end{itemize}
 
-The scheme satisfies the following properties:
-\begin{itemize}
-    \item Correctness: For all $\mathsf{ck}$ output by $\mathsf{Setup}$, all message vectors $\mathbf{m}$, and all $i \in \{1,\ldots,\ell\}$, if $(C, r) \gets \mathsf{Commit}_\mathsf{ck}(\mathbf{m})$, then $\mathsf{Open}_\mathsf{ck}(C, \mathbf{m}, i, (r, m_i)) = 1$ with probability 1.
-    
-    \item Hiding: The commitment $C$ reveals no information about the committed message vector $\mathbf{m}$.
-    
-    \item Binding: It is computationally infeasible to find two different message vectors $\mathbf{m} \neq \mathbf{m}'$ and openings $r, r'$ such that $\mathsf{Commit}_\mathsf{ck}(\mathbf{m}) = \mathsf{Commit}_\mathsf{ck}(\mathbf{m}')$.
-    
-    \item Rerandomizability: For any commitment $C$ with opening $r$, $\mathsf{Rerand}(C, r)$ produces a new commitment $C'$ that is indistinguishable from a fresh commitment to the same message vector.
-\end{itemize}
-\end{definition}
 
 
 
@@ -2589,32 +2621,3 @@ z_{r4} = \rho_4 + e \cdot r_4 \<\< \\
 \<\< C_4^e \cdot T_4 \stackrel{?}{=}  h^{z_{r4}}\\
 \<\< C_3/C_4 = g \\
 }
-
-
-% \begin{construction}{Opening Proof($C$)}{test}
-%     \vspace{1em}
-%     \textbf{Public parameters:} $g, h \in \G$
-
-%     \textbf{Inputs:} $C$ such that $C = g^mh^r$, $\Prover$ knows $m, r \in \Z_q$.
-%     \vspace{1em}
-%     \begin{enumerate}
-%         \item $\Prover$ samples $\alpha_1, \rho_1 \sample [q-1]$ and sends $T \gets g^{\alpha_1}h^{\rho_1}$
-        
-%         \item $\Verifier$ sends challenge $c \sample [q-1].$
-    
-%         \item $\Prover$ sends $s_1 \gets \alpha_1 + cm, s_2 \gets \rho_1 + cr$
-    
-%         \item $\Verifier$ verifies that $g^{s_1}h^{s_2} = C^cT$
-%     \end{enumerate}
-% \end{construction}
-
-% \begin{theorem}
-%     Construction \ref{construct:openproof} is a $\Sigma-$protocol for the relation
-%     \[
-%     \mathcal{R} = \left\{ (C,g,h,q),(m,r) \; | \; C = g^{m}h^r \right\}
-%     \]
-    
-% \end{theorem}
-% \begin{proof}
-%     It follows from \cite{wahby_doubly-efficient_2018, schnorr_efficient_1991}
-% \end{proof}
