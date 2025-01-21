@@ -1,4 +1,125 @@
 
+@misc{stephan_krenn_proposal_2021,
+	title = {Proposal: {Sigma}-protocols},
+	url = {https://docs.zkproof.org/pages/standards/accepted-workshop4/proposal-sigma.pdf},
+	abstract = {Over the last years, zero-knowledge proofs of knowledge based
+on Σ-protocols have found numerous applications. However, up to date
+there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations. This document proposes a standardization effort for noninteractive Σ-protocols in prime order groups, allowing for AND and OR
+composition, either in compact (challenge, response) or batchable form
+(commitment, response). The document provides the necessary formal
+background, specifies the protocols in full details, provides examples,
+suggests concrete instantiations (e.g., regarding the selection of elliptic
+curves or hash functions), and provides guidelines to ease the secure and
+compatible implementation of Σ-protocols.},
+	urldate = {2024-05-21},
+	author = {{Stephan Krenn} and {Michele Orru}},
+	year = {2021},
+}
+
+@incollection{goos_efficient_2000,
+	address = {Berlin, Heidelberg},
+	title = {Efficient {Zero}-{Knowledge} {Proofs} of {Knowledge} without {Intractability} {Assumptions}},
+	volume = {1751},
+	isbn = {978-3-540-66967-8 978-3-540-46588-1},
+	url = {http://link.springer.com/10.1007/978-3-540-46588-1_24},
+	urldate = {2025-01-19},
+	booktitle = {Public {Key} {Cryptography}},
+	publisher = {Springer Berlin Heidelberg},
+	author = {Cramer, Ronald and Damgård, Ivan and MacKenzie, Philip},
+	editor = {Goos, Gerhard and Hartmanis, Juris and Van Leeuwen, Jan and Imai, Hideki and Zheng, Yuliang},
+	year = {2000},
+	doi = {10.1007/978-3-540-46588-1_24},
+	note = {Series Title: Lecture Notes in Computer Science},
+	pages = {354--372},
+}
+
+@incollection{hutchison_foundations_2005,
+	address = {Berlin, Heidelberg},
+	title = {Foundations of {Group} {Signatures}: {The} {Case} of {Dynamic} {Groups}},
+	volume = {3376},
+	isbn = {978-3-540-24399-1 978-3-540-30574-3},
+	shorttitle = {Foundations of {Group} {Signatures}},
+	url = {http://link.springer.com/10.1007/978-3-540-30574-3_11},
+	urldate = {2025-01-04},
+	booktitle = {Topics in {Cryptology} – {CT}-{RSA} 2005},
+	publisher = {Springer Berlin Heidelberg},
+	author = {Bellare, Mihir and Shi, Haixia and Zhang, Chong},
+	editor = {Hutchison, David and Kanade, Takeo and Kittler, Josef and Kleinberg, Jon M. and Mattern, Friedemann and Mitchell, John C. and Naor, Moni and Nierstrasz, Oscar and Pandu Rangan, C. and Steffen, Bernhard and Sudan, Madhu and Terzopoulos, Demetri and Tygar, Dough and Vardi, Moshe Y. and Weikum, Gerhard and Menezes, Alfred},
+	year = {2005},
+	doi = {10.1007/978-3-540-30574-3_11},
+	note = {Series Title: Lecture Notes in Computer Science},
+	pages = {136--153},
+}
+
+@misc{noauthor_building_nodate,
+	title = {Building {Blocks} for {Theoretical} {Computer} {Science}},
+	url = {https://mfleck.cs.illinois.edu/building-blocks/index-sp2020.html},
+	urldate = {2024-12-27},
+}
+
+@inproceedings{jaques_allosaur_2024,
+	address = {New York, NY, USA},
+	series = {{ASIA} {CCS} '24},
+	title = {{ALLOSAUR}: {Accumulator} with {Low}-{Latency} {Oblivious} {Sublinear} {Anonymous} credential {Updates} with {Revocations}},
+	isbn = {979-8-4007-0482-6},
+	shorttitle = {{ALLOSAUR}},
+	url = {https://dl.acm.org/doi/10.1145/3634737.3637641},
+	doi = {10/g8wvnx},
+	abstract = {A cryptographic accumulator is a compressed data structure with associated algorithms used for secure membership testing. In the growing space of digital credentials, accumulators are used to manage sets of valid credentials, giving efficient and anonymous methods for credential holders to prove their validity. Unlike traditional credentials like digital signatures, one can easily revoke credentials with an accumulator; however, each revocation forces existing credential holders to engage in an expensive update process. Previous works make this faster and easier by sacrificing anonymity. To improve performance without compromising privacy, we present ALLOSAUR, a multi-party accumulator based on pairings. In ALLOSAUR, we eliminate the cost of accumulating new credentials, let "credential managers" manage the accumulator values with secure multiparty computation, and allow anonymous credential updates with a square-root reduction in communication costs as compared to existing work.A deployed digital credential system is a vast and complicated system, and existing formalisms do not fully address the scope or power of a real-world adversary. We develop a thorough "UC-style" formalism that allows arbitrary malicious behaviour from an adversary controlling a minority of credential managers and arbitrary numbers of users, credentials, and verifiers. In our new formalism we present a novel definition of privacy that captures as much anonymity as possible while accounting for inevitable losses from interaction with the system. The detail in our formalism reveals real-world issues in existing accumulator constructions, all of which ALLOSAUR avoids.The typical bottleneck in accumulator-based digital credential systems is handling revocations of credentials. Our proof-of-concept implementation of ALLOSAUR can update over 1000 revocations with less than half a second of total computation and 16 kB communication, which is at least a 5x improvement over the previous state-of-the-art in both metrics.},
+	urldate = {2024-12-24},
+	booktitle = {Proceedings of the 19th {ACM} {Asia} {Conference} on {Computer} and {Communications} {Security}},
+	publisher = {Association for Computing Machinery},
+	author = {Jaques, Samuel and Montgomery, Hart and Lodder, Michael},
+	month = jul,
+	year = {2024},
+	pages = {1708--1723},
+}
+
+@inproceedings{husain_local_2020,
+	title = {Local {Differential} {Privacy} for {Sampling}},
+	url = {https://proceedings.mlr.press/v108/husain20a.html},
+	abstract = {Differential privacy (DP) is a leading privacy protection  focused by design on individual privacy. In the local model of DP, strong privacy is achieved by privatizing each user’s individual data before sending it to an untrusted aggregator for analysis. While in recent years local DP has been adopted for practical deployments, most research in this area focuses on problems where each individual holds a single data record. In many problems of practical interest this assumption is unrealistic since nowadays most user-owned devices collect large quantities of data (e.g. pictures, text messages, time series). We propose to model this scenario by assuming each individual holds a distribution over the space of data records, and develop novel local DP methods to sample privately from these distributions. Our main contribution is a boosting-based density estimation algorithm for learning samplers that generate synthetic data while protecting the underlying distribution of each user with local DP. We give approximation guarantees quantifying how well these samplers approximate the true distribution. Experimental results against DP kernel density estimation and DP GANs displays the quality of our results.},
+	language = {en},
+	urldate = {2024-12-18},
+	booktitle = {Proceedings of the {Twenty} {Third} {International} {Conference} on {Artificial} {Intelligence} and {Statistics}},
+	publisher = {PMLR},
+	author = {Husain, Hisham and Balle, Borja and Cranko, Zac and Nock, Richard},
+	month = jun,
+	year = {2020},
+	note = {ISSN: 2640-3498},
+	pages = {3404--3413},
+}
+
+@misc{raskhodnikova_differentially_2022,
+	title = {Differentially {Private} {Sampling} from {Distributions}},
+	copyright = {Creative Commons Attribution 4.0 International},
+	url = {https://arxiv.org/abs/2211.08193},
+	doi = {10.48550/ARXIV.2211.08193},
+	abstract = {We initiate an investigation of private sampling from distributions. Given a dataset with \$n\$ independent observations from an unknown distribution \$P\$, a sampling algorithm must output a single observation from a distribution that is close in total variation distance to \$P\$ while satisfying differential privacy. Sampling abstracts the goal of generating small amounts of realistic-looking data. We provide tight upper and lower bounds for the dataset size needed for this task for three natural families of distributions: arbitrary distributions on \${\textbackslash}\{1,{\textbackslash}ldots ,k{\textbackslash}\}\$, arbitrary product distributions on \${\textbackslash}\{0,1{\textbackslash}\}{\textasciicircum}d\$, and product distributions on \${\textbackslash}\{0,1{\textbackslash}\}{\textasciicircum}d\$ with bias in each coordinate bounded away from 0 and 1. We demonstrate that, in some parameter regimes, private sampling requires asymptotically fewer observations than learning a description of \$P\$ nonprivately; in other regimes, however, private sampling proves to be as difficult as private learning. Notably, for some classes of distributions, the overhead in the number of observations needed for private learning compared to non-private learning is completely captured by the number of observations needed for private sampling.},
+	urldate = {2024-12-18},
+	publisher = {arXiv},
+	author = {Raskhodnikova, Sofya and Sivakumar, Satchit and Smith, Adam and Swanberg, Marika},
+	year = {2022},
+	note = {Version Number: 1},
+	keywords = {Cryptography and Security (cs.CR), FOS: Computer and information sciences, Machine Learning (cs.LG)},
+}
+
+@misc{cheu_differentially_2024,
+	title = {Differentially {Private} {Multi}-{Sampling} from {Distributions}},
+	copyright = {Creative Commons Attribution 4.0 International},
+	url = {https://arxiv.org/abs/2412.10512},
+	doi = {10.48550/ARXIV.2412.10512},
+	abstract = {Many algorithms have been developed to estimate probability distributions subject to differential privacy (DP): such an algorithm takes as input independent samples from a distribution and estimates the density function in a way that is insensitive to any one sample. A recent line of work, initiated by Raskhodnikova et al. (Neurips '21), explores a weaker objective: a differentially private algorithm that approximates a single sample from the distribution. Raskhodnikova et al. studied the sample complexity of DP {\textbackslash}emph\{single-sampling\} i.e., the minimum number of samples needed to perform this task. They showed that the sample complexity of DP single-sampling is less than the sample complexity of DP learning for certain distribution classes. We define two variants of {\textbackslash}emph\{multi-sampling\}, where the goal is to privately approximate \$m\&gt;1\$ samples. This better models the realistic scenario where synthetic data is needed for exploratory data analysis.
+ A baseline solution to {\textbackslash}emph\{multi-sampling\} is to invoke a single-sampling algorithm \$m\$ times on independently drawn datasets of samples. When the data comes from a finite domain, we improve over the baseline by a factor of \$m\$ in the sample complexity. When the data comes from a Gaussian, Ghazi et al. (Neurips '23) show that {\textbackslash}emph\{single-sampling\} can be performed under approximate differential privacy; we show it is possible to {\textbackslash}emph\{single- and multi-sample Gaussians with known covariance subject to pure DP\}. Our solution uses a variant of the Laplace mechanism that is of independent interest.
+ We also give sample complexity lower bounds, one for strong multi-sampling of finite distributions and another for weak multi-sampling of bounded-covariance Gaussians.},
+	urldate = {2024-12-18},
+	publisher = {arXiv},
+	author = {Cheu, Albert and Nayak, Debanuj},
+	year = {2024},
+	note = {Version Number: 1},
+	keywords = {Cryptography and Security (cs.CR), Data Structures and Algorithms (cs.DS), FOS: Computer and information sciences, Machine Learning (cs.LG), Machine Learning (stat.ML)},
+}
+
 @article{benarroch_zero-knowledge_2023,
 	title = {Zero-knowledge proofs for set membership: efficient, succinct, modular},
 	volume = {91},
@@ -205,7 +326,7 @@ Usr\_lan: en},
 	keywords = {⛔ No DOI found},
 }
 
-@inproceedings{hutchison_foundations_2005,
+@inproceedings{hutchison_foundations_2005-1,
 	address = {Berlin, Heidelberg},
 	title = {Foundations of {Group} {Signatures}: {The} {Case} of {Dynamic} {Groups}},
 	volume = {3376},
@@ -466,7 +587,7 @@ Usr\_lan: en},
 	keywords = {⛔ No DOI found},
 }
 
-@misc{raskhodnikova_differentially_2022,
+@misc{raskhodnikova_differentially_2022-1,
 	title = {Differentially {Private} {Sampling} from {Distributions}},
 	url = {http://arxiv.org/abs/2211.08193},
 	doi = {10.48550/arXiv.2211.08193},
@@ -2352,22 +2473,6 @@ In this SoK, we categorize the main traditional and decentralized financial appl
 	doi = {10.1007/978-3-540-30580-4_28},
 	note = {Series Title: Lecture Notes in Computer Science},
 	pages = {416--431},
-}
-
-@misc{stephan_krenn_proposal_nodate,
-	title = {Proposal: {Sigma}-protocols},
-	url = {https://docs.zkproof.org/pages/standards/accepted-workshop4/proposal-sigma.pdf},
-	abstract = {Over the last years, zero-knowledge proofs of knowledge based
-on Σ-protocols have found numerous applications. However, up to date
-there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations. This document proposes a standardization effort for noninteractive Σ-protocols in prime order groups, allowing for AND and OR
-composition, either in compact (challenge, response) or batchable form
-(commitment, response). The document provides the necessary formal
-background, specifies the protocols in full details, provides examples,
-suggests concrete instantiations (e.g., regarding the selection of elliptic
-curves or hash functions), and provides guidelines to ease the secure and
-compatible implementation of Σ-protocols.},
-	urldate = {2024-05-21},
-	author = {{Stephan Krenn} and {Michele Orru}},
 }
 
 @article{rubinfeld_taming_2012,
@@ -5744,7 +5849,7 @@ Our construction is not only expressed compactly as a circuit, but can also be t
 	keywords = {Hash Function, SNARK, STARK, Zero-Knowledge Proof Systems},
 }
 
-@misc{campanelli_legosnark_2019-1,
+@misc{campanelli_legosnark_2019,
 	title = {{LegoSNARK}: {Modular} {Design} and {Composition} of {Succinct} {Zero}-{Knowledge} {Proofs}},
 	shorttitle = {{LegoSNARK}},
 	url = {https://eprint.iacr.org/2019/142},
