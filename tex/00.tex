@@ -359,7 +359,6 @@ Furthermore, our scheme often leverages Pedersen Commitments homomorphic propert
     \right | \leq \negl
 \]
 \end{definition}
- \noindent and where $|\vec{m}_0| = |\vec{m}_1|$:
 
 
 \begin{definition}[Binding] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is binding if for all $\PPT$ adversaries $\Adv$ and all message vectors $\vec{m}_0, \vec{m}_1$ of equal length, there is a negligible function $\negl$ such that:
@@ -434,150 +433,73 @@ A rerandomizable vector commitment scheme $\mathsf{RVC}$ satisfies symmetric gro
 
 
 
+\begin{definition}[Additive Homomorphism]
+A rerandomizable vector commitment scheme $\mathsf{RVC}$ is additively homomorphic if for all $\vec{m}_1, \vec{m}_2 \in \mathcal{M}^n$ and randomness $r_1, r_2 \in \Z_p$:
+\[
+    \Pr\left[
+    \begin{array}{l}
+        \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
+        (\cm_1, r_1) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m}_1) \\
+        (\cm_2, r_2) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m}_2)
+    \end{array}
+    : \cm_1 \cdot \cm_2 = \mathsf{Commit}(\mathsf{ck}, \vec{m}_1 + \vec{m}_2, r_1 + r_2)
+    \right] = 1
+\]
+
+\noindent Furthermore, for symmetric group correctness, the homomorphism must hold across groups:
+\[
+    e(\cm_1 \cdot \cm_2, \widehat{g}) = e(g, \widehat{\cm_1} \cdot \widehat{\cm_2})
+\]
+\end{definition}
 
 
-
-\newpage
 \subsection{Construction}
 
-We instantiate the Pedersen Vector Commitment over both $\G_1 and \G_2$ for use within the PS signature. We denote $\cm \in \G_1, \tilde{\cm} \in \G_2$ and verify $\cm \equiv \tilde{\cm}$ by asserting $e(\cm, \tilde{g}) = e(g, \tilde{\cm})$. 
+We instantiate the Pedersen Vector Commitment over both $\G_1 and \G_2$ for use within the PS signature. We denote $\cm \in \G_1, \widehat{\cm} \in \G_2$ and verify $\cm \equiv \tilde{\cm}$ by asserting $e(\cm, \tilde{g}) = e(g, \tilde{\cm})$. 
 Let $\G_1, \G_2$ be cyclic groups of large prime order $p$ with an efficient Type 3 pairing $e : \G_1 \times \G_2 \to \G_t$. 
-For a vector of messages $\mathbf{m} = (m_1, \ldots, m_\ell) \in \F_q^\ell$, the rerandomizable Pedersen vector commitment scheme consists of the following PPT algorithms:
+For a vector of messages $\vec{m} = (m_1, \ldots, m_n) \in \Z_q^n$, the rerandomizable Pedersen vector commitment scheme consists of the following PPT algorithms:
 
 \begin{itemize}
-    \item $\mathsf{CM.Setup}(1^\lambda, \ell, \textbf{y}) \to \mathsf{ck}$: compute \textbf{y} $\in \Z_p^\ell$, \textbf{g} $\gets g^{\textbf{y}}$, $\ck \gets (g, \textbf{g})$
+    \item $\mathsf{CM.Setup}(1^\lambda, 1^n) \to \mathsf{ck}$: 
+    On input the security parameter $\secparam$ and maximum message vector length $1^n$ in unary. Compute a bilinear group $\mathsf{BG =}(p, \G_1, \G_2, \G_T, e, G, \widehat{G}) \sample \mathsf{BGGen}(\secparam)$, 
+    sample $n$ elements $\{y_i\}_1^n \sample \Z_p$, and $x \sample \Z_p$, compute $(H, \widehat{H}) \gets (xG, x\widehat{G})$ and $\{G_i, \widehat{G}_i\}_1^n \gets (y_iG, y_i\widehat{G})_1^n$ Return $\ck$ as $(\mathsf{BG}, \{G_i, \widehat{G}_i\}_1^n, H,\widehat{H})$
 
-    \item $\mathsf{CM.Com}_\mathsf{ck}(\mathbf{m}, r) \to (\mathsf{cm}, \tilde{\mathsf{cm}})$: parse  $\mathsf{ck}$ as $(g, \mathbf{g})$, compute $\mathsf{cm} \gets \mathbf{g^m}g^r, \tilde{\mathsf{cm}} \gets \tilde{\mathbf{g^m}}\tilde{g^r}$, output $(\mathsf{cm}, \Tilde{\mathsf{cm}})$
+    \item $\mathsf{CM.Com}(\ck, \vec{m}) \to (\mathsf{cm}, \widehat{\mathsf{cm}}, r)$: On input $\ck = (\mathsf{BG}, \{G_i, \widehat{G}_i\}_1^n, H,\widehat{H})$, a message vector $\vec{m} = \{m_1, \ldots, m_n\}$. Sample $r \sample \Z_p$, compute $\cm \gets rH + \sum_1^n m_iG_i$ and $\widehat{\cm} \gets r\widehat{H} + \sum_1^n m_i\widehat{G}_i$. Output $(\cm, \widehat{cm}, r)$ where equality of commitments across groups can be verified $e(\cm, \widehat{G}) = e(G, \widehat{\cm})$
     
-    \item $\mathsf{CM.Rerand}_{\mathsf{ck}}(\cm, \tilde{\cm}, r') \to (\mathsf{cm'}, \tilde{\mathsf{cm'}}): $ 
-    compute $\mathsf{cm'} = \mathsf{cm} \cdot g^r$', $\tilde{\mathsf{cm'}} = \tilde{\mathsf{cm}} \cdot g^r$', output $\mathsf{cm'}, \tilde{\mathsf{cm'}}$
-\end{itemize}
-
-% The scheme satisfies the following properties:
-% \begin{itemize}
-%     \item Correctness: For all $\mathsf{ck}$ output by $\mathsf{Setup}$, all message vectors $\mathbf{m}$, and all $i \in \{1,\ldots,\ell\}$, if $(C, r) \gets \mathsf{Commit}_\mathsf{ck}(\mathbf{m})$, then $\mathsf{Open}_\mathsf{ck}(C, \mathbf{m}, i, (r, m_i)) = 1$ with probability 1.
-    
-%     \item Hiding: The commitment $C$ reveals no information about the committed message vector $\mathbf{m}$.
-    
-%     \item Binding: It is computationally infeasible to find two different message vectors $\mathbf{m} \neq \mathbf{m}'$ and openings $r, r'$ such that $\mathsf{Commit}_\mathsf{ck}(\mathbf{m}) = \mathsf{Commit}_\mathsf{ck}(\mathbf{m}')$.
-    
-%     \item Rerandomizability: For any commitment $C$ with opening $r$, $\mathsf{Rerand}(C, r)$ produces a new commitment $C'$ that is indistinguishable from a fresh commitment to the same message vector.
-% \end{itemize}
-
-
-
-
-\subsection{Usage}
-1. Each credential attribute is an exponent of the commitment
-2. Homomorphism 
-
-A Pedersen Commitment's algebraic structure enables additive homomorphism, given messages $m_1, m_2$ and randomness $r_1, r_2$ and commitments $\C_1(m_1[u]_1 + r_1[v]_1)$ and $\C_2(m_2[u]_1 + r_2[v]_1)$,
-$\C_1 \cdot C_2$ creates a new commitment = $\C((m_1+m_2)[u] + (r_1+r_2)[v])$. 
-Using additive homomorphism, a Pedersen Commitment can be rerandomized:
-\begin{itemize}
-    \item $\mathsf{COM.Rerand(\C)} \to  ([\C']_1, t)$: generate rerandomizing secret $t \getsrand \F_q$, then $[\C']_1 := [\C]_1 + t[v]_1 = m[u]_1 + (t + r)[v]_1$ 
+    \item $\mathsf{CM.Rerand}(\ck, \cm, \widehat{\cm}, \Delta_r) \to (\mathsf{cm'}, \widehat{\mathsf{cm'}}):$
+    On input $\ck = (\mathsf{BG}, \{G_i, \widehat{G}_i\}_1^n, H,\widehat{H})$, commitments $\cm, \widehat{cm}$ and new randomness $\Delta_r$, compute blinding points $\Delta_rH, \Delta_r\widehat{H}$, add points to commitments, $\cm' = \cm + \Delta_rH$, and $\widehat{\cm'} = \widehat{\cm} + \Delta_r\widehat{H}$, the randomized commitment is now $\cm = m_1G_1 + \ldots + m_iG_i + (r + \Delta_r)H$ and new opening key $(r + \Delta_r)$
 \end{itemize}
 
 
+\subsubsection{Additive Homomorphism}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- perfectly hiding and computationally binding
-- perfectly binding and computationally binding
-
-Definitions
-- adapted from the commitment scheme here and here
-
-
-\begin{definition}[Randomizable Vector Commitment Scheme]
-    
-\end{definition}
+We leverage Pedersen commitment's additively homomorphic properties multiple times in our construction. 
 \begin{itemize}
-    \item $CM.Setup(BG, \secparam, 1^n) \to ck$: Sample $g \sample \G_1, \tilg \sample \G_2$. Sample $\yb \sample \Z_p^{n}$ and compute $(\gb, \tilgb) \gets (g^{\yb}, \tilg^{\yb})$. Output $ck \gets (g, \gb, \tilg, \tilgb)$
-    
-    \item $CM.Com_{ck}(\mb, r) \to (\cm, \tilcm):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$ and $\mb$ as $(m_1, \dots, m_{\ell})$, return $(\cm, \tilcm)$ as $(\gb^{\mb}g^r, \tilgb^{\mb}\tilg^r)$
+    \item \textbf{Rerandomization: } given a commitment $\cm = mG + rH$ and fresh randomness $\Delta_r \in \Z_p$, the rerandomized commitment $\cm'$ is $\cm + \Delta_rH$ = $mG + rH + \Delta_rH$ = $mG + (r+\Delta_r)H$. This operation preserves the committed value $m$ while updating the randomness from $r$ to $r + \Delta_r$. $\cm'$ is computationally indistinguishable from $\cm$.
 
-    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ Parse $ck$ as $(g, \gb, \tilg, \tilgb)$. Compute $(g^{\rd}, \tilg^{\rd})$ and return $(\cm', \tilcm')$ as $(\cm \cdot g^{\rd}, \tilcm' \cdot \tilg^{\rd})$
+    \textbf{Two Party Protocol:} During credential generation, a two-party computation protocol establishes a shared secret between user and authority:
+    \begin{enumerate}
+        \item User generates secret share $s_1 \sample \Z_p$ and commits with randomness $r \sample \Z_p$: 
+            $\cm_1 \gets s_1G + rH$
+        \item Authority receives $\cm_1$, samples $s_2 \sample \Z_p$ and computes:
+            $\cm_2 = s_2G + \cm_1 = (s_1 + s_2)G + rH$
+        \item Authority returns $(\cm_2, s_2)$ to user who now holds shared secret $s_1 + s_2$
+    \end{enumerate}
+    
+    Security holds against both malicious parties:
+    \begin{itemize}
+        \item \textbf{Unforgeability (malicious user):} The binding property ensures committed $s_1$ cannot be changed after authority responds (computational binding under DL assumption). Fresh $s_2$ per interaction prevents replay attacks.
+        \item \textbf{Anonymity (malicious issuer):} Perfect hiding of $\cm_1$ ensures issuer learns nothing about $s_1$, while DL assumption prevents extraction even given $\cm_1$.
+    \end{itemize}
+
+    \item \textbf{Proofs of Knowledge}
+    
 \end{itemize}
 
-Security
-
-Hiding
-Binding
-Position Binding: used for equality proofs
-Homomorphism
 
 
 
-\subsubsection{Construction}
 
-\begin{itemize}
-    \item $CM.Setup(\secparam, n) \to ck:$ The setup Algorithm generates the commitment key $ck$. Samples $(g, \tilg) \sample \G_1^* \times \G_2^*$ and $n$ scalars $y_i \gets \Z_p$, $Y_i \gets g^{y_i}$, and $\tily_i \gets \tilg^{y_i}$ $\forall \; 1 \leq i \leq n;$ such that $Y_i = g_1^{y_1}\dots g_n^{y_n}$ and $\tily_i = \tilg_1^{y_1}\dots \tilg_n^{y_n}$. Outputs $ck$ a tuple $(g, Y_i, \tilg, \tily_i)$ with commitment keys in both $\G_1$ and $\G_2$ where $e(Y_i,\tilg) = e(g,\tily_i)$
-
-    \item $CM.Com_{ck}(\{m_i\}^n_{i=1}) \to (cm, \tilcm):$ to commit to $n$ messages $m_1, \dots, m_n$, the committer samples $r \sample \Zp$, and parses $ck$ as $(g, Y_i, \tilg, \tily_i)$ and commits to $\{m_i\}^n_{i=1}$ over dual commitments in $\G_1$ and $\G_2$. Computes $g^r, \tilg^r$, Commits to $\{m_i\}^n_{i=1}$ with respect to $ck$ such that $\cm \gets g_1^{m_1}\dots g_n^{m_n} g^r$ and $\tilcm \gets \tilg_1^{m_1} \dots \tilg_n^{m_n}\tilg^r$ Then outputs $(\cm, \tilcm)$ where the equality of commitments can be verified by pairing $e(\cm, \tilg) = e(g, \tilcm)$
-    
-    \item $CM.Rerand_{ck}((\cm, \tilcm), \rd) \to (\cm', \tilcm'):$ To rerandomize the commitment, the last element $g, \tilg$ is randomized with $\rd$. Compute $g^{\rd}, \tilg^{\rd}$, Compute $\cm'$ = $\cm \cdot g^{\rd}$ as $g_1^{m_1}\dots g_n^{m_n} g^r \cdot g^{\rd}$ which will equal $g_1^{m_1}\dots g_n^{m_n} g^{r + \rd}$ and equivalently for $\tilcm'$. Return the rerandomized commitments $(\cm', \tilcm')$
-    
-\end{itemize}
 
 % % % % % % % % % % 
 % 
@@ -1137,12 +1059,12 @@ Our construction builds a new anonymous credential building block for multi-issu
     \label{fig:three-creds}
 \end{figure}
 
-\noindent A user with three valid credentials first randomizes their signatures and commitments:
+\noindent A user with three valid credentials first rerandomizes their signatures and commitments:
 \begin{align*}
     \cm_i' \gets& \mathsf{Com.Rerand}(\cm_i, \Delta_{r_i}) \text{ for } i \in [1,3] \\
     \sigma_i' \gets& \mathsf{PS.Rerand}(\sigma_i, \Delta_{r_i}, \Delta_{u_i} \text{ for } i \in [1,3])
 \end{align*}
-The randomized credentials and commitments $\cm_i', \sigma_i'$ are now indistinguishable from their original issuance.  
+The rerandomized credentials and commitments $\cm_i', \sigma_i'$ are now indistinguishable from their original issuance.  
 Next, the user and verifier interact in a two-party protocol where the user first verifies the randomized signatures and their commitments, 
 \[
 \mathsf{PS.Verify}(\sigma_i',\cm_i',pk_i') = 1 \quad \forall i \in [3]
@@ -1158,7 +1080,7 @@ $\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, \delta_u, \mathsf{ctx}_m, \mat
     s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
 \end{align*}
 
-\noindent Then $\phi$ is the statement "there exist openings of commitments $(\cm_m, \cm_d, \cm_u)$ satisfying relation $\mathcal{R}$.
+
 
 
 
@@ -1328,7 +1250,10 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 % % % % % % % % % % 
 % 
-% Sigmn Protocols
+% Sigma Protocols
+% 
+% good notes on introducing proofs for this section
+% https://web.mat.upc.edu/jorge.villar/doc/notes/DataProt/zk.pdf#page=5.44
 % 
 % % % % % % % % % % 
 
@@ -1518,6 +1443,13 @@ The relation $\mathcal{R}$ denotes a zero knowledge proof ofknowledge of private
 
     HVZK: The simulator from Theorem 1 operates identically on the reduced generator set, producing perfectly indistinguishable transcripts.
 \end{proof}
+
+
+\begin{corollary}[AND proofs]
+    AND proofs
+    % https://web.mat.upc.edu/jorge.villar/doc/notes/DataProt/zk.pdf#page=5.44
+\end{corollary}
+
 
 
 
