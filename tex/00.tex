@@ -543,143 +543,14 @@ Early work by Camenisch and Lysanskaya defined a multi-show attribute-based anon
 
 \noindent In this section, we analyze their relative merits as justification for settling on our construction. We demonstrate this variant of PS signatures offers a compelling advantage - they naturally output verified Pedersen commitments that integrate with standardised $\sigma-$protocols. Although this approach introduces small overhead, we argue the security benefits of using well-studied and well-understood proof protocols with pedersen commitments outweigh the computational overhead. 
 
-To demonstrate the problem
-
-Overview the BBS+ signature and protocol for proving knowledge of the attributes.
-
-\sam{I can probably leave this out, but leave here for reference now}
-
-\begin{figure}
-   \begin{pchstack}[boxed, center, space=1em]
-        \begin{pcvstack}
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Setup}(\secparam)$}{%
-                \mathsf{BG =}(p, \G_1, \G_2, \G_T, e, G, \hat{G}) \sample \mathsf{BGGen}(\secparam) \\
-                g \sample G_1, \vec{h} \sample \G_1^n, \hat{g} \sample \G_2 \\
-                pp \gets (p, g, \{{h}_i\}_1^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
-                \pcreturn pp \\
-        }
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.KG(pp)}$}{%
-                pp \gets (p, g, \{{h}_i\}_1^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
-                x \sample \Z_p^*, \hat{X} \gets \hat{g}^x\\
-               sk \gets x, pk \gets \hat{X} \\
-                \pcreturn (sk, pk) \\
-            }
-        \end{pcvstack}
-        \begin{pcvstack}
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Sign}(sk = x, \vec{m})$}{%
-                C \gets g(\prod_{i=1}^n h_i^{m_i}) \\
-                e \sample \Z_p^* \\
-                A \gets C^{\frac{1}{x+e}} \\
-                \pcreturn \sigma \gets (A,e) \\
-            }
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Verify}(pk, \vec{m}, \sigma = (A,e) )$}{%
-                C \gets g(\prod_{i=1}^n h_i^{m_i}) \\
-                \text{Check } e(A, \hat{g}^e\cdot \widehat{X}) = e(C, \hat{g}) \\
-            }
-        \end{pcvstack}
-    \end{pchstack}
-    \caption{$\Z_p^*, \G_1^*$ - the star (*) represents the exclusion of trivial elements. }
-    \label{fig:enter-label}
-\end{figure}
-
-
-Sigma protocol for anonymous verification
-
-\subsubsection{$\Sigma$-protocol for Zero Knowledge Proof of Knowledge of a BBS+ Signature}
-\begin{itemize}
-    \item Common Input
-    
-\end{itemize}
-
-
-\begin{protocol}{ZKPoK of BBS+ Signature}{bbsplus}
-    \vspace{1em}
-    \textbf{Public parameters:}  Public Parameters $(pk = \hat{X}, \hat{g})$
-
-    \textbf{Provers Input:} $\sigma = (A,e)$ \quad $ A =  C^{\frac{1}{x+e}}, \quad C = g(\prod_{i=1}^n h_i^{m_i}), \quad A \neq 1_{\G_1}$
-    % $\cm$ such that $\cm = \prod_{i=1}^ng_i^{m_i}h^r$, \;    $\Prover$ knows $\{m\}_{i=1}^n, r \in \Z_q^{n+1}$.
-
-    \vspace{1em}
-
-    \begin{enumerate}
-        \item $\Prover$ Samples $r \sample \Z_p^*$, computes
-        \[
-        \Bar{A} \gets A^r \qquad \Bar{B} \gets (C\cdot A^{-e})^r = C^r \cdot \Bar{A}^{-e}
-        \]
-        Sample $\alpha, \beta \sample \Z_p^*$, computes
-        \[
-        U \gets C^{\alpha} \Bar{A}^{\beta}
-        \]
-        Sends $(\Bar{A}, \Bar{B}, U)$ to $\Verifier$
-        
-        \item $\Verifier$ sends challenge $c \sample \Z_p^*$
-    
-        \item $\Prover$ computes responses $(s,t)$ where
-        \[
-        s \gets \alpha + r \cdot c \qquad t \gets \beta - e \cdot c
-        \]
-    
-        \item $\Verifier$ accepts if
-        \[
-        e(\Bar{A}, \hat{X}) = e(\Bar{B}, \hat{g})) \quad \wedge \quad U \cdot \Bar{B}^c = C^s \cdot \Bar{A}^t
-        \]
-    \end{enumerate}
-\end{protocol}
+To demonstrate the problem \ref{}
 
 
 
-\begin{protocol}{ZKPoK of Two BBS+ Signatures with Hidden Message Equality}{bbsplus-equality}
-    \vspace{1em}
-    \textbf{Public parameters:} $(\hat{X}, \hat{g})$
-    
-    \textbf{Provers Input:} Two signatures $\sigma_1 = (A_1,e_1), \sigma_2 = (A_2,e_2)$ where
-    $A_i = C_i^{\frac{1}{x+e_i}}, \quad C_i = g h_{i,1}^{m_1} h_{i,2}^{m_2}, \quad A_i \neq 1_{\G_1}$
 
-    Prover wants to prove that $m_1$ is equal between $C_i$ for $A_i$ for $i \in 1,2$
-    \vspace{1em}
-    \begin{enumerate}
-        \item $\Prover$ firstly conducts PoK for BBS+ Signature, then
-            \item Prove decomposition of $C_i$:
-                    \[
-                    C_i' = g\prod_{k=2}^n h_{i,k}^{m_{i,k}} \quad \text{and} \quad H_i = h_{i,1}^m
-                    \]
-                    \[
-                    C_i = C_i' \cdot H_i
-                    \]
-            For hidden message equality:
-            \begin{itemize}
-                \item Samples $r_m, \gamma \sample \Z_p^*$, computes
-                \[
-                T_1 \gets h_{1,1}^{r_m} (h_{1,1}^m)^{-\gamma} \qquad T_2 \gets h_{2,1}^{r_m} (h_{2,1}^m)^{-\gamma}
-                \]
-            \end{itemize}
-        Sends $(\Bar{A}_1, \Bar{B}_1, U_1, \Bar{A}_2, \Bar{B}_2, U_2, T_1, T_2)$ to $\Verifier$
-        
-        \item $\Verifier$ sends challenge $c \sample \Z_p^*$
-    
-        \item $\Prover$ computes:
-            \begin{itemize}
-                \item For $i \in \{1,2\}$:
-                \[
-                s_i \gets \alpha_i + r_i \cdot c \qquad t_i \gets \beta_i - e_i \cdot c
-                \]
-                \item For hidden message equality:
-                \[
-                z_m \gets r_m + \gamma \cdot c
-                \]
-            \end{itemize}
-        Sends $(s_1, t_1, s_2, t_2, z_m)$ to $\Verifier$
-    
-        \item $\Verifier$ accepts if for $i \in \{1,2\}$:
-        \[
-        e(\Bar{A}_i, \hat{X}) = e(\Bar{B}_i, \hat{g}) \quad \wedge \quad U_i \cdot \Bar{B}_i^c = C_i^{s_i} \cdot \Bar{A}_i^{t_i}
-        \]
-        and
-        \[
-        h_{1,1}^{z_m} = T_1 \cdot (h_{1,1}^m)^c \quad \wedge \quad h_{2,1}^{z_m} = T_2 \cdot (h_{2,1}^m)^c
-        \]
-    \end{enumerate}
-\end{protocol}
+
+
+
 
 
 
@@ -2027,6 +1898,145 @@ What is the takeaway message from the evaluation?
 
 
 
+\newpage
+\section{Anonymous Credential Algebraic Comparison}
+
+\subsection{BBS+}
+
+
+Overview the BBS+ signature and protocol for proving knowledge of the attributes.
+
+\sam{I can probably leave this out, but leave here for reference now}
+
+\begin{figure}
+   \begin{pchstack}[boxed, center, space=1em]
+        \begin{pcvstack}
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Setup}(\secparam)$}{%
+                \mathsf{BG =}(p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(\secparam) \\
+                g \sample G_1, \vec{h} \sample \G_1^{n+1}, \hat{g} \sample \G_2 \\
+                pp \gets (p, g, \{{h}_i\}_0^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
+                \pcreturn pp \\
+        }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.KG(pp)}$}{%
+                pp \gets (p, g, \{{h}_i\}_0^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
+                x \sample \Z_p^*, \hat{w} \gets \hat{g}^x \\
+                sk = x, pk = (\hat{w}, \{{h}_i\}_0^n) \\
+                \pcreturn (sk, pk) \\
+            }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Sign}(sk = x, \vec{m} = (m_1, \ldots, m_n))$}{%
+                e, s \sample \Z_p^* \\
+                A \gets (gh_0^s\prod_1^n h_i^{m_i})^{\frac{1}{e+x}} \\
+                \pcreturn \sigma \gets (A,e,s) \\
+            }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Verify}(pk, \vec{m}, \sigma = (A,e,s) )$}{%
+                \text{Check } e(A, \hat{w}\cdot \hat{g}^e) = e(gh_0^s\prod_1^n h_i^{m_i}, \hat{g}) \\
+            }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.SignCommitted}(sk = x, \vec{m})$}{%
+                \Prover \text{ samples } s' \sample Z_p^* \; \text{ commits to } \vec{m} : \; \cm = h_0^{s'}\prod_1^n h_i^{m_i}\\
+                \t \text{ Computes }\pi = PoK\{(s', \vec{m}) : \cm = h_0^{s'}\prod_{1}^n h_i^{m_i} \} \\
+                \mathcal{S} \text{ Signer verifies cm is well formed } \mathsf{ZK.Verify}(\pi, \cm) = 1 \\
+                \t \text{ signer samples } s'', e \sample Z_p^* \\
+                \t \text{ computes } A = (gh_0^{s''}\cm)^{\frac{1}{e+x}}, \text{ returns } (A,e,s'') \\
+                \Prover \text{ computes } s = s' + s'', \text{ and } \sigma = (A,e,s) \\
+            }
+        \end{pcvstack}
+        \begin{pcvstack}
+        \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.ProveSignature}(pk, \sigma = (A,e,s), \vec{m})$}{%
+            r_1 \sample \Z_p^* \\
+            A' \gets A^{r_1}, r_3 \gets \frac{1}{r_1} \\
+            \Bar{A} \gets A'^{-e} \cdot (gh_0^s\prod_1^n h_i^{m_i})^{r_1} \\
+            r_2 \sample \Z_p^* \\
+            d \gets (gh_0^s\prod_1^n h_i^{-m_i})^{r_1} \cdot h_0^{-r_2} \\
+            s' \gets s - r_2 \cdot r_3 \\
+            r_e, r_s, \{r_{m_i}\}_{i=1}^n \sample \Z_p^* \\
+            T_1 \gets A^{r_e} \cdot h_0^{r_s} \\
+            T_2 \gets g^c\prod_{i=1}^n h_i^{r_{m_i}} \\
+            c \gets \mathcal{H}(A', \Bar{A}, T_1, T_2) \\
+            z_e \gets r_e + c \cdot e \\
+            z_s \gets r_s + c \cdot s \\
+            \forall i \in [1,n]: z_{m_i} \gets r_{m_i} + c \cdot m_i \\
+            \pi \gets (A', \Bar{A}, d, T_1, T_2, z_e, z_s, \{z_{m_i}\}_{i=1}^n) \\
+            \pcreturn \pi \\
+        }
+        \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.VerifyProof}(pk, \pi)$}{%
+            \text{Parse } \pi \text{ as } (A', \Bar{A}, d, T_1, T_2, z_e, z_s, \{z_{m_i}\}_{i=1}^n) \\
+            \text{Check } A' \neq 1_{\G_1} \\
+            \text{Check } e(A',\hat{w}) = e(\Bar{A},\hat{g}) \\
+            c \gets \mathcal{H}(A', \Bar{A}, T_1, T_2) \\
+            \text{Check } T_1 = A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c} \\
+            \text{Check } T_2 = g^c\prod_{i=1}^n h_i^{z_{m_i}} \\
+            \pcreturn \text{all checks pass} \\
+        }
+        \end{pcvstack}
+    \end{pchstack}
+    \caption{Zero-knowledge proof of knowledge protocol for BBS+ signatures. The proof $\pi$ consists of $(k+5)$ group elements in $\G_1$ and $(k+5)$ scalars in $\Z_p$, where $k$ is the number of hidden message components.}
+    \label{fig:bbs-zkp}
+\end{figure}
+
+
+\begin{protocol}{Zero-Knowledge Proof of Knowledge of BBS+ Signature}{bbsplus-pok}
+    \vspace{1em}
+    \textbf{Public parameters:} $(p, \G_1, \G_2, \G_T, e, g_2)$, $pk = (\hat{w}, \{h_i\}_{i=0}^n)$
+    
+    \textbf{Prover's Input:} $\sigma = (A,e,s)$, messages $\{m_i\}_{i=1}^n$ where $A = (gh_0^s\prod_{i=1}^n h_i^{m_i})^{\frac{1}{e+x}}$ and $b$ is the signed message $b = gh_0^s \prod_1^nh_i^{m_i}$
+
+    \textbf{Relation $\mathcal{R}$}
+        \[
+        \pi \gets \mathsf{SPK}\{(\{m_i\}_{i=1}^n, e, r_2, r_3, s'): \quad \frac{\Bar{A}}{d} = A'^{-e} \cdot h_0^{r_2} \quad \wedge \quad g = d^{r_3}h_0^{-s'}\prod_{i=1}^n h_i^{-m_i}\}
+        \]
+    \vspace{1em}
+    \textbf{Setup: } $\Prover$ sets up for protocol
+    
+    \begin{itemize}
+                \item Sample randomizer: $r_1 \sample \Z_p$
+                \item Compute blinded signature: $A' \gets A^{r_1}$
+                \item set $r_3 \gets \frac{1}{r_1}$
+                \item set $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ $\quad (=A'^{x})$ 
+                
+                $A'^{-e}\cdot b^r_1 = A^{-er} \cdot b^{r_1}$. We know $A = b^{\frac{1}{e+x}}$, $b^{\frac{-er_1}{e+x}} \cdot b^{\frac{r_1(e+x)}{e+x}} = A^{r_1x} = A'^x$
+                
+                \item sample $r_2 \sample \Z_p$
+                \item set $d \gets (gh_0^s \prod_1^nh_i^{-m_i})^{r_1} \cdot h_0^{-r_2}$ which randomizes $d$
+                \item set $s' \gets s - r_2 \cdot r_3$
+                \item Sample random values: $r_e, r_s, \{r_{m_i}\}_{i=1}^n \sample \Z_p^*$
+                \item Compute commitments:
+                \[
+                    T_1 \gets A^{r_e} \cdot h_0^{r_s}
+                \]
+                \[
+                    T_2 \gets g\prod_{i=1}^n h_i^{r_{m_i}}
+                \]
+                Send $(A', \Bar{A}, T_1, T_2)$ to $\Verifier$
+            \end{itemize}
+    \begin{enumerate}
+        \item $\Prover$:
+        
+        \item $\Verifier$ sends challenge $c \sample \Z_p^*$
+    
+        \item $\Prover$ computes responses:
+            \begin{itemize}
+                \item $z_e \gets r_e + c \cdot e$
+                \item $z_s \gets r_s + c \cdot s$
+                \item For $i = 1$ to $n$: $z_{m_i} \gets r_{m_i} + c \cdot m_i$
+            \end{itemize}
+            Send $(z_e, z_s, \{z_{m_i}\}_{i=1}^n)$ to $\Verifier$
+    
+        \item $\Verifier$ checks:
+            \[
+                A' \neq 1_{\G_1} \quad \wedge \quad e(A',\hat{w}) = e(\Bar{A},g_2)
+            \]
+            \[
+                T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}
+            \]
+            \[
+                T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}
+            \]
+    \end{enumerate}
+\end{protocol}
+
+The resulting proof is $(A', \Bar{A}, d, \pi)$. To verify, the verifier checks $A' \neq 1_{\G_1} \wedge e(A', \hat{X}) = e(\Bar{A}, \hat{g})$ and verifies $\pi$
+we don't want to reveal $k$ components
+$CDL$ proof is 3 $\G_1$ and $k+5$ elements in $\G_1$ and $k+5$ scalars
 
 
 
@@ -2034,5 +2044,4 @@ What is the takeaway message from the evaluation?
 
 
 
-
-
+\subsection{CL04}
