@@ -2010,17 +2010,76 @@ Current constructions combine 3 areas of improvement
 \end{enumerate}
 
 \subsubsection{computational consideration}
+Anonymous Credentials introduce computational overhead compared to standard signature verification. 
+
+
 While anonymous credentials introduce additional computational overhead compared to standard signature verification, developments in practical pairing libraries significantly improve their practical efficiency. 
 
 
+\subsection{Foundational Schemes}
+\begin{table}[ht]
+\centering
+\label{tab:original-schemes}
+\begin{tabular}{l|ccccc}
+\toprule
+\textbf{Scheme} & \textbf{Verify} & \textbf{Data Sent} & \textbf{Show} & \textbf{Verify} & \textbf{Data Sent} \\
+& \textbf{Standard} & \textbf{Standard} & \textbf{(User)} & \textbf{Anonymous} & \textbf{Anonymous} \\
+\midrule
+BLS & $2P$ & $|\G_1|$ & $-$ & $(4r+2)P$ & $(2r+3)|\G_1|$ \\
+BBS & $2P$ & $2|\G_1|$ & $PK{P[r+4]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
+CL04 & $3P$ & $3|\G_1|$ & $(2r+4)\G_1$ & $(4r+2)P$ & $(2r+3)|\G_1| + |PK|$ \\
+BBS+ & $2P$ & $2|\G_1|$ & $PK{P[r+4]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
+PS & $2P$ & $2|\G_1|$ & $2\G_1 + PK{P[r+1]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
+\bottomrule
+\end{tabular}
+\caption{$R_{\G_1}, R_\Z$ denotes generating random $\G_1$ point or $\Z_p$ element. $E_{\G_1}, E_{\G_2}, E_P$ denotes exponentiation in either $\G_1, \G_2, \G_T$. $P$ denotes pairing operation.}
+\end{table}
 
 
+\begin{table}[ht]
+\centering
+\label{tab:show-operations-precise}
+\begin{tabular}{l|cc}
+\toprule
+\textbf{Scheme} & \textbf{Prepare} & \textbf{Proofs} \\
+\midrule
+CL04 & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ \\
+BBS+ & $3E_{\G_1}$ & $(r + 4)E_{\G_1}$ \\
+PS & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ \\
+\bottomrule
+\end{tabular}
+\caption{Precise analysis of show operation costs. $E_{\G_1}$ denotes exponentiation in $\G_1$, $E_{\G_T}$ denotes exponentiation in target group $\G_T$. $r$ denotes number of attributes.}
+\end{table}
 
+\begin{table}[ht]
+\centering
+\label{tab:verify-operations}
+\begin{tabular}{l|cc}
+\toprule
+\textbf{Scheme} & \textbf{Structure} & \textbf{Proof Verification} \\
+\midrule
+CL04 & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ \\
+BBS+ & $2P$ & $(r + 4)E_{\G_1}$ \\
+PS & $2P$ & $(r + 1)E_{\G_T}$ \\
+\bottomrule
+\end{tabular}
+\caption{Analysis of verification costs. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and $\G_T$ respectively. $r$ denotes number of attributes.}
+\end{table}
 
-
-
-
-
+\begin{table}[ht]
+\centering
+\label{tab:verify-operations-corrected}
+\begin{tabular}{l|cc}
+\toprule
+\textbf{Scheme} & \textbf{Structure} & \textbf{Proof Verification} \\
+\midrule
+CL04 & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ \\
+BBS+ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ \\
+PS & $2P$ & $(r + 1)E_{\G_T}$ \\
+\bottomrule
+\end{tabular}
+\caption{Corrected analysis of verification costs. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and $\G_T$ respectively. $r$ denotes number of attributes.}
+\end{table}
 
 
 
@@ -2111,15 +2170,6 @@ Randomizable & Yes & No & Yes \\
 \end{tabular}
 \caption{Comparison of original signature schemes, $R_{\G_1}, R_\Z$ denotes generating random $\G_1$ point or $\Z_p$ element. $E_{\G_1}, E_{\G_2}, E_P$ denotes exponentiation in either $\G_1, \G_2, \G_T$. $P$ denotes pairing operation}
 \end{table}
-
-
-Analysis
-CL04
-
-BBS+
-
-PS
-
 
 
 
@@ -2372,6 +2422,90 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 The resulting proof is $(A', \Bar{A}, d, \pi)$. To verify, the verifier checks $A' \neq 1_{\G_1} \wedge e(A', \hat{X}) = e(\Bar{A}, \hat{g})$ and verifies $\pi$
 we don't want to reveal $k$ components
 $CDL$ proof is 3 $\G_1$ and $k+5$ elements in $\G_1$ and $k+5$ scalars
+
+
+
+
+\newpage
+\subsection{BBS+ Original Computational Complexity}
+
+We analyze the computational complexity of the Proof of Knowledge of a BBS+ signature with respect to the \textbf{Prover} and \textbf{Verifier}. The computations are categorized into random scalar generation, scalar multiplications, exponentiations in the groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, and pairings.
+
+\subsection{Prover Complexity}
+The Prover performs the following computations:
+\begin{itemize}
+    \item \textbf{Random Scalars:} Generate $r_1, r_2 \in \mathbb{Z}_p^*$ and $L+4$ random scalars for the Schnorr proof. Total: $L+6$ random scalars.
+    \item \textbf{Scalar Multiplications:} Compute $\delta_1 = r_1 e$ and $\delta_2 = r_2 e$. Total: 2 scalar multiplications.
+    \item \textbf{Exponentiations in $\mathbb{G}_1$:}
+    \begin{itemize}
+        \item Compute $A_1 = g_1^{r_1} g_2^{r_2}$: 2 exponentiations and 1 group addition.
+        \item Compute $A_1^e = g_1^{\delta_1} g_2^{\delta_2}$: 2 exponentiations and 1 group addition.
+    \end{itemize}
+    Total: 4 exponentiations and 2 group additions.
+    \item \textbf{Pairings:} Compute $\mathsf{e}(A_2, w)$ and $\mathsf{e}(g_0, h_0)$. Total: 2 pairings.
+    \item \textbf{Schnorr Proof of Knowledge:}
+    \begin{itemize}
+        \item Prove knowledge of $r_1, r_2, \delta_1, \delta_2, e, s, m_1, \ldots, m_L$. 
+        \item Compute $L+4$ commitments in $\mathbb{G}_T$ (one per attribute plus $e$, $s$, $r_1$, $r_2$). Total: $L+4$ exponentiations in $\mathbb{G}_T$.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Verifier Complexity}
+The Verifier performs the following computations:
+\begin{itemize}
+    \item \textbf{Schnorr Verification:}
+    \begin{itemize}
+        \item Verify $A_1 = g_1^{r_1} g_2^{r_2}$: 2 exponentiations in $\mathbb{G}_1$.
+        \item Verify $A_1^e = g_1^{\delta_1} g_2^{\delta_2}$: 2 exponentiations in $\mathbb{G}_1$.
+    \end{itemize}
+    Total: 4 exponentiations in $\mathbb{G}_1$.
+    \item \textbf{Pairings:}
+    \begin{itemize}
+        \item Compute $\mathsf{e}(A_2, w)$, $\mathsf{e}(g_0, h_0)$, and $\mathsf{e}(g_{L+1}, h_0), \ldots, \mathsf{e}(g_1, h_0)$. Total: $L+4$ pairings.
+    \end{itemize}
+    \item \textbf{Exponentiations in $\mathbb{G}_T$:}
+    \begin{itemize}
+        \item For $L+4$ pairings, compute exponentiations with Schnorr responses. Total: $L+4$ exponentiations in $\mathbb{G}_T$.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Summary of Computational Cost}
+\textbf{Prover:}
+\begin{itemize}
+    \item Random Scalars: $L+6$
+    \item Scalar Multiplications: 2
+    \item Exponentiations: 6 in $\mathbb{G}_1$, $L+4$ in $\mathbb{G}_T$
+    \item Pairings: 2
+\end{itemize}
+
+\textbf{Verifier:}
+\begin{itemize}
+    \item Pairings: $L+4$
+    \item Exponentiations: 4 in $\mathbb{G}_1$, $L+4$ in $\mathbb{G}_T$
+\end{itemize}
+
+
+\subsection{Optimizations}
+
+\begin{itemize}
+    \item \textbf{Multi-Exponentiation:} Instead of computing each exponentiation in $\mathbb{G}_1$ individually, the multi-exponentiation technique can be used to compute terms like $g_1^{r_1} g_2^{r_2}$ or $g_1^{\delta_1} g_2^{\delta_2}$ in a single operation. This reduces the overall cost of group exponentiations, especially for the Prover, where such computations dominate.
+
+    \item \textbf{Batch Pairing Computation:} The Verifier computes $L+4$ pairings during verification. Instead of computing all pairings independently, batch pairing techniques can be applied to reduce overhead by precomputing shared terms. 
+
+    \item \textbf{Miller Loop Optimization:} Pairing computations can be optimized by separating the Miller loop and the final exponentiation. For $L+4$ pairings, only a single final exponentiation in $\mathbb{G}_T$ is required after combining the results of $L+4$ Miller loops. This significantly reduces the overall cost, as the Miller loop is less computationally expensive than the final exponentiation.
+\end{itemize}
+
+By employing these techniques:
+\begin{itemize}
+    \item \textbf{Prover:} Multi-exponentiation reduces the number of scalar multiplications during group operations.
+    \item \textbf{Verifier:} Batching and Miller loop optimizations reduce the number of independent pairing computations and minimize the expensive operations in $\mathbb{G}_T$.
+\end{itemize}
+
+
+
+
+
+
 
 
 
