@@ -1345,6 +1345,83 @@ The relation $\mathcal{R}$ denotes a zero knowledge proof ofknowledge of private
 
 
 
+
+
+
+
+
+
+
+% Our discussion on protocols is largely inspired by the work of Feige and Shamir \cite{FeigeShamir}, though some technical details are omitted in this abstract for brevity.
+
+% The protocols involve two parties: a prover \( P \) and a verifier \( V \), both modeled as interactive probabilistic polynomial-time Turing machines. Each has private auxiliary input tapes. The prover's auxiliary input is denoted by \( w \), and both share a common input \( x \) of length \( k \) bits, where \( k \) is often referred to as the security parameter. A probability is considered negligible if, as a function of \( k \), it decreases to zero faster than any polynomial fraction.
+
+% The proof system is defined with respect to a binary relation \( R = \{(x, w)\} \), which can be verified in polynomial time. For any \( x \), the witness set \( w(x) \) consists of all \( w \) such that \( (x, w) \in R \). The protocol's objective is for \( P \) to demonstrate that it possesses an element from \( w(x) \) on its private input tape. We assume that the protocol is complete with probability 1, meaning that if \( w \in w(x) \), the verifier will always accept.
+
+% \section*{Protocol Structure}
+
+% For simplicity, we focus on three-round public-coin protocols, though this restriction can be relaxed. The protocol's conversations are ordered triples of the form:
+
+% \[
+% m_1, c, m_2
+% \]
+
+% The second message, \( c \), is a random bit string chosen by the verifier, referred to as the challenge. The prover's final message, \( m_2 \), is termed the answer. The length of \( c \) is such that the number of possible values for \( c \) is super-polynomial in \( k \).
+
+% We assume the protocol satisfies knowledge soundness in the following manner: for any prover \( P^* \), given two conversations between \( P^* \) and \( V \): \( (m_1, c, m_2) \) and \( (m_1, c', m_2') \), where \( c \neq c' \), an element of \( w(x) \) can be computed in polynomial time. This is known as the \textit{special soundness property}. This property implies the standard soundness definition, which requires the existence of a knowledge extractor capable of extracting a witness in polynomial time from any prover that succeeds with non-negligible probability.
+
+% Although special soundness is less general than the standard definition, all known proofs of knowledge exhibit this property or a variant where the witness can be computed from a small number of correct answers. Therefore, assuming special soundness is not a significant limitation.
+
+% A protocol that is both sound and complete in the above sense is termed a \textit{proof of knowledge for the relation \( R \)}.
+
+% Finally, we assume the protocol is \textit{honest verifier zero-knowledge}: there exists a simulator \( S \) that, on input \( x \), produces conversations indistinguishable from real conversations between the honest prover and verifier with input \( x \). For simplicity, we assume perfect indistinguishability; extending this to other forms of indistinguishability is straightforward. Most known honest verifier zero-knowledge protocols satisfy a stronger condition: there is a procedure that, given any \( c \), can produce a conversation indistinguishable from all possible conversations between the honest prover and verifier where \( c \) is the challenge. This is referred to as \textit{special honest verifier zero-knowledge}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \newpage
 
 \begin{protocol}{ZKPoK for Pedersen Commitment Opening}{openproof}
@@ -1912,7 +1989,107 @@ What is the takeaway message from the evaluation?
 \section{Comparison of Signature Schemes for Anonymous Credentials}
 \label{sec:signature-comparison}
 
-Introduce Anonymous Credential Schemes, speak about the additional overhead needed in anonymous authentication, speak about signatures ability to be rerandomized and why that's important. Speak about how they are compatible with pedersen commitments for blind signing, and how they're compatible with pedersen commitments for zero knowledge proof presentation. Speak about the difference between verifying the rerandomized signature and proving knowledge of the attributes in a sigma protocol.
+Anonymous Credentials allow users to prove the authenticity of issuer-signed attributes, without revealing the underlying credential, preventing authentication systems from linking and profiling the credential holders. In the concrete setting, this allows users to verify attributes of their credentials without revealing and thus disclosing more personal information than necessary - increasingly important in a world with increasing cyber threat and personal information threat. 
+
+Accountable Privacy is the term assigned to the balance between authentication systems needing to authenticate users and comply with regulations and the user's ambition to remain anonymous or minimally disclose personal information. The area was first introduced by Chaum in early work \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001} merging advancements in zero-knowledge proofs and sigma protocols, commitment schemes, and pairing-based signatures. 
+
+From a cryptographic construction point of view, A natural framework for constructing anonymous credentials, the so-called, CL framework proposed by Camenisch and Lysyanskaya [CL03], is instantiated in several anonymous credentials systems such as [CL01,CL04,CDL16,PS16,TZ23]. In the CL framework, a credential is a signature on a set of attributes, and to prove possession of the credential, the holder proves in zero-knowledge that they hold a signature on a set of attributes that verifies under the credential issuer’s public key.
+
+Traditional signature schemes like RSA, DSA, El-Gamal, while secure for standard digital signatures, lacked the algebraic structure for anonymous credentials. That is, Anonymous Credentials require homomorphic properties required for credential randomization and zero knowledge proof of knowledge of exponents. Prior digital signature schemes used hash functions which don't have the algebraic properties for randomization. 
+
+The real breakthrough came when researchers realized that pairing-based signatures provided the perfect algebraic structure to combine with both Pedersen commitments and sigma protocols. The homomorphic properties of pairings meant you could randomize signatures while preserving verifiability, and the discrete log setting of both commitments and sigma protocols meant that the user with a randomized signature could prove their signature, which after randomization appears indistinguishable from the signature signed by the authority, was signed by the authority and over attributes. Furthermore, the proofs could prove in zero-knowledge that certain relations hold without disclosing attributes. 
+
+Current constructions combine 3 areas of improvement
+\begin{enumerate}
+    \item \textbf{Zero-Knowledge Proofs and Sigma Protocols:} Fiat-Shamir introduced practical zero-knowledge protocols \textbf{CITE Fiat Shamir}, Schnorr's identification protocol build the foundation of sigma protocols over the discrete logarithm relations \cite{brands1996privacy, goos_rapid_1997, brands_rethinking_2000} and Camenisch-Stadler formalized proofs of knowledge for group homomorphism which is the building block for proving discrete log relations in commitment schemes \cite{goos_efficient_1997} and damgards work on sigma protocols \cite{damgard_sigma_2010}.
+
+    \item \textbf{Pairing-based Signatures: } Boneh-Lynn-Shacham (BLS) \cite{goos_short_2001} introduced the first short signature using bilinear pairings, Boneh-Boyen-Shacham (BBS) \cite{hutchison_short_2004} showed how to sign committed messages, Camenisch-Lysyanskaya \cite{cimato_signature_2003, hutchison_signature_2004} demonstrated how pairings enable signature randomization.
+
+    \item \textbf{Commitments: } \cite{pedersen1991non} Pedersen introduced his commitment scheme with perfect hiding and computational binding under the discrete log, \cite{goos_efficient_1997} Camenisch-Stadler formalized the ntoationa dn composition of sigma protocols over commitments and due to their algebraic compatibility with pairing based signatures, pedersen commitments were integrated in the early BLS, BBS, CL signatures \cite{goos_short_2001, hutchison_short_2004, hutchison_signature_2004}. 
+    
+\end{enumerate}
+
+\subsubsection{computational consideration}
+While anonymous credentials introduce additional computational overhead compared to standard signature verification, developments in practical pairing libraries significantly improve their practical efficiency. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+The 2 security properties for anonymous credentials 
+- Unforgeability: models a malicious user, derived from the signature construction and generally follows EUF-CMA. As constructions typically build upon a commitment scheme, the hiding and binding properties of a commitment scheme works well with the (some property) of an EUF-CMA signature scheme. or unforgeable committed signature scheme. 
+- Anonymity: models a malicious issuer and verifier trying to link multiple presentations of a credential, trying to link credentials to a user, trying to do some other tasks
+
+And thus the goal of an anonymous credential system is to enable 
+- Privacy Preserving Authentication - sers can prove possession of certified attributes while maintaining anonymity, leveraging zero-knowledge proofs to demonstrate validity without revealing the credential itself.
+- Blind Signing for private issuance
+- Unlinkability
+- Selective Disclosure
+- rerandomization for unlinkable credential presentations
+
+This work examines several foundational signature schemes - CL, BBS+, and PS signatures - analyzing their suitability for anonymous credential systems through the lens of efficiency, privacy features, and practical considerations.
+
+
+
+
+
+Authentication Overhead
+
+
+Standard signatures: Direct verification via pairings
+Anonymous credentials: Additional zero-knowledge proofs required
+Proving knowledge of signature components increases computational cost
+
+
+Signature Properties for Anonymous Credentials
+
+
+Rerandomizability enables unlinkability between showings
+Blind signing with Pedersen commitments protects user privacy during issuance
+Zero-knowledge compatibility enables private attribute proofs
+Non-reliance on random oracles strengthens security guarantees
+
+
+Implementation Considerations
+
+
+BBS+ offers constant-size signatures but isn't rerandomizable
+CL signatures provide rerandomizability but have linear size
+PS signatures combine constant size with rerandomizability
+Tradeoff between efficiency and privacy features
+
+
+Thresholdise capability
+
+BBS+ They do not “thresholdize” very well: t-out-of- threshold protocols for BBS+ (and standalone BBS) either require offline preprocessing or multiple rounds of interaction between signers.
+
+
+
+Verification Methods
+
+
+Direct verification: Pairing-based signature checks
+Anonymous showing: Zero-knowledge proofs of signature possession
+Selective disclosure: Proving subset of attributes while hiding others
+
+
+
+
+
+
+
+
+
+
+
 
 
 \subsection{Foundational Schemes}
@@ -2056,6 +2233,8 @@ PS - improved, that's what we're using, the first to use it
 
 \subsection{BBS+}
 Overview the BBS+ signature and protocol for proving knowledge of the attributes.
+
+\sam{need to go through the proofs again for correctness}
 
 \begin{figure}
    \begin{pchstack}[boxed, center, space=1em]
