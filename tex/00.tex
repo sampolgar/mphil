@@ -2369,10 +2369,77 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 
 \newpage
+% % % % % % % % % % 
+% 
+% BBS+
+% 
+% % % % % % % % % % 
 
 
 
 
+
+\newpage
+\subsection{\cite{hutchison_constant-size_2006} BBS+ Signature Proof of Knowledge}
+\sam{The is the original}
+\begin{protocol}{\cite{hutchison_constant-size_2006} Zero-Knowledge Proof of Knowledge of BBS+ }{bbsplus-pok-2006}
+    \textbf{Relation $\mathcal{R}$}
+        \[
+        \pi \gets \mathsf{SPK}\{(r_1, r_2, e, \delta_1, \delta_2, e, s, m_1,\ldots,m_{\ell})): \quad A_1 = g_1^{r_1}g_2^{r_2} \quad \wedge \quad A_1^e = g_1^{\delta_1}g_2^{\delta_2} \quad \wedge 
+        \]
+        \[
+        \frac{e(A_2, \widehat{w})}{e(g, \widehat{h_0})} \quad = \quad 
+        e(g_2,\widehat{w})^{-e}e(g_2,\widehat{w})^{r_1}e(g_1,\widehat{h_0})^e(g_2,\widehat{h_0})^{m_1}\cdots e(g_{L+1},\widehat{h_0})^{m_L}
+        \]
+    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e, g_0, \widehat{h_0})$, $pk = (\hat{w} = \hat{h_0}^{\gamma},  g_0, \ldots, g_{L})$
+
+    \textbf{Private Input:} $\Prover$ has BBS+ signature $(A,e,s)$ where $A = (g_0g_1^s\prod_{i=1}^{L} g_{i+1}^{m_i})^{\frac{1}{e+\gamma}}$ and $\delta_1 = r_1e$ and $\delta_2 = r_2e$
+
+    \vspace{1em}
+    \begin{enumerate}
+        \item $\Prover$ samples random $r_1, r_2 \sample \Z_p^*$, set $\delta_1 = r_1e$ and $\delta_2 = r_2e$
+         \begin{itemize}
+        \item Compute blinded signature: $A_1 = g_1^{r_1}g_2^{r_2} \quad \wedge \quad A_2 = Ag_2^{r_1}$
+
+        \item sample Schnorr blinding factors from $\Z_p^*$
+         \[
+         \tilde{x} \text{ for } x \in \{r_1, r_2, e, \delta_1, \delta_2, e, s, m_1,\ldots,m_{L}\}
+         \]
+
+        \item compute Schnorr Commitments:
+        \[
+        T_1 \gets g_1^{\tilde{r_1}}g_2^{\tilde{r_2}} \qquad T_2 \gets g_1^{}\}
+        \]
+        
+        \item  Send $(A', \Bar{A}, d, T_1, T_2)$ to $\Verifier$
+                
+        \end{itemize}
+
+    \item $\Verifier$ sends challenge $c \sample \Z_p^*$\
+
+    \item $\Prover$ computes Schnorr responses:
+         \[
+         z_x = \tilde{x} + c \cdot x \text{ for } x \in \{r_1, r_2, e, s', m_1, \ldots, m_{\ell}\}
+         \]
+ 
+    \item $\Verifier$ checks
+        \[
+            A' \neq 1_{\G_1} \quad \wedge \quad e(A',\hat{w}) = e(\Bar{A},g_2) \qquad T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c} \qquad T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}
+        \]
+    \end{enumerate}
+\end{protocol}
+
+
+
+
+
+
+
+% % % % % % % % % % 
+% 
+% BBS+ CDL16
+% 
+% % % % % % % % % % 
 
 
 
@@ -2482,20 +2549,56 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 
 
-\newpage
-
-\begin{itemize}
-    \item Group elements in $\G_1: $ $A', \Bar{A}, d, T_1, T_2, $
-    \item Scalars: blinding factors for PoK $z_e, z_s, \{m_i\}_1^k, r_1, r_2, r_3$
-\end{itemize}
-
-Notes
-We know $A = b^{\frac{1}{e+x}}$, $b^{\frac{-er_1}{e+x}} \cdot b^{\frac{r_1(e+x)}{e+x}} = A^{r_1x} = A'^x$
 
 
-The resulting proof is $(A', \Bar{A}, d, \pi)$. To verify, the verifier checks $A' \neq 1_{\G_1} \wedge e(A', \hat{X}) = e(\Bar{A}, \hat{g})$ and verifies $\pi$
-we don't want to reveal $k$ components
-$CDL$ proof is 3 $\G_1$ and $k+5$ elements in $\G_1$ and $k+5$ scalars
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \newpage
