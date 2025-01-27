@@ -2016,6 +2016,67 @@ Anonymous Credentials introduce computational overhead compared to standard sign
 While anonymous credentials introduce additional computational overhead compared to standard signature verification, developments in practical pairing libraries significantly improve their practical efficiency. 
 
 
+
+
+
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|cc|cc|ccc}
+\toprule
+\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Verify - Public}} & \multicolumn{2}{c|}{\textbf{Show - Anonymous}} & \multicolumn{3}{c}{\textbf{Verify - Anonymous}} \\
+& Verify & Data Sent & Preparation & PoK & Pairing & Proof Verify & Data Sent \\
+\midrule
+CL04 & $3P$ & $3|\G_1|$ & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ & $(2r + 3)|\G_1| + |PK|$ \\
+BBS+ & $2P$ & $2|\G_1|$ & $3E_{\G_1}$ & $(r + 4)E_{\G_1}$ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ & $2|\G_1| + |PK|$ \\
+PS & $2P$ & $2|\G_1|$ & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ & $2P$ & $(r + 1)E_{\G_T}$ & $2|\G_1| + |PK|$ \\
+\bottomrule
+\end{tabular}
+\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and target group $\G_T$ respectively, $r$ denotes number of attributes, $|\G_1|$ denotes group element size, and $|PK|$ denotes proof of knowledge size.}
+\label{tab:unified-comparison}
+\end{table}
+
+
+
+
+
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|cc|cc|cc}
+\toprule
+\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Verify - Public}} & \multicolumn{2}{c|}{\textbf{Show - Anonymous}} & \multicolumn{2}{c}{\textbf{Verify - Anonymous}} \\
+& Verify & Data Sent & Preparation & Gen. Proofs & Pairing & Proof of Knowledge \\
+\midrule
+CL04 & $3P$ & $3|\G_1|$ & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ \\
+BBS+ & $2P$ & $2|\G_1|$ & $3E_{\G_1}$ & $(r + 4)E_{\G_1}$ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ \\
+PS & $2P$ & $2|\G_1|$ & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ & $2P$ & $(r + 1)E_{\G_T}$ \\
+\bottomrule
+\end{tabular}
+\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and target group $\G_T$ respectively, $r$ denotes number of attributes, and $|\G_1|$ denotes group element size.}
+\label{tab:unified-comparison}
+\end{table}
+
+
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|cc|cc|ccc}
+\toprule
+\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Verify - Public}} & \multicolumn{2}{c|}{\textbf{Show - Anonymous}} & \multicolumn{3}{c}{\textbf{Verify - Anonymous}} \\
+& Verify & Data Sent & Preparation & Gen. Proofs & Pairing & Proof Verify & Data Sent \\
+\midrule
+CL04 & $3P$ & $3|\G_1|$ & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ & $(2r + 3)|\G_1| + (2r + 1)|\G_1|$ \\ \\
+BBS+ & $2P$ & $2|\G_1|$ & $3E_{\G_1} + 1P$ & $(r + 4)E_{\G_T}$ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ & $2|\G_1| + (r + 4)|\G_1|$ \\
+PS & $2P$ & $2|\G_1|$ & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ & $2P$ & $(r + 1)E_{\G_T}$ & $2|\G_1| + (r + 1)|\G_T|$ \\
+\bottomrule
+\end{tabular}
+\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and target group $\G_T$ respectively, $r$ denotes number of attributes, $|\G_1|$ denotes group element size, and $|PK|$ denotes proof of knowledge size.}
+\label{tab:unified-comparison}
+\end{table}
+
+
+
 \subsection{Foundational Schemes}
 \begin{table}[ht]
 \centering
@@ -2025,8 +2086,6 @@ While anonymous credentials introduce additional computational overhead compared
 \textbf{Scheme} & \textbf{Verify} & \textbf{Data Sent} & \textbf{Show} & \textbf{Verify} & \textbf{Data Sent} \\
 & \textbf{Standard} & \textbf{Standard} & \textbf{(User)} & \textbf{Anonymous} & \textbf{Anonymous} \\
 \midrule
-BLS & $2P$ & $|\G_1|$ & $-$ & $(4r+2)P$ & $(2r+3)|\G_1|$ \\
-BBS & $2P$ & $2|\G_1|$ & $PK{P[r+4]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
 CL04 & $3P$ & $3|\G_1|$ & $(2r+4)\G_1$ & $(4r+2)P$ & $(2r+3)|\G_1| + |PK|$ \\
 BBS+ & $2P$ & $2|\G_1|$ & $PK{P[r+4]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
 PS & $2P$ & $2|\G_1|$ & $2\G_1 + PK{P[r+1]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
@@ -2049,21 +2108,6 @@ PS & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ \\
 \bottomrule
 \end{tabular}
 \caption{Precise analysis of show operation costs. $E_{\G_1}$ denotes exponentiation in $\G_1$, $E_{\G_T}$ denotes exponentiation in target group $\G_T$. $r$ denotes number of attributes.}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\label{tab:verify-operations}
-\begin{tabular}{l|cc}
-\toprule
-\textbf{Scheme} & \textbf{Structure} & \textbf{Proof Verification} \\
-\midrule
-CL04 & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ \\
-BBS+ & $2P$ & $(r + 4)E_{\G_1}$ \\
-PS & $2P$ & $(r + 1)E_{\G_T}$ \\
-\bottomrule
-\end{tabular}
-\caption{Analysis of verification costs. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and $\G_T$ respectively. $r$ denotes number of attributes.}
 \end{table}
 
 \begin{table}[ht]
@@ -2221,35 +2265,7 @@ ZKP compatibility & Specialized & Standard libraries \\
 \end{tabular}
 \end{table}
 
-\subsection{Multi-Credential Verification}
-Our focus requires proving knowledge of $N$ credentials with a shared attribute (e.g., $\mathsf{userid}$) under \textit{distinct public keys}. 
-The PS-UTT variant enables this through:
 
-\begin{itemize}
-\item \textbf{Key Linking}: For credential $i$ with public key $\mathsf{pk}_i$, embed a shared Pedersen commitment to $\mathsf{userid}$:
-\begin{equation}
-C_{\mathsf{userid}} = g^{\mathsf{userid}}h^{r_i}
-\end{equation}
-where $r_i$ uses verifiably random blinding factors.
-
-\item \textbf{Batch Proofs}: Given $N$ signatures $\{\sigma_i\}$ on $\{C_{\mathsf{userid}}^{(i)}\}$, prove in zero-knowledge:
-\begin{equation}
-\bigwedge_{i=1}^N \mathsf{Verify}(\mathsf{pk}_i, \sigma_i, C_{\mathsf{userid}}^{(i)}) \land \exists r,\mathsf{userid}: \bigwedge_{i=1}^N C_{\mathsf{userid}}^{(i)} = g^{\mathsf{userid}}h^{r_i}
-\end{equation}
-\end{itemize}
-
-\subsubsection{Performance Advantages}
-The PS-UTT combination provides:
-
-\begin{itemize}
-\item \textbf{Compact Proofs}: Using Groth16 SNARKs, proof size grows logarithmically with $N$ 
-\item \textbf{Efficient Verification}: Pairing product checks for batched credentials:
-\begin{equation}
-\prod_{i=1}^N e(\sigma_i, \mathsf{pk}_i) = e\left(g, \prod_{i=1}^N H(C_{\mathsf{userid}}^{(i)})\right)
-\end{equation}
-
-\item \textbf{Practical Privacy}: Signatures are rerandomized as $\sigma'_i = \sigma_i^{1/\tau_i}$ for fresh $\tau_i$, breaking linkage between presentations
-\end{itemize}
 
 \subsection{Conclusion}
 While CL04 and BBS+ established foundational properties, the PS signature scheme with UTT extensions uniquely satisfies modern requirements for multi-credential systems: constant-size signatures, efficient cross-key batchability, and compatibility with standardized ZKP toolchains. The ability to prove attribute consistency via shared Pedersen commitments—without requiring nested proofs or linear overhead—makes it the optimal choice for practical deployments.˝
@@ -2352,83 +2368,137 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 \end{figure}
 
 
-\subsection{Analysis}
+\newpage
+
+
+
+
+
+
+
+\newpage
+\subsection{\cite{camenisch_anonymous_2016} BBS+ Signature Proof of Knowledge}
+\sam{working on this one, should try to prove soundness in ABar / d = A'e dot h0r2}
+\begin{protocol}{CDL16 Zero-Knowledge Proof of Knowledge of BBS+  \cite{camenisch_anonymous_2016}}{bbsplus-pok-2016}
+    \textbf{Relation $\mathcal{R}$}
+        \[
+        \pi \gets \mathsf{SPK}\{(m_1,\ldots,m_{\ell}), e, r_2, r_3, s'): \quad \frac{\Bar{A}}{d} = A'^{-e} \cdot h_0^{r_2} \quad \wedge \quad g = d^{r_3}h_0^{-s'}\prod_{i=1}^n h_i^{-m_i}\}
+        \]
+    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e, g_2)$, $pk = (\hat{w}, \{h_i\}_{i=0}^n)$
+
+    \textbf{Private Input:} $\Prover$ has BBS+ signature $(A,e,s)$ where $A = (gh_0^s\prod_{i=1}^n h_i^{m_i})^{\frac{1}{e+x}}$ and $b = gh_0^s \prod_1^nh_i^{m_i}$
+
+    \vspace{1em}
+    \begin{enumerate}
+        \item $\Prover$ samples random $r_1, r_2 \sample \Z_p^*$, set $r_3 = \frac{1}{r_1},$ and $s' \gets s - r_2 \cdot r_3$
+         \begin{itemize}
+        \item Compute blinded signature: $A' \gets A^{r_1}$ and set $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ $\quad (=A'^{x})$ 
+        
+        \item compute $d \gets (gh_0^s \prod_1^nh_i^{-m_i})^{r_1} \cdot h_0^{-r_2}$
+
+        \item sample Schnorr blinding factors from $\Z_p$
+         \[
+         \tilde{x} \text{ for } x \in \{r_1, r_2, e, s, m_1, \ldots, m_{\ell}\}
+         \]
+
+        \item compute Schnorr Commitments:
+        \[
+        T_1 \gets A^{\tilde{e}} \cdot h_0^{\tilde{s}} \qquad T_2 \gets g\prod_{i=1}^n h_i^{\tilde{m_i}}
+        \]
+        
+        \item  Send $(A', \Bar{A}, d, T_1, T_2)$ to $\Verifier$
+                
+        \end{itemize}
+
+    \item $\Verifier$ sends challenge $c \sample \Z_p^*$\
+
+    \item $\Prover$ computes Schnorr responses:
+         \[
+         z_x = \tilde{x} + c \cdot x \text{ for } x \in \{r_1, r_2, e, s', m_1, \ldots, m_{\ell}\}
+         \]
+ 
+    \item $\Verifier$ checks
+        \[
+            A' \neq 1_{\G_1} \quad \wedge \quad e(A',\hat{w}) = e(\Bar{A},g_2) \qquad T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c} \qquad T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}
+        \]
+    \end{enumerate}
+\end{protocol}
+
+\newpage
+\subsection{Protocol Analysis}
+
+
+\begin{itemize}
+    \item \textbf{Prover's Operations}
+        \begin{itemize}
+            \item $r_3 = \frac{1}{r_1}$ \qquad $1I_p$
+            \item $s' = s - r_2 \cdot r_3$ \qquad $1M_p + 1A_p$
+            \item $A' \gets A^{r_1}$ \qquad $(1E\G_1)$
+            \item $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ \qquad   $(2E\G_1)$ + $1M_{\G_1}$
+            \item $d \leftarrow (gh_0^{r_1}\prod h_i^{-m_i})^{r_2} \cdot h_0^{r_3}$ \qquad $(n+2)E_{\mathbb{G}_1} + (n-1)M_{\mathbb{G}_1}$
+        \end{itemize}
+    \item \textbf{Prover Schnorr Operations}
+        \begin{itemize}
+            \item sample n+4 field elements (negligible)
+            \item $T_1 \gets A^{\tilde{e}} \cdot h_0^{\tilde{s}}$ \qquad $(2E\G_1)$
+            \item $T_2 \gets g\prod_{i=1}^n h_i^{\tilde{m_i}}$ \qquad  $nE\G_1 + (n-1)M_{\G_1}$
+            \item compute n+4 responses (negligible)
+        \end{itemize}
+    \item \textbf{Proof Size / Data Sent}
+        \begin{itemize}
+            \item $(A', \Bar{A}, d, T_1, T_2)$ \qquad $5E_{\G_1}$
+            \item $z_x = \tilde{x} + c \cdot x \text{ for } x \in \{r_1, r_2, e, s', m_1, \ldots, m_{\ell}\}$ \qquad $(n + 4)\Z_p*$
+        \end{itemize}
+    \item \textbf{Verifier Operations}
+    \begin{itemize}
+        \item $e(A',\hat{w}) = e(\Bar{A},g_2)$ \qquad $1P$
+    \end{itemize}
+    \item \textbf{Verifier Schnorr Operations}
+    \begin{itemize}
+        \item $T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}$ \qquad $3E_{\G_1}$ + $2M_{\G_1}$
+        \item $T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}$ \qquad $(n+1)E_{\G_1}$ + $(n-1)M_{\G_1}$
+    \end{itemize}
+\end{itemize}
+
+
+
+\noindent\textbf{Notation:}
+\begin{itemize}
+\item $I_p$: Field inversion in $\mathbb{Z}_p$
+\item $M_p$: Field multiplication in $\mathbb{Z}_p$
+\item $A_p$: Field addition in $\mathbb{Z}_p$
+\item $E_{\mathbb{G}_1}$: Exponentiation in group $\mathbb{G}_1$
+\item $M_{\mathbb{G}_1}$: Multiplication in group $\mathbb{G}_1$
+\item $P$: Pairing Equality check
+\item $n$: Number of $h_i$ elements (system parameter)
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+\newpage
+
 \begin{itemize}
     \item Group elements in $\G_1: $ $A', \Bar{A}, d, T_1, T_2, $
     \item Scalars: blinding factors for PoK $z_e, z_s, \{m_i\}_1^k, r_1, r_2, r_3$
 \end{itemize}
 
+Notes
+We know $A = b^{\frac{1}{e+x}}$, $b^{\frac{-er_1}{e+x}} \cdot b^{\frac{r_1(e+x)}{e+x}} = A^{r_1x} = A'^x$
 
-\begin{protocol}{Zero-Knowledge Proof of Knowledge of BBS+ Signature}{bbsplus-pok}
-    \vspace{1em}
-    \textbf{Public parameters:} $(p, \G_1, \G_2, \G_T, e, g_2)$, $pk = (\hat{w}, \{h_i\}_{i=0}^n)$
-    
-    \textbf{Prover's Input:} $\sigma = (A,e,s)$, messages $\{m_i\}_{i=1}^n$ where $A = (gh_0^s\prod_{i=1}^n h_i^{m_i})^{\frac{1}{e+x}}$ and $b$ is the signed message $b = gh_0^s \prod_1^nh_i^{m_i}$
-
-    \textbf{Relation $\mathcal{R}$}
-        \[
-        \pi \gets \mathsf{SPK}\{(\{m_i\}_{i=1}^n, e, r_2, r_3, s'): \quad \frac{\Bar{A}}{d} = A'^{-e} \cdot h_0^{r_2} \quad \wedge \quad g = d^{r_3}h_0^{-s'}\prod_{i=1}^n h_i^{-m_i}\}
-        \]
-    \vspace{1em}
-    \textbf{Setup: } $\Prover$ sets up for protocol
-    
-    \begin{itemize}
-                \item Sample randomizer: $r_1 \sample \Z_p$
-                \item Compute blinded signature: $A' \gets A^{r_1}$
-                \item set $r_3 \gets \frac{1}{r_1}$
-                \item set $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ $\quad (=A'^{x})$ 
-                
-                $A'^{-e}\cdot b^r_1 = A^{-er} \cdot b^{r_1}$. We know $A = b^{\frac{1}{e+x}}$, $b^{\frac{-er_1}{e+x}} \cdot b^{\frac{r_1(e+x)}{e+x}} = A^{r_1x} = A'^x$
-                
-                \item sample $r_2 \sample \Z_p$
-                \item set $d \gets (gh_0^s \prod_1^nh_i^{-m_i})^{r_1} \cdot h_0^{-r_2}$ which randomizes $d$
-                \item set $s' \gets s - r_2 \cdot r_3$
-                \item Sample random values: $r_e, r_s, \{r_{m_i}\}_{i=1}^n \sample \Z_p^*$
-                \item Compute commitments:
-                \[
-                    T_1 \gets A^{r_e} \cdot h_0^{r_s}
-                \]
-                \[
-                    T_2 \gets g\prod_{i=1}^n h_i^{r_{m_i}}
-                \]
-                Send $(A', \Bar{A}, T_1, T_2)$ to $\Verifier$
-            \end{itemize}
-    \begin{enumerate}
-        \item $\Prover$:
-        
-        \item $\Verifier$ sends challenge $c \sample \Z_p^*$
-    
-        \item $\Prover$ computes responses:
-            \begin{itemize}
-                \item $z_e \gets r_e + c \cdot e$
-                \item $z_s \gets r_s + c \cdot s$
-                \item For $i = 1$ to $n$: $z_{m_i} \gets r_{m_i} + c \cdot m_i$
-            \end{itemize}
-            Send $(z_e, z_s, \{z_{m_i}\}_{i=1}^n)$ to $\Verifier$
-    
-        \item $\Verifier$ checks:
-            \[
-                A' \neq 1_{\G_1} \quad \wedge \quad e(A',\hat{w}) = e(\Bar{A},g_2)
-            \]
-            \[
-                T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}
-            \]
-            \[
-                T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}
-            \]
-    \end{enumerate}
-\end{protocol}
 
 The resulting proof is $(A', \Bar{A}, d, \pi)$. To verify, the verifier checks $A' \neq 1_{\G_1} \wedge e(A', \hat{X}) = e(\Bar{A}, \hat{g})$ and verifies $\pi$
 we don't want to reveal $k$ components
 $CDL$ proof is 3 $\G_1$ and $k+5$ elements in $\G_1$ and $k+5$ scalars
 
 
-
-
 \newpage
-\subsection{BBS+ Original Computational Complexity}
-
 We analyze the computational complexity of the Proof of Knowledge of a BBS+ signature with respect to the \textbf{Prover} and \textbf{Verifier}. The computations are categorized into random scalar generation, scalar multiplications, exponentiations in the groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, and pairings.
 
 \subsection{Prover Complexity}
@@ -2490,9 +2560,11 @@ The Verifier performs the following computations:
 \begin{itemize}
     \item \textbf{Multi-Exponentiation:} Instead of computing each exponentiation in $\mathbb{G}_1$ individually, the multi-exponentiation technique can be used to compute terms like $g_1^{r_1} g_2^{r_2}$ or $g_1^{\delta_1} g_2^{\delta_2}$ in a single operation. This reduces the overall cost of group exponentiations, especially for the Prover, where such computations dominate.
 
-    \item \textbf{Batch Pairing Computation:} The Verifier computes $L+4$ pairings during verification. Instead of computing all pairings independently, batch pairing techniques can be applied to reduce overhead by precomputing shared terms. 
+    \item \textbf{Precomputation:} rather than computing all pairings, Prover and Verifier can have precomputed points for some e.g. points can be computed in advance $\mathsf{e}(g_{L+1}, h_0), \ldots, \mathsf{e}(g_1, h_0)$
 
-    \item \textbf{Miller Loop Optimization:} Pairing computations can be optimized by separating the Miller loop and the final exponentiation. For $L+4$ pairings, only a single final exponentiation in $\mathbb{G}_T$ is required after combining the results of $L+4$ Miller loops. This significantly reduces the overall cost, as the Miller loop is less computationally expensive than the final exponentiation.
+    \item \textbf{Miller Loop Optimization:} Pairing computations can be optimized by separating the Miller loop and the final exponentiation. For $L+4$ pairings, only a single final exponentiation in $\mathbb{G}_T$ is required after combining the results of $L+4$ Miller loops. This significantly reduces the overall cost, as the Miller loop is less computationally expensive than the final exponentiation. 
+
+    \item \textbf{Batch Verification: } BBS+ signatures signed under the same public key can be batch verified
 \end{itemize}
 
 By employing these techniques:
@@ -2503,6 +2575,148 @@ By employing these techniques:
 
 
 
+
+
+\newpage
+\noindent \textbf{Relation Proved:} Knowledge of $(r_1, r_2, e, \delta_1, \delta_2, s, m_1, \dots, m_L)$ such that:
+\[
+\begin{aligned}
+\mathsf{A}_1 &= \mathsf{g}_1^{r_1} \mathsf{g}_2^{r_2}, \\
+\mathsf{A}_1^e &= \mathsf{g}_1^{\delta_1} \mathsf{g}_2^{\delta_2}, \\
+\mathsf{A}^{e+\gamma} &= \mathsf{g}_0 \mathsf{g}_1^s \mathsf{g}_2^{m_1} \cdots \mathsf{g}_{L+1}^{m_L}, \\
+\delta_1 &= r_1 e, \quad \delta_2 = r_2 e.
+\end{aligned}
+\]
+
+\section*{Prover's Operations}
+\begin{itemize}
+  \item \textbf{Commitments in $\mathsf{G}_1$:}
+    \begin{itemize}
+      \item Compute $\mathsf{A}_1 = \mathsf{g}_1^{r_1} \mathsf{g}_2^{r_2}$, $\mathsf{A}_2 = \mathsf{A} \cdot \mathsf{g}_2^{r_1}$ (3 exponentiations).
+      \item Compute $\mathsf{A}_1^e$ (1 exponentiation).
+    \end{itemize}
+  \item \textbf{Commitments in $\mathsf{G}_T$:}
+    \begin{itemize}
+      \item Construct $\mathsf{T} = \mathsf{e}(\mathsf{A}_2, \mathsf{h}_0)^{-\tilde{e}} \cdot \mathsf{e}(\mathsf{g}_2, \mathsf{w})^{\tilde{r}_1} \cdot \mathsf{e}(\mathsf{g}_2, \mathsf{h}_0)^{\tilde{\delta}_1} \cdot \mathsf{e}(\mathsf{g}_1, \mathsf{h}_0)^{\tilde{s}} \cdots \mathsf{e}(\mathsf{g}_{L+1}, \mathsf{h}_0)^{\tilde{m}_L}$.
+      \item Requires 1 pairing ($\mathsf{e}(\mathsf{A}_2, \mathsf{h}_0)$) and $L+4$ exponentiations in $\mathsf{G}_T$.
+    \end{itemize}
+  \item \textbf{Responses:} Compute Schnorr responses for all secrets:
+    \[
+    z_x = \tilde{x} + c \cdot x \quad \text{for } x \in \{r_1, r_2, e, \delta_1, \delta_2, s, m_1, \dots, m_L\}.
+    \]
+\end{itemize}
+
+\section*{Verifier's Operations}
+\begin{itemize}
+  \item \textbf{Schnorr Checks in $\mathsf{G}_1$:}
+    \begin{itemize}
+      \item Verify $\mathsf{A}_1 = \mathsf{g}_1^{r_1} \mathsf{g}_2^{r_2}$: 2 exponentiations.
+      \item Verify $\mathsf{A}_1^e = \mathsf{g}_1^{\delta_1} \mathsf{g}_2^{\delta_2}$: 2 exponentiations.
+    \end{itemize}
+  \item \textbf{Pairing Checks in $\mathsf{G}_T$:}
+    \begin{itemize}
+      \item Compute $\text{LHS} = \frac{\mathsf{e}(\mathsf{A}_2, \mathsf{w})}{\mathsf{e}(\mathsf{g}_0, \mathsf{h}_0)}$ (2 pairings).
+      \item Compute $\text{RHS} = \prod_{i=1}^{L+4} \mathsf{e}(\cdot)^{\text{precomputed}}_{z_i}$ ($L+4$ exponentiations).
+      \item Verify $\text{LHS} \stackrel{?}{=} \text{RHS}$.
+    \end{itemize}
+\end{itemize}
+
+\noindent \textbf{Summary:}
+\[
+\begin{aligned}
+\text{Prover: } & 
+\begin{cases} 
+4 \text{ $\mathsf{G}_1$ exponentiations} \\
+1 \text{ pairing } (\mathsf{e}(\mathsf{A}_2, \mathsf{h}_0)) \\
+L+4 \text{ $\mathsf{G}_T$ exponentiations}
+\end{cases} \\
+\text{Verifier: } & 
+\begin{cases} 
+4 \text{ $\mathsf{G}_1$ exponentiations} \\
+L+4 \text{ $\mathsf{G}_T$ exponentiations} \\
+2 \text{ pairings } (\mathsf{e}(\mathsf{A}_2, \mathsf{w}), \mathsf{e}(\mathsf{g}_0, \mathsf{h}_0))
+\end{cases}
+\end{aligned}
+\]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Operation} & \textbf{Prover} & \textbf{Verifier} \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Commitment Equality Method}} \\
+\hline
+G1 exponentiations & 4 & 5 \\
+G1 additions & 2 & 4 \\
+Fp multiplications & 3 & 0 \\
+Fp additions & 3 & 0 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{G1 VRF Method}} \\
+\hline
+G1 exponentiations & 11 & 11 \\
+G1 additions & 4 & 7 \\
+Fp multiplications & 6 & 0 \\
+Fp additions & 6 & 0 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Pairing + VRF Method}} \\
+\hline
+G1 exponentiations & 2 & 3 \\
+G2 exponentiations & 2 & 3 \\
+G1 additions & 1 & 2 \\
+G2 additions & 1 & 2 \\
+Fp multiplications & 12 & 0 \\
+Fp additions & 8 & 0 \\
+GT exponentiations & 8 & 5 \\
+GT multiplications & 6 & 4 \\
+Pairings & 4 & 4 \\
+\hline
+\end{tabular}
+\caption{Comparison of computational operations between G1 and Pairing methods}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Operation} & \textbf{Time} \\
+\hline
+Full Pairing & 1.6218 ms \\
+Miller Loop & 0.6931 ms \\
+Final Exponentiation & 0.9287 ms \\
+G1 Mixed Addition (Affine + Jacobian) & 672 ns \\
+G1 Point Doubling (2P) & 414 ns \\
+G2 Mixed Addition (Affine + Jacobian) & 2143 ns \\
+G2 Point Doubling (2P) & 1302 ns \\
+\hline
+Estimated G1 Scalar Mult (255-bit) & 191.59 $\mu$s \\
+\emph{\small(255 doublings + ~128 additions)} & \\
+Estimated G2 Scalar Mult (255-bit) & 606.01 $\mu$s \\
+\emph{\small(255 doublings + ~128 additions)} & \\
+\hline
+\end{tabular}
+\caption{Performance metrics for arkworks BLS12-381 implementation. Scalar multiplication estimates assume naive double-and-add implementation without optimizations.}
+\label{tab:arkworks-performance}
+\end{table}
+\footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
 
 
 
