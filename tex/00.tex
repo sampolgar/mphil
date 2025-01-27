@@ -2381,14 +2381,13 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 \newpage
 \subsection{\cite{hutchison_constant-size_2006} BBS+ Signature Proof of Knowledge}
-\sam{The is the original}
 \begin{protocol}{\cite{hutchison_constant-size_2006} Zero-Knowledge Proof of Knowledge of BBS+ }{bbsplus-pok-2006}
     \textbf{Relation $\mathcal{R}$}
         \[
-        \pi \gets \mathsf{SPK}\{(r_1, r_2, e, \delta_1, \delta_2, e, s, m_1,\ldots,m_{\ell})): \quad A_1 = g_1^{r_1}g_2^{r_2} \quad \wedge \quad A_1^e = g_1^{\delta_1}g_2^{\delta_2} \quad \wedge 
+        \pi \gets \mathsf{SPK}\{(r_1, r_2, e, \delta_1, \delta_2, s, m_1,\ldots,m_{\ell})): \quad A_1 = g_1^{r_1}g_2^{r_2} \quad \wedge \quad A_1^e = g_1^{\delta_1}g_2^{\delta_2} \quad \wedge 
         \]
         \[
-        \frac{e(A_2, \widehat{w})}{e(g, \widehat{h_0})} \quad = \quad 
+        \frac{e(A_2, \widehat{w})}{e(g_2, \widehat{h_0})} \quad = \quad 
         e(g_2,\widehat{w})^{-e}e(g_2,\widehat{w})^{r_1}e(g_1,\widehat{h_0})^e(g_2,\widehat{h_0})^{m_1}\cdots e(g_{L+1},\widehat{h_0})^{m_L}
         \]
     \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e, g_0, \widehat{h_0})$, $pk = (\hat{w} = \hat{h_0}^{\gamma},  g_0, \ldots, g_{L})$
@@ -2399,19 +2398,22 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
     \begin{enumerate}
         \item $\Prover$ samples random $r_1, r_2 \sample \Z_p^*$, set $\delta_1 = r_1e$ and $\delta_2 = r_2e$
          \begin{itemize}
-        \item Compute blinded signature: $A_1 = g_1^{r_1}g_2^{r_2} \quad \wedge \quad A_2 = Ag_2^{r_1}$
+        \item Compute blinded signature: $A_1 = g_1^{r_1}g_2^{r_2} \quad \wedge \quad A_1^e = g_1^{\delta_1}g_2^{\delta_2} \quad \wedge \quad A_2 = Ag_2^{r_1}$
 
         \item sample Schnorr blinding factors from $\Z_p^*$
          \[
-         \tilde{x} \text{ for } x \in \{r_1, r_2, e, \delta_1, \delta_2, e, s, m_1,\ldots,m_{L}\}
+         \tilde{x} \text{ for } x \in \{r_1, r_2, e, \delta_1, \delta_2, s, m_1,\ldots,m_{L}\}
          \]
 
         \item compute Schnorr Commitments:
         \[
-        T_1 \gets g_1^{\tilde{r_1}}g_2^{\tilde{r_2}} \qquad T_2 \gets g_1^{}\}
+        T_1 \gets g_1^{\tilde{r_1}}g_2^{\tilde{r_2}} \qquad T_2 \gets g_1^{\tilde{\delta_1}} g_2^{\tilde{\delta_2}} 
+        \]
+        \[
+        T_3 \gets e(A_2, \hat{h_0})^{\tilde{-e}}\cdot e(g_2, \hat{w})^{\tilde{r_1}} \cdot e(g_2, \hat{h_0})^{\tilde{\delta_1}} \cdot e(g_1, \hat{h_0})^{\tilde{s}} \cdot e(g_2, \hat{h_0})^{\tilde{m_1}} \cdots e(g_{L+1}, \hat{h_0})^{\tilde{m_L}}
         \]
         
-        \item  Send $(A', \Bar{A}, d, T_1, T_2)$ to $\Verifier$
+        \item  Send $(A_1, A_1^e, A_2, T_1, T_2, T_3)$ to $\Verifier$
                 
         \end{itemize}
 
@@ -2419,17 +2421,71 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
     \item $\Prover$ computes Schnorr responses:
          \[
-         z_x = \tilde{x} + c \cdot x \text{ for } x \in \{r_1, r_2, e, s', m_1, \ldots, m_{\ell}\}
+         z_x = \tilde{x} + c \cdot x \text{ for } x \in \{r_1, r_2, e, \delta_1, \delta_2, e, s, m_1,\ldots,m_{\ell})\}
          \]
  
     \item $\Verifier$ checks
+    \[
+    A_1^c \cdot T_1 \stackrel{?}{=} g_1^{z_{r_1}}g_2^{z_{r_2}} \quad \wedge \quad (A_1^e)^c \cdot T_2 = g_1^{{z}_{\delta_1}}g_2^{{z}_{\delta_2}} \quad \wedge
+    \]
         \[
-            A' \neq 1_{\G_1} \quad \wedge \quad e(A',\hat{w}) = e(\Bar{A},g_2) \qquad T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c} \qquad T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}
+            \frac{e(A_2, \widehat{w})}{e(g_2, \widehat{h_0})} \stackrel{?}{=}  e(A_2, \hat{h_0})^{z_e} \cdot e(g_2, \hat{w})^{z_{r_1}} \cdot e(g_2, \hat{h_0})^z_{\delta_1} \cdot e(g_1, \hat{h_0})^{z_s} \cdot \prod_{i=1}^L e(g_{i+1}, \hat{h_0})^{z_{m_i}}
         \]
     \end{enumerate}
 \end{protocol}
 
+\newpage
+\subsection{Protocol Analysis}
 
+\noindent\textbf{Notation:}
+\begin{itemize}
+    \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
+    \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
+    \item $P$: Pairing Operation
+    \item $L$: Number of message attributes
+\end{itemize}
+
+
+\begin{itemize}
+    \item \textbf{Precomputed Values}
+        \begin{itemize}
+            \item $e(g_1, \hat{h_0}), e(g_2, \hat{h_0}), e(g_2, \hat{w})$ \qquad Stored constants in $\G_T$
+            \item $e(g_{i+1}, \hat{h_0})$ for $i \in [1,L]$ \qquad L stored constants in $\G_T$
+        \end{itemize}
+    \item \textbf{Prover's Initial Operations}
+        \begin{itemize}
+            \item Set $\delta_1 = r_1e, \delta_2 = r_2e$ \qquad $2F_p\times$
+            \item $A_1 = g_1^{r_1}g_2^{r_2}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
+            \item $A_1^e$ computation \qquad $1E_{\G_1}$
+            \item $A_2 = Ag_2^{r_1}$ \qquad $1E_{\G_1} + 1M_{\G_1}$
+        \end{itemize}
+    \item \textbf{Prover Schnorr Operations}
+    \begin{itemize}
+        \item Sample L+6 field elements (negligible)
+        \item $T_1 = g_1^{\tilde{r_1}}g_2^{\tilde{r_2}}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
+        \item $T_2 = g_1^{\tilde{\delta_1}}g_2^{\tilde{\delta_2}}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
+        \item $T_3$ computation: \qquad $1P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
+            \begin{itemize}
+                \item $e(A_2, \hat{h_0})^{\tilde{-e}}$ \qquad $1P + 1E_{\G_T}$
+                \item Remaining exponentiations use precomputed pairings \qquad $(L+3)E_{\G_T} + (L+3)M_{\G_T}$
+            \end{itemize}
+    \end{itemize}
+        \item \textbf{Proof Size / Data Sent}
+            \begin{itemize}
+                \item $(A_1, A_1^e, A_2, T_1, T_2, T_3)$ \qquad $5E_{\G_1} + 1E_{\G_T}$
+                \item Responses $z_x$ for $x \in {r_1, r_2, e, \delta_1, \delta_2, s, m_1,\ldots,m_L}$ \qquad $(L+6)\Z_p^*$
+            \end{itemize}
+    \item \textbf{Verifier Operations}
+        \begin{itemize}
+            \item First equation: $A_1^c \cdot T_1 \stackrel{?}{=} g_1^{z_{r_1}}g_2^{z_{r_2}}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
+            \item Second equation: $(A_1^e)^c \cdot T_2 \stackrel{?}{=} g_1^{z_{\delta_1}}g_2^{z_{\delta_2}}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
+            \item Final pairing equation: \qquad $2P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
+                \begin{itemize}
+                    \item Left side: $\frac{e(A_2, \widehat{w})}{e(g_2, \widehat{h_0})}$ \qquad $2P$ + $1M_{\G_T}$
+                    \item Right side  \qquad $(L+3)E_{\G_T} + (L+2)M_{\G_T}$
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
 
 
 
@@ -2494,50 +2550,53 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 \newpage
 \subsection{Protocol Analysis}
 
-
 \begin{itemize}
+    \item \textbf{Notation:}
+        \begin{itemize}
+            \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
+            \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
+            \item $P$: Pairing Operation
+            \item $n$: Number of attributes/messages
+        \end{itemize}
+    \item \textbf{Precomputed Values}
+        \begin{itemize}
+            \item $e(g, g_2), e(h_0, g_2)$ \qquad Stored constants in $\G_T$
+            \item $e(h_i, g_2)$ for $i \in [1,n]$ \qquad n stored constants in $\G_T$
+        \end{itemize}
     \item \textbf{Prover's Operations}
         \begin{itemize}
-            \item $r_3 = \frac{1}{r_1}$ \qquad $1I_p$
-            \item $s' = s - r_2 \cdot r_3$ \qquad $1M_p + 1A_p$
-            \item $A' \gets A^{r_1}$ \qquad $(1E\G_1)$
-            \item $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ \qquad   $(2E\G_1)$ + $1M_{\G_1}$
-            \item $d \leftarrow (gh_0^{r_1}\prod h_i^{-m_i})^{r_2} \cdot h_0^{r_3}$ \qquad $(n+2)E_{\mathbb{G}_1} + (n-1)M_{\mathbb{G}_1}$
+            \item $r_3 = \frac{1}{r_1}$ \qquad $1F_p-$
+            \item $s' = s - r_2 \cdot r_3$ \qquad $1\F_p\times + 1F_p-$
+            \item $A' \gets A^{r_1}$ \qquad $1E_{\G_1}$
+            \item $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
+            \item $d \leftarrow (gh_0^{r_1}\prod h_i^{-m_i})^{r_2} \cdot h_0^{r_3}$
+                \begin{itemize}
+                    \item $h_0^{r_1}$ \qquad $1E_{\G_1}$
+                    \item $\prod h_i^{-m_i}$ \qquad $nE_{\G_1} + (n-1)M_{\G_1}$
+                    \item Final exponentiation and multiplication \qquad $1E_{\G_1} + 2M_{\G_1}$
+                \end{itemize}
         \end{itemize}
     \item \textbf{Prover Schnorr Operations}
         \begin{itemize}
-            \item sample n+4 field elements (negligible)
-            \item $T_1 \gets A^{\tilde{e}} \cdot h_0^{\tilde{s}}$ \qquad $(2E\G_1)$
+            \item Sample n+4 field elements (negligible)
+            \item $T_1 \gets A^{\tilde{e}} \cdot h_0^{\tilde{s}}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
             \item $T_2 \gets g\prod_{i=1}^n h_i^{\tilde{m_i}}$ \qquad  $nE\G_1 + (n-1)M_{\G_1}$
-            \item compute n+4 responses (negligible)
+            \item Compute n+4 responses (negligible)
         \end{itemize}
     \item \textbf{Proof Size / Data Sent}
         \begin{itemize}
-            \item $(A', \Bar{A}, d, T_1, T_2)$ \qquad $5E_{\G_1}$
-            \item $z_x = \tilde{x} + c \cdot x \text{ for } x \in \{r_1, r_2, e, s', m_1, \ldots, m_{\ell}\}$ \qquad $(n + 4)\Z_p*$
+            \item $(A', \Bar{A}, d, T_1, T_2)$ \qquad $5\G_1$ elements
+            \item Responses for ${r_1, r_2, e, s', m_1, \ldots, m_n}$ \qquad $(n + 4)\Z_p^*$
         \end{itemize}
     \item \textbf{Verifier Operations}
-    \begin{itemize}
-        \item $e(A',\hat{w}) = e(\Bar{A},g_2)$ \qquad $1P$
-    \end{itemize}
+        \begin{itemize}
+           \item Pairing equality check: $e(A',\hat{w}) = e(\Bar{A},g_2)$ \qquad $2P + 1M_{\G_T}$
+        \end{itemize}
     \item \textbf{Verifier Schnorr Operations}
-    \begin{itemize}
-        \item $T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}$ \qquad $3E_{\G_1}$ + $2M_{\G_1}$
-        \item $T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}$ \qquad $(n+1)E_{\G_1}$ + $(n-1)M_{\G_1}$
-    \end{itemize}
-\end{itemize}
-
-
-
-\noindent\textbf{Notation:}
-\begin{itemize}
-\item $I_p$: Field inversion in $\mathbb{Z}_p$
-\item $M_p$: Field multiplication in $\mathbb{Z}_p$
-\item $A_p$: Field addition in $\mathbb{Z}_p$
-\item $E_{\mathbb{G}_1}$: Exponentiation in group $\mathbb{G}_1$
-\item $M_{\mathbb{G}_1}$: Multiplication in group $\mathbb{G}_1$
-\item $P$: Pairing Equality check
-\item $n$: Number of $h_i$ elements (system parameter)
+        \begin{itemize}
+            \item $T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
+            \item $T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}$ \qquad $(n+1)E_{\G_1} + nM_{\G_1}$
+        \end{itemize}
 \end{itemize}
 
 
@@ -2591,79 +2650,12 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 
 
-
-
-
-
-
-
-
-
-
-
-\newpage
-We analyze the computational complexity of the Proof of Knowledge of a BBS+ signature with respect to the \textbf{Prover} and \textbf{Verifier}. The computations are categorized into random scalar generation, scalar multiplications, exponentiations in the groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, and pairings.
-
-\subsection{Prover Complexity}
-The Prover performs the following computations:
-\begin{itemize}
-    \item \textbf{Random Scalars:} Generate $r_1, r_2 \in \mathbb{Z}_p^*$ and $L+4$ random scalars for the Schnorr proof. Total: $L+6$ random scalars.
-    \item \textbf{Scalar Multiplications:} Compute $\delta_1 = r_1 e$ and $\delta_2 = r_2 e$. Total: 2 scalar multiplications.
-    \item \textbf{Exponentiations in $\mathbb{G}_1$:}
-    \begin{itemize}
-        \item Compute $A_1 = g_1^{r_1} g_2^{r_2}$: 2 exponentiations and 1 group addition.
-        \item Compute $A_1^e = g_1^{\delta_1} g_2^{\delta_2}$: 2 exponentiations and 1 group addition.
-    \end{itemize}
-    Total: 4 exponentiations and 2 group additions.
-    \item \textbf{Pairings:} Compute $\mathsf{e}(A_2, w)$ and $\mathsf{e}(g_0, h_0)$. Total: 2 pairings.
-    \item \textbf{Schnorr Proof of Knowledge:}
-    \begin{itemize}
-        \item Prove knowledge of $r_1, r_2, \delta_1, \delta_2, e, s, m_1, \ldots, m_L$. 
-        \item Compute $L+4$ commitments in $\mathbb{G}_T$ (one per attribute plus $e$, $s$, $r_1$, $r_2$). Total: $L+4$ exponentiations in $\mathbb{G}_T$.
-    \end{itemize}
-\end{itemize}
-
-\subsection{Verifier Complexity}
-The Verifier performs the following computations:
-\begin{itemize}
-    \item \textbf{Schnorr Verification:}
-    \begin{itemize}
-        \item Verify $A_1 = g_1^{r_1} g_2^{r_2}$: 2 exponentiations in $\mathbb{G}_1$.
-        \item Verify $A_1^e = g_1^{\delta_1} g_2^{\delta_2}$: 2 exponentiations in $\mathbb{G}_1$.
-    \end{itemize}
-    Total: 4 exponentiations in $\mathbb{G}_1$.
-    \item \textbf{Pairings:}
-    \begin{itemize}
-        \item Compute $\mathsf{e}(A_2, w)$, $\mathsf{e}(g_0, h_0)$, and $\mathsf{e}(g_{L+1}, h_0), \ldots, \mathsf{e}(g_1, h_0)$. Total: $L+4$ pairings.
-    \end{itemize}
-    \item \textbf{Exponentiations in $\mathbb{G}_T$:}
-    \begin{itemize}
-        \item For $L+4$ pairings, compute exponentiations with Schnorr responses. Total: $L+4$ exponentiations in $\mathbb{G}_T$.
-    \end{itemize}
-\end{itemize}
-
-\subsection{Summary of Computational Cost}
-\textbf{Prover:}
-\begin{itemize}
-    \item Random Scalars: $L+6$
-    \item Scalar Multiplications: 2
-    \item Exponentiations: 6 in $\mathbb{G}_1$, $L+4$ in $\mathbb{G}_T$
-    \item Pairings: 2
-\end{itemize}
-
-\textbf{Verifier:}
-\begin{itemize}
-    \item Pairings: $L+4$
-    \item Exponentiations: 4 in $\mathbb{G}_1$, $L+4$ in $\mathbb{G}_T$
-\end{itemize}
 
 
 \subsection{Optimizations}
 
 \begin{itemize}
     \item \textbf{Multi-Exponentiation:} Instead of computing each exponentiation in $\mathbb{G}_1$ individually, the multi-exponentiation technique can be used to compute terms like $g_1^{r_1} g_2^{r_2}$ or $g_1^{\delta_1} g_2^{\delta_2}$ in a single operation. This reduces the overall cost of group exponentiations, especially for the Prover, where such computations dominate.
-
-    \item \textbf{Precomputation:} rather than computing all pairings, Prover and Verifier can have precomputed points for some e.g. points can be computed in advance $\mathsf{e}(g_{L+1}, h_0), \ldots, \mathsf{e}(g_1, h_0)$
 
     \item \textbf{Miller Loop Optimization:} Pairing computations can be optimized by separating the Miller loop and the final exponentiation. For $L+4$ pairings, only a single final exponentiation in $\mathbb{G}_T$ is required after combining the results of $L+4$ Miller loops. This significantly reduces the overall cost, as the Miller loop is less computationally expensive than the final exponentiation. 
 
