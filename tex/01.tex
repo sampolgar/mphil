@@ -1,42 +1,64 @@
-Bellare
-Properties
-- Anonymity | uncorrupt opener | fully corrupt issuer
-- Traceability | partially corrupt opener | uncorrupt issuer
-- Non-frameability | fully corrupt opener | fully corrupt issuer
+\newpage
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Operation} & \textbf{Prover} & \textbf{Verifier} \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Commitment Equality Method}} \\
+\hline
+G1 exponentiations & 4 & 5 \\
+G1 additions & 2 & 4 \\
+Fp multiplications & 3 & 0 \\
+Fp additions & 3 & 0 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{G1 VRF Method}} \\
+\hline
+G1 exponentiations & 11 & 11 \\
+G1 additions & 4 & 7 \\
+Fp multiplications & 6 & 0 \\
+Fp additions & 6 & 0 \\
+\hline
+\multicolumn{3}{|l|}{\textbf{Pairing + VRF Method}} \\
+\hline
+G1 exponentiations & 2 & 3 \\
+G2 exponentiations & 2 & 3 \\
+G1 additions & 1 & 2 \\
+G2 additions & 1 & 2 \\
+Fp multiplications & 12 & 0 \\
+Fp additions & 8 & 0 \\
+GT exponentiations & 8 & 5 \\
+GT multiplications & 6 & 4 \\
+Pairings & 4 & 4 \\
+\hline
+\end{tabular}
+\caption{Comparison of computational operations between G1 and Pairing methods}
+\end{table}
 
-\cite{bellare_better_2022-1}
-
-Correctness
-\begin{enumerate}
-    \item the signature should be valid
-    \item the opening algo should correctly identify the Signer given the message and signature
-    \item the proof returned by opening algo should be accepted by the judge
-\end{enumerate}
-
-Formalize correctness with an experiment involving an adversary. 
-
-involved:
-Adversary, signature scheme, adversary A, secparam k.
-\[
-    Adv^{corr}_{GS, \Adv}(k) = \Pr [\Exp^{corr}_{GS, \Adv}(k) = 1]
-\]
-
-We say the dynamic group signature scheme $GS$ is correct if $Adv^{corr}_{GS,\Adv}(k) = 0$ for any adversary $\Adv$ and any $k \in \N$, the adversary is not computationally restricted. 
-
-
-
-Experiment $\Exp^{corr}_{GS,\Adv}(k)$
-
-This says 
-1. run GKg with secparam, get gpk, ik, ok
-2. Corrupt users set is 0
-
-
-
-
-
-
-
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|r|}
+\hline
+\textbf{Operation} & \textbf{Time} \\
+\hline
+Full Pairing & 1.6218 ms \\
+Miller Loop & 0.6931 ms \\
+Final Exponentiation & 0.9287 ms \\
+G1 Mixed Addition (Affine + Jacobian) & 672 ns \\
+G1 Point Doubling (2P) & 414 ns \\
+G2 Mixed Addition (Affine + Jacobian) & 2143 ns \\
+G2 Point Doubling (2P) & 1302 ns \\
+\hline
+Estimated G1 Scalar Mult (255-bit) & 191.59 $\mu$s \\
+\emph{\small(255 doublings + ~128 additions)} & \\
+Estimated G2 Scalar Mult (255-bit) & 606.01 $\mu$s \\
+\emph{\small(255 doublings + ~128 additions)} & \\
+\hline
+\end{tabular}
+\caption{Performance metrics for arkworks BLS12-381 implementation. Scalar multiplication estimates assume naive double-and-add implementation without optimizations.}
+\label{tab:arkworks-performance}
+\end{table}
+\footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
 
 
 

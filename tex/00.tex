@@ -2297,10 +2297,8 @@ PS - improved, that's what we're using, the first to use it
 
 
 
-\subsection{BBS+}
+\subsection{BBS+ \cite{hutchison_constant-size_2006}}
 Overview the BBS+ signature and protocol for proving knowledge of the attributes.
-
-\sam{need to go through the proofs again for correctness}
 
 \begin{figure}
    \begin{pchstack}[boxed, center, space=1em]
@@ -2368,7 +2366,6 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 \end{figure}
 
 
-\newpage
 % % % % % % % % % % 
 % 
 % BBS+
@@ -2380,7 +2377,9 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 
 \newpage
-\subsection{\cite{hutchison_constant-size_2006} BBS+ Signature Proof of Knowledge}
+\subsubsection{Protocol for Signature Proof of Knowledge}
+asd
+
 \begin{protocol}{\cite{hutchison_constant-size_2006} Zero-Knowledge Proof of Knowledge of BBS+ }{bbsplus-pok-2006}
     \textbf{Relation $\mathcal{R}$}
         \[
@@ -2435,7 +2434,7 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 \end{protocol}
 
 \newpage
-\subsection{Protocol Analysis}
+\subsubsection{Complexity Analysis}
 
 \noindent\textbf{Notation:}
 \begin{itemize}
@@ -2500,8 +2499,10 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 
 \newpage
-\subsection{\cite{camenisch_anonymous_2016} BBS+ Signature Proof of Knowledge}
-\sam{working on this one, should try to prove soundness in ABar / d = A'e dot h0r2}
+\subsection{BBS+ \cite{camenisch_anonymous_2016}}
+asd
+\subsubsection{Protocol for Signature Proof of Knowledge}
+asd
 \begin{protocol}{CDL16 Zero-Knowledge Proof of Knowledge of BBS+  \cite{camenisch_anonymous_2016}}{bbsplus-pok-2016}
     \textbf{Relation $\mathcal{R}$}
         \[
@@ -2548,7 +2549,7 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 \end{protocol}
 
 \newpage
-\subsection{Protocol Analysis}
+\subsubsection{Complexity Analysis}
 
 \begin{itemize}
     \item \textbf{Notation:}
@@ -2609,17 +2610,209 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 
 
 
+\newpage
+\subsection{CL04 \cite{hutchison_signature_2004}}
+Signature scheme D from \cite{hutchison_signature_2004}
+% \begin{itemize}
+%     \item \textbf{KeyGen}($1^\lambda$):
+%     \begin{itemize}
+%         \item $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(1^\lambda)$
+%         \item Sample secret key components: $x, y \sample \Z_p^*$, $(z_1, \ldots, z_\ell) \sample (\Z_p^*)^\ell$. Set $sk = (x, y, z_1, \ldots, z_\ell)$
+%         \item Compute public key components: Compute public $x,y$ by $X \gets g^x \in \G_1$, $\widehat{Y} \gets \hat{g}^y \in \G_2$
+%         For $i \in [1..\ell]$: $\widehat{Z}_i \gets \hat{g}^{z_i} \in \G_2$, $W_i \gets X^{z_i} \in \G_1$
+%         \item Output: $pk = (\mathsf{BG}, X, \widehat{Y}, \{\widehat{Z}_i\}_{i=1}^\ell, \{W_i\}_{i=1}^\ell)$
+%     \end{itemize}
+    
+%     \item \textbf{Sign}($sk = (x, y, z_1, \ldots, z_\ell), (m_1,\ldots,m_\ell)$):
+%     \begin{itemize}
+%         \item Sample $\alpha \sample \Z_p^*$. Let $a \gets g^\alpha \in \G_1$
+%         \item For $i \in [1..\ell]$: Compute $A_i \gets a^{z_i} \in \G_1$. Set $b \gets a^y \in \G_1$, $B_i \gets A_i^y \in \G_1$
+%         \item Compute $c \gets a^{x+\alpha xy + \sum_{i=1}^\ell m_i xy z_i} \in \G_1$
+%         \item Output $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
+%     \end{itemize}
+
+%     \item \textbf{Verify}($pk = (\mathsf{BG}, X, \widehat{Y}, \{\widehat{Z}_i\}_{i=1}^\ell, \{W_i\}_{i=1}^\ell), (m_1,\ldots,m_\ell), \sigma$):
+%     \begin{itemize}
+%         \item Parse $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
+%         \item Check signature structure:
+%             \begin{itemize}
+%                 \item $e(b,\hat{g}) = e(a,\widehat{Y})$
+%                 \item $\forall i \in [1..\ell]: e(B_i,\hat{g}) = e(A_i,\widehat{Y})$
+%                 \item $e(c,\hat{g}) = e(X,\hat{g}) \cdot e(a,\widehat{Y})^\alpha \cdot \prod_{i=1}^\ell e(A_i,\widehat{Y})^{m_i}$
+%             \end{itemize}
+%         \item Output accept if all checks pass, reject otherwise
+%     \end{itemize}
+% \end{itemize}
+% \begin{itemize}
+%     \item \textbf{BlindSign}:
+%         \begin{itemize}
+%             \item \textbf{Common Input}: $pk$, commitment $M \in \G_1$
+%             \item \textbf{User Input}: Messages $(m_1,\ldots,m_\ell)$ such that $M = g^{m_1}\prod_{i=1}^\ell \widehat{Z}_i^{m_i}$
+%             \item \textbf{Signer Input}: $sk$
+%             \item \textbf{Protocol}:
+%             \begin{itemize}
+%                 \item User $\to$ Signer: Proof $\pi = \mathsf{PoK}\{(m_1,\ldots,m_\ell): M = g^{m_1}\prod_{i=1}^\ell \widehat{Z}_i^{m_i}\}$
+%                 \item Signer: Verify $\pi$, then:
+%                     \begin{itemize}
+%                         \item Sample $\alpha \sample \Z_p^*$, compute $a \gets g^\alpha \in \G_1$
+%                         \item For $i \in [1..\ell]$: $A_i \gets a^{z_i} \in \G_1$
+%                         \item Set $b \gets a^y \in \G_1$, $B_i \gets A_i^y \in \G_1$
+%                         \item Compute $c \gets a^x \cdot M^{xy} \in \G_1$
+%                     \end{itemize}
+%                 \item Signer $\to$ User: $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
+%             \end{itemize}
+%         \end{itemize}
+%     \item \textbf{ZKPoK-Verify}:
+%         \begin{itemize}
+%             \item \textbf{Common Input}: $pk$, blinded signature $\tilde{\sigma} = (\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c})$
+%             \item \textbf{Prover Input}: $(m_1,\ldots,m_\ell)$, randomization factors $r, r'$
+%             \item \textbf{Protocol}:
+%             \begin{itemize}
+%                 \item Compute pairings:
+%                     \begin{itemize}
+%                         \item $v_x \gets e(\tilde{a},\hat{g})$
+%                         \item $v_{xy} \gets e(\tilde{a},\widehat{Y})$
+%                         \item $v_s \gets e(\tilde{c},\hat{g})$
+%                     \end{itemize}
+%                 \item Execute proof: $\pi = \mathsf{PoK}\{(r,r',\{m_i\}): v_s = v_x \cdot v_{xy}^r \cdot \prod_{i=1}^\ell e(\tilde{A}_i,\widehat{Y})^{m_i}\}$
+%                 \item Verify: $e(\tilde{b},\hat{g}) = e(\tilde{a},\widehat{Y})$ and $\forall i: e(\tilde{B}_i,\hat{g}) = e(\tilde{A}_i,\widehat{Y})$
+%             \end{itemize}
+%         \end{itemize}
+%         \item \textbf{ZKPoK-Verify}:
+%             \begin{itemize}
+%                 \item \textbf{Common Input}: $pk$, signature $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
+%                 \item \textbf{Prover Input}: $(m_1,\ldots,m_\ell)$
+%                 \item Send $(\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c})$ to Verifier
+
+%                 \item \textbf{Protocol}:
+%                 \begin{itemize}
+%                     \item Sample $r, r' \sample \Z_p^*$, Compute $(a^{r'}, b^{r'}, c^{r'r}) = (\tilde{a}, \tilde{b}, \tilde{c^r})$
+%                     \item For $i \in [1..\ell]$: $\tilde{A}_i \gets A_i^r$, and $\tilde{B}_i \gets B_i^r$
+%                     \item Send $(\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c^r})$ to Verifier
+%                     \item Both parties compute:
+%                     \[
+%                     v_x \gets e(\tilde{a},\hat{g}) \qquad v_{xy} \gets e(\tilde{a},\widehat{Y}) \qquad v_s \gets e(\tilde{c^r},\hat{g})
+%                     \]
+%                     \item Execute proof: 
+%                         \[\pi = \mathsf{PoK}\{(r,r',\{m_i\}): v_s = v_x \cdot v_{xy}^r \cdot \prod_{i=1}^\ell e(\tilde{A}_i,\widehat{Y})^{m_i}\}\]
+%                     \item Verifier checks:
+%                         \begin{itemize}
+%                             \item $e(\tilde{b},\hat{g}) = e(\tilde{a},\widehat{Y})$
+%                             \item $\forall i \in [1..\ell]: e(\tilde{B}_i,\hat{g}) = e(\tilde{A}_i,\widehat{Y})$
+%                             \item Verification of $\pi$
+%                         \end{itemize}
+%                 \end{itemize}
+% \end{itemize}
+% \end{itemize}
+
+\newpage
+\subsection{CL04 Mapped to Type3 Pairings}
+\begin{itemize}
+    \item \textbf{KeyGen}($1^\lambda$):
+    \begin{itemize}
+        \item $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(1^\lambda)$
+        \item Sample $x, y \sample \Z_p^*$, $(z_1, \ldots, z_\ell) \sample (\Z_p^*)^\ell$. Set $sk = (x, y, z_1, \ldots, z_\ell)$
+        \item Compute public key:
+            \begin{align*}
+                X &\gets g^x \in \G_1, \quad \widehat{Y} \gets \hat{g}^y \in \G_2 \qquad h \sample \Z_p^*, H \gets g^h\\
+                \widehat{Z}_i &\gets \hat{g}^{z_i} \in \G_2, \quad W_i \gets g^{x z_i} \in \G_1 \quad \forall i \in [1..\ell]
+            \end{align*}
+        \item Output: $pk = (\mathsf{BG}, X, \widehat{Y}, \{\widehat{Z}_i\}_{i=1}^\ell, \{W_i\}_{i=1}^\ell)$
+    \end{itemize}
+    
+    \item \textbf{Sign}($sk, (m_1,\ldots,m_\ell)$):
+    \begin{itemize}
+        \item Sample $\alpha \sample \Z_p^*$, compute $a \gets g^\alpha \in \G_1$
+        \item For $i \in [1..\ell]$: $A_i \gets a^{z_i} \in \G_1$
+        \item Compute $b \gets a^y \in \G_1$, $B_i \gets A_i^y \in \G_1$
+        \item Compute $c \gets a^{x} \cdot b^{\alpha} \cdot \prod_{i=1}^\ell B_i^{m_i} \in \G_1$
+        \item Output $\sigma = (a, \{A_i\}, b, \{B_i\}, c)$
+    \end{itemize}
+
+    \item \textbf{Verify}($pk, (m_1,\ldots,m_\ell), \sigma$):
+    \begin{itemize}
+        \item Parse $\sigma = (a, \{A_i\}, b, \{B_i\}, c)$
+        \item Verify:
+            \begin{align*}
+                e(b, \hat{g}) &= e(a, \widehat{Y}) \\
+                \forall i: e(B_i, \hat{g}) &= e(A_i, \widehat{Y}) \\
+                e(c, \hat{g}) &= e(X, \hat{g}) \cdot e(a, \widehat{Y})^\alpha \cdot \prod_{i=1}^\ell e(A_i, \widehat{Y})^{m_i}
+            \end{align*}
+    \end{itemize}
+
+    \item \textbf{BlindSign Protocol}:
+    \begin{itemize}
+        \item \textbf{User} (with $(m_1, \ldots, m_\ell)$):
+            \begin{itemize}
+                \item Sample $\gamma \sample \Z_p^*$
+                \item Compute commitment: $\cm \gets h^\gamma\prod_{i=1}^\ell W_i^{m_i} \in \G_1$
+                \item Send $\cm$ to Signer with proof:
+                    \[
+                    \pi = \mathsf{PoK}\{(m_1, \ldots, m_\ell, \gamma): \cm = H^\gamma\prod_{i=1}^\ell W_i^{m_i}\}
+                    \]
+            \end{itemize}
+        
+        \item \textbf{Signer} (with $sk = (x, y, z_1, \ldots, z_\ell)$):
+        \item Verify $\pi$. If valid:
+                
+        \begin{itemize}
+            \item Sample $\alpha \sample \Z_p^*$, compute $a \gets g^\alpha$, $A_i \gets a^{z_i}$
+            \item Compute $b \gets a^y$, $B_i \gets A_i^y$
+            \item Compute $c \gets a^x \cdot \cm^{xy} \in \G_1$
+            \item Send $\sigma = (a, \{A_i\}, b, \{B_i\}, c)$ to User
+        \end{itemize}
+
+
+        \item \textbf{User} (Unblinding):
+            \begin{itemize}
+                \item Sample $r, r' \sample \Z_p^*$
+                \item Compute blinded signature $\tilde{\sigma}$:
+                    \begin{align*}
+                        \tilde{a} &\gets a^{r'} \\
+                        \tilde{A_i} &\gets A_i^{r'} && \text{for } i \in [1,\ell] \\
+                        \tilde{b} &\gets b^{r'} \\
+                        \tilde{B_i} &\gets B_i^{r'} && \text{for } i \in [1,\ell] \\
+                        \tilde{c}^r &\gets c^{r r'}
+                    \end{align*}
+            \end{itemize}
+
+    \item \textbf{ZKPoK-Verify}:
+    \begin{itemize}
+        \item \textbf{Common Input}: $pk$, $\tilde{\sigma} = (\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c})$
+        
+        \item \textbf{Prover} (with $m_1, \ldots, m_\ell$):
+            \begin{itemize}
+                \item Compute pairings:
+                    \begin{align*}
+                        v_x &\gets e(\tilde{a}, \hat{g}) \\
+                        v_{xy} &\gets e(\tilde{a}, \widehat{Y}) \\
+                        v_s &\gets e(\tilde{c}, \hat{g})
+                    \end{align*}
+                \item Generate proof:
+                    \[
+                    \pi = \mathsf{PoK}\{(m_1, \ldots, m_\ell, r): v_s = v_x \cdot \prod_{i=1}^\ell e(\tilde{A}_i, \widehat{Y})^{m_i}\}
+                    \]
+            \end{itemize}
+        
+        \item \textbf{Verifier}:
+            \begin{itemize}
+                \item Check signature structure:
+                    \begin{align*}
+                        e(\tilde{b}, \hat{g}) &\stackrel{?}{=} e(\tilde{a}, \widehat{Y}) \\
+                        e(\tilde{B}_i, \hat{g}) &\stackrel{?}{=} e(\tilde{A}_i, \widehat{Y}) && \text{for } i \in [1,\ell]
+                    \end{align*}
+                \item Verify proof $\pi$ using the pairing equation for $v_s$
+                \item Accept if all checks pass
+            \end{itemize}
+    \end{itemize}
+\end{itemize}
+\end{itemize}
 
 
 
 
 
-
-
-
-
-
-
+\newpage
 
 
 
@@ -2672,67 +2865,6 @@ By employing these techniques:
 
 
 
-\newpage
-\noindent \textbf{Relation Proved:} Knowledge of $(r_1, r_2, e, \delta_1, \delta_2, s, m_1, \dots, m_L)$ such that:
-\[
-\begin{aligned}
-\mathsf{A}_1 &= \mathsf{g}_1^{r_1} \mathsf{g}_2^{r_2}, \\
-\mathsf{A}_1^e &= \mathsf{g}_1^{\delta_1} \mathsf{g}_2^{\delta_2}, \\
-\mathsf{A}^{e+\gamma} &= \mathsf{g}_0 \mathsf{g}_1^s \mathsf{g}_2^{m_1} \cdots \mathsf{g}_{L+1}^{m_L}, \\
-\delta_1 &= r_1 e, \quad \delta_2 = r_2 e.
-\end{aligned}
-\]
-
-\section*{Prover's Operations}
-\begin{itemize}
-  \item \textbf{Commitments in $\mathsf{G}_1$:}
-    \begin{itemize}
-      \item Compute $\mathsf{A}_1 = \mathsf{g}_1^{r_1} \mathsf{g}_2^{r_2}$, $\mathsf{A}_2 = \mathsf{A} \cdot \mathsf{g}_2^{r_1}$ (3 exponentiations).
-      \item Compute $\mathsf{A}_1^e$ (1 exponentiation).
-    \end{itemize}
-  \item \textbf{Commitments in $\mathsf{G}_T$:}
-    \begin{itemize}
-      \item Construct $\mathsf{T} = \mathsf{e}(\mathsf{A}_2, \mathsf{h}_0)^{-\tilde{e}} \cdot \mathsf{e}(\mathsf{g}_2, \mathsf{w})^{\tilde{r}_1} \cdot \mathsf{e}(\mathsf{g}_2, \mathsf{h}_0)^{\tilde{\delta}_1} \cdot \mathsf{e}(\mathsf{g}_1, \mathsf{h}_0)^{\tilde{s}} \cdots \mathsf{e}(\mathsf{g}_{L+1}, \mathsf{h}_0)^{\tilde{m}_L}$.
-      \item Requires 1 pairing ($\mathsf{e}(\mathsf{A}_2, \mathsf{h}_0)$) and $L+4$ exponentiations in $\mathsf{G}_T$.
-    \end{itemize}
-  \item \textbf{Responses:} Compute Schnorr responses for all secrets:
-    \[
-    z_x = \tilde{x} + c \cdot x \quad \text{for } x \in \{r_1, r_2, e, \delta_1, \delta_2, s, m_1, \dots, m_L\}.
-    \]
-\end{itemize}
-
-\section*{Verifier's Operations}
-\begin{itemize}
-  \item \textbf{Schnorr Checks in $\mathsf{G}_1$:}
-    \begin{itemize}
-      \item Verify $\mathsf{A}_1 = \mathsf{g}_1^{r_1} \mathsf{g}_2^{r_2}$: 2 exponentiations.
-      \item Verify $\mathsf{A}_1^e = \mathsf{g}_1^{\delta_1} \mathsf{g}_2^{\delta_2}$: 2 exponentiations.
-    \end{itemize}
-  \item \textbf{Pairing Checks in $\mathsf{G}_T$:}
-    \begin{itemize}
-      \item Compute $\text{LHS} = \frac{\mathsf{e}(\mathsf{A}_2, \mathsf{w})}{\mathsf{e}(\mathsf{g}_0, \mathsf{h}_0)}$ (2 pairings).
-      \item Compute $\text{RHS} = \prod_{i=1}^{L+4} \mathsf{e}(\cdot)^{\text{precomputed}}_{z_i}$ ($L+4$ exponentiations).
-      \item Verify $\text{LHS} \stackrel{?}{=} \text{RHS}$.
-    \end{itemize}
-\end{itemize}
-
-\noindent \textbf{Summary:}
-\[
-\begin{aligned}
-\text{Prover: } & 
-\begin{cases} 
-4 \text{ $\mathsf{G}_1$ exponentiations} \\
-1 \text{ pairing } (\mathsf{e}(\mathsf{A}_2, \mathsf{h}_0)) \\
-L+4 \text{ $\mathsf{G}_T$ exponentiations}
-\end{cases} \\
-\text{Verifier: } & 
-\begin{cases} 
-4 \text{ $\mathsf{G}_1$ exponentiations} \\
-L+4 \text{ $\mathsf{G}_T$ exponentiations} \\
-2 \text{ pairings } (\mathsf{e}(\mathsf{A}_2, \mathsf{w}), \mathsf{e}(\mathsf{g}_0, \mathsf{h}_0))
-\end{cases}
-\end{aligned}
-\]
 
 
 
@@ -2744,82 +2876,3 @@ L+4 \text{ $\mathsf{G}_T$ exponentiations} \\
 
 
 
-
-
-
-
-
-
-
-\newpage
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Operation} & \textbf{Prover} & \textbf{Verifier} \\
-\hline
-\multicolumn{3}{|l|}{\textbf{Commitment Equality Method}} \\
-\hline
-G1 exponentiations & 4 & 5 \\
-G1 additions & 2 & 4 \\
-Fp multiplications & 3 & 0 \\
-Fp additions & 3 & 0 \\
-\hline
-\multicolumn{3}{|l|}{\textbf{G1 VRF Method}} \\
-\hline
-G1 exponentiations & 11 & 11 \\
-G1 additions & 4 & 7 \\
-Fp multiplications & 6 & 0 \\
-Fp additions & 6 & 0 \\
-\hline
-\multicolumn{3}{|l|}{\textbf{Pairing + VRF Method}} \\
-\hline
-G1 exponentiations & 2 & 3 \\
-G2 exponentiations & 2 & 3 \\
-G1 additions & 1 & 2 \\
-G2 additions & 1 & 2 \\
-Fp multiplications & 12 & 0 \\
-Fp additions & 8 & 0 \\
-GT exponentiations & 8 & 5 \\
-GT multiplications & 6 & 4 \\
-Pairings & 4 & 4 \\
-\hline
-\end{tabular}
-\caption{Comparison of computational operations between G1 and Pairing methods}
-\end{table}
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|r|}
-\hline
-\textbf{Operation} & \textbf{Time} \\
-\hline
-Full Pairing & 1.6218 ms \\
-Miller Loop & 0.6931 ms \\
-Final Exponentiation & 0.9287 ms \\
-G1 Mixed Addition (Affine + Jacobian) & 672 ns \\
-G1 Point Doubling (2P) & 414 ns \\
-G2 Mixed Addition (Affine + Jacobian) & 2143 ns \\
-G2 Point Doubling (2P) & 1302 ns \\
-\hline
-Estimated G1 Scalar Mult (255-bit) & 191.59 $\mu$s \\
-\emph{\small(255 doublings + ~128 additions)} & \\
-Estimated G2 Scalar Mult (255-bit) & 606.01 $\mu$s \\
-\emph{\small(255 doublings + ~128 additions)} & \\
-\hline
-\end{tabular}
-\caption{Performance metrics for arkworks BLS12-381 implementation. Scalar multiplication estimates assume naive double-and-add implementation without optimizations.}
-\label{tab:arkworks-performance}
-\end{table}
-\footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
-
-
-
-
-
-
-
-
-
-
-\subsection{CL04}
