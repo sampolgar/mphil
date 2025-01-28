@@ -2286,6 +2286,13 @@ Anonymous Attestation - improved BBS+
 CL04? not sure if it was improved
 PS - improved, that's what we're using, the first to use it
 
+\noindent\textbf{Notation:}
+\begin{itemize}
+    \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
+    \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
+    \item $P$: Pairing Operation
+    \item $L$: Number of message attributes
+\end{itemize}
 
 
 
@@ -2379,7 +2386,8 @@ The signature scheme for signing information-theoretically hidden messages consi
     \end{enumerate}
 \end{protocol}
 
-\subsubsection{Complexity Analysis}
+\newpage
+
 \noindent\textbf{Notation:}
 \begin{itemize}
     \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
@@ -2388,48 +2396,30 @@ The signature scheme for signing information-theoretically hidden messages consi
     \item $\ell$: Number of messages
 \end{itemize}
 
-\newpage
+
+\subsubsection{PS16 Complexity Analysis \cite{sako_short_2016}}
 \begin{itemize}
     \item \textbf{Prover's Initial Operations (Signature Randomization)}
-        \begin{itemize}
-            \item $\sigma_1' = \sigma_1^r$ \qquad $1E_{\G_1}$
-            \item $\sigma_2' = (\sigma_2 \cdot \sigma_1^t)^r$ \qquad $2E_{\G_1} + 1M_{\G_1}$
-        \end{itemize}
-        
-    \item \textbf{Prover Schnorr Operations}
-        \begin{itemize}
-            \item Sample $\ell+2$ field elements ($t, r, m_1,\ldots,m_\ell$) \qquad (negligible)
-            \item Compute commitment $T$
-            \[
-            T \gets e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j} \cdot e(\sigma_1', \hat{g})^{\tilde{t}}
-            \]
-                \begin{itemize}
-                    \item $e(\sigma_1',\hat{X})$ \qquad $1P$
-                    \item $e(\sigma_1', \hat{g})^{\tilde{t}}$ \qquad $1P + 1E_{\G_T}$
-                    \item $e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j}$ \qquad $\ell (P + E_{\G_T})$
-                    \item Multiply all terms \qquad $(\ell+1 )M_{\G_T}$
-                \end{itemize}
-                \item Compute commitment $T$: \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + (\ell+1) M_{\G_T}$
-        \end{itemize}
-        
-    \item \textbf{Proof Size / Data Sent}
-        \begin{itemize}
-            \item $(\sigma_1', \sigma_2')$ \qquad $2\G_1$ elements
-            \item $T$ \qquad $1\G_T$ element
-            \item $z_{x}$ for $x \in \{t,r,m_1,\ldots,m_\ell\}$ \qquad $(\ell+2)\Z_p^*$ elements
-        \end{itemize}
-        
-    \item \textbf{Verifier Operations}
-        \begin{itemize}
-            \item Final equation verification: \qquad $(\ell+3)P + (\ell+1)E_{\G_T} + (\ell +2) M_{\G_T}$
-                \begin{itemize}
-                    \item $e(\sigma_2', \hat{g})$ \qquad $1P$
-                    \item $e(\sigma_1',\hat{X})$ \qquad $1P$
-                    \item $e(\sigma_1', \widehat{Y}_j)^{z_{m_j}}$ \qquad $\ell P + \ell E_{\G_T}$
-                    \item $e(\sigma_1', \hat{g})^{z_t}$ \qquad $1P + 1E_{\G_T}$
-                    \item Final multiplications \qquad $(\ell +2 )M_{\G_T}$
-                \end{itemize}
-        \end{itemize}
+    \begin{itemize}
+        \item $(\sigma_1^r, (\sigma_2 \cdot \sigma_1^t)^r)$ \qquad $3E_{\G_1} + 1M_{\G_1}$
+    \end{itemize}
+    
+\item \textbf{Prover Schnorr Operations}
+    \begin{itemize}
+        \item Sample $\ell+2$ field elements ($t, r, m_1,\ldots,m_\ell$) \qquad (negligible)
+        \item Compute $T \gets e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j} \cdot e(\sigma_1', \hat{g})^{\tilde{t}}$ \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + (\ell+1)M_{\G_T}$
+    \end{itemize}
+    
+\item \textbf{Proof Size / Data Sent}
+    \begin{itemize}
+        \item $(\sigma_1', \sigma_2', T)$ \qquad $2\G_1$, $1\G_T$ elements
+        \item $z_x$ for $x \in \{t,r,m_1,\ldots,m_\ell\}$ \qquad $(\ell+2)\Z_p^*$ elements
+    \end{itemize}
+    
+\item \textbf{Verifier Operations}
+    \begin{itemize}
+        \item Equation verification: $e(\sigma_2', \hat{g}) \stackrel{?}{=} e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{z_{m_j}} \cdot e(\sigma_1', \hat{g})^{z_t}$ \qquad $(\ell+3)P + (\ell+1)E_{\G_T} + (\ell+2)M_{\G_T}$
+    \end{itemize}
 \end{itemize}
 
 
@@ -2448,7 +2438,7 @@ The signature scheme for signing information-theoretically hidden messages consi
 
 
 \newpage
-\subsection{PS \cite{tomescu2022utt}}
+\subsection{PS22 \cite{tomescu2022utt}}
 
 \begin{itemize}
     \item \textbf{PS.Rerand}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm = (\cm, \widehat{\cm}) ) \to (\sigma', \cm', \Delta_r, \Delta_u)$
@@ -2467,7 +2457,6 @@ The signature scheme for signing information-theoretically hidden messages consi
     \]
     
 \end{itemize}
-
 
 
 \newpage
@@ -2496,10 +2485,7 @@ The signature scheme for signing information-theoretically hidden messages consi
             \]
             \item Compute Schnorr commitments:
             \[
-                T_1 \gets h^{\tilde{r'}} \prod_{i=1}^\ell g_i^{\tilde{m_i}}
-            \]
-            \[
-                T_2 \gets e(\sigma_1^{\tilde{u'}}, \widehat{X} \cdot \widehat{\cm'})
+                T_1 \gets h^{\tilde{r'}} \prod_{i=1}^\ell g_i^{\tilde{m_i}} \qquad T_2 \gets e(\sigma_1^{\tilde{u'}}, \widehat{X} \cdot \widehat{\cm'})
             \]
             \item Send $(\cm', T_1, T_2)$ to $\Verifier$
         \end{itemize}
@@ -2514,6 +2500,7 @@ The signature scheme for signing information-theoretically hidden messages consi
         \item $\Verifier$ checks:
         \[
             \cm'^c \cdot T_1 \stackrel{?}{=} h^{z_{r'}} \prod_{i=1}^\ell g_i^{z_{m_i}}
+            \quad \wedge \quad e(\cm, \hat{h}) \stackrel{?}{=} e(h, \widehat{\cm})
         \]
         \[
             e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})
@@ -2525,6 +2512,7 @@ The signature scheme for signing information-theoretically hidden messages consi
 
 
 \newpage
+\subsubsection{PS UTT Complexity Analysis \cite{tomescu2022utt}}
 \begin{itemize}
     \item \textbf{Prover's Initial Operations (Signature Rerandomization)}
     \begin{itemize}
@@ -2547,7 +2535,8 @@ The signature scheme for signing information-theoretically hidden messages consi
 \item \textbf{Verifier Operations}
     \begin{itemize}
         \item First equation check: $\cm'^c \cdot T_1 \stackrel{?}{=} h^{z_{r'}} \prod_{i=1}^\ell g_i^{z_{m_i}}$ \qquad $(\ell + 2) E_{\G_1}$ + $(\ell + 2) M_{\G_1}$
-        \item Second equation check: $e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})$ \qquad $ 1E_{\G_1} + 1M_{\G_2} + 1E_{\G_T} + 2P + 2M_{\G_T} $
+        \item Second equation check: $e(\cm, \hat{h}) \stackrel{?}{=} e(h, \widehat{\cm})$ \qquad $2P$
+        \item Third equation check: $e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})$ \qquad $ 1E_{\G_1} + 1M_{\G_2} + 1E_{\G_T} + 2P + 2M_{\G_T} $
     \end{itemize}
 \end{itemize}
 
@@ -2650,59 +2639,41 @@ asd
 \end{protocol}
 
 \newpage
-\subsubsection{Complexity Analysis}
-
-\noindent\textbf{Notation:}
-\begin{itemize}
-    \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
-    \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
-    \item $P$: Pairing Operation
-    \item $L$: Number of message attributes
-\end{itemize}
-
+\subsubsection{BBS+ 2006 Complexity Analysis}
 
 \begin{itemize}
     \item \textbf{Precomputed Values}
-        \begin{itemize}
-            \item $e(g_1, \hat{h_0}), e(g_2, \hat{h_0}), e(g_2, \hat{w})$ \qquad Stored constants in $\G_T$
-            \item $e(g_{i+1}, \hat{h_0})$ for $i \in [1,L]$ \qquad L stored constants in $\G_T$
-        \end{itemize}
+    \begin{itemize}
+        \item Base pairings: $(e(g_1, \hat{h_0}), e(g_2, \hat{h_0}), e(g_2, \hat{w}))$ \qquad $3$ stored $\G_T$ elements
+        \item Message pairings: $\{e(g_{i+1}, \hat{h_0})\}_{i \in [1,L]}$ \qquad $L$ stored $\G_T$ elements
+    \end{itemize}
+
     \item \textbf{Prover's Initial Operations}
-        \begin{itemize}
-            \item Set $\delta_1 = r_1e, \delta_2 = r_2e$ \qquad $2F_p\times$
-            \item $A_1 = g_1^{r_1}g_2^{r_2}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
-            \item $A_1^e$ computation \qquad $1E_{\G_1}$
-            \item $A_2 = Ag_2^{r_1}$ \qquad $1E_{\G_1} + 1M_{\G_1}$
-        \end{itemize}
+    \begin{itemize}
+        \item $(\delta_1, \delta_2) \gets (r_1e, r_2e)$ \qquad $2F_p\times$
+        \item $(A_1, A_1^e, A_2) \gets (g_1^{r_1}g_2^{r_2}, (g_1^{r_1}g_2^{r_2})^e, Ag_2^{r_1})$ \qquad $4E_{\G_1} + 2M_{\G_1}$
+    \end{itemize}
+    
     \item \textbf{Prover Schnorr Operations}
     \begin{itemize}
-        \item Sample L+6 field elements (negligible)
-        \item $T_1 = g_1^{\tilde{r_1}}g_2^{\tilde{r_2}}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
-        \item $T_2 = g_1^{\tilde{\delta_1}}g_2^{\tilde{\delta_2}}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
-        \item $T_3$ computation: \qquad $1P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
-            \begin{itemize}
-                \item $e(A_2, \hat{h_0})^{\tilde{-e}}$ \qquad $1P + 1E_{\G_T}$
-                \item Remaining exponentiations use precomputed pairings \qquad $(L+3)E_{\G_T} + (L+3)M_{\G_T}$
-            \end{itemize}
+        \item Sample $L+6$ field elements $(\tilde{r_1}, \tilde{r_2}, \tilde{e}, \tilde{\delta_1}, \tilde{\delta_2}, \tilde{s}, \tilde{m_1},\ldots,\tilde{m_L})$ \qquad (negligible)
+        \item $(T_1, T_2) \gets (g_1^{\tilde{r_1}}g_2^{\tilde{r_2}}, g_1^{\tilde{\delta_1}}g_2^{\tilde{\delta_2}})$ \qquad $4E_{\G_1} + 2M_{\G_1}$
+        \item Compute $T_3$ using precomputed pairings \qquad $1P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
     \end{itemize}
-        \item \textbf{Proof Size / Data Sent}
-            \begin{itemize}
-                \item $(A_1, A_1^e, A_2, T_1, T_2, T_3)$ \qquad $5E_{\G_1} + 1E_{\G_T}$
-                \item Responses $z_x$ for $x \in {r_1, r_2, e, \delta_1, \delta_2, s, m_1,\ldots,m_L}$ \qquad $(L+6)\Z_p^*$
-            \end{itemize}
+    
+    \item \textbf{Proof Size / Data Sent}
+    \begin{itemize}
+        \item $(A_1, A_1^e, A_2, T_1, T_2, T_3)$ \qquad $5$ elements in $\G_1$, $1$ element in $\G_T$
+        \item $z_x$ for $x \in \{r_1, r_2, e, \delta_1, \delta_2, s, m_1,\ldots,m_L\}$ \qquad $(L+6)$ elements in $\Z_p^*$
+    \end{itemize}
+    
     \item \textbf{Verifier Operations}
-        \begin{itemize}
-            \item First equation: $A_1^c \cdot T_1 \stackrel{?}{=} g_1^{z_{r_1}}g_2^{z_{r_2}}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
-            \item Second equation: $(A_1^e)^c \cdot T_2 \stackrel{?}{=} g_1^{z_{\delta_1}}g_2^{z_{\delta_2}}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
-            \item Final pairing equation: \qquad $2P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
-                \begin{itemize}
-                    \item Left side: $\frac{e(A_2, \widehat{w})}{e(g_2, \widehat{h_0})}$ \qquad $2P$ + $1M_{\G_T}$
-                    \item Right side  \qquad $(L+3)E_{\G_T} + (L+2)M_{\G_T}$
-                \end{itemize}
-        \end{itemize}
+    \begin{itemize}
+        \item Commitment verification: $A_1^c \cdot T_1 \stackrel{?}{=} g_1^{z_{r_1}}g_2^{z_{r_2}}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
+        \item Exponentiation verification: $(A_1^e)^c \cdot T_2 \stackrel{?}{=} g_1^{z_{\delta_1}}g_2^{z_{\delta_2}}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
+        \item Pairing equation verification: $e(A_2, \widehat{w}) \stackrel{?}{=} e(g_2, \widehat{h_0}) \cdot T_3^c$ \qquad $2P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
+    \end{itemize}
 \end{itemize}
-
-
 
 
 
@@ -2715,7 +2686,7 @@ asd
 
 
 \newpage
-\subsection{BBS+ \cite{camenisch_anonymous_2016}}
+\subsection{BBS+ 2016 \cite{camenisch_anonymous_2016}}
 asd
 \subsubsection{Protocol for Signature Proof of Knowledge}
 asd
@@ -2768,52 +2739,37 @@ asd
 \subsubsection{Complexity Analysis}
 
 \begin{itemize}
-    \item \textbf{Notation:}
-        \begin{itemize}
-            \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
-            \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
-            \item $P$: Pairing Operation
-            \item $n$: Number of attributes/messages
-        \end{itemize}
     \item \textbf{Precomputed Values}
-        \begin{itemize}
-            \item $e(g, g_2), e(h_0, g_2)$ \qquad Stored constants in $\G_T$
-            \item $e(h_i, g_2)$ for $i \in [1,n]$ \qquad n stored constants in $\G_T$
-        \end{itemize}
-    \item \textbf{Prover's Operations}
-        \begin{itemize}
-            \item $r_3 = \frac{1}{r_1}$ \qquad $1F_p-$
-            \item $s' = s - r_2 \cdot r_3$ \qquad $1\F_p\times + 1F_p-$
-            \item $A' \gets A^{r_1}$ \qquad $1E_{\G_1}$
-            \item $\Bar{A} \gets A'^{-e} \cdot b^{r_1}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
-            \item $d \leftarrow (gh_0^{r_1}\prod h_i^{-m_i})^{r_2} \cdot h_0^{r_3}$
-                \begin{itemize}
-                    \item $h_0^{r_1}$ \qquad $1E_{\G_1}$
-                    \item $\prod h_i^{-m_i}$ \qquad $nE_{\G_1} + (n-1)M_{\G_1}$
-                    \item Final exponentiation and multiplication \qquad $1E_{\G_1} + 2M_{\G_1}$
-                \end{itemize}
-        \end{itemize}
+    \begin{itemize}
+        \item Base pairings: $(e(g, g_2), e(h_0, g_2))$ \qquad $2$ stored $\G_T$ elements
+        \item Attribute pairings: $\{e(h_i, g_2)\}_{i \in [1,n]}$ \qquad $n$ stored $\G_T$ elements
+    \end{itemize}
+
+    \item \textbf{Prover's Initial Operations}
+    \begin{itemize}
+        \item Field computations: $(r_3, s') \gets (\frac{1}{r_1}, s - r_2 \cdot r_3)$ \qquad $1F_p- + 1F_p\times + 1F_p+$
+        \item Signature randomization: $(A', \Bar{A}) \gets (A^{r_1}, A'^{-e} \cdot b^{r_1})$ \qquad $3E_{\G_1} + 1M_{\G_1}$
+        \item Attribute commitment: $d \gets (gh_0^{r_1}\prod_{i=1}^n h_i^{-m_i})^{r_2} \cdot h_0^{r_3}$ \qquad $(n+2)E_{\G_1} + (n+1)M_{\G_1}$
+    \end{itemize}
+    
     \item \textbf{Prover Schnorr Operations}
-        \begin{itemize}
-            \item Sample n+4 field elements (negligible)
-            \item $T_1 \gets A^{\tilde{e}} \cdot h_0^{\tilde{s}}$ \qquad $2E_{\G_1} + 1M_{\G_1}$
-            \item $T_2 \gets g\prod_{i=1}^n h_i^{\tilde{m_i}}$ \qquad  $nE\G_1 + (n-1)M_{\G_1}$
-            \item Compute n+4 responses (negligible)
-        \end{itemize}
+    \begin{itemize}
+        \item Sample $n+4$ field elements $(\tilde{e}, \tilde{s}, \tilde{m_1},\ldots,\tilde{m_n}, \tilde{r_1}, \tilde{r_2})$ \qquad (negligible)
+        \item $(T_1, T_2) \gets (A^{\tilde{e}} \cdot h_0^{\tilde{s}}, g\prod_{i=1}^n h_i^{\tilde{m_i}})$ \qquad $(n+2)E_{\G_1} + nM_{\G_1}$
+    \end{itemize}
+    
     \item \textbf{Proof Size / Data Sent}
-        \begin{itemize}
-            \item $(A', \Bar{A}, d, T_1, T_2)$ \qquad $5\G_1$ elements
-            \item Responses for ${r_1, r_2, e, s', m_1, \ldots, m_n}$ \qquad $(n + 4)\Z_p^*$
-        \end{itemize}
+    \begin{itemize}
+        \item $(A', \Bar{A}, d, T_1, T_2)$ \qquad $5$ elements in $\G_1$
+        \item $z_x$ for $x \in \{r_1, r_2, e, s', m_1,\ldots,m_n\}$ \qquad $(n+4)$ elements in $\Z_p^*$
+    \end{itemize}
+    
     \item \textbf{Verifier Operations}
-        \begin{itemize}
-           \item Pairing equality check: $e(A',\hat{w}) = e(\Bar{A},g_2)$ \qquad $2P + 1M_{\G_T}$
-        \end{itemize}
-    \item \textbf{Verifier Schnorr Operations}
-        \begin{itemize}
-            \item $T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
-            \item $T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}$ \qquad $(n+1)E_{\G_1} + nM_{\G_1}$
-        \end{itemize}
+    \begin{itemize}
+        \item Pairing verification: $e(A',\hat{w}) \stackrel{?}{=} e(\Bar{A},g_2)$ \qquad $2P + 1M_{\G_T}$
+        \item Commitment verification: $T_1 \stackrel{?}{=} A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c}$ \qquad $3E_{\G_1} + 2M_{\G_1}$
+        \item Attribute verification: $T_2 \stackrel{?}{=} g^c\prod_{i=1}^n h_i^{z_{m_i}}$ \qquad $(n+1)E_{\G_1} + nM_{\G_1}$
+    \end{itemize}
 \end{itemize}
 
 
@@ -2940,9 +2896,36 @@ Signature scheme D from \cite{hutchison_signature_2004} Mapped to Type3 Pairings
 
 
 \newpage
+\begin{itemize}
+    \item \textbf{Precomputed Values}
+    \begin{itemize}
+        \item Base pairings: $(e(\tilde{a}, \hat{g}), e(\tilde{a}, \widehat{Y}))$ \qquad $2$ stored $\G_T$ elements
+    \end{itemize}
 
-
-
+    \item \textbf{Prover's Initial Operations (Signature Randomization)}
+    \begin{itemize}
+        \item $(\tilde{a}, \tilde{b}, \{\tilde{A_i}\}, \{\tilde{B_i}\}, \tilde{c}) \gets (a^{r'}, b^{r'}, \{A_i^{r'}\}, \{B_i^{r'}\}, c^{rr'})$ \qquad $(2\ell + 3)E_{\G_1}$
+    \end{itemize}
+    
+    \item \textbf{Prover Schnorr Operations}
+    \begin{itemize}
+        \item Sample $\ell+1$ field elements $(\tilde{m_1},\ldots,\tilde{m_\ell}, \tilde{r})$ \qquad (negligible)
+        \item Compute commitment $T \gets v_x \cdot \prod_{i=1}^\ell e(\tilde{A}_i, \widehat{Y})^{\tilde{m_i}}$ \qquad $\ell E_{\G_T} + (\ell-1)M_{\G_T}$
+    \end{itemize}
+    
+    \item \textbf{Proof Size / Data Sent}
+    \begin{itemize}
+        \item $(\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c}, T)$ \qquad $(2\ell + 3)$ elements in $\G_1$, $1$ element in $\G_T$
+        \item $z_x$ for $x \in \{m_1,\ldots,m_\ell, r\}$ \qquad $(\ell + 1)$ elements in $\Z_p^*$
+    \end{itemize}
+    
+    \item \textbf{Verifier Operations}
+    \begin{itemize}
+        \item Structure verification: $e(\tilde{b}, \hat{g}) \stackrel{?}{=} e(\tilde{a}, \widehat{Y})$ \qquad $2P$
+        \item Attribute consistency: $\{e(\tilde{B}_i, \hat{g}) \stackrel{?}{=} e(\tilde{A}_i, \widehat{Y})\}_{i=1}^\ell$ \qquad $2\ell P$
+        \item Challenge verification: $v_s \stackrel{?}{=} v_x \cdot \prod_{i=1}^\ell e(\tilde{A}_i, \widehat{Y})^{z_{m_i}}$ \qquad $\ell P + \ell E_{\G_T} + (\ell-1)M_{\G_T}$
+    \end{itemize}
+\end{itemize}
 
 
 
