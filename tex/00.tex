@@ -2345,7 +2345,7 @@ The signature scheme for signing information-theoretically hidden messages consi
         \pi \gets \mathsf{SPK}\{(m_1,\ldots,m_\ell,t): e(\sigma_2', \hat{g}) = e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{m_j} \cdot e(\sigma_1', \hat{g})^t\}
         \]
     
-    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e, g, \hat{g})$, $pk = (g, Y_1,\ldots,Y_r, \hat{g}, \hat{X}, \widehat{Y}_1,\ldots,\widehat{Y}_r)$, $\sigma' = (\sigma_1, \sigma_2)$
+    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e, g, \hat{g})$, $pk = (g, Y_1,\ldots,Y_r, \hat{g}, \hat{X}, \widehat{Y}_1,\ldots,\widehat{Y}_r)$, 
     
     \textbf{Private Input:} $\Prover$ has $(m_1,\ldots,m_\ell, t)$ where $\sigma = (\sigma_1, \sigma_2)$, $\sigma_1 = g^u, \sigma_2 = (g^x \cdot \cm)^u$ and $\cm = g^t\prod_{i=1}^rY_i^{m_i}$
     \vspace{1em}
@@ -2388,8 +2388,6 @@ The signature scheme for signing information-theoretically hidden messages consi
     \item $\ell$: Number of messages
 \end{itemize}
 
-
-
 \newpage
 \begin{itemize}
     \item \textbf{Prover's Initial Operations (Signature Randomization)}
@@ -2401,13 +2399,17 @@ The signature scheme for signing information-theoretically hidden messages consi
     \item \textbf{Prover Schnorr Operations}
         \begin{itemize}
             \item Sample $\ell+2$ field elements ($t, r, m_1,\ldots,m_\ell$) \qquad (negligible)
-            \item Compute commitment $T$: \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + \ell M_{\G_T}$
+            \item Compute commitment $T$
+            \[
+            T \gets e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j} \cdot e(\sigma_1', \hat{g})^{\tilde{t}}
+            \]
                 \begin{itemize}
                     \item $e(\sigma_1',\hat{X})$ \qquad $1P$
                     \item $e(\sigma_1', \hat{g})^{\tilde{t}}$ \qquad $1P + 1E_{\G_T}$
-                    \item For each $j \in [1,\ell]$: $e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j}$ \qquad $1P + 1E_{\G_T}$
-                    \item Multiply all terms \qquad $\ell M_{\G_T}$
+                    \item $e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j}$ \qquad $\ell (P + E_{\G_T})$
+                    \item Multiply all terms \qquad $(\ell+1 )M_{\G_T}$
                 \end{itemize}
+                \item Compute commitment $T$: \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + (\ell+1) M_{\G_T}$
         \end{itemize}
         
     \item \textbf{Proof Size / Data Sent}
@@ -2419,13 +2421,13 @@ The signature scheme for signing information-theoretically hidden messages consi
         
     \item \textbf{Verifier Operations}
         \begin{itemize}
-            \item Final equation verification: \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + \ell M_{\G_T}$
+            \item Final equation verification: \qquad $(\ell+3)P + (\ell+1)E_{\G_T} + (\ell +2) M_{\G_T}$
                 \begin{itemize}
                     \item $e(\sigma_2', \hat{g})$ \qquad $1P$
                     \item $e(\sigma_1',\hat{X})$ \qquad $1P$
-                    \item For each $j \in [1,\ell]$: $e(\sigma_1', \widehat{Y}_j)^{z_{m_j}}$ \qquad $1P + 1E_{\G_T}$
+                    \item $e(\sigma_1', \widehat{Y}_j)^{z_{m_j}}$ \qquad $\ell P + \ell E_{\G_T}$
                     \item $e(\sigma_1', \hat{g})^{z_t}$ \qquad $1P + 1E_{\G_T}$
-                    \item Final multiplications \qquad $\ell M_{\G_T}$
+                    \item Final multiplications \qquad $(\ell +2 )M_{\G_T}$
                 \end{itemize}
         \end{itemize}
 \end{itemize}
