@@ -2296,74 +2296,183 @@ PS - improved, that's what we're using, the first to use it
 
 
 
+% % % % % % % % % % 
+% 
+% PS Start
+% 
+% % % % % % % % % % 
 
-\subsection{BBS+ \cite{hutchison_constant-size_2006}}
-Overview the BBS+ signature and protocol for proving knowledge of the attributes.
 
-\begin{figure}
-   \begin{pchstack}[boxed, center, space=1em]
-        \begin{pcvstack}
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Setup}(\secparam)$}{%
-                \mathsf{BG =}(p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(\secparam) \\
-                g \sample G_1, \vec{h} \sample \G_1^{n+1}, \hat{g} \sample \G_2 \\
-                pp \gets (p, g, \{{h}_i\}_0^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
-                \pcreturn pp \\
-        }
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.KG(pp)}$}{%
-                pp \gets (p, g, \{{h}_i\}_0^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
-                x \sample \Z_p^*, \hat{w} \gets \hat{g}^x \\
-                sk = x, pk = (\hat{w}, \{{h}_i\}_0^n) \\
-                \pcreturn (sk, pk) \\
-            }
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Sign}(sk = x, \vec{m} = (m_1, \ldots, m_n))$}{%
-                e, s \sample \Z_p^* \\
-                A \gets (gh_0^s\prod_1^n h_i^{m_i})^{\frac{1}{e+x}} \\
-                \pcreturn \sigma \gets (A,e,s) \\
-            }
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Verify}(pk, \vec{m}, \sigma = (A,e,s) )$}{%
-                \text{Check } e(A, \hat{w}\cdot \hat{g}^e) = e(gh_0^s\prod_1^n h_i^{m_i}, \hat{g}) \\
-            }
-            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.SignCommitted}(sk = x, \vec{m})$}{%
-                \Prover \text{ samples } s' \sample Z_p^* \; \text{ commits to } \vec{m} : \; \cm = h_0^{s'}\prod_1^n h_i^{m_i}\\
-                \t \text{ Computes }\pi = PoK\{(s', \vec{m}) : \cm = h_0^{s'}\prod_{1}^n h_i^{m_i} \} \\
-                \mathcal{S} \text{ Signer verifies cm is well formed } \mathsf{ZK.Verify}(\pi, \cm) = 1 \\
-                \t \text{ signer samples } s'', e \sample Z_p^* \\
-                \t \text{ computes } A = (gh_0^{s''}\cm)^{\frac{1}{e+x}}, \text{ returns } (A,e,s'') \\
-                \Prover \text{ computes } s = s' + s'', \text{ and } \sigma = (A,e,s) \\
-            }
-        \end{pcvstack}
-        \begin{pcvstack}
-        \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.ProveSignature}(pk, \sigma = (A,e,s), \vec{m})$}{%
-            r_1 \sample \Z_p^* \\
-            A' \gets A^{r_1}, r_3 \gets \frac{1}{r_1} \\
-            \Bar{A} \gets A'^{-e} \cdot (gh_0^s\prod_1^n h_i^{m_i})^{r_1} \\
-            r_2 \sample \Z_p^* \\
-            d \gets (gh_0^s\prod_1^n h_i^{-m_i})^{r_1} \cdot h_0^{-r_2} \\
-            s' \gets s - r_2 \cdot r_3 \\
-            r_e, r_s, \{r_{m_i}\}_{i=1}^n \sample \Z_p^* \\
-            T_1 \gets A^{r_e} \cdot h_0^{r_s} \\
-            T_2 \gets g^c\prod_{i=1}^n h_i^{r_{m_i}} \\
-            c \gets \mathcal{H}(A', \Bar{A}, T_1, T_2) \\
-            z_e \gets r_e + c \cdot e \\
-            z_s \gets r_s + c \cdot s \\
-            \forall i \in [1,n]: z_{m_i} \gets r_{m_i} + c \cdot m_i \\
-            \pi \gets (A', \Bar{A}, d, T_1, T_2, z_e, z_s, \{z_{m_i}\}_{i=1}^n) \\
-            \pcreturn \pi \\
-        }
-        \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.VerifyProof}(pk, \pi)$}{%
-            \text{Parse } \pi \text{ as } (A', \Bar{A}, d, T_1, T_2, z_e, z_s, \{z_{m_i}\}_{i=1}^n) \\
-            \text{Check } A' \neq 1_{\G_1} \\
-            \text{Check } e(A',\hat{w}) = e(\Bar{A},\hat{g}) \\
-            c \gets \mathcal{H}(A', \Bar{A}, T_1, T_2) \\
-            \text{Check } T_1 = A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c} \\
-            \text{Check } T_2 = g^c\prod_{i=1}^n h_i^{z_{m_i}} \\
-            \pcreturn \text{all checks pass} \\
-        }
-        \end{pcvstack}
-    \end{pchstack}
-    \caption{Zero-knowledge proof of knowledge protocol for BBS+ signatures. The proof $\pi$ consists of $(k+5)$ group elements in $\G_1$ and $(k+5)$ scalars in $\Z_p$, where $k$ is the number of hidden message components.}
-    \label{fig:bbs-zkp}
-\end{figure}
+
+\subsection{PS \cite{sako_short_2016}}
+
+The signature scheme for signing information-theoretically hidden messages consists of the following algorithms:
+
+\begin{itemize}
+    \item \textbf{KeyGen}$(1^\lambda)$:
+        \begin{itemize}
+            \item Generate bilinear group: $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(1^\lambda)$
+            \item Sample $(x, y_1, \ldots, y_{r}) \sample (\Z_p^*)^{\ell+1}$
+            \item Compute $(X, Y_1, \ldots, Y_r) \gets (g^x, g^{y_1}, \ldots, g^{y_r})$ and $(\hat{X}, \hat{Y}_1, \ldots, \hat{Y}_r) \gets (\hat{g}^x, \hat{g}^{y_1}, \ldots, \hat{g}^{y_r})$. Set $\mathsf{sk} \gets X$ and $\mathsf{pk} \gets (g, Y_1, \ldots, Y_r, \hat{g}, \hat{g}^{y_1}, \ldots, \hat{g}^{y_r})$
+        \end{itemize}
+    
+    \item \textbf{BlindSign Protocol}:
+        \begin{itemize}
+            \item \textbf{Prover} (input: $m_1,\ldots,m_\ell$): samples $t \sample \Z_p^*$, computes $\cm \gets g^t\prod_{i=1}^r Y_i^{m_i}$. Sends $\cm$ with a proof of knowledge to Signer
+                \[
+               \pi \leftarrow \mathsf{PoK}\{(m_1,\ldots,m_\ell,t): \mathsf{cm} = g^t\prod_{i=1}^r  Y_i^{m_i}\}
+                \]
+                
+            \item \textbf{Signer} proves $\pi$, on success, samples $u \sample \Z_p^*$, computes $\sigma' \gets (g^u, (X\cm)^u)$, returns to Prover
+            
+            \item \textbf{User} unblinds by $\sigma \gets (\sigma_1', \frac{\sigma_2'}{\sigma_1{'t}})$
+        \end{itemize}
+
+        \item \textbf{Verify PoK}:
+        \begin{itemize}
+            \item \textbf{Prover:} Randomizes $\sigma$, samples $r,t \sample \Z_p^*$, computes $\sigma' \gets (\sigma_1^r, (\sigma_2 \cdot \sigma_1^t)^r)$. Sends $\sigma' = (\sigma_1, \sigma_2)$ to $\Verifier$ with a PoK
+                \[
+               \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell,t): e(\sigma_2', \hat{g}) = e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{m_j} \cdot e(\sigma', \hat{g})^t\}
+                \]
+                
+        \end{itemize}
+\end{itemize}
+
+
+\begin{protocol}{PS Signature: Zero-Knowledge Proof of Knowledge of Blind Signature}{blind-sig-pok}
+    \textbf{Relation $\mathcal{R}$:} Prove knowledge of messages and randomness in a blind signature:
+        \[
+        \pi \gets \mathsf{SPK}\{(m_1,\ldots,m_\ell,t): e(\sigma_2', \hat{g}) = e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{m_j} \cdot e(\sigma_1', \hat{g})^t\}
+        \]
+    
+    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e, g, \hat{g})$, $pk = (g, Y_1,\ldots,Y_r, \hat{g}, \hat{X}, \widehat{Y}_1,\ldots,\widehat{Y}_r)$, $\sigma' = (\sigma_1, \sigma_2)$
+    
+    \textbf{Private Input:} $\Prover$ has $(m_1,\ldots,m_\ell, t)$ where $\sigma = (\sigma_1, \sigma_2)$, $\sigma_1 = g^u, \sigma_2 = (g^x \cdot \cm)^u$ and $\cm = g^t\prod_{i=1}^rY_i^{m_i}$
+    \vspace{1em}
+    \begin{enumerate}
+        \item $\Prover$: randomizes $\sigma$, samples $r,t \sample \Z_p^*$, computes $\sigma' \gets (\sigma_1^r, (\sigma_2 \cdot \sigma_1^t)^r)$\
+        \begin{itemize}
+            \item Samples Schnorr blinding factors from $\Z_p^*$
+            \[
+            \tilde{x} \text{ for } x \in \{\ t, r, m_1, \ldots, m_{\ell}\}
+            \]
+            \item Compute Schnorr commitment:
+            \[
+            T \gets e(\sigma_1',\hat{X}) \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j} \cdot e(\sigma_1', \hat{g})^{\tilde{t}}
+            \]
+            \item Send $T$ to $\Verifier$
+        \end{itemize}
+        
+        \item $\Verifier$ sends challenge $c \sample \Z_p^*$
+        
+        \item $\Prover$ computes Schnorr responses:
+        \[
+        z_{x} = \tilde{x} + c \cdot x \text{ for } x \in \{t,r, m_1, \ldots, m_\ell\}
+        \]
+
+        $\Prover$ sends $\Verifier$ $(\sigma_1', \sigma_2' \in \G_1, T \in \G_T, z_{x_j} \in \F_p^{\ell + 2} $
+        
+        \item $\Verifier$ checks:
+        \[
+        e(\sigma_2', \hat{g})^c \cdot T \stackrel{?}{=} e(\sigma_1',\hat{X})^c \cdot \prod_{j=1}^\ell e(\sigma_1', \widehat{Y}_j)^{z_{m_j}} \cdot e(\sigma_1', \hat{g})^{z_t}
+        \]
+    \end{enumerate}
+\end{protocol}
+
+\subsubsection{Complexity Analysis}
+\noindent\textbf{Notation:}
+\begin{itemize}
+    \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
+    \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
+    \item $P$: Pairing Operation
+    \item $\ell$: Number of messages
+\end{itemize}
+
+
+
+\newpage
+\begin{itemize}
+    \item \textbf{Prover's Initial Operations (Signature Randomization)}
+        \begin{itemize}
+            \item $\sigma_1' = \sigma_1^r$ \qquad $1E_{\G_1}$
+            \item $\sigma_2' = (\sigma_2 \cdot \sigma_1^t)^r$ \qquad $2E_{\G_1} + 1M_{\G_1}$
+        \end{itemize}
+        
+    \item \textbf{Prover Schnorr Operations}
+        \begin{itemize}
+            \item Sample $\ell+2$ field elements ($t, r, m_1,\ldots,m_\ell$) \qquad (negligible)
+            \item Compute commitment $T$: \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + \ell M_{\G_T}$
+                \begin{itemize}
+                    \item $e(\sigma_1',\hat{X})$ \qquad $1P$
+                    \item $e(\sigma_1', \hat{g})^{\tilde{t}}$ \qquad $1P + 1E_{\G_T}$
+                    \item For each $j \in [1,\ell]$: $e(\sigma_1', \widehat{Y}_j)^{\tilde{m}_j}$ \qquad $1P + 1E_{\G_T}$
+                    \item Multiply all terms \qquad $\ell M_{\G_T}$
+                \end{itemize}
+        \end{itemize}
+        
+    \item \textbf{Proof Size / Data Sent}
+        \begin{itemize}
+            \item $(\sigma_1', \sigma_2')$ \qquad $2\G_1$ elements
+            \item $T$ \qquad $1\G_T$ element
+            \item $z_{x}$ for $x \in \{t,r,m_1,\ldots,m_\ell\}$ \qquad $(\ell+2)\Z_p^*$ elements
+        \end{itemize}
+        
+    \item \textbf{Verifier Operations}
+        \begin{itemize}
+            \item Final equation verification: \qquad $(\ell+2)P + (\ell+1)E_{\G_T} + \ell M_{\G_T}$
+                \begin{itemize}
+                    \item $e(\sigma_2', \hat{g})$ \qquad $1P$
+                    \item $e(\sigma_1',\hat{X})$ \qquad $1P$
+                    \item For each $j \in [1,\ell]$: $e(\sigma_1', \widehat{Y}_j)^{z_{m_j}}$ \qquad $1P + 1E_{\G_T}$
+                    \item $e(\sigma_1', \hat{g})^{z_t}$ \qquad $1P + 1E_{\G_T}$
+                    \item Final multiplications \qquad $\ell M_{\G_T}$
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+
+
+% % % % % % % % % % 
+% 
+% PS End
+% 
+% % % % % % % % % % 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 % % % % % % % % % % 
@@ -2372,11 +2481,9 @@ Overview the BBS+ signature and protocol for proving knowledge of the attributes
 % 
 % % % % % % % % % % 
 
-
-
-
-
 \newpage
+\subsection{BBS+ 2006}
+Original BBS+ signature
 \subsubsection{Protocol for Signature Proof of Knowledge}
 asd
 
@@ -2603,7 +2710,11 @@ asd
 
 
 
-
+% % % % % % % % % % 
+% 
+% CL04
+% 
+% % % % % % % % % % 
 
 
 
@@ -2612,101 +2723,8 @@ asd
 
 \newpage
 \subsection{CL04 \cite{hutchison_signature_2004}}
-Signature scheme D from \cite{hutchison_signature_2004}
-% \begin{itemize}
-%     \item \textbf{KeyGen}($1^\lambda$):
-%     \begin{itemize}
-%         \item $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(1^\lambda)$
-%         \item Sample secret key components: $x, y \sample \Z_p^*$, $(z_1, \ldots, z_\ell) \sample (\Z_p^*)^\ell$. Set $sk = (x, y, z_1, \ldots, z_\ell)$
-%         \item Compute public key components: Compute public $x,y$ by $X \gets g^x \in \G_1$, $\widehat{Y} \gets \hat{g}^y \in \G_2$
-%         For $i \in [1..\ell]$: $\widehat{Z}_i \gets \hat{g}^{z_i} \in \G_2$, $W_i \gets X^{z_i} \in \G_1$
-%         \item Output: $pk = (\mathsf{BG}, X, \widehat{Y}, \{\widehat{Z}_i\}_{i=1}^\ell, \{W_i\}_{i=1}^\ell)$
-%     \end{itemize}
-    
-%     \item \textbf{Sign}($sk = (x, y, z_1, \ldots, z_\ell), (m_1,\ldots,m_\ell)$):
-%     \begin{itemize}
-%         \item Sample $\alpha \sample \Z_p^*$. Let $a \gets g^\alpha \in \G_1$
-%         \item For $i \in [1..\ell]$: Compute $A_i \gets a^{z_i} \in \G_1$. Set $b \gets a^y \in \G_1$, $B_i \gets A_i^y \in \G_1$
-%         \item Compute $c \gets a^{x+\alpha xy + \sum_{i=1}^\ell m_i xy z_i} \in \G_1$
-%         \item Output $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
-%     \end{itemize}
+Signature scheme D from \cite{hutchison_signature_2004} Mapped to Type3 Pairings
 
-%     \item \textbf{Verify}($pk = (\mathsf{BG}, X, \widehat{Y}, \{\widehat{Z}_i\}_{i=1}^\ell, \{W_i\}_{i=1}^\ell), (m_1,\ldots,m_\ell), \sigma$):
-%     \begin{itemize}
-%         \item Parse $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
-%         \item Check signature structure:
-%             \begin{itemize}
-%                 \item $e(b,\hat{g}) = e(a,\widehat{Y})$
-%                 \item $\forall i \in [1..\ell]: e(B_i,\hat{g}) = e(A_i,\widehat{Y})$
-%                 \item $e(c,\hat{g}) = e(X,\hat{g}) \cdot e(a,\widehat{Y})^\alpha \cdot \prod_{i=1}^\ell e(A_i,\widehat{Y})^{m_i}$
-%             \end{itemize}
-%         \item Output accept if all checks pass, reject otherwise
-%     \end{itemize}
-% \end{itemize}
-% \begin{itemize}
-%     \item \textbf{BlindSign}:
-%         \begin{itemize}
-%             \item \textbf{Common Input}: $pk$, commitment $M \in \G_1$
-%             \item \textbf{User Input}: Messages $(m_1,\ldots,m_\ell)$ such that $M = g^{m_1}\prod_{i=1}^\ell \widehat{Z}_i^{m_i}$
-%             \item \textbf{Signer Input}: $sk$
-%             \item \textbf{Protocol}:
-%             \begin{itemize}
-%                 \item User $\to$ Signer: Proof $\pi = \mathsf{PoK}\{(m_1,\ldots,m_\ell): M = g^{m_1}\prod_{i=1}^\ell \widehat{Z}_i^{m_i}\}$
-%                 \item Signer: Verify $\pi$, then:
-%                     \begin{itemize}
-%                         \item Sample $\alpha \sample \Z_p^*$, compute $a \gets g^\alpha \in \G_1$
-%                         \item For $i \in [1..\ell]$: $A_i \gets a^{z_i} \in \G_1$
-%                         \item Set $b \gets a^y \in \G_1$, $B_i \gets A_i^y \in \G_1$
-%                         \item Compute $c \gets a^x \cdot M^{xy} \in \G_1$
-%                     \end{itemize}
-%                 \item Signer $\to$ User: $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
-%             \end{itemize}
-%         \end{itemize}
-%     \item \textbf{ZKPoK-Verify}:
-%         \begin{itemize}
-%             \item \textbf{Common Input}: $pk$, blinded signature $\tilde{\sigma} = (\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c})$
-%             \item \textbf{Prover Input}: $(m_1,\ldots,m_\ell)$, randomization factors $r, r'$
-%             \item \textbf{Protocol}:
-%             \begin{itemize}
-%                 \item Compute pairings:
-%                     \begin{itemize}
-%                         \item $v_x \gets e(\tilde{a},\hat{g})$
-%                         \item $v_{xy} \gets e(\tilde{a},\widehat{Y})$
-%                         \item $v_s \gets e(\tilde{c},\hat{g})$
-%                     \end{itemize}
-%                 \item Execute proof: $\pi = \mathsf{PoK}\{(r,r',\{m_i\}): v_s = v_x \cdot v_{xy}^r \cdot \prod_{i=1}^\ell e(\tilde{A}_i,\widehat{Y})^{m_i}\}$
-%                 \item Verify: $e(\tilde{b},\hat{g}) = e(\tilde{a},\widehat{Y})$ and $\forall i: e(\tilde{B}_i,\hat{g}) = e(\tilde{A}_i,\widehat{Y})$
-%             \end{itemize}
-%         \end{itemize}
-%         \item \textbf{ZKPoK-Verify}:
-%             \begin{itemize}
-%                 \item \textbf{Common Input}: $pk$, signature $\sigma = (a, \{A_i\}_{i=1}^\ell, b, \{B_i\}_{i=1}^\ell, c)$
-%                 \item \textbf{Prover Input}: $(m_1,\ldots,m_\ell)$
-%                 \item Send $(\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c})$ to Verifier
-
-%                 \item \textbf{Protocol}:
-%                 \begin{itemize}
-%                     \item Sample $r, r' \sample \Z_p^*$, Compute $(a^{r'}, b^{r'}, c^{r'r}) = (\tilde{a}, \tilde{b}, \tilde{c^r})$
-%                     \item For $i \in [1..\ell]$: $\tilde{A}_i \gets A_i^r$, and $\tilde{B}_i \gets B_i^r$
-%                     \item Send $(\tilde{a}, \{\tilde{A}_i\}, \tilde{b}, \{\tilde{B}_i\}, \tilde{c^r})$ to Verifier
-%                     \item Both parties compute:
-%                     \[
-%                     v_x \gets e(\tilde{a},\hat{g}) \qquad v_{xy} \gets e(\tilde{a},\widehat{Y}) \qquad v_s \gets e(\tilde{c^r},\hat{g})
-%                     \]
-%                     \item Execute proof: 
-%                         \[\pi = \mathsf{PoK}\{(r,r',\{m_i\}): v_s = v_x \cdot v_{xy}^r \cdot \prod_{i=1}^\ell e(\tilde{A}_i,\widehat{Y})^{m_i}\}\]
-%                     \item Verifier checks:
-%                         \begin{itemize}
-%                             \item $e(\tilde{b},\hat{g}) = e(\tilde{a},\widehat{Y})$
-%                             \item $\forall i \in [1..\ell]: e(\tilde{B}_i,\hat{g}) = e(\tilde{A}_i,\widehat{Y})$
-%                             \item Verification of $\pi$
-%                         \end{itemize}
-%                 \end{itemize}
-% \end{itemize}
-% \end{itemize}
-
-\newpage
-\subsection{CL04 Mapped to Type3 Pairings}
 \begin{itemize}
     \item \textbf{KeyGen}($1^\lambda$):
     \begin{itemize}

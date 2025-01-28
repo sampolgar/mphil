@@ -4,6 +4,75 @@
 \begin{tabular}{|l|c|c|}
 \hline
 \textbf{Operation} & \textbf{Prover} & \textbf{Verifier} \\
+
+Overview the BBS+ signature and protocol for proving knowledge of the attributes.
+
+\begin{figure}
+   \begin{pchstack}[boxed, center, space=1em]
+        \begin{pcvstack}
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Setup}(\secparam)$}{%
+                \mathsf{BG =}(p, \G_1, \G_2, \G_T, e, g, \hat{g}) \sample \mathsf{BGGen}(\secparam) \\
+                g \sample G_1, \vec{h} \sample \G_1^{n+1}, \hat{g} \sample \G_2 \\
+                pp \gets (p, g, \{{h}_i\}_0^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
+                \pcreturn pp \\
+        }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.KG(pp)}$}{%
+                pp \gets (p, g, \{{h}_i\}_0^n, \hat{g}, \G_1, \G_2, \G_T, e) \\
+                x \sample \Z_p^*, \hat{w} \gets \hat{g}^x \\
+                sk = x, pk = (\hat{w}, \{{h}_i\}_0^n) \\
+                \pcreturn (sk, pk) \\
+            }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Sign}(sk = x, \vec{m} = (m_1, \ldots, m_n))$}{%
+                e, s \sample \Z_p^* \\
+                A \gets (gh_0^s\prod_1^n h_i^{m_i})^{\frac{1}{e+x}} \\
+                \pcreturn \sigma \gets (A,e,s) \\
+            }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.Verify}(pk, \vec{m}, \sigma = (A,e,s) )$}{%
+                \text{Check } e(A, \hat{w}\cdot \hat{g}^e) = e(gh_0^s\prod_1^n h_i^{m_i}, \hat{g}) \\
+            }
+            \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.SignCommitted}(sk = x, \vec{m})$}{%
+                \Prover \text{ samples } s' \sample Z_p^* \; \text{ commits to } \vec{m} : \; \cm = h_0^{s'}\prod_1^n h_i^{m_i}\\
+                \t \text{ Computes }\pi = PoK\{(s', \vec{m}) : \cm = h_0^{s'}\prod_{1}^n h_i^{m_i} \} \\
+                \mathcal{S} \text{ Signer verifies cm is well formed } \mathsf{ZK.Verify}(\pi, \cm) = 1 \\
+                \t \text{ signer samples } s'', e \sample Z_p^* \\
+                \t \text{ computes } A = (gh_0^{s''}\cm)^{\frac{1}{e+x}}, \text{ returns } (A,e,s'') \\
+                \Prover \text{ computes } s = s' + s'', \text{ and } \sigma = (A,e,s) \\
+            }
+        \end{pcvstack}
+        \begin{pcvstack}
+        \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.ProveSignature}(pk, \sigma = (A,e,s), \vec{m})$}{%
+            r_1 \sample \Z_p^* \\
+            A' \gets A^{r_1}, r_3 \gets \frac{1}{r_1} \\
+            \Bar{A} \gets A'^{-e} \cdot (gh_0^s\prod_1^n h_i^{m_i})^{r_1} \\
+            r_2 \sample \Z_p^* \\
+            d \gets (gh_0^s\prod_1^n h_i^{-m_i})^{r_1} \cdot h_0^{-r_2} \\
+            s' \gets s - r_2 \cdot r_3 \\
+            r_e, r_s, \{r_{m_i}\}_{i=1}^n \sample \Z_p^* \\
+            T_1 \gets A^{r_e} \cdot h_0^{r_s} \\
+            T_2 \gets g^c\prod_{i=1}^n h_i^{r_{m_i}} \\
+            c \gets \mathcal{H}(A', \Bar{A}, T_1, T_2) \\
+            z_e \gets r_e + c \cdot e \\
+            z_s \gets r_s + c \cdot s \\
+            \forall i \in [1,n]: z_{m_i} \gets r_{m_i} + c \cdot m_i \\
+            \pi \gets (A', \Bar{A}, d, T_1, T_2, z_e, z_s, \{z_{m_i}\}_{i=1}^n) \\
+            \pcreturn \pi \\
+        }
+        \procedure[]{$\mathrm{Algorithm} \; \mathsf{BBS.VerifyProof}(pk, \pi)$}{%
+            \text{Parse } \pi \text{ as } (A', \Bar{A}, d, T_1, T_2, z_e, z_s, \{z_{m_i}\}_{i=1}^n) \\
+            \text{Check } A' \neq 1_{\G_1} \\
+            \text{Check } e(A',\hat{w}) = e(\Bar{A},\hat{g}) \\
+            c \gets \mathcal{H}(A', \Bar{A}, T_1, T_2) \\
+            \text{Check } T_1 = A^{z_e} \cdot h_0^{z_s} \cdot (\Bar{A})^{-c} \\
+            \text{Check } T_2 = g^c\prod_{i=1}^n h_i^{z_{m_i}} \\
+            \pcreturn \text{all checks pass} \\
+        }
+        \end{pcvstack}
+    \end{pchstack}
+    \caption{Zero-knowledge proof of knowledge protocol for BBS+ signatures. The proof $\pi$ consists of $(k+5)$ group elements in $\G_1$ and $(k+5)$ scalars in $\Z_p$, where $k$ is the number of hidden message components.}
+    \label{fig:bbs-zkp}
+\end{figure}
+
+
 \hline
 \multicolumn{3}{|l|}{\textbf{Commitment Equality Method}} \\
 \hline
