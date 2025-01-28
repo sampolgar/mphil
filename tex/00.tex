@@ -2440,15 +2440,122 @@ The signature scheme for signing information-theoretically hidden messages consi
 % % % % % % % % % % 
 
 
+% % % % % % % % % % 
+% 
+% PS UTT Start
+% 
+% % % % % % % % % % 
+
+
+\newpage
+\subsection{PS \cite{tomescu2022utt}}
+
+\begin{itemize}
+    \item \textbf{PS.Rerand}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm = (\cm, \widehat{\cm}) ) \to (\sigma', \cm', \Delta_r, \Delta_u)$
+    \begin{itemize}
+        \item $\Prover$ samples $\Delta_r, \Delta_u \sample \Z_p$
+        \item Rerandomizes the signature $\sigma'$ = $(\sigma_1', \sigma_2') \gets (\sigma_1^{\Delta_u}, (\sigma_2\cdot \sigma_1^{\Delta_r})^{\Delta_u})$
+        \item Randomizes the commitment by computing $h^{\Delta_r}, \hat{h}^{\Delta_r}$, then  $(\cm', \widehat{\cm'}) \gets (\cm \cdot h^{\Delta_r}, \widehat{\cm}\cdot \hat{h}^{\Delta_r})$
+    \end{itemize}
+
+    \item \textbf{PoK}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm, \widehat{\cm}, \vec{m}, \Delta_r, \Delta_u)$ $\Prover$ sends rerandomized signature and commitment $\sigma', \cm'$ and $\pi$ 
+    \[
+       \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u+\Delta_u, r+\Delta_r): 
+    \]
+    \[
+        e(\sigma_2, \hat{h}) = e(\sigma_1, \widehat{X} \cdot \widehat{\cm}) \quad \wedge \quad e(\cm, \hat{h}) = e(h, \widehat{\cm})  \quad \wedge \quad \cm = h^{r+\Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+    
+\end{itemize}
+
+
+
+\newpage
+\begin{protocol}{Zero-Knowledge Proof of Knowledge for PS Signature over Commitments}{ps-pok}
+    \textbf{Relation $\mathcal{R}$}
+    \[
+        \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u+\Delta_u, r+\Delta_r): 
+    \]
+    \[
+         e(\sigma_2, \hat{h}) = e(\sigma_1, \widehat{X} \cdot \widehat{\cm}) \quad \wedge \quad
+        e(\cm, \hat{h}) = e(h, \widehat{\cm}) \quad \wedge \quad
+        \cm = h^{r+\Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+        \}
+    \]
+    
+    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e)$, $\pk = (X, \{g_i\}_{i=1}^\ell, h)$, a rerandomized signature $\sigma' = (\sigma_1', \sigma_2')$, and rerandomized commitment $\cm'$
+    
+    \textbf{Private Input:} $\Prover$ has messages $(m_1,\ldots,m_\ell)$, commitment randomness $r' = r + \Delta_r$, signature randomness $u' = u + \Delta_u$
+    
+    \begin{enumerate}
+        \item $\Prover$:
+        \begin{itemize}
+            \item Sample Schnorr blinding factors from $\Z_p$:
+            \[
+                \tilde{x} \text{ for } x \in \{m_1,\ldots,m_\ell, r', u'\}
+            \]
+            \item Compute Schnorr commitments:
+            \[
+                T_1 \gets h^{\tilde{r'}} \prod_{i=1}^\ell g_i^{\tilde{m_i}}
+            \]
+            \[
+                T_2 \gets e(\sigma_1^{\tilde{u'}}, \widehat{X} \cdot \widehat{\cm'})
+            \]
+            \item Send $(\cm', T_1, T_2)$ to $\Verifier$
+        \end{itemize}
+        
+        \item $\Verifier$ sends challenge $c \sample \Z_p$
+        
+        \item $\Prover$ computes Schnorr responses:
+        \[
+            z_x = \tilde{x} + c \cdot x \text{ for } x \in \{m_1,\ldots,m_\ell, u', r'\}
+        \]
+        
+        \item $\Verifier$ checks:
+        \[
+            \cm'^c \cdot T_1 \stackrel{?}{=} h^{z_{r'}} \prod_{i=1}^\ell g_i^{z_{m_i}}
+        \]
+        \[
+            e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})
+        \]
+    \end{enumerate}
+\end{protocol}
 
 
 
 
+\newpage
+\begin{itemize}
+    \item \textbf{Prover's Initial Operations (Signature Rerandomization)}
+    \begin{itemize}
+        \item $(\sigma_1^{\Delta_u}, (\sigma_2\cdot \sigma_1^{\Delta_r})^{\Delta_u})$ \qquad $3E_{\G_1} + 1M_{\G_1}$
+        \item $(\cm \cdot h^{\Delta_r}, \widehat{\cm} \cdot \hat{h}^{\Delta_r})$ \qquad $1E_{\G_2} + 1E_{\G_1} + 1M_{\G_1} + 1M_{\G_2}$
+    \end{itemize}
+\item \textbf{Prover Schnorr Operations}
+    \begin{itemize}
+        \item Sample $\ell+2$ field elements ($\tilde{m_1},\ldots,\tilde{m_\ell}, \tilde{r'}, \tilde{u'}$) \qquad (negligible)
+        \item Compute commitment $T_1 \gets h^{\tilde{r'}} \prod_{i=1}^\ell g_i^{\tilde{m_i}}$ \qquad $(\ell + 1)E_{\G_1} + \ell M_{\G_1}$
+        \item Compute commitment $T_2 \gets e(\sigma_1^{\tilde{u'}}, \widehat{X} \cdot \widehat{\cm'})$ \qquad $1E_{\G_1} + 1M_{\G_2} + 1P$
+    \end{itemize}
+    
+\item \textbf{Proof Size / Data Sent}
+    \begin{itemize}
+        \item $(\sigma_1', \sigma_2', \cm', \widehat{\cm'}, T_1, T_2)$ \qquad $5\G_1$, $1\G_2$ elements
+        \item $z_x$ for $x \in \{m_1,\ldots,m_\ell, r', u'\}$ \qquad $(\ell+2)\Z_p$ elements
+    \end{itemize}
+    
+\item \textbf{Verifier Operations}
+    \begin{itemize}
+        \item First equation check: $\cm'^c \cdot T_1 \stackrel{?}{=} h^{z_{r'}} \prod_{i=1}^\ell g_i^{z_{m_i}}$ \qquad $(\ell + 2) E_{\G_1}$ + $(\ell + 2) M_{\G_1}$
+        \item Second equation check: $e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})$ \qquad $ 1E_{\G_1} + 1M_{\G_2} + 1E_{\G_T} + 2P + 2M_{\G_T} $
+    \end{itemize}
+\end{itemize}
 
-
-
-
-
+% % % % % % % % % % 
+% 
+% PS UTT End
+% 
+% % % % % % % % % % 
 
 
 
