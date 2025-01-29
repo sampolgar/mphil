@@ -2936,10 +2936,10 @@ Signature scheme D from \cite{hutchison_signature_2004} Mapped to Type3 Pairings
 % 
 % % % % % % % % % % 
 
-
 \newpage
 \subsection{Optimizations}
-Many optimizations for pairing-based cryptography exist, which reduce the theoretical computational costs identified in our analysis. These optimizations have evolved from seminal work in pairing implementation, particularly building on the foundations laid by Barreto et al. and Scott.
+Most cryptographic papers analyze computational complexity in a theoretical sense without regarding optimizations available for operations within their credentials. 
+For example, some schemes measure the complexity of multiple pairing operations \cite{sako_short_2016} but do not take into account optimizations such as computing Miller Loop and Final Exponentiation separately, algorithms available in practical cryptography libraries. We discuss optimizations found in many cryptography libraries below and the impact they have in practical implementations.
 
 \begin{itemize}
     \item \textbf{Pairing Optimizations:}
@@ -2982,7 +2982,8 @@ Many optimizations for pairing-based cryptography exist, which reduce the theore
         \]
         where $g_i$ are group elements and $m_i$ are scalar exponents. A naive approach computing each $g_i^{m_i}$ separately would require $\ell$ independent exponentiations. However, several algorithms exist that can compute this product significantly faster by processing multiple scalars simultaneously, similar to how carrying works in manual addition. These optimizations reduce the complexity from $O(\ell)$ exponentiations to sublinear complexity in $\ell$.
         
-    This optimization is particularly critical for anonymous credential systems where we frequently need to compute:
+
+    This is useful in Anonymous Credentials, we use it with:
     \begin{itemize}
         \item Commitment openings involving multiple attributes
         \item Proof generation with multiple blinding factors
