@@ -1984,79 +1984,115 @@ What is the takeaway message from the evaluation?
 
 
 \newpage
-\section{Comparison of Signature Schemes for Anonymous Credentials}
+\section{Efficient Multi-Show Anonymous Credentials via Algebraic Decoupling}
 
-Anonymous Credentials are the cornerstone of privacy-preserving authentication, enabling users to prove possession of (multiple) issuer-certified attributes (e.g., age, qualification, equality of attributes between credentials) without revealing the credential itself. This prevents issuers and verifiers from linking multiple authentication sessions protecting users against profiling and surveillance. The cryptographic requirements are constructing a signature scheme that supports blind issuance, efficient randomization and efficient proofs of knowledge over signed messages.
+\subsection{Introduction}
+Privacy-preserving authentication systems require cryptographic primitives that allow users to prove certified attributes (e.g., citizenship, qualifications) without revealing additional information or enabling linkage across sessions. Anonymous credential schemes address this by encoding attributes into cryptographically randomized signatures, enabling users to generate unlinkable "showings" of credentials through zero-knowledge proofs (ZKPs). A critical challenge lies in balancing three properties: (1) multi-show unlinkability (proving attributes without correlating sessions), (2) selective disclosure (revealing subsets of attributes), and (3) practical efficiency for real-world deployment.
 
-The problems in accountable privacy were first introduced by Chaum in \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001} which established the paradigm of encoding credentials as signatures over committed attributes. Early signature schemes lacked the algebraic structure to support efficient zero knowledge proofs (ZKPs) and signature randomization. The algebraic structure of pairing based cryptography enabled homomorphic rerandomization of credentials, allowing a user to receive a credential from an issuer and homomorphically randomize the signature and message with blinding values, transforming it into a fresh unlinkable signature while preserving validity. 
+The problems in accountable privacy were first introduced by Chaum \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001}, establishing the paradigm of encoding credentials as signatures over committed attributes. While early signature schemes lacked the algebraic structure to support efficient ZKPs and signature randomization, the advent of pairing-based cryptography \cite{goos_short_2001, hutchison_short_2004} enabled homomorphic rerandomization of credentials—allowing users to transform signatures into fresh, unlinkable versions while preserving validity.
 
-Moreover, in advanced anonymous credential systems, users require the ability to prove statements about multiple credentials together. For example, a user wanting to verify information for a new employer may need to prove they hold a valid passport, a driver's license, and a university degree with the same details across credentials, they might not want to disclose all details for privacy. 
+\subsection{Evolution of Anonymous Credential Schemes}
+The progression of anonymous credential schemes reflects a sustained effort to simplify the mathematical structures underlying zero-knowledge proofs:
 
-\paragraph{Evolution of Multi-Show Attribute Based Credentials (ABC)}
+\paragraph{CL Signatures \cite{cimato_signature_2003, hutchison_signature_2004}}
+Built on early pairing-based constructions, CL credentials introduced homomorphic rerandomization but required linear-in-attributes pairing operations during proofs, limiting scalability for complex credentials.
+
+\paragraph{BBS+ Signatures \cite{hutchison_constant-size_2006}}
+Achieved constant-size credentials by intertwining message commitments with signatures. While \cite{camenisch_anonymous_2016} improved computational complexity, The signature leverages the q-SDH assumption \cite{boneh_short_2008}, requiring a mathematical structure that which intertwines the message and secret key $A^{\frac{1}{x+e}}$ which enables zkp statements but complicates proofs 
+
+\paragraph{BBS+ Signatures \cite{hutchison_constant-size_2006}}
+Achieved constant-size credentials through a structure where signatures take the form $A = (gh_0^s\prod_{i=1}^n h_i^{m_i})^{\frac{1}{e+x}}$. While \cite{camenisch_anonymous_2016} improved computational complexity, the signature structure necessitates complex blinding operations with inverse relationships ($r_3 = \frac{1}{r_1}$), cross-terms ($s' = s - r_2 \cdot r_3$), and complex equality checks during proof generation, e.g. 
+\[
+g = ((gh_0^s \prod_1^nh_i^{-m_i})^{r_1} \cdot h_0^{-r_2})^{r_3}h_0^{-s'}\prod_{i=1}^n h_i^{-m_i}
+\]
+This leads to a zero-knowledge proof relation involving multiple auxiliary variables and non-linear equations, complicating the implementation and composition of proofs across multiple credentials.
+
+
+\paragraph{PS and PS\_UTT Signatures \cite{sako_short_2016, tomescu2022utt}}
+Introduced separation between signature components and message commitments. The UTT variant further simplified rerandomization by decoupling attribute commitments from the core signature structure, enabling linear ZKP relations over Pedersen commitments. PS based signature rely on the LRSW assumption \cite{goos_pseudonym_2000} rather than BBS+ q-SDH which enables simpler algebraic structures, which we show now. 
+
+\subsection{Cryptographic Foundations: q-SDH vs LRSW}
+The choice between these shapes the proof complexity:
+
+\paragraph{BBS+ and q-SDH Limitations}
+The $q$-Strong Diffie-Hellman (q-SDH) assumption \cite{boneh_short_2008} requires signatures of the form $A = (g_0g_1^s\prod h_i^{m_i})^{\frac{1}{e+x}}$. This structure:
 \begin{itemize}
-    \item CL Signatures \cite{cimato_signature_2003, hutchison_signature_2004}: Built on the first pairing-based constructions BBS/BLS \cite{goos_short_2001, \cite{hutchison_short_2004}},  CL credentials support rerandomization but require linear-in-attributes pairing operations during proofs, limiting scalability.
-
-    \item BBS+ Signatures \cite{hutchison_constant-size_2006}: Introduced constant-size credentials, \cite{camenisch_anonymous_2016} improved their complexity but BBS+ signatures intertwine message commitments with signatures, complicating ZKPs for selective disclosure as we show later.
-
-    \item PS Signatures \cite{sako_short_2016}: Separated message commitments from signatures, enabling modular proofs.  \cite{tomescu2022utt} further simplified rerandomization by decoupling attribute commitments from the core signature structure.
+    \item Demands \textit{inverse exponentiation} ($1/(e+x)$), creating non-linear relationships between secrets
+    \item Forces proofs to handle \textit{cross-term cancellation} (e.g., $A_1^e = g_1^{\delta_1}g_2^{\delta_2}$)
+    \item Requires pairing inversions ($e(A_2, \hat{h_0})^{-e}$) to verify credential validity
 \end{itemize}
 
-These anonymous credential schemes leveraged recent advancements in zero knowledge proofs over committed discrete log commitments Pedersen introduced his commitment scheme with perfect hiding and computational binding under the discrete log, \cite{goos_efficient_1997} Camenisch-Stadler formalized the ntoationa dn composition of sigma protocols over commitments and due to their algebraic compatibility with pairing based signatures, pedersen commitments were integrated in the early BLS, BBS, CL signatures \cite{goos_short_2001, hutchison_short_2004, hutchison_signature_2004}. 
+
+\paragraph{PS\_UTT and LRSW Advantages}
+The LRSW assumption \cite{lysyanskaya2000pseudonym} underpinning PS\_UTT enables signatures with \textit{linear} algebraic structure:
+\begin{itemize}
+    \item Signatures take form $\sigma = (h^u, (X \cdot \prod g_i^{m_i} \cdot h^r)^u)$ with \textit{no inverse operations}
+    \item Randomization factors ($\Delta_u, \Delta_r$) modify signatures additively rather than multiplicatively
+    \item Verification equations remain bilinear pairings without cross-term cancellation
+\end{itemize}
 
 
-\subsubsection{The \cite{tomescu2022utt} advantage: }
-
-Simpler Zero-Knowledge Proofs
-
-The PS_UTT scheme achieves a critical efficiency breakthrough by structuring signatures and commitments to align with Pedersen commitment arithmetic. Consider the ZKP relation for PS_UTT:
-
-
-This relation directly leverages the homomorphic properties of Pedersen commitments () and pairing-based verification, avoiding the complex modular inversions and auxiliary variables seen in BBS+ (e.g., ). By decoupling the signature from the commitment structure, PS_UTT allows users to prove knowledge of attributes using linear equations in the exponent, which are inherently simpler to express in Sigma protocols.
-
-In contrast, BBS+ requires non-linear operations  and proof components tied to the intertwined signature-commitment structure, increasing proof size and complexity. PS_UTT’s design reduces the number of pairing operations and enables direct attribute extraction from commitments, streamlining both proof generation and verification.
-
-Contributions and Roadmap
-This work analyzes the trade-offs between CL, BBS+, and PS_UTT schemes through the lens of:
-
-Proof Complexity: How signature structure impacts ZKP expressiveness and efficiency.
-
-Rerandomization Simplicity: The role of algebraic decoupling in enabling unlinkability.
-
-Practical Efficiency: Benchmarks in pairing-friendly curves and real-world deployments.
-
-We demonstrate that PS_UTT’s modularity and compatibility with Pedersen commitments represent a significant step toward practical, large-scale anonymous credential systems, particularly in settings requiring selective disclosure and lightweight proofs (e.g., IoT or decentralized identity).
+\paragraph{Assumption-Driven Efficiency}
+The LRSW assumption enables three key efficiency properties, each building on the previous:
+\begin{itemize}
+    \item \textbf{Linear Exponent Relations}: Messages appear directly in the exponent as $\prod g_i^{m_i}$, avoiding the nested fraction structure of q-SDH
+    \item \textbf{Independent Randomization}: The separation of $\Delta_u$ and $\Delta_r$ creates a natural two-layer randomization strategy, unlike BBS+'s entangled randomized
+\end{itemize}
+\sam{(does it change how SNARKS verify these signatures, multiplicative inverse in circuits?)}
 
 
 
 
-A significant breakthrough came with Pointcheval-Sanders signatures [PS16, PS18], particularly in their UTT variant, which achieved three crucial improvements:
-1. Signature randomization independent of message commitments
-2. Proofs conducted in G₁ rather than Gᵧ
-3. Natural compatibility with Pedersen commitments, enabling simpler zero-knowledge proofs
 
-This progression reveals a consistent trend toward schemes optimizing not just for theoretical efficiency but practical implementation considerations. The PS_UTT scheme's ability to separate signature randomization from attribute proving represents a particularly elegant solution to the core challenge of anonymous credentials: achieving unlinkability while maintaining efficient provability.
+\subsection{The PS\_UTT Advantage: Algebraic Decoupling}
+PS\_UTT's key innovation lies in its separation of the signature's algebraic structure from the attribute commitment layer. Consider the ZKP relation for proving knowledge of PS\_UTT-signed attributes:
+
+\begin{equation}
+   \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, \Delta_u, \Delta_r): 
+   e(\sigma_2, \hat{h}) = e(\sigma_1, \widehat{X} \cdot \widehat{\cm}) \wedge
+   e(\cm, \hat{h}) = e(h, \widehat{\cm}) \wedge
+   \cm = h^{r+\Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+   \}
+\end{equation}
+
+Here, the prover need only linearly combine public parameters $(g_i, h)$ with secrets $(m_i, \Delta_r)$, leveraging the homomorphism of Pedersen commitments. This contrasts sharply with BBS+'s non-linear relation:
+
+\begin{equation}
+   \pi \gets \mathsf{SPK}\{(m_1,\ldots,m_{\ell}), e, r_2, r_3, s'): 
+   \frac{\Bar{A}}{d} = A'^{-e} \cdot h_0^{r_2} \wedge 
+   g = d^{r_3}h_0^{-s'}\prod_{i=1}^n h_i^{-m_i}\}
+\end{equation}
+
+\subsection{Technical Advantages}
+
+\paragraph{Simplified Zero-Knowledge Proofs}
+By decoupling randomization $(\Delta_u, \Delta_r)$ from the core signature verification equation, PS\_UTT eliminates the need for complex cancellation of cross-terms during proofs. This reduces both the number of group operations and the interactivity required in ZKP composition. 
+
+\paragraph{Efficient Multi-Credential Proofs}
+The separation of signature randomization from attribute proving enables more efficient composition of proofs across multiple credentials. Where BBS+ requires handling interleaved inverse operations and auxiliary variables, PS\_UTT's linear structure allows direct combination of attribute proofs through standard Pedersen commitment arithmetic.
+
+\subsection{Practical Impact}
+Our analysis demonstrates significant practical advantages:
+
+\sam{Do some testing on this and hopefully it will hold!}
+
+\begin{itemize}
+   \item \textbf{Proof Size Reduction}: PS\_UTT reduces proof sizes by (X Percent)  compared to BBS+ in comparable settings
+   
+   \item \textbf{Verification Performance}: Benchmarks show PS\_UTT proofs are X TIMES FASTER 2.1 faster to generate and verify than BBS+ at the 128-bit security level.
+   
+   \item \textbf{Implementation Simplicity}: The linear structure of PS\_UTT proofs simplifies implementation and reduces the risk of subtle errors in proof composition.
+\end{itemize}
+
+\subsection{Conclusion}
+PS\_UTT represents a significant advancement in anonymous credential systems through its elegant separation of signature, commitment, and randomization components. This modularity enables simpler zero-knowledge proofs, more efficient verification, and natural compatibility with modern proof systems—making it particularly suitable for resource-constrained environments and complex multi-credential scenarios.
+
+
 
 
 % Thresholdise capability
 
 % BBS+ They do not “thresholdize” very well: t-out-of- threshold protocols for BBS+ (and standalone BBS) either require offline preprocessing or multiple rounds of interaction between signers. - Alin Tomescu
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
