@@ -2303,6 +2303,10 @@ PS - improved, that's what we're using, the first to use it
 
 
 
+
+
+
+
 % % % % % % % % % % 
 % 
 % PS Start
@@ -2539,6 +2543,70 @@ The signature scheme for signing information-theoretically hidden messages consi
         \item Third equation check: $e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})$ \qquad $ 1E_{\G_1} + 1M_{\G_2} + 1E_{\G_T} + 2P + 2M_{\G_T} $
     \end{itemize}
 \end{itemize}
+
+\begin{figure}
+    \centering
+    \caption{Complexity comparison between standard PS UTT and optimized variant. The optimized version uses Multi-Scalar Multiplication to reduce Schnorr proof from $\mathcal{O}(\ell)$ individual exponentiation to $\mathcal{O}(log \ell)$ effective operations using MSM techniques. Verifier pairing checks are re-arranged with Miller Loop + Final Exponentiation techniques with Pairing Inversion. Miller Loop batching (MLoop) and final exponentiation sharing (F.Exp), reducing the pairing cost from 4P to approximately 2.5P. MSM(n) denotes an n-point multi-scalar multiplication with complexity O(n/log n) using window methods}
+    \label{fig:enter-label}
+        \begin{tabular}{|l|p{4.5cm}|p{4.5cm}|p{3.5cm}|}
+            \hline
+            \textbf{Protocol} & \textbf{Show (Prover)} & \textbf{Verify (Verifier)} & \textbf{Data Sent} \\
+            \hline
+            PS UTT &
+            \textbf{Randomize:}
+            \begin{itemize}[nosep]
+                \item $4E_{\G_1} + 2M_{\G_1}$ 
+                \item $1E_{\G_2} + 1M_{\G_2}$
+            \end{itemize}
+            \textbf{Schnorr Proof:}
+            \begin{itemize}[nosep]
+                \item $(\ell+1)E_{\G_1} + \ell M_{\G_1}$ 
+                \item $1E_{\G_1} + 1M_{\G_2} + 1P$ 
+            \end{itemize}
+            &
+            \begin{itemize}[nosep]
+                \item $(\ell+3)E_{\G_1} + (\ell+2)M_{\G_1} + 1M_{\G_2}$
+                \item $1E_{\G_T} + 2M_{\G_T}$
+                \item $4P$ 
+            \end{itemize}
+            &
+            \begin{itemize}[nosep]
+                \item $5\G_1$
+                \item $1\G_2$
+                \item $(\ell+2)\Z_p$
+            \end{itemize}
+            \\
+             \hline
+             PS UTT Optimized &
+            \textbf{Randomize:}
+            \begin{itemize}[nosep]
+                \item $4E_{\G_1} + 2M_{\G_1}$ 
+                \item $1E_{\G_2} + 1M_{\G_2}$
+            \end{itemize}
+            \textbf{Schnorr Proof:}
+            \begin{itemize}[nosep]
+                \item $\cancel{(\ell+1)E_{\G_1} + \ell M_{\G_1}}$
+                \item $MSM(\ell + 1)\G_1$ 
+                \item $1E_{\G_1} + 1M_{\G_2} + 1P$ 
+            \end{itemize}
+            &
+            \begin{itemize}[nosep]
+                \item $\cancel{(\ell+3)E_{\G_1} + (\ell+2)M_{\G_1}} + 1M_{\G_2}$
+                \item $MSM(\ell+3) + 1M_{\G_2}$
+                \item $1E_{\G_T} + 2M_{\G_T}$
+                \item $\cancel{4P}$ 
+                \item $4\text{MLoop}\G_T + 1\text{F.Exp}\G_T$ 
+            \end{itemize}
+            &
+            \begin{itemize}[nosep]
+                \item $5\G_1$
+                \item $1\G_2$
+                \item $(\ell+2)\Z_p$
+            \end{itemize}
+            \\
+             \hline
+        \end{tabular}
+\end{figure}
 
 % % % % % % % % % % 
 % 
@@ -2781,11 +2849,6 @@ asd
 % 
 % % % % % % % % % % 
 
-
-
-
-
-
 \newpage
 \subsection{CL04 \cite{hutchison_signature_2004}}
 Signature scheme D from \cite{hutchison_signature_2004} Mapped to Type3 Pairings
@@ -2892,9 +2955,6 @@ Signature scheme D from \cite{hutchison_signature_2004} Mapped to Type3 Pairings
 \end{itemize}
 
 
-
-
-
 \newpage
 \begin{itemize}
     \item \textbf{Precomputed Values}
@@ -2929,60 +2989,228 @@ Signature scheme D from \cite{hutchison_signature_2004} Mapped to Type3 Pairings
 
 
 
+% % % % % % % % % % 
+% 
+% CL04 FINISH
+% 
+% % % % % % % % % % 
+
+
+
+\newpage
+\subsection{Analysis No Optimization}
+\begin{tabular}{|l|p{4.5cm}|p{4.5cm}|p{3.5cm}|}
+    \hline
+    \textbf{Protocol} & \textbf{Show (Prover)} & \textbf{Verify (Verifier)} & \textbf{Data Sent} \\
+    \hline
+    CL04 &
+    \textbf{Randomize:}
+    \begin{itemize}[nosep]
+        \item $(2\ell + 3)E_{\G_1}$ (sig. rand.)
+    \end{itemize}
+    \textbf{Schnorr Proof:}
+    \begin{itemize}[nosep]
+        \item $(\ell+1)$ samplings
+        \item $\ell E_{\G_T} + (\ell-1)M_{\G_T}$ (commits)
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $(2\ell + 2)P$ (struct. verify)
+        \item $\ell P + \ell E_{\G_T} + (\ell-1)M_{\G_T}$ (chall. verify)
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $(2\ell + 3)\G_1$
+        \item $1\G_T$
+        \item $(\ell + 1)\Z_p^*$
+    \end{itemize}
+    \\
+    \hline
+    BBS+ &
+    \textbf{Randomize:}
+    \begin{itemize}[nosep]
+        \item $2F_p\times$ (deltas)
+        \item $4E_{\G_1} + 2M_{\G_1}$ (sig. rand.)
+    \end{itemize}
+    \textbf{Schnorr Proof:}
+    \begin{itemize}[nosep]
+        \item $4E_{\G_1} + 2M_{\G_1}$ (commits)
+        \item $1P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $6E_{\G_1} + 4M_{\G_1}$ (commits)
+        \item $2P + (L+4)E_{\G_T} + (L+3)M_{\G_T}$
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $5\G_1$
+        \item $1\G_T$
+        \item $(L+6)\Z_p^*$
+    \end{itemize}
+    \\
+    \hline
+    BBS+ 2016 &
+    \textbf{Randomize:}
+    \begin{itemize}[nosep]
+        \item $1F_p^- + 2F_p\times$ (field ops)
+        \item $3E_{\G_1} + 1M_{\G_1}$ (sig. rand.)
+        \item $(n+2)E_{\G_1} + (n+1)M_{\G_1}$ (attr. commit)
+    \end{itemize}
+    \textbf{Schnorr Proof:}
+    \begin{itemize}[nosep]
+        \item $(n+4)$ samplings
+        \item $(n+2)E_{\G_1} + nM_{\G_1}$ (commits)
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $2P + 1M_{\G_T}$ (pairing)
+        \item $(n+4)E_{\G_1} + (n+2)M_{\G_1}$ (commits)
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $5\G_1$
+        \item $(n+4)\Z_p^*$
+    \end{itemize}
+    \\
+    \hline
+    PS16 & 
+    \textbf{Randomize:}
+    \begin{itemize}[nosep]
+        \item $3E_{\G_1} + 1M_{\G_1}$ (sig. rand.)
+    \end{itemize}
+    \textbf{Schnorr Proof:}
+    \begin{itemize}[nosep]
+        \item $(\ell+2)P + (\ell+1)E_{\G_T} + (\ell+1)M_{\G_T}$
+    \end{itemize}
+    & 
+    \begin{itemize}[nosep]
+        \item $(\ell+3)P$
+        \item $(\ell+1)E_{\G_T}$
+        \item $(\ell+2)M_{\G_T}$
+    \end{itemize}
+    & 
+    \begin{itemize}[nosep]
+        \item $2\G_1$
+        \item $1\G_T$
+        \item $(\ell+2)\Z_p^*$
+    \end{itemize}
+    \\
+    \hline
+    PS UTT &
+    \textbf{Randomize:}
+    \begin{itemize}[nosep]
+        \item $4E_{\G_1} + 2M_{\G_1}$ 
+        \item $1E_{\G_2} + 1M_{\G_2}$
+    \end{itemize}
+    \textbf{Schnorr Proof:}
+    \begin{itemize}[nosep]
+        \item $(\ell+1)E_{\G_1} + \ell M_{\G_1}$ 
+        \item $1E_{\G_1} + 1M_{\G_2} + 1P$ 
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $(\ell+3)E_{\G_1} + (\ell+2)M_{\G_1} + 1M_{\G_2}$
+        \item $1E_{\G_T} + 2M_{\G_T}$
+        \item $4P$ 
+    \end{itemize}
+    &
+    \begin{itemize}[nosep]
+        \item $5\G_1$
+        \item $1\G_2$
+        \item $(\ell+2)\Z_p$
+    \end{itemize}
+    \\
+    
+     \hline
+\end{tabular}
 
 
 
 
 
 
+% % % % % % % % % % 
+% 
+% OPTIMISATIONS
+% 
+% % % % % % % % % % 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\newpage
 \subsection{Optimizations}
+Many optimizations for pairing-based cryptography exist, which reduce the theoretical computational costs identified in our analysis. These optimizations have evolved from seminal work in pairing implementation, particularly building on the foundations laid by Barreto et al. and Scott.
 
 \begin{itemize}
-    \item \textbf{Multi-Exponentiation:} Instead of computing each exponentiation in $\mathbb{G}_1$ individually, the multi-exponentiation technique can be used to compute terms like $g_1^{r_1} g_2^{r_2}$ or $g_1^{\delta_1} g_2^{\delta_2}$ in a single operation. This reduces the overall cost of group exponentiations, especially for the Prover, where such computations dominate.
-
-    \item \textbf{Miller Loop Optimization:} Pairing computations can be optimized by separating the Miller loop and the final exponentiation. For $L+4$ pairings, only a single final exponentiation in $\mathbb{G}_T$ is required after combining the results of $L+4$ Miller loops. This significantly reduces the overall cost, as the Miller loop is less computationally expensive than the final exponentiation. 
-
-    \item \textbf{Batch Verification: } BBS+ signatures signed under the same public key can be batch verified
+    \item \textbf{Pairing Optimizations:}
+    \begin{itemize}
+        \item \textbf{Miller Loop + Final Exponentiation:} 
+        A pairing computation (e.g., Tate, Ate) consists of two distinct phases, denoted as $e(P,Q)$ in complexity analysis:
+        \begin{itemize}
+            \item \textit{Miller Loop}: Computes a rational function over points (complexity linear in loop length)
+            \item \textit{Final Exponentiation}: Ensures unique representation in the target group $\mathbb{G}_T$
+        \end{itemize}
+        
+        For products of pairings, we can optimize:
+        \[
+        \prod_{i=1}^\ell e(g_i, \hat{h}_i) = \text{FinalExp}\left(\prod_{i=1}^\ell \text{MillerLoop}(g_i, \hat{h}_i)\right)
+        \]
+        
+        \noindent The left-hand side requires:
+        \begin{itemize}
+            \item $\ell$ complete pairings ($\ell P$)
+            \item $(\ell-1)$ multiplications in $\mathbb{G}_T$ ($(\ell-1)M_{\mathbb{G}_T}$)
+        \end{itemize}
+        
+        \noindent The right-hand side reduces to:
+        \begin{itemize}
+            \item $\ell$ Miller Loops ($\approx 0.4\ell P$)
+            \item 1 Single Final Exponentiation ($\approx 0.6P$)
+        \end{itemize}
+        
+        \item \textbf{Batch Pairing Inversion:} For equations of the form $e(a,b) = e(c,d)$, transform to:
+        \[
+        e(a,b) \cdots e(c^{-1},d) \stackrel{?}{=} 1_{\mathbb{G}_T}
+        \]
+        This optimization reduces standalone pairing counts by approximately 50\% through the elimination of redundant Final Exponentiations.
+    \end{itemize}
+    
+    \item \textbf{Multi-Scalar Multiplication (MSM):}
+        Multi-scalar multiplication addresses the common operation of computing:
+        \[
+            T = \prod_{i=1}^\ell g_i^{m_i}
+        \]
+        where $g_i$ are group elements and $m_i$ are scalar exponents. A naive approach computing each $g_i^{m_i}$ separately would require $\ell$ independent exponentiations. However, several algorithms exist that can compute this product significantly faster by processing multiple scalars simultaneously, similar to how carrying works in manual addition. These optimizations reduce the complexity from $O(\ell)$ exponentiations to sublinear complexity in $\ell$.
+        
+    This optimization is particularly critical for anonymous credential systems where we frequently need to compute:
+    \begin{itemize}
+        \item Commitment openings involving multiple attributes
+        \item Proof generation with multiple blinding factors
+        \item Verification equations combining multiple witnesses
+    \end{itemize}
+    All schemes we denote benefit from MSM.
+    
+    \item \textbf{Precomputation Strategies:} 
+    \begin{itemize}
+        \item Cache frequently used pairing results: $e(g_i, \hat{h}_j)$ for fixed bases
+        \item Optimize BBS+ operations: Transform $\prod_{i=1}^L e(g_{i+1}, \hat{h}_0)^{\tilde{m}_i}$ into $L$ multiplications in $\mathbb{G}_T$
+        \item Store processed group elements for repeated operations
+    \end{itemize}
+    
+    \item \textbf{Batch Verification:}
+    \begin{itemize}
+        \item For $N$ BBS+ proofs under a common public key:
+        \begin{align*}
+            \prod_{i=1}^N e(A_i, \hat{w}_i) \stackrel{?}{=} e(g, \hat{h}_0)^N \cdot \prod_{j=1}^n e(g_j, \hat{h}_j)^{\sum_{i=1}^N m_{i,j}}
+        \end{align*}
+        This optimization reduces complexity from $O(N \cdot n)$ to $O(n + N)$ pairings
+    \end{itemize}
 \end{itemize}
 
-By employing these techniques:
+\subsubsection*{Practical Implications}
 \begin{itemize}
-    \item \textbf{Prover:} Multi-exponentiation reduces the number of scalar multiplications during group operations.
-    \item \textbf{Verifier:} Batching and Miller loop optimizations reduce the number of independent pairing computations and minimize the expensive operations in $\mathbb{G}_T$.
+    \item \textbf{PS2016:} Leverages pairing batching optimizations effectively but requires q-type assumptions
+    \item \textbf{BBS+:} Employs precomputation and MSM optimizations for attribute handling, though proof size remains linear
+    \item \textbf{PSUTT:} Achieves balance between succinctness and token updatability through careful application of MSM optimizations
 \end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
