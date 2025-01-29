@@ -1984,315 +1984,71 @@ What is the takeaway message from the evaluation?
 
 
 \newpage
-\section{Anonymous Credential Algebraic Comparison}
-
 \section{Comparison of Signature Schemes for Anonymous Credentials}
-\label{sec:signature-comparison}
 
-Anonymous Credentials allow users to prove the authenticity of issuer-signed attributes, without revealing the underlying credential, preventing authentication systems from linking and profiling the credential holders. In the concrete setting, this allows users to verify attributes of their credentials without revealing and thus disclosing more personal information than necessary - increasingly important in a world with increasing cyber threat and personal information threat. 
+Anonymous Credentials are the cornerstone of privacy-preserving authentication, enabling users to prove possession of (multiple) issuer-certified attributes (e.g., age, qualification, equality of attributes between credentials) without revealing the credential itself. This prevents issuers and verifiers from linking multiple authentication sessions protecting users against profiling and surveillance. The cryptographic requirements are constructing a signature scheme that supports blind issuance, efficient randomization and efficient proofs of knowledge over signed messages.
 
-Accountable Privacy is the term assigned to the balance between authentication systems needing to authenticate users and comply with regulations and the user's ambition to remain anonymous or minimally disclose personal information. The area was first introduced by Chaum in early work \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001} merging advancements in zero-knowledge proofs and sigma protocols, commitment schemes, and pairing-based signatures. 
+The problems in accountable privacy were first introduced by Chaum in \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001} which established the paradigm of encoding credentials as signatures over committed attributes. Early signature schemes lacked the algebraic structure to support efficient zero knowledge proofs (ZKPs) and signature randomization. The algebraic structure of pairing based cryptography enabled homomorphic rerandomization of credentials, allowing a user to receive a credential from an issuer and homomorphically randomize the signature and message with blinding values, transforming it into a fresh unlinkable signature while preserving validity. 
 
-From a cryptographic construction point of view, A natural framework for constructing anonymous credentials, the so-called, CL framework proposed by Camenisch and Lysyanskaya [CL03], is instantiated in several anonymous credentials systems such as [CL01,CL04,CDL16,PS16,TZ23]. In the CL framework, a credential is a signature on a set of attributes, and to prove possession of the credential, the holder proves in zero-knowledge that they hold a signature on a set of attributes that verifies under the credential issuer’s public key.
+Moreover, in advanced anonymous credential systems, users require the ability to prove statements about multiple credentials together. For example, a user wanting to verify information for a new employer may need to prove they hold a valid passport, a driver's license, and a university degree with the same details across credentials, they might not want to disclose all details for privacy. 
 
-Traditional signature schemes like RSA, DSA, El-Gamal, while secure for standard digital signatures, lacked the algebraic structure for anonymous credentials. That is, Anonymous Credentials require homomorphic properties required for credential randomization and zero knowledge proof of knowledge of exponents. Prior digital signature schemes used hash functions which don't have the algebraic properties for randomization. 
-
-The real breakthrough came when researchers realized that pairing-based signatures provided the perfect algebraic structure to combine with both Pedersen commitments and sigma protocols. The homomorphic properties of pairings meant you could randomize signatures while preserving verifiability, and the discrete log setting of both commitments and sigma protocols meant that the user with a randomized signature could prove their signature, which after randomization appears indistinguishable from the signature signed by the authority, was signed by the authority and over attributes. Furthermore, the proofs could prove in zero-knowledge that certain relations hold without disclosing attributes. 
-
-Current constructions combine 3 areas of improvement
-\begin{enumerate}
-    \item \textbf{Zero-Knowledge Proofs and Sigma Protocols:} Fiat-Shamir introduced practical zero-knowledge protocols \textbf{CITE Fiat Shamir}, Schnorr's identification protocol build the foundation of sigma protocols over the discrete logarithm relations \cite{brands1996privacy, goos_rapid_1997, brands_rethinking_2000} and Camenisch-Stadler formalized proofs of knowledge for group homomorphism which is the building block for proving discrete log relations in commitment schemes \cite{goos_efficient_1997} and damgards work on sigma protocols \cite{damgard_sigma_2010}.
-
-    \item \textbf{Pairing-based Signatures: } Boneh-Lynn-Shacham (BLS) \cite{goos_short_2001} introduced the first short signature using bilinear pairings, Boneh-Boyen-Shacham (BBS) \cite{hutchison_short_2004} showed how to sign committed messages, Camenisch-Lysyanskaya \cite{cimato_signature_2003, hutchison_signature_2004} demonstrated how pairings enable signature randomization.
-
-    \item \textbf{Commitments: } \cite{pedersen1991non} Pedersen introduced his commitment scheme with perfect hiding and computational binding under the discrete log, \cite{goos_efficient_1997} Camenisch-Stadler formalized the ntoationa dn composition of sigma protocols over commitments and due to their algebraic compatibility with pairing based signatures, pedersen commitments were integrated in the early BLS, BBS, CL signatures \cite{goos_short_2001, hutchison_short_2004, hutchison_signature_2004}. 
-    
-\end{enumerate}
-
-\subsubsection{computational consideration}
-Anonymous Credentials introduce computational overhead compared to standard signature verification. 
-
-
-While anonymous credentials introduce additional computational overhead compared to standard signature verification, developments in practical pairing libraries significantly improve their practical efficiency. 
-
-
-
-
-
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{l|cc|cc|ccc}
-\toprule
-\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Verify - Public}} & \multicolumn{2}{c|}{\textbf{Show - Anonymous}} & \multicolumn{3}{c}{\textbf{Verify - Anonymous}} \\
-& Verify & Data Sent & Preparation & PoK & Pairing & Proof Verify & Data Sent \\
-\midrule
-CL04 & $3P$ & $3|\G_1|$ & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ & $(2r + 3)|\G_1| + |PK|$ \\
-BBS+ & $2P$ & $2|\G_1|$ & $3E_{\G_1}$ & $(r + 4)E_{\G_1}$ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ & $2|\G_1| + |PK|$ \\
-PS & $2P$ & $2|\G_1|$ & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ & $2P$ & $(r + 1)E_{\G_T}$ & $2|\G_1| + |PK|$ \\
-\bottomrule
-\end{tabular}
-\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and target group $\G_T$ respectively, $r$ denotes number of attributes, $|\G_1|$ denotes group element size, and $|PK|$ denotes proof of knowledge size.}
-\label{tab:unified-comparison}
-\end{table}
-
-
-
-
-
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{l|cc|cc|cc}
-\toprule
-\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Verify - Public}} & \multicolumn{2}{c|}{\textbf{Show - Anonymous}} & \multicolumn{2}{c}{\textbf{Verify - Anonymous}} \\
-& Verify & Data Sent & Preparation & Gen. Proofs & Pairing & Proof of Knowledge \\
-\midrule
-CL04 & $3P$ & $3|\G_1|$ & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ \\
-BBS+ & $2P$ & $2|\G_1|$ & $3E_{\G_1}$ & $(r + 4)E_{\G_1}$ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ \\
-PS & $2P$ & $2|\G_1|$ & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ & $2P$ & $(r + 1)E_{\G_T}$ \\
-\bottomrule
-\end{tabular}
-\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and target group $\G_T$ respectively, $r$ denotes number of attributes, and $|\G_1|$ denotes group element size.}
-\label{tab:unified-comparison}
-\end{table}
-
-
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{l|cc|cc|ccc}
-\toprule
-\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Verify - Public}} & \multicolumn{2}{c|}{\textbf{Show - Anonymous}} & \multicolumn{3}{c}{\textbf{Verify - Anonymous}} \\
-& Verify & Data Sent & Preparation & Gen. Proofs & Pairing & Proof Verify & Data Sent \\
-\midrule
-CL04 & $3P$ & $3|\G_1|$ & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ & $(2r + 3)|\G_1| + (2r + 1)|\G_1|$ \\ \\
-BBS+ & $2P$ & $2|\G_1|$ & $3E_{\G_1} + 1P$ & $(r + 4)E_{\G_T}$ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ & $2|\G_1| + (r + 4)|\G_1|$ \\
-PS & $2P$ & $2|\G_1|$ & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ & $2P$ & $(r + 1)E_{\G_T}$ & $2|\G_1| + (r + 1)|\G_T|$ \\
-\bottomrule
-\end{tabular}
-\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and target group $\G_T$ respectively, $r$ denotes number of attributes, $|\G_1|$ denotes group element size, and $|PK|$ denotes proof of knowledge size.}
-\label{tab:unified-comparison}
-\end{table}
-
-
-
-\subsection{Foundational Schemes}
-\begin{table}[ht]
-\centering
-\label{tab:original-schemes}
-\begin{tabular}{l|ccccc}
-\toprule
-\textbf{Scheme} & \textbf{Verify} & \textbf{Data Sent} & \textbf{Show} & \textbf{Verify} & \textbf{Data Sent} \\
-& \textbf{Standard} & \textbf{Standard} & \textbf{(User)} & \textbf{Anonymous} & \textbf{Anonymous} \\
-\midrule
-CL04 & $3P$ & $3|\G_1|$ & $(2r+4)\G_1$ & $(4r+2)P$ & $(2r+3)|\G_1| + |PK|$ \\
-BBS+ & $2P$ & $2|\G_1|$ & $PK{P[r+4]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
-PS & $2P$ & $2|\G_1|$ & $2\G_1 + PK{P[r+1]}$ & $Ver(PK)$ & $2|\G_1| + |PK|$ \\
-\bottomrule
-\end{tabular}
-\caption{$R_{\G_1}, R_\Z$ denotes generating random $\G_1$ point or $\Z_p$ element. $E_{\G_1}, E_{\G_2}, E_P$ denotes exponentiation in either $\G_1, \G_2, \G_T$. $P$ denotes pairing operation.}
-\end{table}
-
-
-\begin{table}[ht]
-\centering
-\label{tab:show-operations-precise}
-\begin{tabular}{l|cc}
-\toprule
-\textbf{Scheme} & \textbf{Prepare} & \textbf{Proofs} \\
-\midrule
-CL04 & $(2r + 3)E_{\G_1}$ & $(2r + 1)E_{\G_1}$ \\
-BBS+ & $3E_{\G_1}$ & $(r + 4)E_{\G_1}$ \\
-PS & $2E_{\G_1}$ & $(r + 1)E_{\G_T}$ \\
-\bottomrule
-\end{tabular}
-\caption{Precise analysis of show operation costs. $E_{\G_1}$ denotes exponentiation in $\G_1$, $E_{\G_T}$ denotes exponentiation in target group $\G_T$. $r$ denotes number of attributes.}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\label{tab:verify-operations-corrected}
-\begin{tabular}{l|cc}
-\toprule
-\textbf{Scheme} & \textbf{Structure} & \textbf{Proof Verification} \\
-\midrule
-CL04 & $(3r + 2)P$ & $(r + 2)E_{\G_1}$ \\
-BBS+ & $2P$ & $(r + 2)P + (r + 3)E_{\G_T}$ \\
-PS & $2P$ & $(r + 1)E_{\G_T}$ \\
-\bottomrule
-\end{tabular}
-\caption{Corrected analysis of verification costs. $P$ denotes pairing operation, $E_{\G_1}$ and $E_{\G_T}$ denote exponentiations in $\G_1$ and $\G_T$ respectively. $r$ denotes number of attributes.}
-\end{table}
-
-
-
-The 2 security properties for anonymous credentials 
-- Unforgeability: models a malicious user, derived from the signature construction and generally follows EUF-CMA. As constructions typically build upon a commitment scheme, the hiding and binding properties of a commitment scheme works well with the (some property) of an EUF-CMA signature scheme. or unforgeable committed signature scheme. 
-- Anonymity: models a malicious issuer and verifier trying to link multiple presentations of a credential, trying to link credentials to a user, trying to do some other tasks
-
-And thus the goal of an anonymous credential system is to enable 
-- Privacy Preserving Authentication - sers can prove possession of certified attributes while maintaining anonymity, leveraging zero-knowledge proofs to demonstrate validity without revealing the credential itself.
-- Blind Signing for private issuance
-- Unlinkability
-- Selective Disclosure
-- rerandomization for unlinkable credential presentations
-
-This work examines several foundational signature schemes - CL, BBS+, and PS signatures - analyzing their suitability for anonymous credential systems through the lens of efficiency, privacy features, and practical considerations.
-
-
-
-
-
-Authentication Overhead
-
-
-Standard signatures: Direct verification via pairings
-Anonymous credentials: Additional zero-knowledge proofs required
-Proving knowledge of signature components increases computational cost
-
-
-Signature Properties for Anonymous Credentials
-
-
-Rerandomizability enables unlinkability between showings
-Blind signing with Pedersen commitments protects user privacy during issuance
-Zero-knowledge compatibility enables private attribute proofs
-Non-reliance on random oracles strengthens security guarantees
-
-
-Implementation Considerations
-
-
-BBS+ offers constant-size signatures but isn't rerandomizable
-CL signatures provide rerandomizability but have linear size
-PS signatures combine constant size with rerandomizability
-Tradeoff between efficiency and privacy features
-
-
-Thresholdise capability
-
-BBS+ They do not “thresholdize” very well: t-out-of- threshold protocols for BBS+ (and standalone BBS) either require offline preprocessing or multiple rounds of interaction between signers.
-
-
-
-Verification Methods
-
-
-Direct verification: Pairing-based signature checks
-Anonymous showing: Zero-knowledge proofs of signature possession
-Selective disclosure: Proving subset of attributes while hiding others
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Foundational Schemes}
-\begin{table}[ht]
-\centering
-\label{tab:original-schemes}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Feature} & \textbf{CL04} & \textbf{BBS+} & \textbf{PS} \\
-\midrule
-Signature size & $(1 + 2r)\G_1$ & $3\G_1$ & $2\G_1$ \\
-Public key size & $(r+1)\G_1$ & $2\G_1$ & $2\G_1$ \\
-Show (User) & $(2r+4)\G_1$ & $PK\{P[r+4]\}$ & $2\G_1 + PK\{P[r+1]\}$ \\
-Verify (Verifier) & $(4r+2)P$ & $Ver(PK)$ & $Ver(PK)$ \\
-Data Sent & $(2r+3)\G_1 + |PK|$ & $2\G_1 + |PK|$ & $2\G_1 + |PK|$ \\
-Randomizable & Yes & No & Yes \\
-% Proof complexity & Linear pairings & Joint proofs & Modular \\
-\bottomrule
-\end{tabular}
-\caption{Comparison of original signature schemes, $R_{\G_1}, R_\Z$ denotes generating random $\G_1$ point or $\Z_p$ element. $E_{\G_1}, E_{\G_2}, E_P$ denotes exponentiation in either $\G_1, \G_2, \G_T$. $P$ denotes pairing operation}
-\end{table}
-
-
-
-
-
-
-Anonymous credential systems require signature schemes that balance efficiency, privacy, and support for complex proofs. 
-We analyze three foundational schemes—CL04, BBS+, and PS—and their extensions, focusing on their suitability for multi-issuer, multi-credential attribute-based credential systems. 
-
-There is significant overhead between verifying credentials non-privately or just verifying the credential is valid, and verifying attributes themselves. 
-
-
-
-\subsection{Foundational Schemes}
-\begin{table}[ht]
-\centering
-\caption{Comparison of original signature schemes}
-\label{tab:original-schemes}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Feature} & \textbf{CL04} & \textbf{BBS+} & \textbf{PS} \\
-\midrule
-Signature size & $O(n)$ & $O(1)$ & $O(1)$ \\
-Public key size & $O(n)$ & $O(1)$ & $O(1)$ \\
-Rerandomizable & Yes & No & Yes \\
-Proof complexity & Linear pairings & Joint proofs & Modular \\
-Attribute consistency & Impractical & Nested ZKPs & Via commitments \\
-Batchability (same PK) & No & No & Yes \\
-Implementation & Complex $\mathbb{G}_T$ proofs & Custom ZKPs & Standard $\Sigma$-protocols \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Extended Schemes}
-\begin{table}[ht]
-\centering
-\caption{Comparison of improved schemes}
-\label{tab:improved-schemes}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Feature} & \textbf{BBS+ (Anonymous Attestation)} & \textbf{PS (UTT Variant)} \\
-\midrule
-Key improvement & $\mathbb{G}_1$ proofs & Pedersen integration \\
-Proof overhead & +1 pairing & +2 pairings \\
-Attribute consistency & Nested proofs & Shared randomness \\
-Cross-PK batchability & No & Key linking \\
-ZKP compatibility & Specialized & Standard libraries \\
-\bottomrule 
-\end{tabular}
-\end{table}
-
-
-
-\subsection{Conclusion}
-While CL04 and BBS+ established foundational properties, the PS signature scheme with UTT extensions uniquely satisfies modern requirements for multi-credential systems: constant-size signatures, efficient cross-key batchability, and compatibility with standardized ZKP toolchains. The ability to prove attribute consistency via shared Pedersen commitments—without requiring nested proofs or linear overhead—makes it the optimal choice for practical deployments.˝
-
-
-
-
-
-Outline
-- Initial schemes BBS+, CL04, PS used sigma protocols with proofs in Gt. Computation is slow, group elements are large, implementations are more complex. 
-- CL signatures can be rerandomized but the pairings are linear in the number of attributes. 
-- BBS+ are constant size signatures but can't essentially be rerandomized because the message commitment is "intertwined" with the signature and thus the signature and committed messages must be proven together, this makes the proof more complex but overhead smaller.
-- Anonymous Attestation improved BBS+ by proving in G1 adding overhead by 1 pairing and but because of the structure of the signature, remains complex zkp's
-- UTT version added 2 pairings, proving in G1 but with the added simplicity of proving knowledge of a pedersen commitment. This is extremely important for practical use cases. 
-
-Improvements started with
-Anonymous Attestation - improved BBS+
-CL04? not sure if it was improved
-PS - improved, that's what we're using, the first to use it
-
-\noindent\textbf{Notation:}
+\paragraph{Evolution of Multi-Show Attribute Based Credentials (ABC)}
 \begin{itemize}
-    \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
-    \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
-    \item $P$: Pairing Operation
-    \item $L$: Number of message attributes
+    \item CL Signatures \cite{cimato_signature_2003, hutchison_signature_2004}: Built on the first pairing-based constructions BBS/BLS \cite{goos_short_2001, \cite{hutchison_short_2004}},  CL credentials support rerandomization but require linear-in-attributes pairing operations during proofs, limiting scalability.
+
+    \item BBS+ Signatures \cite{hutchison_constant-size_2006}: Introduced constant-size credentials, \cite{camenisch_anonymous_2016} improved their complexity but BBS+ signatures intertwine message commitments with signatures, complicating ZKPs for selective disclosure as we show later.
+
+    \item PS Signatures \cite{sako_short_2016}: Separated message commitments from signatures, enabling modular proofs.  \cite{tomescu2022utt} further simplified rerandomization by decoupling attribute commitments from the core signature structure.
 \end{itemize}
+
+These anonymous credential schemes leveraged recent advancements in zero knowledge proofs over committed discrete log commitments Pedersen introduced his commitment scheme with perfect hiding and computational binding under the discrete log, \cite{goos_efficient_1997} Camenisch-Stadler formalized the ntoationa dn composition of sigma protocols over commitments and due to their algebraic compatibility with pairing based signatures, pedersen commitments were integrated in the early BLS, BBS, CL signatures \cite{goos_short_2001, hutchison_short_2004, hutchison_signature_2004}. 
+
+
+\subsubsection{The \cite{tomescu2022utt} advantage: }
+
+Simpler Zero-Knowledge Proofs
+
+The PS_UTT scheme achieves a critical efficiency breakthrough by structuring signatures and commitments to align with Pedersen commitment arithmetic. Consider the ZKP relation for PS_UTT:
+
+
+This relation directly leverages the homomorphic properties of Pedersen commitments () and pairing-based verification, avoiding the complex modular inversions and auxiliary variables seen in BBS+ (e.g., ). By decoupling the signature from the commitment structure, PS_UTT allows users to prove knowledge of attributes using linear equations in the exponent, which are inherently simpler to express in Sigma protocols.
+
+In contrast, BBS+ requires non-linear operations  and proof components tied to the intertwined signature-commitment structure, increasing proof size and complexity. PS_UTT’s design reduces the number of pairing operations and enables direct attribute extraction from commitments, streamlining both proof generation and verification.
+
+Contributions and Roadmap
+This work analyzes the trade-offs between CL, BBS+, and PS_UTT schemes through the lens of:
+
+Proof Complexity: How signature structure impacts ZKP expressiveness and efficiency.
+
+Rerandomization Simplicity: The role of algebraic decoupling in enabling unlinkability.
+
+Practical Efficiency: Benchmarks in pairing-friendly curves and real-world deployments.
+
+We demonstrate that PS_UTT’s modularity and compatibility with Pedersen commitments represent a significant step toward practical, large-scale anonymous credential systems, particularly in settings requiring selective disclosure and lightweight proofs (e.g., IoT or decentralized identity).
+
+
+
+
+A significant breakthrough came with Pointcheval-Sanders signatures [PS16, PS18], particularly in their UTT variant, which achieved three crucial improvements:
+1. Signature randomization independent of message commitments
+2. Proofs conducted in G₁ rather than Gᵧ
+3. Natural compatibility with Pedersen commitments, enabling simpler zero-knowledge proofs
+
+This progression reveals a consistent trend toward schemes optimizing not just for theoretical efficiency but practical implementation considerations. The PS_UTT scheme's ability to separate signature randomization from attribute proving represents a particularly elegant solution to the core challenge of anonymous credentials: achieving unlinkability while maintaining efficient provability.
+
+
+% Thresholdise capability
+
+% BBS+ They do not “thresholdize” very well: t-out-of- threshold protocols for BBS+ (and standalone BBS) either require offline preprocessing or multiple rounds of interaction between signers. - Alin Tomescu
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2312,6 +2068,14 @@ PS - improved, that's what we're using, the first to use it
 % PS Start
 % 
 % % % % % % % % % % 
+
+% \noindent\textbf{Notation:}
+% \begin{itemize}
+%     \item $F_p-, F_p \times, F_p +$: Field inversion, multiply, add $\in \Z_p$
+%     \item $E_{\G_1, \G_2, \G_T}$, $M_{\G_1, \G_2, \G_T}$: Exponentiation / Multiplication in respective groups
+%     \item $P$: Pairing Operation
+%     \item $L$: Number of message attributes
+% \end{itemize}
 
 
 

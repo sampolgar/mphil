@@ -1,28 +1,10 @@
+ \item \textbf{Zero-Knowledge Proofs and Sigma Protocols:} Fiat-Shamir introduced practical zero-knowledge protocols \textbf{CITE Fiat Shamir}, Schnorr's identification protocol build the foundation of sigma protocols over the discrete logarithm relations \cite{brands1996privacy, goos_rapid_1997, brands_rethinking_2000} and Camenisch-Stadler formalized proofs of knowledge for group homomorphism which is the building block for proving discrete log relations in commitment schemes \cite{goos_efficient_1997} and damgards work on sigma protocols \cite{damgard_sigma_2010}.
 
-% - motivation
-% - key properties needed (rerandomizing compatibility with vector commitments)
-% - why better than standard PS signatures
+    \item \textbf{Pairing-based Signatures: } Boneh-Lynn-Shacham (BLS) \cite{goos_short_2001} introduced the first short signature using bilinear pairings, Boneh-Boyen-Shacham (BBS) \cite{hutchison_short_2004} showed how to sign committed messages, Camenisch-Lysyanskaya \cite{cimato_signature_2003, hutchison_signature_2004} demonstrated how pairings enable signature randomization.
 
-% Definitions
-% - syntax + verifykey
-% - correctness
-% - security model
-% - additional properties (rerandomization soundness??)
+    \item \textbf{Commitments: } \cite{pedersen1991non} Pedersen introduced his commitment scheme with perfect hiding and computational binding under the discrete log, \cite{goos_efficient_1997} Camenisch-Stadler formalized the ntoationa dn composition of sigma protocols over commitments and due to their algebraic compatibility with pairing based signatures, pedersen commitments were integrated in the early BLS, BBS, CL signatures \cite{goos_short_2001, hutchison_short_2004, hutchison_signature_2004}. 
+    
 
-% Construction
-% - formal
-% - design choice (performance evaluation between standard PS signature and this in terms of G1/G2 exponents for Proof of Knowledge)
-% -- compatibility with pedersen commitments
-% -- compare efficiency with respect to signature size, computational costs of sign and verify (good breakdown in \cite{hutchison_get_2010})
-
-
-% - detail rerand mechanism
-
-% Security Analysis
-% - reduce to PS signature security
-% - outline the new work from \cite{smart_reassessing_2018} about maintaining security
-% - analyse randomization properties w.r.t 
-% - add footnote about rerandomizing vs randomizing
 
 
 % Take advantage of how they discuss the project here, including security properties, actors, etc
