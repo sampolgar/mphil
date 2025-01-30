@@ -473,8 +473,8 @@ For a vector of messages $\vec{m} = (m_1, \ldots, m_n) \in \Z_q^n$, the rerandom
 
     \item $\mathsf{CM.Com}(\ck, \vec{m}) \to (\mathsf{cm}, \widehat{\mathsf{cm}}, r)$: On input $\ck = (\mathsf{BG}, \{G_i, \widehat{G}_i\}_1^n, H,\widehat{H})$, a message vector $\vec{m} = \{m_1, \ldots, m_n\}$. Sample $r \sample \Z_p$, compute $\cm \gets rH + \sum_1^n m_iG_i$ and $\widehat{\cm} \gets r\widehat{H} + \sum_1^n m_i\widehat{G}_i$. Output $(\cm, \widehat{cm}, r)$ where equality of commitments across groups can be verified $e(\cm, \widehat{G}) = e(G, \widehat{\cm})$
     
-    \item $\mathsf{CM.Rerand}(\ck, \cm, \widehat{\cm}, \Delta_r) \to (\mathsf{cm'}, \widehat{\mathsf{cm'}}):$
-    On input $\ck = (\mathsf{BG}, \{G_i, \widehat{G}_i\}_1^n, H,\widehat{H})$, commitments $\cm, \widehat{cm}$ and new randomness $\Delta_r$, compute blinding points $\Delta_rH, \Delta_r\widehat{H}$, add points to commitments, $\cm' = \cm + \Delta_rH$, and $\widehat{\cm'} = \widehat{\cm} + \Delta_r\widehat{H}$, the randomized commitment is now $\cm = m_1G_1 + \ldots + m_iG_i + (r + \Delta_r)H$ and new opening key $(r + \Delta_r)$
+    \item $\mathsf{CM.Rerand}(\ck, \cm, \widehat{\cm}, r_\Delta) \to (\mathsf{cm'}, \widehat{\mathsf{cm'}}):$
+    On input $\ck = (\mathsf{BG}, \{G_i, \widehat{G}_i\}_1^n, H,\widehat{H})$, commitments $\cm, \widehat{cm}$ and new randomness $r_\Delta$, compute blinding points $r_\DeltaH, r_\Delta\widehat{H}$, add points to commitments, $\cm' = \cm + r_\DeltaH$, and $\widehat{\cm'} = \widehat{\cm} + r_\Delta\widehat{H}$, the randomized commitment is now $\cm = m_1G_1 + \ldots + m_iG_i + (r + r_\Delta)H$ and new opening key $(r + r_\Delta)$
 \end{itemize}
 
 
@@ -482,7 +482,7 @@ For a vector of messages $\vec{m} = (m_1, \ldots, m_n) \in \Z_q^n$, the rerandom
 
 We leverage Pedersen commitment's additively homomorphic properties multiple times in our construction. 
 \begin{itemize}
-    \item \textbf{Rerandomization: } given a commitment $\cm = mG + rH$ and fresh randomness $\Delta_r \in \Z_p$, the rerandomized commitment $\cm'$ is $\cm + \Delta_rH$ = $mG + rH + \Delta_rH$ = $mG + (r+\Delta_r)H$. This operation preserves the committed value $m$ while updating the randomness from $r$ to $r + \Delta_r$. $\cm'$ is computationally indistinguishable from $\cm$.
+    \item \textbf{Rerandomization: } given a commitment $\cm = mG + rH$ and fresh randomness $r_\Delta \in \Z_p$, the rerandomized commitment $\cm'$ is $\cm + r_\DeltaH$ = $mG + rH + r_\DeltaH$ = $mG + (r+r_\Delta)H$. This operation preserves the committed value $m$ while updating the randomness from $r$ to $r + r_\Delta$. $\cm'$ is computationally indistinguishable from $\cm$.
 
     \textbf{Two Party Protocol:} During credential generation, a two-party computation protocol establishes a shared secret between user and authority:
     \begin{enumerate}
@@ -539,60 +539,34 @@ As already mentioned, the hiding property hold information theoretically.
 % % % % % % % % % % 
 \newpage
 \section{Rerandomizable Signature over Commitments}
-Early work by Camenisch and Lysanskaya defined a multi-show attribute-based anonymous credential as a commitment and signature scheme with protocols to "issue blindly" - to receive a signature over-committed values without revealing the attributes during issuance and protocols to use the credential anonymously. The three main signature-based constructions are CL04, BBs+ and PS signatures. 
-
-\noindent In this section, we analyze their relative merits as justification for settling on our construction. We demonstrate this variant of PS signatures offers a compelling advantage - they naturally output verified Pedersen commitments that integrate with standardised $\sigma-$protocols. Although this approach introduces small overhead, we argue the security benefits of using well-studied and well-understood proof protocols with pedersen commitments outweigh the computational overhead. 
-
-To demonstrate the problem \ref{}
-- Initial schemes BBS+, CL04, PS used sigma protocols with proofs in Gt. Computation is slow, group elements are large, implementations are more complex. 
-- CL signatures can be rerandomized but the pairings are linear in the number of attributes. 
-- BBS+ are constant size signatures but can't essentially be rerandomized because the message commitment is "intertwined" with the signature and thus the signature and committed messages must be proven together, this makes the proof more complex but overhead smaller.
-- Anonymous Attestation improved BBS+ by proving in G1 adding overhead by 1 pairing and but because of the structure of the signature, remains complex zkp's
-- UTT version added 2 pairings, proving in G1 but with the added simplicity of proving knowledge of a pedersen commitment. This is extremely important for practical use cases. 
-
-Improvements started with
-Anonymous Attestation - improved BBS+
-CL04? not sure if it was improved
-PS - improved, that's what we're using, the first to use it
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 \subsubsection{Syntax}
-\begin{itemize}
-    \item $PS.KeyGen(\secparam, \ck) \to (\sk, \vk):$ Parse $\ck$ as $ck \gets (g, \gb, \tilg, \tilgb)$. Sample $x \sample \Zp$, set $(\sk, \vk) \gets (g^x, \tilg^x)$
+\begin{definition}[Rerandomizable Signature over Commitments]
+    A rerandomizable signature scheme over commitments $\mathsf{RS}$ is a tuple $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Rerand}, \mathsf{Ver}, \mathsf{VerKey})$ of PPT algorithms where:
+        \begin{itemize}
+            \item $\mathsf{RS.KeyGen(pp, ck)} \to \mathsf{(sk, pk = (pp, vk, ck))}$ is a probabilistic algorithm that takes in the public parameters $\mathsf{pp}$ and commitment key $\mathsf{ck}$, outputs a signing key $\sk$, a public verification key $\vk$ and outputs $\mathsf{(sk, pk = (pp, vk, ck))}$
 
-    \item $PS.Sign_{ck}(\sk, \cm) \to \sigma:$ Parse $\ck$ as $\gets (g, \cdot, \tilg, \cdot)$ Sample $u \sample \Zp$, compute $\sigma_1 \gets g^u$, $\sigma_2 \gets (\sk \cdot \cm)^u$
-     and return $\sigma \gets (\sigma_1, \sigma_2)$
+            \item $\mathsf{RS.Sign}(\mathsf{sk, cm};u ) \to \sigma$: probabilistic algorithm takes the signing key $\sk$, commitment $\cm$ from the commitment space $\mathcal{C}$ and random coins $u$ sampled from random space of the signature scheme. Output $\sigma$
 
-     \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma': $ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new signature $\sigma'$. For any message $m$ and initial randomizer $r$, if $\sigma$ was generated as $\sigma \gets \mathsf{RS.Sign}(\sk, \mathsf{CM.Com}(\ck, m, r), u)$, then the output $\sigma'$ corresponds to $\mathsf{RS.Sign}(\sk,\mathsf{CM.Com}(\ck, m, r+r_\Delta), u+u_\Delta)$. The randomness spaces for both the signature and commitment schemes form algebraic groups under the efficiently computable operation $"+"$.
 
-     \item $PS.Verify_{ck, vk}(\sigma, (\cm, \tilcm)) \to \bit: $ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
+            \item $\mathsf{RS.Ver}(\mathsf{pk = (pp, vk, ck), cm}, \sigma) \rightarrow \bit$: is a deterministic algorithm, takes as input the public key $\mathsf{pk}$, $\cm \in \mathcal{C}$ and signature $\sigma$, outputs 1 for successful verification, otherwise 0. 
 
-     \item $\mathsf{PS.VKey}(\sk, \vk)$ 
-     
-\end{itemize}
+            \item $\mathsf{RS.VerKey}(\mathsf{sk, pk = (pp, vk, ck)})$ 
+        \end{itemize}
+\end{definition}
+
+
+
+
+\newpage
 \subsubsection{Construction}
 \begin{itemize}
     \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
 
-    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (X \cdot \cm)^u$ both are notably in $\G_1$ and thus $(X \cdot \cm)^u$ = $(g_1^{m_1u}\dots g_n^{m_nu}g^{xu+ru})$. Returns $\sigma \gets (\sigma_1, \sigma_2)$    
+    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (\sk \cdot \cm)^u$, returns $(g^u, (\sk \cdot \cm)^u)$
 
-    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
+    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2) \equiv (h, \sigma_2) \equiv (g^u, (\sk \cdot \cm)^u)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
 
     \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
 
@@ -1041,7 +1015,7 @@ Our construction builds a new anonymous credential building block for multi-issu
 
 \begin{enumerate}
     \item \textbf{Modified Rerandomizable Pointcheval-Sanders Signatures:} 
-    Our construction builds on Pointcheval-Sanders signatures which provide constant-sized signatures and efficient verification via bilinear pairings. We employ the modification in \cite{tomescu2022utt}, rather than randomizing just the signature, then proving knowledge of messages with respect to the randomized signature, we first randomize the commitment with $\Delta_u$, then randomize the signature with the commitment randomness $\Delta_u$ and new randomness $\Delta_r$.
+    Our construction builds on Pointcheval-Sanders signatures which provide constant-sized signatures and efficient verification via bilinear pairings. We employ the modification in \cite{tomescu2022utt}, rather than randomizing just the signature, then proving knowledge of messages with respect to the randomized signature, we first randomize the commitment with $u_\Delta$, then randomize the signature with the commitment randomness $u_\Delta$ and new randomness $r_\Delta$.
     
     The modification removes the need to run zero-knowledge protocols on the randomized signature, which are bespoke for this scheme and often needed in anonymous credentials e.g. \cite{sako_short_2016, hutchison_signature_2004}. Instead, ours outputs a verified randomized Pedersen commitment to be used in standardized zero-knowledge proof protocols \cite{stephan_krenn_proposal_nodate}, which are widely used with security reducing to the original PS signature under the q-SDH assumption. Furthermore, our modification avoids sigma protocols with computation in $\G_2$ significantly reducing overhead. 
     
@@ -1116,11 +1090,11 @@ Next, the user and verifier interact in a two-party protocol where the user firs
 
 \noindent Let $\mathcal{R}$ be a relation for public input $(\sigma_m', \sigma_d', \sigma_u', pk_m, pk_d, pk_u, \cm_m', \cm_d', \cm_u')$ where:
 
-$\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, \delta_u, \mathsf{ctx}_m, \mathsf{ctx}_d, \mathsf{ctx}_u, \mathsf{exp}_m, \mathsf{exp}_d, \mathsf{issued}_u)$:
+$\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, u_\Delta, \mathsf{ctx}_m, \mathsf{ctx}_d, \mathsf{ctx}_u, \mathsf{exp}_m, \mathsf{exp}_d, \mathsf{issued}_u)$:
 \begin{align*}
     \cm_m &= \mathsf{CM.Com}([s, k, \mathsf{ctx}_m, \mathsf{exp}_m]; r_m) \; \wedge \; \mathsf{exp}_m > \mathsf{today} \; \wedge \mathsf{ctx}_m = \text{"master"} \; \wedge\\
     \cm_d &= \mathsf{CM.Com}([s, \delta_d, \mathsf{ctx}_d, \mathsf{exp}_d]; r_d) \; \wedge \; \mathsf{exp}_d > \mathsf{today} \; \wedge \mathsf{ctx}_d = \text{"dmv"} \; \wedge\\
-    \cm_u &= \mathsf{CM.Com}([s, \delta_u, \mathsf{ctx}_u, \mathsf{issued}_u]; r_u) \; \wedge \; \mathsf{ctx}_u \in \mathcal{D} \; \wedge\\
+    \cm_u &= \mathsf{CM.Com}([s, u_\Delta, \mathsf{ctx}_u, \mathsf{issued}_u]; r_u) \; \wedge \; \mathsf{ctx}_u \in \mathcal{D} \; \wedge\\
     s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
 \end{align*}
 
@@ -1989,7 +1963,7 @@ What is the takeaway message from the evaluation?
 \subsection{Introduction}
 Privacy-preserving authentication systems require cryptographic primitives that allow users to prove certified attributes (e.g., citizenship, qualifications) without revealing additional information or enabling linkage across sessions. Anonymous credential schemes address this by encoding attributes into cryptographically randomized signatures, enabling users to generate unlinkable "showings" of credentials through zero-knowledge proofs (ZKPs). A critical challenge lies in balancing three properties: (1) multi-show unlinkability (proving attributes without correlating sessions), (2) selective disclosure (revealing subsets of attributes), and (3) practical efficiency for real-world deployment.
 
-The problems in accountable privacy were first introduced by Chaum \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001}, establishing the paradigm of encoding credentials as signatures over committed attributes. While early signature schemes lacked the algebraic structure to support efficient ZKPs and signature randomization, the advent of pairing-based cryptography \cite{goos_short_2001, hutchison_short_2004} enabled homomorphic rerandomization of credentials—allowing users to transform signatures into fresh, unlinkable versions while preserving validity.
+The problems in accountable privacy were first introduced by Chaum \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001}, establishing the paradigm of encoding credentials as signatures over committed attributes. While early signature schemes lacked the algebraic structure to support efficient ZKPs and signature randomization, the advent of pairing-based cryptography \cite{goos_short_2001, hutchison_short_2004} coupled with commitment schemes and zero-knowledge proof systems enabled homomorphic rerandomization of credentials—allowing users to transform signatures into fresh, unlinkable versions while preserving validity.
 
 \subsection{Evolution of Anonymous Credential Schemes}
 The progression of anonymous credential schemes reflects a sustained effort to simplify the mathematical structures underlying zero-knowledge proofs:
@@ -2027,7 +2001,7 @@ The $q$-Strong Diffie-Hellman (q-SDH) assumption \cite{boneh_short_2008} require
 The LRSW assumption \cite{lysyanskaya2000pseudonym} underpinning PS\_UTT enables signatures with \textit{linear} algebraic structure:
 \begin{itemize}
     \item Signatures take form $\sigma = (h^u, (X \cdot \prod g_i^{m_i} \cdot h^r)^u)$ with \textit{no inverse operations}
-    \item Randomization factors ($\Delta_u, \Delta_r$) modify signatures additively rather than multiplicatively
+    \item Randomization factors ($u_\Delta, r_\Delta$) modify signatures additively rather than multiplicatively
     \item Verification equations remain bilinear pairings without cross-term cancellation
 \end{itemize}
 
@@ -2036,7 +2010,7 @@ The LRSW assumption \cite{lysyanskaya2000pseudonym} underpinning PS\_UTT enables
 The LRSW assumption enables three key efficiency properties, each building on the previous:
 \begin{itemize}
     \item \textbf{Linear Exponent Relations}: Messages appear directly in the exponent as $\prod g_i^{m_i}$, avoiding the nested fraction structure of q-SDH
-    \item \textbf{Independent Randomization}: The separation of $\Delta_u$ and $\Delta_r$ creates a natural two-layer randomization strategy, unlike BBS+'s entangled randomized
+    \item \textbf{Independent Randomization}: The separation of $u_\Delta$ and $r_\Delta$ creates a natural two-layer randomization strategy, unlike BBS+'s entangled randomized
 \end{itemize}
 \sam{(does it change how SNARKS verify these signatures, multiplicative inverse in circuits?)}
 
@@ -2048,14 +2022,14 @@ The LRSW assumption enables three key efficiency properties, each building on th
 PS\_UTT's key innovation lies in its separation of the signature's algebraic structure from the attribute commitment layer. Consider the ZKP relation for proving knowledge of PS\_UTT-signed attributes:
 
 \begin{equation}
-   \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, \Delta_u, \Delta_r): 
+   \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u_\Delta, r_\Delta): 
    e(\sigma_2, \hat{h}) = e(\sigma_1, \widehat{X} \cdot \widehat{\cm}) \wedge
    e(\cm, \hat{h}) = e(h, \widehat{\cm}) \wedge
-   \cm = h^{r+\Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+   \cm = h^{r+r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
    \}
 \end{equation}
 
-Here, the prover need only linearly combine public parameters $(g_i, h)$ with secrets $(m_i, \Delta_r)$, leveraging the homomorphism of Pedersen commitments. This contrasts sharply with BBS+'s non-linear relation:
+Here, the prover need only linearly combine public parameters $(g_i, h)$ with secrets $(m_i, r_\Delta)$, leveraging the homomorphism of Pedersen commitments. This contrasts sharply with BBS+'s non-linear relation:
 
 \begin{equation}
    \pi \gets \mathsf{SPK}\{(m_1,\ldots,m_{\ell}), e, r_2, r_3, s'): 
@@ -2066,7 +2040,7 @@ Here, the prover need only linearly combine public parameters $(g_i, h)$ with se
 \subsection{Technical Advantages}
 
 \paragraph{Simplified Zero-Knowledge Proofs}
-By decoupling randomization $(\Delta_u, \Delta_r)$ from the core signature verification equation, PS\_UTT eliminates the need for complex cancellation of cross-terms during proofs. This reduces both the number of group operations and the interactivity required in ZKP composition. 
+By decoupling randomization $(u_\Delta, r_\Delta)$ from the core signature verification equation, PS\_UTT eliminates the need for complex cancellation of cross-terms during proofs. This reduces both the number of group operations and the interactivity required in ZKP composition. 
 
 \paragraph{Efficient Multi-Credential Proofs}
 The separation of signature randomization from attribute proving enables more efficient composition of proofs across multiple credentials. Where BBS+ requires handling interleaved inverse operations and auxiliary variables, PS\_UTT's linear structure allows direct combination of attribute proofs through standard Pedersen commitment arithmetic.
@@ -2245,40 +2219,86 @@ The signature scheme for signing information-theoretically hidden messages consi
 \subsection{PS22 \cite{tomescu2022utt}}
 
 \begin{itemize}
-    \item \textbf{PS.Rerand}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm = (\cm, \widehat{\cm}) ) \to (\sigma', \cm', \Delta_r, \Delta_u)$
+    \item \textbf{PS.Rerand}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm = (\cm, \widetilde{\cm}) ) \to (\sigma', \cm', r_\Delta, u_\Delta)$
     \begin{itemize}
-        \item $\Prover$ samples $\Delta_r, \Delta_u \sample \Z_p$
-        \item Rerandomizes the signature $\sigma'$ = $(\sigma_1', \sigma_2') \gets (\sigma_1^{\Delta_u}, (\sigma_2\cdot \sigma_1^{\Delta_r})^{\Delta_u})$
-        \item Randomizes the commitment by computing $h^{\Delta_r}, \hat{h}^{\Delta_r}$, then  $(\cm', \widehat{\cm'}) \gets (\cm \cdot h^{\Delta_r}, \widehat{\cm}\cdot \hat{h}^{\Delta_r})$
+        \item $\Prover$ samples $r_\Delta, u_\Delta \sample \Z_p$
+        \item Rerandomizes the signature $\sigma'$ = $(\sigma_1', \sigma_2') \gets (\sigma_1^{u_\Delta}, (\sigma_2\cdot \sigma_1^{r_\Delta})^{u_\Delta})$
+        \item Randomizes the commitment by computing $g^{r_\Delta}, \hat{g}^{r_\Delta}$, then  $(\cm', \widehat{\cm'}) \gets (\cm \cdot h^{r_\Delta}, \widehat{\cm}\cdot \hat{h}^{r_\Delta})$
     \end{itemize}
 
-    \item \textbf{PoK}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm, \widehat{\cm}, \vec{m}, \Delta_r, \Delta_u)$ $\Prover$ sends rerandomized signature and commitment $\sigma', \cm'$ and $\pi$ 
-    \[
-       \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u+\Delta_u, r+\Delta_r): 
+    \item \textbf{PoK}$(\pk, \sigma = (\sigma_1, \sigma_2), \cm, \widehat{\cm}, \vec{m}, r_\Delta, u_\Delta)$ $\Prover$ sends rerandomized signature and commitment $\sigma', \cm'$ and $\pi$ 
+  \[
+        \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u+u_\Delta, r+r_\Delta): 
     \]
     \[
-        e(\sigma_2, \hat{h}) = e(\sigma_1, \widehat{X} \cdot \widehat{\cm}) \quad \wedge \quad e(\cm, \hat{h}) = e(h, \widehat{\cm})  \quad \wedge \quad \cm = h^{r+\Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+         e(\sigma_2', \tilde{g}) = e(\sigma_1', \widetilde{X})\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
+        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
+        \cm' = g^{r+r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+        \}
     \]
     
 \end{itemize}
+
+
+notes, recall
+\begin{align*}
+    &\sigma_1' = \sigma_1^{u_\Delta} = h^{u_\Delta} = g^{u \cdot u_\Delta} \\
+    &\sigma_2' = (\sigma_2\cdot \sigma_1^{r_\Delta})^{u_\Delta}) \\
+    &= ((sk\cdot \cm)^u \cdot h^{r_\Delta})^{u_\Delta}) \\
+    &= g^{x \cdot u \cdot u_\Delta} \cdot \cm^{u \cdot u_\Delta}\cdot g^{u \cdot u_\Delta \cdot r_\Delta}\\
+\end{align*}
+
+
+
+    \[
+        \cm' = g^{r+r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+    Changing to this
+    \[
+        \cm' = \tilde{g}^{r_\Delta} \cdot \widetilde{\cm} \text{  without sending  } \widetilde{\cm} 
+    \]
+    but using its bases $g_1, \ldots, g_\ell$
+
+    \[
+        \sigma_1' = \sigma_1^{u_\Delta} = h^{u_\Delta} = g^{u \cdot u_\Delta} \\
+    \]
+    \begin{align*}
+    &\sigma_2' = (\sigma_2\cdot \sigma_1^{r_\Delta})^{u_\Delta}) \\
+    &= ((sk\cdot \cm)^u \cdot h^{r_\Delta})^{u_\Delta}) \\
+    &= g^{x \cdot u \cdot u_\Delta} \cdot \cm^{u \cdot u_\Delta}\cdot g^{u \cdot u_\Delta \cdot r_\Delta}\\
+    \end{align*}
+
+    \begin{align*}
+    e(\sigma_2', \tilde{g}) &= e((\sk \cdot \cm)^{u \cdot u\Delta}\cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+    &= e(h^{x \cdot u_\Delta}\cdot \cm^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+    &= e(h^{x \cdot u_\Delta}, \tilde{g}) \cdot e(\cm^{u \cdot u_\Delta}, \tilde{g}) \cdot e(h^{ u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+    &= e(h^{u_\Delta}, \tilde{g}^x) \cdot e(\cm, \tilde{g})^{u \cdot u_\Delta} \cdot e(h^{ u_\Delta}, \tilde{g})^{r_\Delta} \\
+    &= e(\sigma_1', \vk) \cdot e(g^{u \cdot u_\Delta}, \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g})^{r_\Delta} \\
+    &= e(\sigma_1', \vk) \cdot e(\sigma_1', \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g}^{r_\Delta}) \\
+    &= e(\sigma_1', \vk \cdot \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}) \\
+\end{align*}
+
+ % = e(g^(u.u_delta), g_tilda^x).e(cm, g_tilda)^(u.u_delta). e(h^u_delta, g_tilda)^r_delta
+    
+    
 
 
 \newpage
 \begin{protocol}{Zero-Knowledge Proof of Knowledge for PS Signature over Commitments}{ps-pok}
     \textbf{Relation $\mathcal{R}$}
     \[
-        \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u+\Delta_u, r+\Delta_r): 
+        \pi \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u+u_\Delta, r+r_\Delta): 
     \]
     \[
-         e(\sigma_2, \hat{h}) = e(\sigma_1, \widehat{X} \cdot \widehat{\cm}) \quad \wedge \quad
-        e(\cm, \hat{h}) = e(h, \widehat{\cm}) \quad \wedge \quad
-        \cm = h^{r+\Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+         e(\sigma_2', \tilde{g}) = e(\sigma_1', \widetilde{X})\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
+        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
+        \cm' = g^{r+r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
         \}
     \]
+
+    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, g, \tilde{g}, e)$, $\pk = (\vk = \tilde{X}, \ck = g_1, \ldots, g_{\ell}, g)$, a rerandomized signature $\sigma' = (\sigma_1', \sigma_2')$, and rerandomized commitment $\cm' = (\cm \cdot g^{r_\Delta}, \widetilde{\cm}' \cdot \tilde{g}^{r_\Delta})$
     
-    \textbf{Common Input:} $(p, \G_1, \G_2, \G_T, e)$, $\pk = (X, \{g_i\}_{i=1}^\ell, h)$, a rerandomized signature $\sigma' = (\sigma_1', \sigma_2')$, and rerandomized commitment $\cm'$
-    
-    \textbf{Private Input:} $\Prover$ has messages $(m_1,\ldots,m_\ell)$, commitment randomness $r' = r + \Delta_r$, signature randomness $u' = u + \Delta_u$
+    \textbf{Private Input:} $\Prover$ has messages $(m_1,\ldots,m_\ell)$, commitment randomness $r' = r + r_\Delta$, signature randomness $u' = u + u_\Delta$
     
     \begin{enumerate}
         \item $\Prover$:
@@ -2289,9 +2309,9 @@ The signature scheme for signing information-theoretically hidden messages consi
             \]
             \item Compute Schnorr commitments:
             \[
-                T_1 \gets h^{\tilde{r'}} \prod_{i=1}^\ell g_i^{\tilde{m_i}} \qquad T_2 \gets e(\sigma_1^{\tilde{u'}}, \widehat{X} \cdot \widehat{\cm'})
+                T_1 \gets g^{\tilde{r'}} \prod_{i=1}^\ell g_i^{\tilde{m_i}} \qquad T_2 \gets e(\sigma_1'^{u'}, \vk \cdot \widehat{\cm'})
             \]
-            \item Send $(\cm', T_1, T_2)$ to $\Verifier$
+            \item Send $(T_1 \in \G_1, T_2 \in \G_T)$ to $\Verifier$
         \end{itemize}
         
         \item $\Verifier$ sends challenge $c \sample \Z_p$
@@ -2303,11 +2323,11 @@ The signature scheme for signing information-theoretically hidden messages consi
         
         \item $\Verifier$ checks:
         \[
-            \cm'^c \cdot T_1 \stackrel{?}{=} h^{z_{r'}} \prod_{i=1}^\ell g_i^{z_{m_i}}
-            \quad \wedge \quad e(\cm, \hat{h}) \stackrel{?}{=} e(h, \widehat{\cm})
+            \cm'^c \cdot T_1 \stackrel{?}{=} g^{z_{r'}} \prod_{i=1}^\ell g_i^{z_{m_i}}
+            \quad \wedge \quad e(\cm', \tilde{g}) \stackrel{?}{=} e(g, \widetilde{\cm}')
         \]
         \[
-            e(\sigma_2, \hat{h})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1^{z_{u'}}, \widehat{X} \cdot \widehat{\cm'})
+            e(\sigma_2', \tilde{g})^c \cdot T_2 \stackrel{?}{=} e(\sigma_1'^{z_{u'}}, \vk \cdot \widetilde{\cm}')
         \]
     \end{enumerate}
 \end{protocol}
@@ -2320,8 +2340,8 @@ The signature scheme for signing information-theoretically hidden messages consi
 \begin{itemize}
     \item \textbf{Prover's Initial Operations (Signature Rerandomization)}
     \begin{itemize}
-        \item $(\sigma_1^{\Delta_u}, (\sigma_2\cdot \sigma_1^{\Delta_r})^{\Delta_u})$ \qquad $3E_{\G_1} + 1M_{\G_1}$
-        \item $(\cm \cdot h^{\Delta_r}, \widehat{\cm} \cdot \hat{h}^{\Delta_r})$ \qquad $1E_{\G_2} + 1E_{\G_1} + 1M_{\G_1} + 1M_{\G_2}$
+        \item $(\sigma_1^{u_\Delta}, (\sigma_2\cdot \sigma_1^{r_\Delta})^{u_\Delta})$ \qquad $3E_{\G_1} + 1M_{\G_1}$
+        \item $(\cm \cdot h^{r_\Delta}, \widehat{\cm} \cdot \hat{h}^{r_\Delta})$ \qquad $1E_{\G_2} + 1E_{\G_1} + 1M_{\G_1} + 1M_{\G_2}$
     \end{itemize}
 \item \textbf{Prover Schnorr Operations}
     \begin{itemize}
