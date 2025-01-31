@@ -234,21 +234,45 @@ which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.
 
 \subsection{Digital Signatures}
 
-\begin{definition}[Correctness]
-    Correctness
+\begin{definition}[Signature Scheme]
+A signature scheme $\mathsf{Sig}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ where:
+
+\begin{itemize}
+    \item $\mathsf{KeyGen}(1^\lambda) \rightarrow (\mathsf{sk}, \mathsf{pk})$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a secret signing key $\mathsf{sk}$ and a public verification key $\mathsf{pk}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{pk}$.
+    
+    \item $\mathsf{Sign}(\mathsf{sk}, m; r) \rightarrow \sigma$: is a probabilistic algorithm that takes as input the secret key $\mathsf{sk}$, a message $m \in \mathcal{M}$, and random coins $r$ sampled from the randomness space $\mathcal{R}$. It outputs a signature $\sigma$.
+    
+    \item $\mathsf{Verify}(\mathsf{pk}, m, \sigma) \rightarrow b$: is a deterministic algorithm that takes as input the public key $\mathsf{pk}$, a message $m \in \mathcal{M}$, and a signature $\sigma$. It outputs a bit $b \in \{0,1\}$, where 1 indicates acceptance and 0 indicates rejection.
+\end{itemize}
+
+The scheme must satisfy the following correctness property:
+For all $\lambda \in \mathbb{N}$, all $(\mathsf{sk}, \mathsf{pk}) \leftarrow \mathsf{KeyGen}(1^\lambda)$, all messages $m \in \mathcal{M}$, and all random coins $r \in \mathcal{R}$:
+
+$$\Pr[\mathsf{Verify}(\mathsf{pk}, m, \mathsf{Sign}(\mathsf{sk}, m; r)) = 1] = 1$$
+
 \end{definition}
 
+\begin{definition}[Correctness]
+A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is correct if for all $k \in \mathbb{N}$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^k)]$ and all $m \in \mathcal{M}$ we have:
 
+$$\Pr[\mathsf{Verify}(m, \mathsf{Sign}(m, \mathsf{sk}), \mathsf{pk}) = 1] = 1.$$
+\end{definition}
 
 \begin{definition}[EUF-CMA]
-    EUF-CMA
+A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$ with access to a signing oracle $\mathsf{Sign}(\cdot, \mathsf{sk})$ there is a negligible function $\negl$ such that:
+
+$$\Pr\left[\begin{array}{l}
+    (\mathsf{sk}, \mathsf{pk}) \stackrel{\$}{\leftarrow} \mathsf{KeyGen}(1^k), \\
+    (m^*, \sigma^*) \stackrel{\$}{\leftarrow} \mathcal{A}^{\mathsf{Sign}(\cdot,\mathsf{sk})}(\mathsf{pk})
+\end{array} : m^* \notin Q \wedge \mathsf{Verify}(m^*, \sigma^*, \mathsf{pk}) = 1\right] \leq \negl$$
+
+where $Q$ is the set of queries that $\mathcal{A}$ has issued to the signing oracle.
 \end{definition}
 
 
 
 
-
-
+\subsection{Zero Knowledge Proofs}
 
 \subsection{Zero Knowledge Proofs of Knowledge}
 
@@ -538,9 +562,8 @@ As already mentioned, the hiding property hold information theoretically.
 % 
 % % % % % % % % % % 
 \newpage
-\section{Rerandomizable Signature over Commitments}
+\section{Rerandomizable Signature over Commitments} 
 
-\subsubsection{Syntax}
 \begin{definition}[Rerandomizable Signature over Commitments]
     A rerandomizable signature scheme over commitments $\mathsf{RS}$ is a tuple $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Rerand}, \mathsf{Ver}, \mathsf{VerKey})$ of PPT algorithms where:
         \begin{itemize}
@@ -548,7 +571,7 @@ As already mentioned, the hiding property hold information theoretically.
 
             \item $\mathsf{RS.Sign}(\mathsf{sk, cm};u ) \to \sigma$: probabilistic algorithm takes the signing key $\sk$, commitment $\cm$ from the commitment space $\mathcal{C}$ and random coins $u$ sampled from random space of the signature scheme. Output $\sigma$
 
-            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new signature $\sigma'$. For any message $m$ and initial randomizer $r$, if $\sigma$ was generated as $\sigma \gets \mathsf{RS.Sign}(\sk, \mathsf{CM.Com}(\ck, m, r), u)$, then the output $\sigma'$ corresponds to $\mathsf{RS.Sign}(\sk,\mathsf{CM.Com}(\ck, m, r+r_\Delta), u+u_\Delta)$. The randomness spaces for both the signature and commitment schemes form algebraic groups under the efficiently computable operation $"+"$.
+            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new signature $\sigma'$. 
 
             \item $\mathsf{RS.Ver}(\mathsf{pk = (pp, vk, ck), cm}, \sigma) \rightarrow \bit$: is a deterministic algorithm, takes as input the public key $\mathsf{pk}$, $\cm \in \mathcal{C}$ and signature $\sigma$, outputs 1 for successful verification, otherwise 0. 
 
@@ -557,28 +580,105 @@ As already mentioned, the hiding property hold information theoretically.
 \end{definition}
 
 
+\begin{definition}[Correctness] 
+A rerandomizable signature scheme over commitments is correct if for all security parameters $\secparam$, for all $\ell > 1$, all bilinear groups $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \in [\mathsf{BGGen}(\secparam)]$, all key pairs $(\sk, \pk) \in [\mathsf{KeyGen}(\mathsf{BG, 1^{\ell}})]$, all messages $m \in \mathcal{M}$, all commitments $\cm \in \mathcal{C}$, all commitment keys $\mathsf{ck} \in [\mathsf{CM.KeyGen}(\secparam)]$, and all randomness $r, u, r_\Delta, u_\Delta \in \Z_p$ we have:
+    \begin{align*}
+        &\mathsf{RS.VerKey}(\sk, \pk) = 1 \qquad \wedge \\
+        &\Pr \left[ \mathsf{RS.Ver}(\pk, \left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r), u)\right), m) = 1 \right] =1 \qquad \wedge \\
+        &\Pr \left[ \mathsf{RS.Ver}(\pk, \mathsf{RS.Rerand}(\pk,\left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r), u)\right),r_\Delta, u_\Delta), m) = 1 \right] =1 \qquad \wedge \\
+        &\Pr \left[ \mathsf{RS.Ver}(\pk, \left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r+r_\Delta), u+u_\Delta)\right), m) = 1 \right] = 1\\
+    \end{align*}
+\end{definition}
 
 
-\newpage
+
+\begin{definition}[EUF-CCA]
+A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen-commitment attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+    \begin{align*}
+        &\Pr\left[
+            \begin{array}{l}
+                \mathsf{BG} \gets \mathsf{BGGen}(1^{\secparam}), \\
+                \mathsf{ck} \gets \mathsf{CM.KeyGen}(\mathsf{BG}), \\
+                (\sk, \pk) \gets \mathsf{KeyGen}(\mathsf{BG}), \\
+                (m^*, \cm^*, \sigma^*) \gets \mathcal{A}^{\mathsf{Sign}(\sk, \cdot)}(\pk) \\
+                \end{array}
+                \quad : \quad
+                \begin{array}{l}
+                \cm^* = \mathsf{CM.Com}(\mathsf{ck}, m^*, r^*) \land \\
+                \mathsf{RS.Ver}(\pk, \sigma^*, m^*) = 1 \land \\
+                \cm^* \notin Q_{\cm}
+            \end{array}
+        \right] \leq \negl
+    \end{align*}
+where $Q_{\cm}$ is the set of all commitments queried to the signing oracle.
+\end{definition}
+
+
+\subsection{Signature Adaptation Under Malicious Keys}
+\begin{definition}[Signature Adaptation Under Malicious Keys]
+A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
+\begin{itemize}
+    \item $\cm \in \mathcal{C}$ is a valid commitment,
+    \item $\sigma$ is a valid signature under $\pk$ (i.e., $\mathsf{RS.Ver}(\pk, \cm, \sigma) = 1$),
+    \item $r \in \Z_p^*$,
+\end{itemize}
+the distribution of $\mathsf{RS.Rerand}(\pk, \sigma, \mu)$ is identical to $\mathsf{RS.Sign}(\sk, \mathsf{CM.Rerand}(\ck, \cm, r))$, even when $\pk$ is adversarially generated.
+\end{definition}
+
+
+
+We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as input into our rerandomizable signature scheme $\mathsf{RS}$. We copy the algorithm below for convenience.
 \subsubsection{Construction}
 \begin{itemize}
-    \item $PS.KeyGen_{\ck}(\secparam) \to (\sk, \vk):$ The PS Signature KeyGen algorithm is parameterized by the corresponding commitment key $\ck$. The Signer retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, samples secret $x \sample \Zp$, sets $X \gets g^x$ and $\tilx \gets \tilg^x$, sets $\sk$ as $(g, X)$ and the public verification key $\vk$ as $(\ck, \tilx)$ and returns $(\sk, \vk)$
+    \item $\mathsf{CM.Setup}(\secparam, \ell, (y_i, \ldots, y_{\ell} \in \Z_p^{\ell})) \to \ck:$  
+    Sample $(g, \tilde{g}) \sample \G_1 \times \G_2$, For $i \in [1,\ell]$: Compute $g_i = g^{y_i}$ and $\tilde{g}_i = \tilde{g}^{y_i}$. Return $\ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+    
+    \item $\mathsf{RS.KeyGen}(\secparam, \ck) \to (\sk, \vk):$ 
+        Retrieve $(g, \cdot, \tilde{g}, \cdot)$ from $\mathsf{ck}$,
+        Sample $x \sample \Z_p$,
+        Set $(\sk, \vk) \gets (g^x, \tilde{g}^x)$, return $(\sk, \vk))$
+        % Return $(\mathsf{sk} = (x,g), \mathsf{pk} = (\mathsf{pp}, \mathsf{vk}, \mathsf{ck}))$
+    
+    \item $\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{cm}; u) \to \sigma:$ 
+        Let $h \gets g^u$
+        Return $\sigma \gets (h, (\sk \cdot \mathsf{cm})^u)$
+    
+    \item $\mathsf{RS.Rerand}(\sigma, r_\Delta, u_\Delta) \to \sigma':$
+        Parse $\sigma$ as $(\sigma_1, \sigma_2)$
+        Set $\sigma_1' \gets \sigma_1^{u_\Delta}$
+        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}$
+        Return $\sigma' \gets (\sigma_1', \sigma_2')$
+    
+    \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
+        Parse $\sigma$ as $(\sigma_1, \sigma_2)$,
+        Assert $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$ and 
+        $e(\sigma_2, \tilde{g}) = e(\sigma_1, \mathsf{vk} \cdot \widetilde{\mathsf{cm}})$
+        Return 1 if all checks pass, 0 otherwise
 
-    \item $PS.Sign_{\sk}(\cm) \to \sigma: $ The signing algorithm signs the commitment. Retreives $(g, \cdot, \tilg, \cdot)$ from $\ck$, Samples $u \sample \Zp$, Computes $\sigma_1$ as $g^u$ and $\sigma_2 \gets (\sk \cdot \cm)^u$, returns $(g^u, (\sk \cdot \cm)^u)$
-
-    \item $PS.Rerand(\sigma, \rd, \ud) \to \sigma':$ Parse $\sigma$ as $(\sigma_1, \sigma_2) \equiv (h, \sigma_2) \equiv (g^u, (\sk \cdot \cm)^u)$. Compute $\sigma_1' \gets \sigma_1^{\ud}$ and $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\rd})^{\ud}$. Return $\sigma' \gets (\sigma_1', \sigma_2')$
-
-    \item $PS.Verify(\sigma, (\cm, \tilcm)) \to \bit:$ Verify $ZKPoK.Open_{ck}(\cm)$. Parse $\ck$ as $(g, \cdot, \tilg, \cdot)$ and $\sigma$ as $(\sigma_1, \sigma_2)$. Assert $e(\cm, \tilg) = e(g, \tilcm)$ and $e(\sigma_2, \tilg) = e(\sigma_1, \vk \cdot \tilcm)$
-
-    \item $\mathsf{PS.VKey}(\sk, \vk)$ 
-
+        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit$
 \end{itemize}
 
 
-\subsection{PS Signature over Commitment Construction}
-\begin{itemize}
-    \item $PS.Rerand_{ck,vk}(\sigma, \rd, \ud) \to \sigma'$: Rerandomization of the signature must preserve the algebraic properties of the commitment itself to allow the commitment to be used for zero knowledge proof protocols. To do so, the commitment is re-randomized with the random factor $\rd$ such that a commitment and signature pair 
-\end{itemize}
+\subsubsection{Formal Rerandomization Process}
+Explicitly define signature rerandomization:
+\[
+\sigma' = \left(\sigma_1^{u_\Delta},\, \left(\sigma_2 \cdot \sigma_1^{r_\Delta}\right)^{u_\Delta}\right)
+\]
+Prove validity preservation:
+\[
+e(\sigma_2', \tilg) = e(\sigma_1', \tilx \cdot \widehat{\cm}') \implies e\left((\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}, \tilg\right) = e\left(\sigma_1^{u_\Delta}, \tilx \cdot (\widehat{\cm} + r_\Delta\widehat{H})\right)
+\]
+
+
+
+
+
+
+
+
+
+
+
 
 
 

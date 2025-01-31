@@ -1,4 +1,5 @@
 \usepackage{amsmath} 
+\usepackage{amsthm} 
 \usepackage{wasysym} 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -129,6 +130,10 @@ keys
 \newcommand{\CCO}{\mathcal{C}}
 \newcommand{\Auditor}{\mathcal{A}}
 \newcommand{\Revoker}{\mathcal{R}}
+
+
+\newenvironment{experiment}[1][]{\begin{trivlist}\item[\hskip \labelsep{\bfseries Experiment #1}]}{\end{trivlist}}
+
 
 %--------------------------------------------------------
 % Protocol Environment
