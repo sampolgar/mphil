@@ -670,6 +670,13 @@ Prove validity preservation:
 e(\sigma_2', \tilg) = e(\sigma_1', \tilx \cdot \widehat{\cm}') \implies e\left((\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}, \tilg\right) = e\left(\sigma_1^{u_\Delta}, \tilx \cdot (\widehat{\cm} + r_\Delta\widehat{H})\right)
 \]
 
+
+
+
+
+
+
+
 \sam{come back to prove correctness}
 
 
@@ -2536,16 +2543,21 @@ notes, recall
 % % % % % % % % % % 
 
 
-
-
-
-
-
-
-
-
-
-
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|cc|ccc}
+\toprule
+\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Show}} & \multicolumn{3}{c}{\textbf{Verify}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-6}
+& Credential & PoK & Credential & PoK & Data Sent \\
+\midrule
+PSUTT & $(2\ell + 3)E_{\mathbb{G}_1}$ & $(2\ell + 1)E_{\mathbb{G}_1}$ & $(3\ell + 2)P$ & $(\ell + 2)E_{\mathbb{G}_1}$ & $(2\ell + 3)|\mathbb{G}_1| + |PK|$ \\
+PSUTT+LVS & $3E_{\mathbb{G}_2} + E_{\mathbb{G}_1}$ & $MSM(\ell + 1)_{\mathbb{G}_1} + E_{\mathbb{G}_1}$ & $2M\text{Loop}\mathbb{G}_T + E_{\mathbb{G}_T}$ & $E_{\mathbb{G}_1} + MSM(\ell + 1)_{\mathbb{G}_1}$ & $2|\mathbb{G}_1| + 2|\mathbb{G}_2| + (\ell + 1)|\mathbb{Z}_p|$ \\
+\bottomrule
+\end{tabular}
+\caption{Comprehensive comparison of anonymous credential schemes. $P$ denotes pairing operation, $E_{\mathbb{G}_1}$, $E_{\mathbb{G}_2}$ and $E_{\mathbb{G}_T}$ denote exponentiations in $\mathbb{G}_1$, $\mathbb{G}_2$ and target group $\mathbb{G}_T$ respectively, $\ell$ denotes number of attributes, $|\mathbb{G}_1|$ and $|\mathbb{G}_2|$ denote group element sizes, and $|\mathbb{Z}_p|$ denotes field element size.}
+\label{tab:unified-comparison}
+\end{table}
 
 
 
