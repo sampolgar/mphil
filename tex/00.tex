@@ -315,7 +315,7 @@ where $g_i$ is the generator of $\G_i$. The SXDH assumption holds if XDDH holds 
 
 
 
-\begin{definition}[Symmetric Discrete Logarithm Assumption (SDLP)]
+\begin{definition}[Symmetric Discrete Logarithm Assumption (SDLP)]\label{sdlp}
 For any PPT adversary $\mathcal{A}$, we say the SDLP assumption holds if there exists a negligible function $\negl$ such that:
 $$\Pr\left[\begin{array}{l}
     \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
@@ -463,7 +463,7 @@ The protocol must satisfy:
 
 
 \newpage
-\section{Bilinear Rerandomizable Vector Commitments}
+\section{Symmetric Bilinear Rerandomizable Vector Commitments}
 We now introduce a specialized commitment scheme based on \cite{tomescu2022utt} as the building block for our anonymous credential system. Our construction extends the classical Pedersen Commitment scheme with three properties that are required for our multi-issuer, multi-credential setting construction:
 \begin{enumerate}
     \item \textbf{Position Binding: } we need to commit to a vector of attributes $\{m_1, \ldots, m_n\}$ while ensuring the individual positions within the commitment remain binding. Position binding is useful when proving relations about specific committed attributes across multiple credentials. 
@@ -475,7 +475,7 @@ We now introduce a specialized commitment scheme based on \cite{tomescu2022utt} 
 
 \noindent Furthermore, our scheme often leverages Pedersen Commitments homomorphic properties, allowing us to combine multiple commitments with group operations. This enables us to bind credential attributes and hide secrets while maintaining privacy. 
 
-
+\subsubsection{Definition}
 
 \begin{definition}[Rerandomizable Vector Commitment scheme] 
     A rerandomizable vector commitment scheme $\mathsf{RVC}$ is a tuple $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open}, \mathsf{Rerand})$ of PPT algorithms where:
@@ -527,6 +527,7 @@ We now introduce a specialized commitment scheme based on \cite{tomescu2022utt} 
                 - \frac{1}{2}
     \right | \leq \negl
 \]
+Informally, hiding states that a commitment $\cm$ hides the underlying messages, even a computationally bounded adversary $\Adv$ can not distinguish between commitments with different messages of their choice with probability better than random guessing, even when $\Adv$ chooses both messages.
 \end{definition}
 
 
@@ -543,7 +544,10 @@ We now introduce a specialized commitment scheme based on \cite{tomescu2022utt} 
             : b_0 = b_1 = 1 \land \vec{m}_0 \neq  \vec{m}_1
         \right ] \leq \negl
     \]
+Informally, No adversary $\Adv$ should be able to open a commitment to two different messages, even when allowed to use different randomness values. This captures the "unforgeability" aspect of commitments. 
 \end{definition}
+
+
 
 
 \begin{definition}[Position Binding]
@@ -564,7 +568,10 @@ A rerandomizable vector commitment scheme $\mathsf{RVC}$ is position binding if 
           \end{array}
     \right] \leq \negl
 \]
+Informally: No adversary $\Adv$ should be able to open a vector commitment to two different messages, differing at a specific position $i$. This ensures that when using commitment openings in proof systems, the following two commitments are not equal $\mathsf{CM.Com}([\alpha, \beta]; r_1)$ $\neq$ $\mathsf{CM.Com}([\beta, \alpha]; r_1)$.
 \end{definition}
+
+
 
 
 
@@ -636,9 +643,11 @@ Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pa
     Parse $\ck$ as $(g, \cdot, \tilde{g}, \cdot)$
     Compute $\cm' \gets \cm \cdot g^{r_\Delta}$ and $\widetilde{\cm'} \gets \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}$
     Return $(\cm', \widetilde{\cm'})$
+
+    \item $\mathsf{CM.Open}$
 \end{itemize}
 
-\subsubsection{Homomorphic Properties}
+\paragraph{Homomorphic Properties}
 The scheme inherits the additive homomorphic properties of Pedersen commitments:
 
 \begin{itemize}
@@ -658,12 +667,88 @@ The scheme inherits the additive homomorphic properties of Pedersen commitments:
     \end{itemize}
 \end{itemize}
 
-\subsubsection{Security}
+\subsection{Security of our Construction}
 \textbf{From UTT}
 We use a dual bilinear version of the well-known Pedersen commitment \cite{feigenbaum_non-interactive_1992}
 The binding property holds under the SDL assumption of \cite{hutchison_get_2010}
 which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.) 
 As already mentioned, the hiding property hold information theoretically.
+
+
+
+
+\begin{theorem}[Position Binding from SDLP]
+If the Symmetric Discrete Logarithm (SDLP, \ref{sdlp}) assumption holds in the bilinear group, then our RVC scheme satisfies position binding.
+\end{theorem}
+
+\begin{proof}
+We proceed by contradiction through a reduction to SDLP. Suppose there exists a PPT adversary $\mathcal{A}$ that breaks position binding with non-negligible probability $\epsilon$. We construct a PPT adversary $\mathcal{B}$ that breaks the SDLP assumption with probability $\epsilon/\ell$ (where $\ell$ is the vector length). 
+% why do we use epsilon over ell? 
+% epsilon is the probability that B breaks position binding
+% so we split it between the number of messages because it could break any of the messages?
+
+$\mathcal{B}$ receives an SDLP challenge $(g^x, \tilde{g}^x)$ and needs to compute $x$. It simulates the position binding game for $\mathcal{A}$ as follows:
+
+% Simulating the position binding game for A means it runs the position binding definition 
+
+1. $\mathcal{B}$ picks a random index $i^* \sample [1,\ell]$ where it expects $\mathcal{A}$ to break position binding
+
+2. For the commitment key generation: 
+   - For position $i^*$: sets $g_{i^*} \gets g^x, \tilde{g}_{i^*} \gets \tilde{g}^x$ from the challenge
+   - For all other positions $j \neq i^*$: samples $y_j \sample \Z_p$ and sets $g_j \gets g^{y_j}, \tilde{g}_j \gets \tilde{g}^{y_j}$
+
+3. Provides $\ck = (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$ to $\mathcal{A}$
+
+4. $\mathcal{A}$ outputs $(\cm, i, m, m', r, r')$ where:
+   - $\cm$ is a commitment
+   - $i$ is the broken position
+   - $m, m'$ are different messages for position $i$
+   - $r, r'$ are the respective openings
+
+5. If $i \neq i^*$, $\mathcal{B}$ aborts. Otherwise:
+   - Given valid openings, we have:
+     $\cm = g^r\prod_{j=1}^\ell g_j^{m_j} = g^{r'}\prod_{j=1}^\ell g_j^{m'_j}$
+   - At position $i^*$, this gives us:
+     $g^r(g^x)^m\prod_{j\neq i^*} g_j^{m_j} = g^{r'}(g^x)^{m'}\prod_{j\neq i^*} g_j^{m'_j}$
+   - Since $m_j = m'_j$ for $j \neq i^*$, we can solve for $x$:
+     $x = \frac{r' - r}{m - m'} \bmod p$
+
+$\mathcal{B}$ succeeds whenever $\mathcal{A}$ breaks position $i^*$, which occurs with probability $\epsilon/\ell$ when $\mathcal{A}$ succeeds (probability $\epsilon$) and $\mathcal{B}$ guesses the correct position (probability $1/\ell$).
+
+The key insight is that the symmetric property $e(\cm, \tilde{g}) = e(g, \widetilde{\cm})$ ensures that breaking position binding in either group leads to breaking SDLP, as any valid opening must be consistent across both groups.
+
+Therefore, if $\mathcal{A}$ succeeds with non-negligible probability $\epsilon$, then $\mathcal{B}$ breaks SDLP with non-negligible probability $\epsilon/\ell$, contradicting the SDLP assumption.
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -694,7 +779,7 @@ As already mentioned, the hiding property hold information theoretically.
 % % % % % % % % % % 
 \newpage
 \section{Rerandomizable Signature over Commitments} 
-
+\subsubsection{Definition}
 \begin{definition}[Rerandomizable Signature over Commitments]
     A rerandomizable signature scheme over commitments $\mathsf{RS}$ is a tuple $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Rerand}, \mathsf{Ver}, \mathsf{VerKey})$ of PPT algorithms where:
         \begin{itemize}
@@ -745,7 +830,7 @@ where $Q_{\cm}$ is the set of all commitments queried to the signing oracle.
 \end{definition}
 
 
-\subsection{Signature Adaptation Under Malicious Keys}
+\sam{need to do this for the anonymous credential section}
 \begin{definition}[Signature Adaptation Under Malicious Keys]
 A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
 \begin{itemize}
@@ -782,33 +867,62 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
         Return $\sigma' \gets (\sigma_1', \sigma_2')$
     
     \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
-        Parse $\sigma$ as $(\sigma_1, \sigma_2)$,
-        Assert $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$ and 
-        $e(\sigma_2, \tilde{g}) = e(\sigma_1, \mathsf{vk} \cdot \widetilde{\mathsf{cm}})$
-        Return 1 if all checks pass, 0 otherwise
+        Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
+    \[
+        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u \cdot u_\Delta, r \cdot r_\Delta): 
+    \]
+    \[
+         e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
+        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
+        \cm' = g^{r \cdot r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+        \}
+    \]
 
         \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit$
 \end{itemize}
 
 
-\subsubsection{Formal Rerandomization Process}
-Explicitly define signature rerandomization:
-\[
-\sigma' = \left(\sigma_1^{u_\Delta},\, \left(\sigma_2 \cdot \sigma_1^{r_\Delta}\right)^{u_\Delta}\right)
-\]
-Prove validity preservation:
-\[
-e(\sigma_2', \tilg) = e(\sigma_1', \tilx \cdot \widehat{\cm}') \implies e\left((\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}, \tilg\right) = e\left(\sigma_1^{u_\Delta}, \tilx \cdot (\widehat{\cm} + r_\Delta\widehat{H})\right)
-\]
+\subsubsection{Security of our Construction}
+\begin{theorem}
+    RS is correct
+\end{theorem}
+\begin{proof}
+    First we demonstrate the provers rerandomized signature verifies with the verification key $\vk$ and the rerandomized commitment. Essentially, we need the following pairing to hold
+    \[
+          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk \cdot \widetilde{\cm'})
+    \]
+
+    We manipulate the bilinearity properties of the pairing groups to verify the initial pairing.
+    
+    \begin{align*}
+        e(\sigma_2', \tilde{g}) &= e((\sk \cdot \cm)^{u \cdot u\Delta}\cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+        &= e(h^{x \cdot u_\Delta}\cdot \cm^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+        &= e(h^{x \cdot u_\Delta}, \tilde{g}) \cdot e(\cm^{u \cdot u_\Delta}, \tilde{g}) \cdot e(h^{ u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+        &= e(h^{u_\Delta}, \tilde{g}^x) \cdot e(\cm, \tilde{g})^{u \cdot u_\Delta} \cdot e(h^{ u_\Delta}, \tilde{g})^{r_\Delta} \\
+        &= e(\sigma_1', \vk) \cdot e(g^{u \cdot u_\Delta}, \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g})^{r_\Delta} \\
+        &= e(\sigma_1', \vk) \cdot e(\sigma_1', \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g}^{r_\Delta}) \\
+        &= e(\sigma_1', \vk \cdot \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}) \\
+        &= e(\sigma_1', \vk \cdot \widetilde{\cm'}) \\
+    \end{align*}
+
+    Secondly, we need to verify knowledge of messages within the commitment. The Prover used $\widetilde{\cm'} \in \G_2$ during verification and this would be the natural method to for a sigma style proof of knowledge protocol, proving knowledge of the attributes of the commitment with $\G_2$ bases. However, due to the properties of the symmetric bilinear commitment \ref{sdlp}, we can prove the equality of $\cm' \in \G_1$ and $\widetilde{\cm'} \in \G_2$ to reduce $\G_2$ computation on both the prover and verifier during verification. 
+    Thus the prover computes 
+    \[
+        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}')
+    \]
+    Then runs a sigma protocol to prove
+    \[
+    \cm' = g^{r \cdot r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+    
+    
+    
+\end{proof}
 
 
 
 
 
-
-
-
-\sam{come back to prove correctness}
 
 
 
