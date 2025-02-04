@@ -202,31 +202,135 @@ $\G_1^*$ excludes the elliptic curve identity element $\{\mathcal{O}\}$ required
 
 
 \begin{definition}[Bilinear map]
-    
+Let $\G_1$, $\G_2$ and $\G_T$ be cyclic groups of prime order $p$, where $\G_1$ and $\G_2$ are additive and $\G_T$ is multiplicative. Let $g$ and $\tilde{g}$ be generators of $\G_1$ and $\G_2$, respectively. We call $e: \G_1 \times \G_2 \rightarrow \G_T$ a bilinear map or pairing if it is efficiently computable and the following holds:
+\begin{itemize}
+    \item \textbf{Bilinearity:} $e(g^a, \tilde{g}^b) = e(g, \tilde{g})^{ab} = e(g^b, \tilde{g}^a)$ $\forall a,b \in \mathbb{Z}_p$.
+    \item \textbf{Non-degeneracy:} $e(g, \tilde{g}) \neq 1_{\G_T}$, i.e., $e(g, \tilde{g})$ generates $\G_T$.
+\end{itemize}
+
+\noindent If $\G_1 = \G_2$, then $e$ is symmetric (Type-1) and asymmetric (Type-2 or 3) otherwise. For Type-2 pairings, there is an efficiently computable isomorphism $\Psi: \G_2 \rightarrow \G_1$ but none from $\G_1 \rightarrow \G_2$; for Type-3 pairings, no efficiently computable isomorphisms between $\G_1$ and $\G_2$ are known. In practice, we use Type-3 pairings as they provide the best balance between security and efficiency at standard security levels.
 \end{definition}
 
 
-\begin{definition}[Bilinear-group generator]
-    
+\begin{definition}[Bilinear Group Generator]
+A bilinear group generator $\mathsf{BGGen}$ is a probabilistic polynomial-time algorithm that on input security parameter $1^\lambda$, outputs a tuple $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \tilde{g})$ where:
+\begin{itemize}
+    \item $p$ is a prime of bit-length $\lambda$
+    \item $(\G_1, \G_2, \G_T)$ are cyclic groups of order $p$
+    \item $g$ and $\tilde{g}$ are generators of $\G_1$ and $\G_2$ respectively
+    \item $e: \G_1 \times \G_2 \rightarrow \G_T$ is a non-degenerate bilinear map
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Discrete Logarithm in Bilinear Groups]
+For a bilinear group generator $\BGGen$, we say the discrete logarithm assumption holds if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    a \sample \Z_p \\
+    a' \sample \mathcal{A}(\BG, g^a)
+\end{array} : a' = a\right] \leq \negl$$
+The assumption is analogously defined for $\G_2$ using $\tilde{g}^a$.
+\end{definition}
+
+\begin{definition}[q-Strong Diffie-Hellman Assumption]
+For any PPT adversary $\mathcal{A}$ and positive integer $q = \poly(\lambda)$, we say the $q$-SDH assumption holds if there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    s \sample \Z_p \\
+    (c, h) \sample \mathcal{A}(\BG, g, \tilde{g}, \tilde{g}^s, \ldots, \tilde{g}^{s^q})
+\end{array} : e(h, \tilde{g}^s \cdot \tilde{g}^c) = e(g, \tilde{g})\right] \leq \negl$$
+where $c \in \Z_p \setminus \{-s\}$.
 \end{definition}
 
 
-\begin{definition}[Discrete Log Problem]
-    
+\begin{definition}[LRSW Assumption in Bilinear Groups]
+For any PPT adversary $\mathcal{A}$, we say the LRSW assumption holds if there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    x,y \sample \Z_p, X \gets g^x, \tilde{Y} \gets \tilde{g}^y \\
+    (m^*, A, B, C) \sample \mathcal{A}^{\mathcal{O}_{x,y}}(\BG, X, \tilde{Y})
+\end{array} : \begin{array}{l}
+    m^* \notin Q \quad \land \quad \exists r \in \Z_p :\\
+    A = g^r \land B = A^y \land C = A^{x+m^*xy}
+\end{array}\right] \leq \negl(\lambda)$$
+where $Q$ is the set of queries made to $\mathcal{O}_{x,y}$ with access to $x,y$ is defined by:
+\[
+\text{Oracle }\mathcal{O}_{x,y}(m): \text{ Samples } r \sample \Z_p, \text{ Returns } (g^r, (g^r)^y, (g^r)^{x+mxy})
+\]
+\end{definition}
+\begin{definition}[PS-LRSW Assumption in Bilinear Groups]
+For any PPT adversary $\mathcal{A}$, we say the PS-LRSW assumption holds if there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    x,y \sample \Z_p, X \gets g^x, Y \gets g^y \\
+    \tilde{X} \gets \tilde{g}^x, \tilde{Y} \gets \tilde{g}^y \\
+    (m^*, P_1, P_2) \sample \mathcal{A}^{\mathcal{O}_{x,y}}(\BG, X, Y, \tilde{X}, \tilde{Y})
+\end{array} : \begin{array}{l}
+    m^* \notin Q \land P_1 \neq 1_{\G_1} \land \\
+    e(P_1, \tilde{X} \cdot \tilde{Y}^{m^*}) = e(P_2, \tilde{g})
+\end{array}\right] \leq \negl$$
+where $Q$ is the set of queries made to $\mathcal{O}_{x,y}$ with access to $x,y$ is defined by:
+\[
+\text{Oracle }\mathcal{O}_{x,y}(m): \text{ Samples } h \sample \G_1, \text{ Returns the pair }P = (h, h^{x+my})
+\]
 \end{definition}
 
-.
-.
-.
-Define the assumptions we use
 
-\begin{definition}[q-sdh]
-    
+
+\begin{definition}[Type-3 PS-LRSW Assumption]
+For any PPT adversary $\mathcal{A}$, we say the Type-3 PS-LRSW assumption holds in the generic bilinear group model if there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    x,y \sample \Z_p, X \gets g^x, \tilde{Y} \gets \tilde{g}^y \\
+    (m^*, P_1, P_2) \sample \mathcal{A}^{\mathcal{O}_{x,y}}(\BG, X, \tilde{Y})
+\end{array} : \begin{array}{l}
+    m^* \notin Q \land P_1 \neq 1_{\G_1} \land \\
+    e(P_1, \tilde{X} \cdot \tilde{Y}^{m^*}) = e(P_2, \tilde{g})
+\end{array}\right] \leq \negl$$
+where $Q$ is the set of queries made to $\mathcal{O}_{x,y}$ with access to $x,y$ is defined by:
+\[
+\text{Oracle }\mathcal{O}_{x,y}(m): \text{ Samples } h \sample \G_1, \text{ Returns the pair } P = (h, h^{x+my})
+\]
+
+\noindent Furthermore, in the generic group model after $q$ oracle queries and $q_G$ group-oracle queries, the probability of success is bounded by $\mathcal{O}((q + q_G)^2/p)$.
 \end{definition}
+
+
+
+\begin{definition}[XDDH/SXDH Assumption in Bilinear Groups]
+For any PPT adversary $\mathcal{A}$, we say the XDDH assumption holds in $\G_i$ ($i \in \{1,2\}$) if there exists a negligible function $\negl$ such that:
+$$\left|\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    a, b \sample \Z_p, c \gets ab \bmod p \\
+    d \sample \mathcal{A}(\BG, g_i^a, g_i^b, g_i^c)
+\end{array}\right] - 
+\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    a, b, r \sample \Z_p \\
+    d \sample \mathcal{A}(\BG, g_i^a, g_i^b, g_i^r)
+\end{array}\right]\right| \leq \negl$$
+where $g_i$ is the generator of $\G_i$. The SXDH assumption holds if XDDH holds in both $\G_1$ and $\G_2$.
+\end{definition}
+
+
+
+
+\begin{definition}[Symmetric Discrete Logarithm Assumption (SDLP)]
+For any PPT adversary $\mathcal{A}$, we say the SDLP assumption holds if there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    x \sample \Z_p \\
+    x' \sample \mathcal{A}(\BG, g^x, \tilde{g}^x)
+\end{array} : x = x'\right] \leq \negl$$
+where validity of input can be verified by checking $e(g, \tilde{g}^x) = e(g^x, \tilde{g})$.
+\end{definition}
+
+
 
 Assumptions from here - as discussed by UTT paper commitment instantiation
 The binding property holds under the SDL assumption of \cite{hutchison_get_2010}
 which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.) 
+
 
 
 
@@ -269,28 +373,55 @@ $$\Pr\left[\begin{array}{l}
 where $Q$ is the set of queries that $\mathcal{A}$ has issued to the signing oracle.
 \end{definition}
 
-
-
-
-\subsection{Zero Knowledge Proofs}
-
-\subsection{Zero Knowledge Proofs of Knowledge}
-
-
-
-\begin{definition}[Completeness]
-   Completeness
+\begin{definition}[EUF-CMA Security]
+A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    (\mathsf{sk}, \mathsf{pk}) \sample \mathsf{KeyGen}(1^\lambda) \\
+    (m^*, \sigma^*) \sample \mathcal{A}^{\mathcal{O}_{\mathsf{sk}}}(\mathsf{pk})
+\end{array} : \begin{array}{l}
+    m^* \notin Q \land \\
+    \mathsf{Verify}(m^*, \sigma^*, \mathsf{pk}) = 1
+\end{array}\right] \leq \negl$$
+where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access to $\mathsf{sk}$ is defined by:
+\[
+\text{Oracle }\mathcal{O}_{\mathsf{sk}}(m): \text{ Returns } \sigma \gets \mathsf{Sign}(m, \mathsf{sk})
+\]
 \end{definition}
 
 
-\begin{definition}[Knowledge Soundness]
-    Knowledge Soundness
+
+\begin{definition}[NP Relation and Language]
+A relation $\mathcal{R} \subseteq \{0,1\}^* \times \{0,1\}^*$ is an NP relation if:
+\begin{itemize}
+    \item There exists a polynomial $p(\cdot)$ such that for all $(x,w) \in \mathcal{R}$, $|w| \leq p(|x|)$
+    \item Membership in $\mathcal{R}$ can be verified in polynomial time
+\end{itemize}
+We define the language $\mathcal{L}_\mathcal{R} = \{x \mid \exists w : (x,w) \in \mathcal{R}\}$. Here, $x$ is called the statement and $w$ the witness.
 \end{definition}
 
+\sam{come back and build out the definition more}
 
-\begin{definition}[Zero Knowledge]
-    zero knowledge
+\begin{definition}[Sigma Protocol]
+A Sigma protocol for relation $\mathcal{R}$ is a three-move protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ with the following form:
+\begin{itemize}
+    \item Common input: statement $x$
+    \item Prover's private input: witness $w$ such that $(x,w) \in \mathcal{R}$
+\end{itemize}
+The protocol proceeds as:
+\begin{enumerate}
+    \item $\mathcal{P}$ sends a commitment $a$ to $\mathcal{V}$
+    \item $\mathcal{V}$ sends a random challenge $e \sample \{0,1\}^t$
+    \item $\mathcal{P}$ sends a response $z$
+\end{enumerate}
+A transcript $(a,e,z)$ is accepting if $\mathcal{V}$'s verification predicate $\phi(x,a,e,z)=1$.
+The protocol must satisfy:
+\begin{itemize}
+    \item Completeness: If $(x,w) \in \mathcal{R}$, then an honest $\mathcal{P}(x,w)$ convinces $\mathcal{V}(x)$ with probability 1
+    \item Special Soundness: There exists a polynomial-time extractor $\mathcal{E}$ that, given any $x$ and accepting transcripts $(a,e,z)$ and $(a,e',z')$ with $e \neq e'$, outputs $w$ such that $(x,w) \in \mathcal{R}$
+    \item Special Honest-Verifier Zero-Knowledge: There exists a PPT simulator $\mathcal{S}$ that, on input $x$ and challenge $e$, outputs $(a,e,z)$ with the same distribution as honest transcripts
+\end{itemize}
 \end{definition}
+
 
 
 % % % % % % % % % % 
