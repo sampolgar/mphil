@@ -185,7 +185,7 @@ The notation $\vect{x}$ is used to denote the vector $(x_0, \ldots,x_n)$ or $(x_
 The notation $\{x_i\}_1^n, \sum_1^n x_i, \prod_1^n x_i$ are shorthand for $\{x_i\}_{i=1}^n, \sum_{i=1}^n x_i$ and $\prod_{i=1}^n x_i$ respectively. 
 
 % maybe need to rewrite
-We write $A(x,y,\ldots : \oracle_1, \oracle_2, \ldots)$ as an algorithm taking $(x,y,\ldots)$ as input with access to oracles $(\oracle_1, \oracle_2, \ldots)$ and $z \sample A(x,y,\ldots : \oracle_1, \oracle_2, \ldots)$ as the assignment of the output of $A$ to $z$.
+We write $A(x,y,\ldots : \oracle_1, \oracle_2, \ldots)$ as an algorithm taking $(x,y,\ldots)$ as input with access to oracles $(\oracle_1, \oracle_2, \ldots)$ and $z \sample A(x,y,\ldots : \oracle_1, \oracle_2, \ldots)$ as the assignment of the output of $A$ to $z$. We denote the adversary algorithm as $\Adv$
 
 We write commitments using 1-base indexing. $\cm_m[1]$ represents the message at the first position of the $\cm_m$ commitment, that is, in a commitment $\cm_m = CM.Com([s,k,\ldots];r)$, algebraically, the commitment is $g_1^sg_2^k\ldots h^r$ where $s$ is the first position.
 
@@ -199,6 +199,11 @@ $\Z_p^*, \G_1^*$ - the star (*) represents the exclusion of trivial elements. Th
 
 $\G_1^*$ excludes the elliptic curve identity element $\{\mathcal{O}\}$ required for discrete log operations as any elliptic curve operation with the identity element results in the identity element. 
 
+For a probabilistic algorithm $A$, we write $x \leftarrow A(y_1,\ldots,y_n)$ to denote sampling $x$ according to the distribution induced by $A$'s random coins on inputs $y_1,\ldots,y_n$. 
+
+For an interactive protocol $P = (P_0, P_1)$ with inputs $in_0, in_1$ and outputs $out_0, out_1$, we write $\langle out_0; out_1 \rangle \leftarrow \langle P_0(in_0); P_1(in_1) \rangle$ to denote protocol execution.
+
+For an array $\mathsf{arr}$, we denote its $i$th element by $\mathsf{arr}[i]$.
 
 
 \begin{definition}[Bilinear map]
@@ -232,15 +237,6 @@ $$\Pr\left[\begin{array}{l}
 The assumption is analogously defined for $\G_2$ using $\tilde{g}^a$.
 \end{definition}
 
-\begin{definition}[q-Strong Diffie-Hellman Assumption]
-For any PPT adversary $\mathcal{A}$ and positive integer $q = \poly(\lambda)$, we say the $q$-SDH assumption holds if there exists a negligible function $\negl$ such that:
-$$\Pr\left[\begin{array}{l}
-    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
-    s \sample \Z_p \\
-    (c, h) \sample \mathcal{A}(\BG, g, \tilde{g}, \tilde{g}^s, \ldots, \tilde{g}^{s^q})
-\end{array} : e(h, \tilde{g}^s \cdot \tilde{g}^c) = e(g, \tilde{g})\right] \leq \negl$$
-where $c \in \Z_p \setminus \{-s\}$.
-\end{definition}
 
 
 \begin{definition}[LRSW Assumption in Bilinear Groups]
@@ -537,17 +533,16 @@ Informally, hiding states that a commitment $\cm$ hides the underlying messages,
         \left [
             \begin{array}{l}
             \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
-            (\cm, \vec{m}_0, \vec{m}_1, r_0, r_1) \gets \Adv(\mathsf{ck}) \\
+            (\vec{m}_0, \vec{m}_1, r_0, r_1) \gets \Adv(\mathsf{ck}) \\
+            \cm_0 \gets \mathcal{A}(\mathsf{CM.Com}(\ck, \vec{m}_0, r_0)) \\
             b_0 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}_0, r_0) \\
             b_1 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}_1, r_1) \\
             \end{array}
-            : b_0 = b_1 = 1 \land \vec{m}_0 \neq  \vec{m}_1
+            \quad : \quad  b_0 = b_1 = 1 \quad \land \quad  \vec{m}_0 \neq  \vec{m}_1
         \right ] \leq \negl
     \]
 Informally, No adversary $\Adv$ should be able to open a commitment to two different messages, even when allowed to use different randomness values. This captures the "unforgeability" aspect of commitments. 
 \end{definition}
-
-
 
 
 \begin{definition}[Position Binding]
@@ -557,18 +552,17 @@ A rerandomizable vector commitment scheme $\mathsf{RVC}$ is position binding if 
     \left[
         \begin{array}{l}
         \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
-        (\cm, i, m, m', r, r') \sample \mathcal{A}(\mathsf{ck}) \\
-        b \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}, r) \\
-        b' \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}', r') \\
+        (\cm, i, \vec{m}_0, \vec{m}_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck}) \\
+        \mathsf{Open}(\ck, \cm, \vec{m}_0, r_0, i) = 1 \\
+        \mathsf{Open}(\ck, \cm, \vec{m}_1, r_1, i) = 1 \\
         \end{array}
         : \begin{array}{l}
-            b = b' = 1 \land \\
-            m_i \neq m'_i \land \\
-            0 \leq i < n
+            \vec{m}_0 \neq \vec{m}_1 \quad \wedge\\
+            \vec{m}_0[j] = \vec{m}_1[j] \; \forall \; j \neq i \\
           \end{array}
-    \right] \leq \negl
+    \right] \leq \negl(\lambda)
 \]
-Informally: No adversary $\Adv$ should be able to open a vector commitment to two different messages, differing at a specific position $i$. This ensures that when using commitment openings in proof systems, the following two commitments are not equal $\mathsf{CM.Com}([\alpha, \beta]; r_1)$ $\neq$ $\mathsf{CM.Com}([\beta, \alpha]; r_1)$.
+Informally, this states that an adversary $\Adv$ should not be able to open a commitment $\cm$ to index $i$ unless both commitments use the same message, even when the commitments only differ by position $i$
 \end{definition}
 
 
@@ -668,57 +662,71 @@ The scheme inherits the additive homomorphic properties of Pedersen commitments:
 \end{itemize}
 
 \subsection{Security of our Construction}
-\textbf{From UTT}
-We use a dual bilinear version of the well-known Pedersen commitment \cite{feigenbaum_non-interactive_1992}
-The binding property holds under the SDL assumption of \cite{hutchison_get_2010}
-which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.) 
-As already mentioned, the hiding property hold information theoretically.
+% \textbf{From UTT}
+% We use a dual bilinear version of the well-known Pedersen commitment \cite{feigenbaum_non-interactive_1992}
+% The binding property holds under the SDL assumption of \cite{hutchison_get_2010}
+% which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.) 
+% As already mentioned, the hiding property hold information theoretically.
 
 
 
 
-\begin{theorem}[Position Binding from SDLP]
-If the Symmetric Discrete Logarithm (SDLP, \ref{sdlp}) assumption holds in the bilinear group, then our RVC scheme satisfies position binding.
+
+
+Proof Structure
+1. Start with a position binding adversary A
+2. Build a reduction B that solves SDLP
+3. Show that if A breaks position binding with Pr > than negl, then B solves SDLP with Pr > negl
+
+For the SDLP challenge
+$g_1 = g^x, \tilde{g}_1 = \tilde{g}^x$
+Compute For $i \in [2, \ell], y_i \sample \Z_p, g_i \gets g^{y_i}, \tilde{g}_i \gets \tilde{g}^{y_i}$
+For $\Adv$ to break position binding, they claim they found different openings for the same position of the message. 
+$\cm = g^r$
+
+
+\begin{theorem}
+    
 \end{theorem}
 
-\begin{proof}
-We proceed by contradiction through a reduction to SDLP. Suppose there exists a PPT adversary $\mathcal{A}$ that breaks position binding with non-negligible probability $\epsilon$. We construct a PPT adversary $\mathcal{B}$ that breaks the SDLP assumption with probability $\epsilon/\ell$ (where $\ell$ is the vector length). 
-% why do we use epsilon over ell? 
-% epsilon is the probability that B breaks position binding
-% so we split it between the number of messages because it could break any of the messages?
 
-$\mathcal{B}$ receives an SDLP challenge $(g^x, \tilde{g}^x)$ and needs to compute $x$. It simulates the position binding game for $\mathcal{A}$ as follows:
 
-% Simulating the position binding game for A means it runs the position binding definition 
 
-1. $\mathcal{B}$ picks a random index $i^* \sample [1,\ell]$ where it expects $\mathcal{A}$ to break position binding
 
-2. For the commitment key generation: 
-   - For position $i^*$: sets $g_{i^*} \gets g^x, \tilde{g}_{i^*} \gets \tilde{g}^x$ from the challenge
-   - For all other positions $j \neq i^*$: samples $y_j \sample \Z_p$ and sets $g_j \gets g^{y_j}, \tilde{g}_j \gets \tilde{g}^{y_j}$
 
-3. Provides $\ck = (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$ to $\mathcal{A}$
 
-4. $\mathcal{A}$ outputs $(\cm, i, m, m', r, r')$ where:
-   - $\cm$ is a commitment
-   - $i$ is the broken position
-   - $m, m'$ are different messages for position $i$
-   - $r, r'$ are the respective openings
 
-5. If $i \neq i^*$, $\mathcal{B}$ aborts. Otherwise:
-   - Given valid openings, we have:
-     $\cm = g^r\prod_{j=1}^\ell g_j^{m_j} = g^{r'}\prod_{j=1}^\ell g_j^{m'_j}$
-   - At position $i^*$, this gives us:
-     $g^r(g^x)^m\prod_{j\neq i^*} g_j^{m_j} = g^{r'}(g^x)^{m'}\prod_{j\neq i^*} g_j^{m'_j}$
-   - Since $m_j = m'_j$ for $j \neq i^*$, we can solve for $x$:
-     $x = \frac{r' - r}{m - m'} \bmod p$
 
-$\mathcal{B}$ succeeds whenever $\mathcal{A}$ breaks position $i^*$, which occurs with probability $\epsilon/\ell$ when $\mathcal{A}$ succeeds (probability $\epsilon$) and $\mathcal{B}$ guesses the correct position (probability $1/\ell$).
 
-The key insight is that the symmetric property $e(\cm, \tilde{g}) = e(g, \widetilde{\cm})$ ensures that breaking position binding in either group leads to breaking SDLP, as any valid opening must be consistent across both groups.
 
-Therefore, if $\mathcal{A}$ succeeds with non-negligible probability $\epsilon$, then $\mathcal{B}$ breaks SDLP with non-negligible probability $\epsilon/\ell$, contradicting the SDLP assumption.
-\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -914,9 +922,7 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
     \[
     \cm' = g^{r \cdot r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
     \]
-    
-    
-    
+
 \end{proof}
 
 
@@ -2313,6 +2319,8 @@ What is the takeaway message from the evaluation?
 \newpage
 \section{Efficient Multi-Show Anonymous Credentials via Algebraic Decoupling}
 
+
+
 \subsection{Introduction}
 Privacy-preserving authentication systems require cryptographic primitives that allow users to prove certified attributes (e.g., citizenship, qualifications) without revealing additional information or enabling linkage across sessions. Anonymous credential schemes address this by encoding attributes into cryptographically randomized signatures, enabling users to generate unlinkable "showings" of credentials through zero-knowledge proofs (ZKPs). A critical challenge lies in balancing three properties: (1) multi-show unlinkability (proving attributes without correlating sessions), (2) selective disclosure (revealing subsets of attributes), and (3) practical efficiency for real-world deployment.
 
@@ -2339,6 +2347,19 @@ This leads to a zero-knowledge proof relation involving multiple auxiliary varia
 Introduced separation between signature components and message commitments. The UTT variant further simplified rerandomization by decoupling attribute commitments from the core signature structure, enabling linear ZKP relations over Pedersen commitments. PS based signature rely on the LRSW assumption \cite{goos_pseudonym_2000} rather than BBS+ q-SDH which enables simpler algebraic structures, which we show now. 
 
 \subsection{Cryptographic Foundations: q-SDH vs LRSW}
+
+\subsubsection{q-SDH}
+\begin{definition}[q-Strong Diffie-Hellman Assumption]
+For any PPT adversary $\mathcal{A}$ and positive integer $q = \poly(\lambda)$, we say the $q$-SDH assumption holds if there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
+    s \sample \Z_p \\
+    (c, h) \sample \mathcal{A}(\BG, g, \tilde{g}, \tilde{g}^s, \ldots, \tilde{g}^{s^q})
+\end{array} : e(h, \tilde{g}^s \cdot \tilde{g}^c) = e(g, \tilde{g})\right] \leq \negl$$
+where $c \in \Z_p \setminus \{-s\}$.
+\end{definition}
+
+
 The choice between these shapes the proof complexity:
 
 \paragraph{BBS+ and q-SDH Limitations}

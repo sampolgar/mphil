@@ -142,10 +142,34 @@ keys
 %--------------------------------------------------------
 % Protocol Environment
 %--------------------------------------------------------
-
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb, xcolor, enumitem, mdframed}
 \usepackage[most]{tcolorbox}
+
+\makeatletter
+% First, clear the current definitions
+\let\proposition\relax
+\let\endproposition\relax
+\let\lemma\relax
+\let\endlemma\relax
+\let\definition\relax
+\let\enddefinition\relax
+
+% % Now create fresh counters
+% \newcounter{proposition}
+% \newcounter{lemma}
+% \newcounter{definition}
+
+% Define the environments with their own counters
+\spnewtheorem{proposition}{Proposition}{\bfseries}{\itshape}
+\spnewtheorem{lemma}{Lemma}{\bfseries}{\itshape}
+\spnewtheorem{definition}{Definition}{\bfseries}{\itshape}
+\makeatother
+
+\makeatletter
+\@removefromreset{proposition}{theorem}
+\@removefromreset{lemma}{theorem}
+\makeatother
 
 \newtcbtheorem[auto counter]{protocol}{Protocol}{
     colback=white,
