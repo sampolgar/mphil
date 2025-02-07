@@ -358,17 +358,6 @@ A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is correc
 $$\Pr[\mathsf{Verify}(m, \mathsf{Sign}(m, \mathsf{sk}), \mathsf{pk}) = 1] = 1.$$
 \end{definition}
 
-\begin{definition}[EUF-CMA]
-A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$ with access to a signing oracle $\mathsf{Sign}(\cdot, \mathsf{sk})$ there is a negligible function $\negl$ such that:
-
-$$\Pr\left[\begin{array}{l}
-    (\mathsf{sk}, \mathsf{pk}) \stackrel{\$}{\leftarrow} \mathsf{KeyGen}(1^k), \\
-    (m^*, \sigma^*) \stackrel{\$}{\leftarrow} \mathcal{A}^{\mathsf{Sign}(\cdot,\mathsf{sk})}(\mathsf{pk})
-\end{array} : m^* \notin Q \wedge \mathsf{Verify}(m^*, \sigma^*, \mathsf{pk}) = 1\right] \leq \negl$$
-
-where $Q$ is the set of queries that $\mathcal{A}$ has issued to the signing oracle.
-\end{definition}
-
 \begin{definition}[EUF-CMA Security]
 A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 $$\Pr\left[\begin{array}{l}
@@ -834,7 +823,7 @@ A rerandomizable signature scheme over commitments is existentially unforgeable 
             \end{array}
         \right] \leq \negl
     \end{align*}
-where $Q_{\cm}$ is the set of all commitments queried to the signing oracle.
+where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 \end{definition}
 
 
@@ -929,7 +918,263 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
 
 
 
+\newpage
+\begin{theorem}[EUF-CCA Security]
+In the Algebraic Group Model, if the PS-LRSW assumption holds in the bilinear group $\mathbb{G}$, then our signature scheme is existentially unforgeable under chosen message attacks. Specifically, for any algebraic PPT adversary $\mathcal{A}$, there exists a PPT reduction $\mathcal{B}$ against PS-LRSW such that:
+\[
+    \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
+\]
+where $q_v$ is the number of verification queries.
+\end{theorem}
 
+\begin{proof}
+We construct a reduction $\mathcal{B}$ that uses any algebraic adversary $\mathcal{A}$ breaking EUF-CCA to solve the PS-LRSW problem. The key insight is that the algebraic property lets us extract the structure of $\mathcal{A}$'s forgery directly.
+
+\paragraph{Setup:} On input PS-LRSW instance $(g, \tilde{g}, X = g^x, Y = g^y, \tilde{X} = \tilde{g}^x, \tilde{Y} = \tilde{g}^y)$, $\mathcal{B}$ proceeds as follows:
+\begin{enumerate}
+    \item Initialize signing query set $Q = \emptyset$
+    \item Forward generators and public key to $\mathcal{A}$: $(g, \tilde{g}, X, Y, \tilde{X}, \tilde{Y})$
+\end{enumerate}
+
+\paragraph{Signing Oracle:} On signing query for commitment $\cm$:
+\begin{enumerate}
+    \item Add $\cm$ to $Q$
+    \item Query PS-LRSW oracle on $\cm$ to obtain $(h, h^{x+my})$
+    \item Return signature to $\mathcal{A}$
+\end{enumerate}
+
+\paragraph{Verification Oracle:} On query $(\sigma, \cm)$, since $\mathcal{A}$ is algebraic, it provides representations:
+\[
+\sigma_1 = g^{\alpha_0}\prod_{i=1}^n g_i^{\alpha_i}h^{\alpha_{n+1}}, \quad
+\sigma_2 = g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}
+\]
+Return 1 if verification equation holds using these representations.
+
+\paragraph{Forgery:} When $\mathcal{A}$ outputs $(\sigma^*, \cm^*)$, it must provide algebraic representations:
+\[
+\sigma_1^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
+\sigma_2^* = g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
+\]
+
+If $\cm^* \in Q$ or verification fails, abort. Otherwise, $\mathcal{B}$ extracts the PS-LRSW solution:
+\begin{enumerate}
+    \item Set $h^* = \sigma_1^*$ (this is the first component of PS-LRSW forgery)
+    \item Extract $m^*$ from the verification equation using the algebraic representations
+    \item Return $(m^*, h^*, (h^*)^{x+m^*y})$ as PS-LRSW forgery
+\end{enumerate}
+
+\paragraph{Analysis:} Let's analyze $\mathcal{B}$'s success probability in solving PS-LRSW using $\mathcal{A}$'s forgery.
+
+\paragraph{Perfect Simulation:} First, we show $\mathcal{B}$'s simulation is perfect from $\mathcal{A}$'s view:
+\begin{itemize}
+    \item The public key distribution is identical to the real scheme as it comes directly from the PS-LRSW instance
+    \item Signing queries are answered using the PS-LRSW oracle, producing valid signatures with the correct distribution
+    \item The verification oracle perfectly implements the verification equation using $\mathcal{A}$'s algebraic representations
+\end{itemize}
+
+\paragraph{Extraction Success:} When $\mathcal{A}$ produces a valid forgery $(\sigma^*, \cm^*)$, the verification equation must hold:
+\[
+e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
+\]
+
+By the algebraic property, this means:
+\[
+\delta_0 + \sum_{i=1}^n \delta_i + \delta_{n+1} = (\gamma_0 + \sum_{i=1}^n \gamma_i + \gamma_{n+1})(x + m^*y)
+\]
+
+Therefore, we have:
+\begin{itemize}
+    \item $h^* = \sigma_1^*$ is a valid group element (by $\mathcal{A}$'s success)
+    \item $m^*$ is extractable from the algebraic representations
+    \item $(h^*)^{x+m^*y} = \sigma_2^*$ by the verification equation
+    \item $\cm^* \notin Q$ (by definition of forgery)
+\end{itemize}
+
+\paragraph{Probability Analysis:} Let $\epsilon$ be $\mathcal{A}$'s advantage in the EUF-CCA game. Then:
+\[
+\Pr[\mathcal{B} \text{ succeeds}] \geq \epsilon - \Pr[\text{BadVer}]
+\]
+where $\text{BadVer}$ is the event that $\mathcal{A}$ produces a verification query that validates but doesn't correspond to its algebraic representation. By the q-type assumption underlying PS-LRSW, this probability is bounded by $q_v/p$.
+
+Therefore:
+\[
+\Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) \geq \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) - \frac{q_v}{p}
+\]
+
+\end{proof}
+
+
+
+
+\paragraph{Extracting $m^*$ from Algebraic Representations:} 
+Given $\mathcal{A}$'s forgery $(\sigma^*, \cm^*)$ with algebraic representations:
+\[
+\sigma_1^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
+\sigma_2^* = g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
+\]
+
+The verification equation provides:
+\[
+e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
+\]
+
+Substituting the algebraic representations and using bilinearity:
+\begin{align*}
+e(g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}, \tilde{g}) &= e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}^x \cdot \tilde{g}^{ym^*}) \\
+&= e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}^{x+ym^*})
+\end{align*}
+
+This yields a system of equations in the exponents. For each generator basis:
+\begin{align*}
+\text{For } g&: \delta_0 = \gamma_0(x + ym^*) \\
+\text{For } g_i&: \delta_i = \gamma_i(x + ym^*) \text{ for } i \in [1,n] \\
+\text{For } h&: \delta_{n+1} = \gamma_{n+1}(x + ym^*) 
+\end{align*}
+
+Since $\mathcal{A}$ is algebraic, we can extract $m^*$ in one of two ways:
+
+\begin{enumerate}
+    \item \textbf{Direct Extraction:} From any non-zero coefficient $\gamma_i$:
+    \[
+    x + ym^* = \frac{\delta_i}{\gamma_i}
+    \]
+    Therefore:
+    \[
+    m^* = \frac{1}{y}(\frac{\delta_i}{\gamma_i} - x)
+    \]
+
+    \item \textbf{System Solution:} Using any two equations with non-zero coefficients:
+    \[
+    \frac{\delta_i}{\gamma_i} = \frac{\delta_j}{\gamma_j} = x + ym^*
+    \]
+    This provides a consistency check for the extracted value.
+\end{enumerate}
+
+Note that at least one $\gamma_i$ must be non-zero for a valid forgery, as otherwise $\sigma_1^*$ would be the identity element, violating the verification equation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \begin{theorem}[EUF-CCA Security]
+% In the Algebraic Group Model, if the PS-LRSW assumption holds in the bilinear group $\mathbb{G}$, our signature scheme is existentially unforgeable under chosen message attacks. Specifically, for any algebraic PPT adversary $\mathcal{A}$ making at most $q_s$ signing queries and $q_v$ verification queries, there exists a PPT reduction $\mathcal{B}$ against PS-LRSW such that:
+% \[
+%     \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
+% \]
+% \end{theorem}
+
+% \begin{proof}
+% We proceed through a sequence of games, showing that any successful forgery in our scheme would lead to breaking the PS-LRSW assumption.
+
+% Game 0: The original EUF-CCA security game where adversary $\mathcal{A}$ has access to signing oracle $\mathcal{O}_{\mathsf{Sign}}$ and verification oracle $\mathcal{O}_{\mathsf{Ver}}$.
+
+% Game 1: We modify Game 0 by replacing the verification oracle with an algebraic verification. Since $\mathcal{A}$ is algebraic, for any group element $Z$ it queries to $\mathcal{O}_{\mathsf{Ver}}$, it must provide its representation in terms of the generators:
+% \[
+% Z = g^{\alpha_0}\prod_{i=1}^n g_i^{\alpha_i}h^{\alpha_{n+1}}
+% \]
+% where $\{g, g_1,\ldots,g_n, h\}$ are the public generators.
+
+% Let $(\sigma^*, \cm^*)$ be $\mathcal{A}$'s forgery attempt. Since $\mathcal{A}$ is algebraic, it provides representations:
+% \begin{align*}
+% \sigma_1^* &= g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}} \\
+% \sigma_2^* &= g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}
+% \end{align*}
+
+% Game 2: In this game, we extract the algebraic structure of the forgery. Given $\mathcal{A}$'s forgery $(\sigma^*, \cm^*)$ with algebraic representations:
+% \begin{align*}
+% \sigma_1^* &= g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}} \\
+% \sigma_2^* &= g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}} \\
+% \cm^* &= g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
+% \end{align*}
+
+% For a valid forgery, the verification equation must hold:
+% \[
+% e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
+% \]
+
+% By substituting the algebraic representations and using the bilinearity of the pairing, we obtain:
+% \begin{align*}
+% e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}) &= e(g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}, \tilde{g}^x \cdot \tilde{g}^{ym^*}) \\
+% \end{align*}
+
+% This yields a system of equations in the exponents:
+% \begin{align*}
+% \gamma_0 &= \beta_0(x + ym^*) \\
+% \gamma_i &= \beta_i(x + ym^*) \text{ for } i \in [1,n] \\
+% \gamma_{n+1} &= \beta_{n+1}(x + ym^*) 
+% \end{align*}
+
+% Game 3: We construct our reduction $\mathcal{B}$ to PS-LRSW. $\mathcal{B}$ receives a PS-LRSW challenge $(g, \tilde{g}, X = g^x, Y = g^y, \tilde{X} = \tilde{g}^x, \tilde{Y} = \tilde{g}^y)$ and simulates the EUF-CCA game for $\mathcal{A}$ as follows:
+
+% 1. Setup: $\mathcal{B}$ forwards the generators and challenge elements to $\mathcal{A}$
+
+% 2. Signing Queries: For each signing query on commitment $\cm_i$, $\mathcal{B}$ queries its PS-LRSW oracle to obtain a signature pair $(h_i, h_i^{x+m_iy})$
+
+% 3. Verification Queries: $\mathcal{B}$ uses the algebraic representations provided by $\mathcal{A}$ to verify signatures
+
+% When $\mathcal{A}$ outputs a valid forgery $(\sigma^*, \cm^*)$, $\mathcal{B}$ uses the algebraic representations to extract:
+% \[
+% h^* = \sigma_1^* = g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}
+% \]
+% \[
+% (h^*)^{x+m^*y} = \sigma_2^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}
+% \]
+
+% Since $\cm^*$ was never queried to the signing oracle, this constitutes a valid PS-LRSW forgery.
+
+
+
+% Let us analyze the probability of $\mathcal{A}$'s success in each game. Let $\mathsf{Succ}_i$ denote the event that $\mathcal{A}$ succeeds in Game i.
+
+% \paragraph{Game 0 → Game 1:}
+% The transition from Game 0 to Game 1 is purely conceptual. We simply require $\mathcal{A}$ to provide algebraic representations of group elements, which any algebraic adversary must be able to do by definition. Therefore:
+% \[
+% \Pr[\mathsf{Succ}_0] = \Pr[\mathsf{Succ}_1]
+% \]
+
+% \paragraph{Game 1 → Game 2:}
+% In Game 2, we extract the algebraic structure of $\mathcal{A}$'s forgery. This is again a conceptual change that doesn't affect $\mathcal{A}$'s view of the game:
+% \[
+% \Pr[\mathsf{Succ}_1] = \Pr[\mathsf{Succ}_2]
+% \]
+
+% \paragraph{Game 2 → Game 3:}
+% This transition introduces our reduction to PS-LRSW. We need to show that $\mathcal{B}$'s simulation is perfect unless a specific event occurs. Let $\mathsf{Bad}$ be the event that $\mathcal{A}$ produces a verification query $(\sigma, \cm)$ that verifies correctly but doesn't correspond to a valid algebraic representation.
+
+% By the properties of the algebraic group model, this can only occur if $\mathcal{A}$ finds a collision in the pairing equations. Given the q-type assumption underlying PS-LRSW, this probability is bounded by $q_v/p$ where $q_v$ is the number of verification queries:
+% \[
+% |\Pr[\mathsf{Succ}_2] - \Pr[\mathsf{Succ}_3]| \leq \Pr[\mathsf{Bad}] \leq \frac{q_v}{p}
+% \]
+
+% \paragraph{Final Analysis:}
+% If $\mathcal{A}$ succeeds in Game 3, then $\mathcal{B}$ successfully breaks the PS-LRSW assumption. Therefore:
+% \[
+% \Pr[\mathsf{Succ}_3] \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda)
+% \]
+
+% Combining all the probability bounds:
+% \begin{align*}
+% \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) &= \Pr[\mathsf{Succ}_0] \\
+% &= \Pr[\mathsf{Succ}_1] \\
+% &= \Pr[\mathsf{Succ}_2] \\
+% &\leq \Pr[\mathsf{Succ}_3] + \frac{q_v}{p} \\
+% &\leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
+% \end{align*}
+
+% This completes the proof, showing that any algebraic adversary's advantage in breaking EUF-CCA security is bounded by their advantage in breaking PS-LRSW plus a negligible term from verification queries.
+% \end{proof}
 
 
 
