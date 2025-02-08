@@ -918,142 +918,6 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
 
 
 
-\newpage
-\begin{theorem}[EUF-CCA Security]
-In the Algebraic Group Model, if the PS-LRSW assumption holds in the bilinear group $\mathbb{G}$, then our signature scheme is existentially unforgeable under chosen message attacks. Specifically, for any algebraic PPT adversary $\mathcal{A}$, there exists a PPT reduction $\mathcal{B}$ against PS-LRSW such that:
-\[
-    \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
-\]
-where $q_v$ is the number of verification queries.
-\end{theorem}
-
-\begin{proof}
-We construct a reduction $\mathcal{B}$ that uses any algebraic adversary $\mathcal{A}$ breaking EUF-CCA to solve the PS-LRSW problem. The key insight is that the algebraic property lets us extract the structure of $\mathcal{A}$'s forgery directly.
-
-\paragraph{Setup:} On input PS-LRSW instance $(g, \tilde{g}, X = g^x, Y = g^y, \tilde{X} = \tilde{g}^x, \tilde{Y} = \tilde{g}^y)$, $\mathcal{B}$ proceeds as follows:
-\begin{enumerate}
-    \item Initialize signing query set $Q = \emptyset$
-    \item Forward generators and public key to $\mathcal{A}$: $(g, \tilde{g}, X, Y, \tilde{X}, \tilde{Y})$
-\end{enumerate}
-
-\paragraph{Signing Oracle:} On signing query for commitment $\cm$:
-\begin{enumerate}
-    \item Add $\cm$ to $Q$
-    \item Query PS-LRSW oracle on $\cm$ to obtain $(h, h^{x+my})$
-    \item Return signature to $\mathcal{A}$
-\end{enumerate}
-
-\paragraph{Verification Oracle:} On query $(\sigma, \cm)$, since $\mathcal{A}$ is algebraic, it provides representations:
-\[
-\sigma_1 = g^{\alpha_0}\prod_{i=1}^n g_i^{\alpha_i}h^{\alpha_{n+1}}, \quad
-\sigma_2 = g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}
-\]
-Return 1 if verification equation holds using these representations.
-
-\paragraph{Forgery:} When $\mathcal{A}$ outputs $(\sigma^*, \cm^*)$, it must provide algebraic representations:
-\[
-\sigma_1^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
-\sigma_2^* = g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
-\]
-
-If $\cm^* \in Q$ or verification fails, abort. Otherwise, $\mathcal{B}$ extracts the PS-LRSW solution:
-\begin{enumerate}
-    \item Set $h^* = \sigma_1^*$ (this is the first component of PS-LRSW forgery)
-    \item Extract $m^*$ from the verification equation using the algebraic representations
-    \item Return $(m^*, h^*, (h^*)^{x+m^*y})$ as PS-LRSW forgery
-\end{enumerate}
-
-\paragraph{Analysis:} Let's analyze $\mathcal{B}$'s success probability in solving PS-LRSW using $\mathcal{A}$'s forgery.
-
-\paragraph{Perfect Simulation:} First, we show $\mathcal{B}$'s simulation is perfect from $\mathcal{A}$'s view:
-\begin{itemize}
-    \item The public key distribution is identical to the real scheme as it comes directly from the PS-LRSW instance
-    \item Signing queries are answered using the PS-LRSW oracle, producing valid signatures with the correct distribution
-    \item The verification oracle perfectly implements the verification equation using $\mathcal{A}$'s algebraic representations
-\end{itemize}
-
-\paragraph{Extraction Success:} When $\mathcal{A}$ produces a valid forgery $(\sigma^*, \cm^*)$, the verification equation must hold:
-\[
-e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
-\]
-
-By the algebraic property, this means:
-\[
-\delta_0 + \sum_{i=1}^n \delta_i + \delta_{n+1} = (\gamma_0 + \sum_{i=1}^n \gamma_i + \gamma_{n+1})(x + m^*y)
-\]
-
-Therefore, we have:
-\begin{itemize}
-    \item $h^* = \sigma_1^*$ is a valid group element (by $\mathcal{A}$'s success)
-    \item $m^*$ is extractable from the algebraic representations
-    \item $(h^*)^{x+m^*y} = \sigma_2^*$ by the verification equation
-    \item $\cm^* \notin Q$ (by definition of forgery)
-\end{itemize}
-
-\paragraph{Probability Analysis:} Let $\epsilon$ be $\mathcal{A}$'s advantage in the EUF-CCA game. Then:
-\[
-\Pr[\mathcal{B} \text{ succeeds}] \geq \epsilon - \Pr[\text{BadVer}]
-\]
-where $\text{BadVer}$ is the event that $\mathcal{A}$ produces a verification query that validates but doesn't correspond to its algebraic representation. By the q-type assumption underlying PS-LRSW, this probability is bounded by $q_v/p$.
-
-Therefore:
-\[
-\Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) \geq \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) - \frac{q_v}{p}
-\]
-
-\end{proof}
-
-
-
-
-\paragraph{Extracting $m^*$ from Algebraic Representations:} 
-Given $\mathcal{A}$'s forgery $(\sigma^*, \cm^*)$ with algebraic representations:
-\[
-\sigma_1^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
-\sigma_2^* = g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
-\]
-
-The verification equation provides:
-\[
-e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
-\]
-
-Substituting the algebraic representations and using bilinearity:
-\begin{align*}
-e(g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}, \tilde{g}) &= e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}^x \cdot \tilde{g}^{ym^*}) \\
-&= e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}^{x+ym^*})
-\end{align*}
-
-This yields a system of equations in the exponents. For each generator basis:
-\begin{align*}
-\text{For } g&: \delta_0 = \gamma_0(x + ym^*) \\
-\text{For } g_i&: \delta_i = \gamma_i(x + ym^*) \text{ for } i \in [1,n] \\
-\text{For } h&: \delta_{n+1} = \gamma_{n+1}(x + ym^*) 
-\end{align*}
-
-Since $\mathcal{A}$ is algebraic, we can extract $m^*$ in one of two ways:
-
-\begin{enumerate}
-    \item \textbf{Direct Extraction:} From any non-zero coefficient $\gamma_i$:
-    \[
-    x + ym^* = \frac{\delta_i}{\gamma_i}
-    \]
-    Therefore:
-    \[
-    m^* = \frac{1}{y}(\frac{\delta_i}{\gamma_i} - x)
-    \]
-
-    \item \textbf{System Solution:} Using any two equations with non-zero coefficients:
-    \[
-    \frac{\delta_i}{\gamma_i} = \frac{\delta_j}{\gamma_j} = x + ym^*
-    \]
-    This provides a consistency check for the extracted value.
-\end{enumerate}
-
-Note that at least one $\gamma_i$ must be non-zero for a valid forgery, as otherwise $\sigma_1^*$ would be the identity element, violating the verification equation.
-
-
-
 
 
 
@@ -1069,116 +933,310 @@ Note that at least one $\gamma_i$ must be non-zero for a valid forgery, as other
 
 
 % \begin{theorem}[EUF-CCA Security]
-% In the Algebraic Group Model, if the PS-LRSW assumption holds in the bilinear group $\mathbb{G}$, our signature scheme is existentially unforgeable under chosen message attacks. Specifically, for any algebraic PPT adversary $\mathcal{A}$ making at most $q_s$ signing queries and $q_v$ verification queries, there exists a PPT reduction $\mathcal{B}$ against PS-LRSW such that:
+% Assume that the PS-LRSW assumption holds in the bilinear group $\mathbb{G}$. Then, in the Algebraic Group Model, our rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen-commitment attacks. More precisely, for any algebraic PPT adversary $\mathcal{A}$, there exists a PPT reduction $\mathcal{B}$ such that
 % \[
-%     \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
+%     \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p},
 % \]
+% where $q_v$ is the number of verification queries.
 % \end{theorem}
 
 % \begin{proof}
-% We proceed through a sequence of games, showing that any successful forgery in our scheme would lead to breaking the PS-LRSW assumption.
+% We describe a reduction $\mathcal{B}$ that uses an adversary $\mathcal{A}$ which breaks the EUF-CCA security of our scheme to solve an instance of the PS-LRSW problem. The reduction proceeds in three steps.
 
-% Game 0: The original EUF-CCA security game where adversary $\mathcal{A}$ has access to signing oracle $\mathcal{O}_{\mathsf{Sign}}$ and verification oracle $\mathcal{O}_{\mathsf{Ver}}$.
-
-% Game 1: We modify Game 0 by replacing the verification oracle with an algebraic verification. Since $\mathcal{A}$ is algebraic, for any group element $Z$ it queries to $\mathcal{O}_{\mathsf{Ver}}$, it must provide its representation in terms of the generators:
+% \paragraph{1. Setup.}
+% Given a PS-LRSW challenge instance
 % \[
-% Z = g^{\alpha_0}\prod_{i=1}^n g_i^{\alpha_i}h^{\alpha_{n+1}}
+% (g, \tilde{g}, X = g^x, Y = g^y, \tilde{X} = \tilde{g}^x, \tilde{Y} = \tilde{g}^y),
 % \]
-% where $\{g, g_1,\ldots,g_n, h\}$ are the public generators.
+% with unknown exponents $x,y \in \mathbb{Z}_p$, the reduction $\mathcal{B}$ does the following:
+% \begin{enumerate}
+%     \item Sets up the public parameters and commitment key $\mathsf{ck}$ as in the scheme.
+%     \item Defines the public key $\mathsf{pk} = (\mathsf{ck},\vk)$ by setting $\vk$ (or a component of it) using the challenge elements (for example, letting $\vk = \tilde{X}$ or otherwise ensuring consistency with the verification equation).
+%     \item Forwards $\mathsf{pk}$ (and any necessary group generators) to the adversary $\mathcal{A}$.
+% \end{enumerate}
+% The distribution of the public key is identical to that in the real scheme under the AGM.
 
-% Let $(\sigma^*, \cm^*)$ be $\mathcal{A}$'s forgery attempt. Since $\mathcal{A}$ is algebraic, it provides representations:
-% \begin{align*}
-% \sigma_1^* &= g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}} \\
-% \sigma_2^* &= g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}
-% \end{align*}
+% \paragraph{2. Simulation of Signing and Verification Oracles.}
+% \begin{itemize}
+%     \item \textbf{Signing Oracle:} For any signing query on a commitment $\cm$, $\mathcal{B}$ adds $\cm$ to the set $Q_{\cm}$ and simulates the signature using the PS-LRSW oracle. In particular, by querying the PS-LRSW oracle on $\cm$, $\mathcal{B}$ obtains a pair $(h, h^{x+m y})$, where $m$ is the message corresponding to $\cm$. This simulation is perfect because the response maintains the algebraic structure required by the scheme.
+%     \item \textbf{Verification Oracle:} When $\mathcal{A}$ issues a verification query $(\sigma, \cm)$, assume that $\mathcal{A}$ provides algebraic representations of the signature:
+%     \[
+%     \sigma_1 = g^{\alpha_0}\prod_{i=1}^{n} g_i^{\alpha_i}h^{\alpha_{n+1}}, \quad \sigma_2 = g^{\beta_0}\prod_{i=1}^{n} g_i^{\beta_i}h^{\beta_{n+1}}.
+%     \]
+%     Then $\mathcal{B}$ checks whether the verification equation holds:
+%     \[
+%     e(\sigma_2, \tilde{g}) \stackrel{?}{=} e(\sigma_1, \tilde{X} \cdot \tilde{Y}^{m}),
+%     \]
+%     where $m$ is the message associated with the commitment $\cm$. The algebraic representations make it possible to verify this equation by comparing exponents.
+% \end{itemize}
 
-% Game 2: In this game, we extract the algebraic structure of the forgery. Given $\mathcal{A}$'s forgery $(\sigma^*, \cm^*)$ with algebraic representations:
-% \begin{align*}
-% \sigma_1^* &= g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}} \\
-% \sigma_2^* &= g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}} \\
-% \cm^* &= g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
-% \end{align*}
-
-% For a valid forgery, the verification equation must hold:
+% \paragraph{3. Forgery and Extraction.}
+% Eventually, $\mathcal{A}$ outputs a forgery $(m^*, \cm^*, \sigma^*)$, where $\cm^* \notin Q_{\cm}$. Write the forged signature as
 % \[
-% e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
+% \sigma_1^* = g^{\gamma_0}\prod_{i=1}^{n} g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
+% \sigma_2^* = g^{\delta_0}\prod_{i=1}^{n} g_i^{\delta_i}h^{\delta_{n+1}}.
 % \]
-
-% By substituting the algebraic representations and using the bilinearity of the pairing, we obtain:
-% \begin{align*}
-% e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}) &= e(g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}, \tilde{g}^x \cdot \tilde{g}^{ym^*}) \\
-% \end{align*}
-
-% This yields a system of equations in the exponents:
-% \begin{align*}
-% \gamma_0 &= \beta_0(x + ym^*) \\
-% \gamma_i &= \beta_i(x + ym^*) \text{ for } i \in [1,n] \\
-% \gamma_{n+1} &= \beta_{n+1}(x + ym^*) 
-% \end{align*}
-
-% Game 3: We construct our reduction $\mathcal{B}$ to PS-LRSW. $\mathcal{B}$ receives a PS-LRSW challenge $(g, \tilde{g}, X = g^x, Y = g^y, \tilde{X} = \tilde{g}^x, \tilde{Y} = \tilde{g}^y)$ and simulates the EUF-CCA game for $\mathcal{A}$ as follows:
-
-% 1. Setup: $\mathcal{B}$ forwards the generators and challenge elements to $\mathcal{A}$
-
-% 2. Signing Queries: For each signing query on commitment $\cm_i$, $\mathcal{B}$ queries its PS-LRSW oracle to obtain a signature pair $(h_i, h_i^{x+m_iy})$
-
-% 3. Verification Queries: $\mathcal{B}$ uses the algebraic representations provided by $\mathcal{A}$ to verify signatures
-
-% When $\mathcal{A}$ outputs a valid forgery $(\sigma^*, \cm^*)$, $\mathcal{B}$ uses the algebraic representations to extract:
+% Because the forgery verifies, we have
 % \[
-% h^* = \sigma_1^* = g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}
+% e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X}\cdot \tilde{Y}^{m^*}).
 % \]
+% By bilinearity, this implies that
 % \[
-% (h^*)^{x+m^*y} = \sigma_2^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}
+% \delta_0 + \sum_{i=1}^{n}\delta_i + \delta_{n+1} = \Bigl(\gamma_0 + \sum_{i=1}^{n}\gamma_i + \gamma_{n+1}\Bigr)(x + m^*y).
 % \]
-
-% Since $\cm^*$ was never queried to the signing oracle, this constitutes a valid PS-LRSW forgery.
-
-
-
-% Let us analyze the probability of $\mathcal{A}$'s success in each game. Let $\mathsf{Succ}_i$ denote the event that $\mathcal{A}$ succeeds in Game i.
-
-% \paragraph{Game 0 → Game 1:}
-% The transition from Game 0 to Game 1 is purely conceptual. We simply require $\mathcal{A}$ to provide algebraic representations of group elements, which any algebraic adversary must be able to do by definition. Therefore:
+% Since at least one of the coefficients $\gamma_i$ must be nonzero (else $\sigma_1^*$ would be trivial), $\mathcal{B}$ can select an index $i$ with $\gamma_i \neq 0$ and compute
 % \[
-% \Pr[\mathsf{Succ}_0] = \Pr[\mathsf{Succ}_1]
+% x + m^*y = \frac{\delta_i}{\gamma_i}.
+% \]
+% Given that $x$ and $y$ come from the PS-LRSW challenge, $\mathcal{B}$ can then extract
+% \[
+% m^* = \frac{1}{y}\Bigl(\frac{\delta_i}{\gamma_i} - x\Bigr).
+% \]
+% Finally, $\mathcal{B}$ outputs $(m^*, h^*, (h^*)^{x+m^*y})$, where $h^* = \sigma_1^*$, as a valid solution to the PS-LRSW problem.
+
+% \paragraph{Analysis.}
+% The simulation is perfect from the view of $\mathcal{A}$, and the probability that $\mathcal{A}$ outputs a valid forgery on a commitment not queried to the signing oracle is at least its advantage $\epsilon$ in the EUF-CCA game. The only additional error term arises from the possibility that $\mathcal{A}$ might output a trivial algebraic representation (which happens with probability at most $\frac{q_v}{p}$, where $q_v$ is the number of verification queries). Hence, the reduction satisfies
+% \[
+% \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}.
 % \]
 
-% \paragraph{Game 1 → Game 2:}
-% In Game 2, we extract the algebraic structure of $\mathcal{A}$'s forgery. This is again a conceptual change that doesn't affect $\mathcal{A}$'s view of the game:
-% \[
-% \Pr[\mathsf{Succ}_1] = \Pr[\mathsf{Succ}_2]
-% \]
+% \paragraph{Discussion.}
+% The AGM is essential here because it forces the adversary to produce signatures with explicit algebraic representations. This structure allows $\mathcal{B}$ to extract the exponents and, in turn, to solve for $m^*$. In the standard model, where adversaries might output arbitrary group elements without a decomposable structure, the extraction method used above would not apply directly.
 
-% \paragraph{Game 2 → Game 3:}
-% This transition introduces our reduction to PS-LRSW. We need to show that $\mathcal{B}$'s simulation is perfect unless a specific event occurs. Let $\mathsf{Bad}$ be the event that $\mathcal{A}$ produces a verification query $(\sigma, \cm)$ that verifies correctly but doesn't correspond to a valid algebraic representation.
-
-% By the properties of the algebraic group model, this can only occur if $\mathcal{A}$ finds a collision in the pairing equations. Given the q-type assumption underlying PS-LRSW, this probability is bounded by $q_v/p$ where $q_v$ is the number of verification queries:
-% \[
-% |\Pr[\mathsf{Succ}_2] - \Pr[\mathsf{Succ}_3]| \leq \Pr[\mathsf{Bad}] \leq \frac{q_v}{p}
-% \]
-
-% \paragraph{Final Analysis:}
-% If $\mathcal{A}$ succeeds in Game 3, then $\mathcal{B}$ successfully breaks the PS-LRSW assumption. Therefore:
-% \[
-% \Pr[\mathsf{Succ}_3] \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda)
-% \]
-
-% Combining all the probability bounds:
-% \begin{align*}
-% \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) &= \Pr[\mathsf{Succ}_0] \\
-% &= \Pr[\mathsf{Succ}_1] \\
-% &= \Pr[\mathsf{Succ}_2] \\
-% &\leq \Pr[\mathsf{Succ}_3] + \frac{q_v}{p} \\
-% &\leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
-% \end{align*}
-
-% This completes the proof, showing that any algebraic adversary's advantage in breaking EUF-CCA security is bounded by their advantage in breaking PS-LRSW plus a negligible term from verification queries.
 % \end{proof}
 
 
 
 
+
+% \newpage
+% \begin{theorem}[EUF-CCA Security]
+% In the Algebraic Group Model, if the PS-LRSW assumption holds in the bilinear group $\mathbb{G}$, then our signature scheme is existentially unforgeable under chosen message attacks. Specifically, for any algebraic PPT adversary $\mathcal{A}$, there exists a PPT reduction $\mathcal{B}$ against PS-LRSW such that:
+% \[
+%     \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) + \frac{q_v}{p}
+% \]
+% where $q_v$ is the number of verification queries.
+% \end{theorem}
+
+% \begin{proof}
+% We construct a reduction $\mathcal{B}$ that uses any algebraic adversary $\mathcal{A}$ breaking EUF-CCA to solve the PS-LRSW problem. The key insight is that the algebraic property lets us extract the structure of $\mathcal{A}$'s forgery directly.
+
+% \paragraph{Setup:} On input PS-LRSW instance $(g, \tilde{g}, X = g^x, Y = g^y, \tilde{X} = \tilde{g}^x, \tilde{Y} = \tilde{g}^y)$, $\mathcal{B}$ proceeds as follows:
+% \begin{enumerate}
+%     \item Initialize signing query set $Q = \emptyset$
+%     \item Forward generators and public key to $\mathcal{A}$: $(g, \tilde{g}, X, Y, \tilde{X}, \tilde{Y})$
+% \end{enumerate}
+
+% \paragraph{Signing Oracle:} On signing query for commitment $\cm$:
+% \begin{enumerate}
+%     \item Add $\cm$ to $Q$
+%     \item Query PS-LRSW oracle on $\cm$ to obtain $(h, h^{x+my})$
+%     \item Return signature to $\mathcal{A}$
+% \end{enumerate}
+
+% \paragraph{Verification Oracle:} On query $(\sigma, \cm)$, since $\mathcal{A}$ is algebraic, it provides representations:
+% \[
+% \sigma_1 = g^{\alpha_0}\prod_{i=1}^n g_i^{\alpha_i}h^{\alpha_{n+1}}, \quad
+% \sigma_2 = g^{\beta_0}\prod_{i=1}^n g_i^{\beta_i}h^{\beta_{n+1}}
+% \]
+% Return 1 if verification equation holds using these representations.
+
+% \paragraph{Forgery:} When $\mathcal{A}$ outputs $(\sigma^*, \cm^*)$, it must provide algebraic representations:
+% \[
+% \sigma_1^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
+% \sigma_2^* = g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
+% \]
+
+% If $\cm^* \in Q$ or verification fails, abort. Otherwise, $\mathcal{B}$ extracts the PS-LRSW solution:
+% \begin{enumerate}
+%     \item Set $h^* = \sigma_1^*$ (this is the first component of PS-LRSW forgery)
+%     \item Extract $m^*$ from the verification equation using the algebraic representations
+%     \item Return $(m^*, h^*, (h^*)^{x+m^*y})$ as PS-LRSW forgery
+% \end{enumerate}
+
+% \paragraph{Analysis:} Let's analyze $\mathcal{B}$'s success probability in solving PS-LRSW using $\mathcal{A}$'s forgery.
+
+% \paragraph{Perfect Simulation:} First, we show $\mathcal{B}$'s simulation is perfect from $\mathcal{A}$'s view:
+% \begin{itemize}
+%     \item The public key distribution is identical to the real scheme as it comes directly from the PS-LRSW instance
+%     \item Signing queries are answered using the PS-LRSW oracle, producing valid signatures with the correct distribution
+%     \item The verification oracle perfectly implements the verification equation using $\mathcal{A}$'s algebraic representations
+% \end{itemize}
+
+% \paragraph{Extraction Success:} When $\mathcal{A}$ produces a valid forgery $(\sigma^*, \cm^*)$, the verification equation must hold:
+% \[
+% e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
+% \]
+
+% By the algebraic property, this means:
+% \[
+% \delta_0 + \sum_{i=1}^n \delta_i + \delta_{n+1} = (\gamma_0 + \sum_{i=1}^n \gamma_i + \gamma_{n+1})(x + m^*y)
+% \]
+
+% Therefore, we have:
+% \begin{itemize}
+%     \item $h^* = \sigma_1^*$ is a valid group element (by $\mathcal{A}$'s success)
+%     \item $m^*$ is extractable from the algebraic representations
+%     \item $(h^*)^{x+m^*y} = \sigma_2^*$ by the verification equation
+%     \item $\cm^* \notin Q$ (by definition of forgery)
+% \end{itemize}
+
+% \paragraph{Probability Analysis:} Let $\epsilon$ be $\mathcal{A}$'s advantage in the EUF-CCA game. Then:
+% \[
+% \Pr[\mathcal{B} \text{ succeeds}] \geq \epsilon - \Pr[\text{BadVer}]
+% \]
+% where $\text{BadVer}$ is the event that $\mathcal{A}$ produces a verification query that validates but doesn't correspond to its algebraic representation. By the q-type assumption underlying PS-LRSW, this probability is bounded by $q_v/p$.
+
+% Therefore:
+% \[
+% \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}}(\lambda) \geq \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{PS},\mathcal{A}}(\lambda) - \frac{q_v}{p}
+% \]
+
+% \end{proof}
+
+
+
+
+% \paragraph{Extracting $m^*$ from Algebraic Representations:} 
+% Given $\mathcal{A}$'s forgery $(\sigma^*, \cm^*)$ with algebraic representations:
+% \[
+% \sigma_1^* = g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \quad
+% \sigma_2^* = g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}
+% \]
+
+% The verification equation provides:
+% \[
+% e(\sigma_2^*, \tilde{g}) = e(\sigma_1^*, \tilde{X} \cdot \tilde{Y}^{m^*})
+% \]
+
+% Substituting the algebraic representations and using bilinearity:
+% \begin{align*}
+% e(g^{\delta_0}\prod_{i=1}^n g_i^{\delta_i}h^{\delta_{n+1}}, \tilde{g}) &= e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}^x \cdot \tilde{g}^{ym^*}) \\
+% &= e(g^{\gamma_0}\prod_{i=1}^n g_i^{\gamma_i}h^{\gamma_{n+1}}, \tilde{g}^{x+ym^*})
+% \end{align*}
+
+% This yields a system of equations in the exponents. For each generator basis:
+% \begin{align*}
+% \text{For } g&: \delta_0 = \gamma_0(x + ym^*) \\
+% \text{For } g_i&: \delta_i = \gamma_i(x + ym^*) \text{ for } i \in [1,n] \\
+% \text{For } h&: \delta_{n+1} = \gamma_{n+1}(x + ym^*) 
+% \end{align*}
+
+% Since $\mathcal{A}$ is algebraic, we can extract $m^*$ in one of two ways:
+
+% \begin{enumerate}
+%     \item \textbf{Direct Extraction:} From any non-zero coefficient $\gamma_i$:
+%     \[
+%     x + ym^* = \frac{\delta_i}{\gamma_i}
+%     \]
+%     Therefore:
+%     \[
+%     m^* = \frac{1}{y}(\frac{\delta_i}{\gamma_i} - x)
+%     \]
+
+%     \item \textbf{System Solution:} Using any two equations with non-zero coefficients:
+%     \[
+%     \frac{\delta_i}{\gamma_i} = \frac{\delta_j}{\gamma_j} = x + ym^*
+%     \]
+%     This provides a consistency check for the extracted value.
+% \end{enumerate}
+
+% Note that at least one $\gamma_i$ must be non-zero for a valid forgery, as otherwise $\sigma_1^*$ would be the identity element, violating the verification equation.
+
+
+
+
+\begin{theorem}[EUF-CCA Security]
+Assume the PS-LRSW assumption holds and the Pedersen commitment is computationally binding. Then, in the Algebraic Group Model, our rerandomizable signature scheme is existentially unforgeable under adaptive chosen-commitment attacks. For any algebraic PPT adversary $\mathcal{A}$, there exist PPT reductions $\mathcal{B}_0, \mathcal{B}_1$ such that:
+\[
+\Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0}(\lambda) + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1}(\lambda) + \frac{q_v + q_s}{p},
+\]
+where $q_v$ (verification) and $q_s$ (signing) are query counts.
+\end{theorem}
+
+\begin{proof}
+We construct two reductions handling different forgery types. Let $\mathcal{A}$ be an adversary with advantage $\epsilon$.
+
+\paragraph{1. Setup}
+Given PS-LRSW challenge over bilinear groups $(g, \tilde{g}, X=g^x, \tilde{X}=\tilde{g}^x, Y=g^y, \tilde{Y}=\tilde{g}^y)$:
+\begin{enumerate}
+    \item \textbf{Commitment Setup:} For 2-slot Pedersen:
+    \begin{itemize}
+        \item Choose $\alpha_1, \alpha_2, \beta_1, \beta_2 \sample \Z_p$
+        \item Set $g_1 = Y^{\alpha_1}g^{\beta_1}$, $\tilde{g}_1 = \tilde{Y}^{\alpha_1}\tilde{g}^{\beta_1}$ 
+        \item Set $g_2 = Y^{\alpha_2}g^{\beta_2}$, $\tilde{g}_2 = \tilde{Y}^{\alpha_2}\tilde{g}^{\beta_2}$
+    \end{itemize}
+    \item \textbf{Public Key:} $\pk = (\tilde{X}, g_1, \tilde{g}_1, g_2, \tilde{g}_2)$
+    \item Send $\pk$ to $\mathcal{A}$. Distribution matches real scheme as $\alpha_i, \beta_i$ are random.
+\end{enumerate}
+
+
+\paragraph{2. Oracle Simulation} \textbf{Signing Oracle:}
+For query $(m_1, m_2, r)$:
+\begin{itemize}
+    \item \textbf{Case $\mathcal{B}_0$ (PS Reduction):}
+    \begin{enumerate}
+        \item Compute $m = \alpha_1m_1 + \alpha_2m_2$
+        \item Query PS-LRSW oracle for $(h, h^{x + my})$
+        \item Return $\sigma = (h, h^{x + my} \cdot h^{\beta_1m_1 + \beta_2m_2 + r})$
+    \end{enumerate}
+    \item \textbf{Case $\mathcal{B}_1$ (Binding Reduction):}
+    \begin{enumerate}
+        \item Compute $\mathsf{cm} = g_1^{m_1}g_2^{m_2}g^r$
+        \item Choose $u \sample \Z_p$, return $\sigma = (g^u, (X \cdot \mathsf{cm})^u)$
+    \end{enumerate}
+\end{itemize}
+
+\noindent \textbf{Verification Oracle:}
+
+\begin{itemize}
+    \item Parse $\sigma = (\sigma_1, \sigma_2)$
+    \item Check $e(\sigma_2, \tilde{g}) = e(\sigma_1, \tilde{X} \cdot \widetilde{\mathsf{cm}})$ where $\widetilde{\mathsf{cm}} = \tilde{g}_1^{m_1}\tilde{g}_2^{m_2}\tilde{g}^r$
+    \item Use AGM to extract exponents from $\sigma_1, \sigma_2$ if needed
+\end{itemize}
+
+
+\paragraph{3. Forgery Extraction}
+
+When $\mathcal{A}$ outputs forgery $(m_1^*, m_2^*, r^*, \sigma^* = (\sigma_1^*, \sigma_2^*))$:
+
+\noindent \textbf{Case 1: New Message Combination}
+If $m^* = \alpha_1m_1^* + \alpha_2m_2^*$ is new:
+\begin{itemize}
+    \item $\mathcal{B}_0$ computes:
+    \[
+    (U, B/U^{\beta_1m_1^* + \beta_2m_2^* + r^*}) = (g^u, X^uY^{m^*u})
+    \]
+    \item This breaks PS-LRSW as $m^*$ wasn't queried. Thus:
+    \[
+    \epsilon_0 \geq \Pr[\text{New } m^*] - \frac{q_s}{p}
+    \]
+\end{itemize}
+
+\noindent \textbf{Case 2: Commitment Collision}
+If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
+\begin{itemize}
+    \item $\mathcal{B}_1$ finds collision:
+    \[
+    g_1^{m_1}g_2^{m_2} = g_1^{m_1^*}g_2^{m_2^*}
+    \]
+    \item Solving gives DLOG relation for $\alpha_i, \beta_i$, breaking binding:
+    \[
+    \epsilon_1 \geq \Pr[\text{Collision}] - \frac{1}{p}
+    \]
+\end{itemize}
+
+\noindent \paragraph{4. Analysis}
+
+\begin{itemize}
+    \item Total advantage partitions as $\epsilon \leq \epsilon_0 + \epsilon_1 + \frac{q_v + q_s + 1}{p}$
+    \item The $\frac{1}{p}$ term accounts for coefficient collisions in setup
+    \item Verification queries add $\frac{q_v}{p}$ error probability and
+\end{itemize}
+\[
+\Adv^{\mathsf{euf\mbox{-}cca}}_{\mathcal{A}} \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0} + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1} + \frac{q_v + q_s}{p}
+\]
+\end{proof}
 
 
 
@@ -1241,15 +1299,14 @@ Note that at least one $\gamma_i$ must be non-zero for a valid forgery, as other
 
 We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous Credentials off the model in \cite{fuchsbauer_structure-preserving_2019}
 
-
 \subsection{Syntax}
 \begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute based Anonymous Credential system consists of the following $\PPT$ algorithms:
     \begin{itemize}
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
 
-    \item $\mathsf{OrgKeygen}(\ppar, n) \torand (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
+    \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
 
-    \item $\mathsf{UserKeygen}(\secparam) \torand (\usk)$ is a probabilistic algorithm. Outputs user secret key $\usk$ consisting of PRF key $k$ and identity string $s$
+    \item $\mathsf{UserKeygen}(\secparam) \to (\usk)$ is a probabilistic algorithm. Outputs user secret key $\usk$ consisting of PRF key $k$ and identity string $s$
 
     \item $(\mathsf{Obtain Master}(usk_m, \textbf{m}, aux), \mathsf{IssueMaster}(osk_m, cm, aux)) \to Cred_m:$ An interactive protocol. $Obtain Master$ is a probabilistic algorithm run by a user, inputs secret key, credential attribute vector $\textbf{m}$, and auxiliary info. $Issue Master$ is a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuer secret key $osk_m$, and auxiliary info. Outputs a master credential $Cred_m$ binding $cm$ to the issuer signature.
     
@@ -1612,7 +1669,7 @@ The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{
 
 
 \newpage
-\subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
+˜\subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
 \subsubsection{Intuition of our Construction}
 
 Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
@@ -1750,7 +1807,7 @@ This ensures:
 
 
 
-
+adf
 
 \newpage
 \subsection{Master Credential Issuance}
@@ -1762,10 +1819,9 @@ The master credential issuance protocol enables a user to obtain their root cred
     \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
     \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_m \gets CM.Setup(BG, \secparam, n)$} \\[1em]
     \multicolumn{3}{l}{Credential Oracle: $(SK_m, PK_m) \gets PS.KeyGen(ck_m)$} \\[1em]
-    \multicolumn{3}{l}{Auditor: $(SK_A, PK_A) \gets TPKE.KeyGen(ck_m)$} \\[1em]
-    \multicolumn{3}{l}{Auditor setup Revocation List} \\[1em]
+    \multicolumn{3}{l}{System setup User List $\mathcal{U}$} \\[1em]
     \underline{User($s$)} && \underline{MCO($SK_M$)} \\[0.5em]
-    \multicolumn{3}{l}{$k_1 \gets \Z_p$, \; $C_1 \gets Com([0,k_1,0,0],r)$}\\[1em]
+    \multicolumn{3}{l}{$k_1 \gets \Z_p$, \; $\cm_1 \gets \mathsf{CM.Com}([0,k_1,0,0],r)$}\\[1em]
     \multicolumn{3}{l}{$\Pi_1 \gets ZKPoK.Prove_{Zeros}(C_1)(k_1, r)$} \\[1em]
     & $\xrightarrow{C_1, \Pi_1}$ & \\[1em]
     \multicolumn{3}{r}{If $ZKPoK.Verify_{Zeros}(\Pi_1, C_1) = 0, $ return $ \bot$} \\[1em]
@@ -1774,11 +1830,8 @@ The master credential issuance protocol enables a user to obtain their root cred
     & $\xleftarrow{C_2, C_m, s, k_2}$ & \\[1em]
     \multicolumn{3}{l}{$k \gets k_1 + k_2$} \\[1em]
     \multicolumn{3}{l}{$\Pi_2 \gets ZKPoK.Prove_{addition}(C_1, C_2, C_m)(k_1, k_2, k, r)$} \\[1em]
-    \multicolumn{3}{l}{$\tau \gets Enc(PK_A, k)$} \\[1em]
-    \multicolumn{3}{l}{$\Pi_3 \gets ZKPOK.Prove_{enc}(C_m)(\tau, k, r)$} \\[1em]
     & $\xrightarrow{C_1, C_2, C_m, \Pi_2, \Pi_3, \tau}$ &\\[1em]
     \multicolumn{3}{r}{If $ZKPOK.Verify_{addition}(\Pi_2, C_1, C_2, C_m) = 0, \;$ return $\bot$} \\[0.5em]
-    \multicolumn{3}{r}{If $ZKPOK.Verify_{enc}(C_m)(\Pi_3, PK_A, \tau)  = 0, \;$ return $\bot$} \\[0.5em]
     \multicolumn{3}{r}{$\sigma_m \gets PS.Sign(SK_M, C_1)$} \\[0.5em]
     \multicolumn{3}{r}{Store Data Record MCO $(C_m, \sigma_m, \tau, \Pi_2, \Pi_3, C_1, C_2, k_2)$ } \\[1em]
     & $\xleftarrow{\sigma_m}$ & \\[1em]
@@ -1874,22 +1927,142 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 % 
 % Sigma Protocols
 % 
-% good notes on introducing proofs for this section
-% https://web.mat.upc.edu/jorge.villar/doc/notes/DataProt/zk.pdf#page=5.44
 % 
 % % % % % % % % % % 
+\section{Zero-Knowledge Proofs}
+\subsection{Preliminaries}
+% Basic definitions, notation, properties
+
+\subsection{Interactive Proofs and Zero-Knowledge}
+
+Interactive proofs allow a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ of the validity of some statement, while potentially keeping certain information private. In the context of anonymous credentials, these proofs serve as fundamental building blocks for demonstrating possession of credentials without revealing unnecessary information.
+
+\subsection{Motivating $\Sigma$-Protocols}
+
+The canonical example motivating $\Sigma$-protocols is Schnorr's identification scheme. Consider a prover who knows the discrete logarithm $w$ of a public group element $h$ with respect to generator $g$ in a group $\mathbb{G}$ of prime order $q$. Formally, the relation is:
+
+\[
+    \mathcal{R}_{\mathsf{DL}} = \{(h,w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}
+\]
+
+\begin{protocol}{Schnorr's Protocol}{schnorr}
+\textbf{Common Input:} Group element $h \in \mathbb{G}$\\
+\textbf{Prover Input:} $w \in \mathbb{Z}_q$ such that $h = g^w$
+\begin{enumerate}
+    \item $\mathcal{P}$ samples $r \sample \Z_q$, computes $a = g^r$
+    \item $\mathcal{V}$ samples challenge $e \sample \{0,1\}^t$ where $2^t < q$
+    \item $\mathcal{P}$ computes $z = r + ew \mod q$
+    \item $\mathcal{V}$ accepts if $g^z = a \cdot h^e$
+\end{enumerate}
+\end{protocol}
+
+This protocol exhibits three important properties:
+
+\begin{itemize}
+    \item \textbf{Knowledge Soundness:} Given transcripts $(a,e,z)$ and $(a,e',z')$ where $e \neq e'$, one can efficiently extract $w = (z-z')(e-e')^{-1} \mod q$
+    \item \textbf{Special Honest-Verifier Zero-Knowledge:} For any fixed challenge $e$, one can efficiently simulate accepting transcripts by sampling $z \sample \Z_q$ and computing $a = g^z h^{-e}$
+    \item \textbf{Three-Move Structure:} The protocol follows a commitment-challenge-response pattern that enables efficient composition
+\end{itemize}
+
+These properties form the basis for defining $\Sigma$-protocols, a framework that captures Schnorr's protocol and many other practical proof systems. The framework provides precise definitions and composition theorems while retaining the efficiency of the underlying protocols.
+
+
+
+
+
+
+
+
+\subsection{Relations and Protocol Structure}
+
+In constructing zero-knowledge proofs, we begin by precisely defining what it means to prove knowledge of some secret information. Following Damgård's formalization, we work with binary relations $R \subseteq \{0,1\}^* \times \{0,1\}^*$. For $(x,w) \in R$, we call $x$ the statement and $w$ the witness. The relation must be polynomially bounded: if $(x,w) \in R$, then $|w| \leq p(|x|)$ for some polynomial $p(\cdot)$.
+
+For example, in your credential system, a typical relation might be:
+\[
+    \mathcal{R}_{\mathsf{CM}} = \left\{ (\mathsf{cm}, (m,r)) \;\middle|\; \mathsf{cm} = g^{m}h^r \right\}
+\]
+where $\mathsf{cm}$ is a Pedersen commitment and $(m,r)$ constitute its opening.
+
+\subsection{$\Sigma$-Protocol Template}
+A $\Sigma$-protocol follows a specific three-move structure, traditionally called "commitment-challenge-response":
+
+\begin{protocol}{$\Sigma$-Protocol Template}{sigma-template}
+\textbf{Common Input:} Statement $x$\\
+\textbf{Prover Input:} Witness $w$ such that $(x,w) \in R$
+    \begin{enumerate}
+        \item $\mathcal{P}$ computes first message $a$ (the commitment) and sends it to $\mathcal{V}$
+        \item $\mathcal{V}$ sends a random $t$-bit challenge $e$
+        \item $\mathcal{P}$ computes response $z$ and sends it to $\mathcal{V}$
+        \item $\mathcal{V}$ accepts if verification predicate $\phi(x,a,e,z)=1$
+    \end{enumerate}
+\end{protocol}
+
+
+
+
+
+\subsection{$\Sigma$-Protocol Framework}
+
+A $\Sigma$-protocol for relation $R$ is a three-move public-coin protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ that follows our template structure while satisfying three specific properties. Let's examine each property carefully:
+
+\begin{definition}[$\Sigma$-Protocol]
+A protocol $\pi$ is a $\Sigma$-protocol for relation $R$ if it is a three-move public-coin protocol and satisfies:
+\begin{itemize}
+    \item \textbf{Completeness:} If $\mathcal{P}$ and $\mathcal{V}$ follow the protocol on common input $x$ and private input $w$ to $\mathcal{P}$ where $(x,w) \in R$, then $\mathcal{V}$ always accepts.
+    
+    \item \textbf{Special Soundness:} There exists a polynomial-time extractor $\mathcal{E}$ that, given any $x$ and any pair of accepting transcripts $(a,e,z)$ and $(a,e',z')$ where $e \neq e'$, outputs $w$ such that $(x,w) \in R$.
+    
+    \item \textbf{Special Honest-Verifier Zero-Knowledge:} There exists a polynomial-time simulator $\mathcal{S}$ that, on input $x$ and challenge $e$, outputs a transcript $(a,e,z)$ with the same probability distribution as transcripts between honest $\mathcal{P}(x,w)$ and $\mathcal{V}(x,e)$.
+\end{itemize}
+\end{definition}
+
+An important subtlety in this definition is the "special" nature of both the soundness and zero-knowledge properties. Special soundness requires extraction from any pair of accepting transcripts with the same first message, which is stronger than standard knowledge extraction. Similarly, special HVZK requires simulation for any given challenge, not just a random one.
+
+For a relation $R$, we denote by $L_R$ the language
+\[
+    L_R = \{x \mid \exists w : (x,w) \in R\}
+\]
+
+A crucial consequence of special soundness is that any $\Sigma$-protocol for $R$ is also an interactive proof system for language $L_R$ with soundness error $2^{-t}$ where $t$ is the challenge length. This follows because any prover successfully responding to more than one challenge must know a witness.
+
+
+
+
+
+
+
+
+
+
+\subsection{Core Proof Protocols}
+% Individual atomic proofs used in your system
+
+\subsection{Compound Statements}
+% How the basic proofs are combined
+
+\subsection{Protocol-Specific Proofs}
+% Your master and context credential specific proof constructions
+
+
+
+
+
+
 
 \section{Construction of $\Sigma$-protocols}\label{sec:sigmaproofs}
-% Recall definitions and introduction here: https://infoscience.epfl.ch/server/api/core/bitstreams/fc1cfb22-d943-4c96-a942-d715b76e6cc4/content#page=6.31
 
-Use standardisation notation / other information from standardisation proof
-% https://www.youtube.com/watch?v=bh0hBwxOiVI
-Concretely
-- $\varphi : \Z_p^n \to \G^m$ is a homomorphism 
-Proving knowledge of a preimage
-Relation is $\{(w) : Y = \varphi(w)\}$
-Relation is $\{(w) : Y = g^w\}$
-Relation is $\{(w) : Y = wG\}$
+Outline of this section
+- Introduce interactive proofs
+- Definition and Property
+- Our Contribution
+
+
+
+
+
+
+
+
 
 
 
@@ -1924,35 +2097,6 @@ The relation $\mathcal{R}$ denotes a zero knowledge proof ofknowledge of private
 
 
 
-
-
-
-
-
-
-% Our discussion on protocols is largely inspired by the work of Feige and Shamir \cite{FeigeShamir}, though some technical details are omitted in this abstract for brevity.
-
-% The protocols involve two parties: a prover \( P \) and a verifier \( V \), both modeled as interactive probabilistic polynomial-time Turing machines. Each has private auxiliary input tapes. The prover's auxiliary input is denoted by \( w \), and both share a common input \( x \) of length \( k \) bits, where \( k \) is often referred to as the security parameter. A probability is considered negligible if, as a function of \( k \), it decreases to zero faster than any polynomial fraction.
-
-% The proof system is defined with respect to a binary relation \( R = \{(x, w)\} \), which can be verified in polynomial time. For any \( x \), the witness set \( w(x) \) consists of all \( w \) such that \( (x, w) \in R \). The protocol's objective is for \( P \) to demonstrate that it possesses an element from \( w(x) \) on its private input tape. We assume that the protocol is complete with probability 1, meaning that if \( w \in w(x) \), the verifier will always accept.
-
-% \section*{Protocol Structure}
-
-% For simplicity, we focus on three-round public-coin protocols, though this restriction can be relaxed. The protocol's conversations are ordered triples of the form:
-
-% \[
-% m_1, c, m_2
-% \]
-
-% The second message, \( c \), is a random bit string chosen by the verifier, referred to as the challenge. The prover's final message, \( m_2 \), is termed the answer. The length of \( c \) is such that the number of possible values for \( c \) is super-polynomial in \( k \).
-
-% We assume the protocol satisfies knowledge soundness in the following manner: for any prover \( P^* \), given two conversations between \( P^* \) and \( V \): \( (m_1, c, m_2) \) and \( (m_1, c', m_2') \), where \( c \neq c' \), an element of \( w(x) \) can be computed in polynomial time. This is known as the \textit{special soundness property}. This property implies the standard soundness definition, which requires the existence of a knowledge extractor capable of extracting a witness in polynomial time from any prover that succeeds with non-negligible probability.
-
-% Although special soundness is less general than the standard definition, all known proofs of knowledge exhibit this property or a variant where the witness can be computed from a small number of correct answers. Therefore, assuming special soundness is not a significant limitation.
-
-% A protocol that is both sound and complete in the above sense is termed a \textit{proof of knowledge for the relation \( R \)}.
-
-% Finally, we assume the protocol is \textit{honest verifier zero-knowledge}: there exists a simulator \( S \) that, on input \( x \), produces conversations indistinguishable from real conversations between the honest prover and verifier with input \( x \). For simplicity, we assume perfect indistinguishability; extending this to other forms of indistinguishability is straightforward. Most known honest verifier zero-knowledge protocols satisfy a stronger condition: there is a procedure that, given any \( c \), can produce a conversation indistinguishable from all possible conversations between the honest prover and verifier where \( c \) is the challenge. This is referred to as \textit{special honest verifier zero-knowledge}.
 
 
 
@@ -2342,6 +2486,35 @@ Let $\cm = (\prod_{i=1}^n g_i^{m_i})h^r$ be a Pedersen commitment to messages $(
 
 
 
+
+
+
+
+
+
+% Our discussion on protocols is largely inspired by the work of Feige and Shamir \cite{FeigeShamir}, though some technical details are omitted in this abstract for brevity.
+
+% The protocols involve two parties: a prover \( P \) and a verifier \( V \), both modeled as interactive probabilistic polynomial-time Turing machines. Each has private auxiliary input tapes. The prover's auxiliary input is denoted by \( w \), and both share a common input \( x \) of length \( k \) bits, where \( k \) is often referred to as the security parameter. A probability is considered negligible if, as a function of \( k \), it decreases to zero faster than any polynomial fraction.
+
+% The proof system is defined with respect to a binary relation \( R = \{(x, w)\} \), which can be verified in polynomial time. For any \( x \), the witness set \( w(x) \) consists of all \( w \) such that \( (x, w) \in R \). The protocol's objective is for \( P \) to demonstrate that it possesses an element from \( w(x) \) on its private input tape. We assume that the protocol is complete with probability 1, meaning that if \( w \in w(x) \), the verifier will always accept.
+
+% \section*{Protocol Structure}
+
+% For simplicity, we focus on three-round public-coin protocols, though this restriction can be relaxed. The protocol's conversations are ordered triples of the form:
+
+% \[
+% m_1, c, m_2
+% \]
+
+% The second message, \( c \), is a random bit string chosen by the verifier, referred to as the challenge. The prover's final message, \( m_2 \), is termed the answer. The length of \( c \) is such that the number of possible values for \( c \) is super-polynomial in \( k \).
+
+% We assume the protocol satisfies knowledge soundness in the following manner: for any prover \( P^* \), given two conversations between \( P^* \) and \( V \): \( (m_1, c, m_2) \) and \( (m_1, c', m_2') \), where \( c \neq c' \), an element of \( w(x) \) can be computed in polynomial time. This is known as the \textit{special soundness property}. This property implies the standard soundness definition, which requires the existence of a knowledge extractor capable of extracting a witness in polynomial time from any prover that succeeds with non-negligible probability.
+
+% Although special soundness is less general than the standard definition, all known proofs of knowledge exhibit this property or a variant where the witness can be computed from a small number of correct answers. Therefore, assuming special soundness is not a significant limitation.
+
+% A protocol that is both sound and complete in the above sense is termed a \textit{proof of knowledge for the relation \( R \)}.
+
+% Finally, we assume the protocol is \textit{honest verifier zero-knowledge}: there exists a simulator \( S \) that, on input \( x \), produces conversations indistinguishable from real conversations between the honest prover and verifier with input \( x \). For simplicity, we assume perfect indistinguishability; extending this to other forms of indistinguishability is straightforward. Most known honest verifier zero-knowledge protocols satisfy a stronger condition: there is a procedure that, given any \( c \), can produce a conversation indistinguishable from all possible conversations between the honest prover and verifier where \( c \) is the challenge. This is referred to as \textit{special honest verifier zero-knowledge}.
 
 
 
@@ -3664,3 +3837,114 @@ For example, some schemes measure the complexity of multiple pairing operations 
     \item \textbf{PSUTT:} Achieves balance between succinctness and token updatability through careful application of MSM optimizations
 \end{itemize}
 
+
+
+
+
+
+\newpage
+\section{Improvements}
+
+
+\subsubsection{$\G_1$ Signature}
+We change the signature algorithm from signing in G1 to signing in G2, this gives a bigger signature (2 x G2 instead of 2 x G1) but faster verification.    
+
+\noindent $\mathsf{RS.Ver}(\sigma, \widetilde{\cm'}, ..)$ takes in $\sigma_2 \in \G_1$, and $\widetilde{\cm'} \in \G_2$. My intuition is we need to do the pairing equality check $e(\cm', \tilde{g}) = e(g, \widetilde{\cm'}) $ to be able to use $\cm \in \G_1$ for $\mathsf{PoK}$ because it's not explicitly used in the pairing verification, the $\G_2$ commitment is. The verifier needs to know why it can trust it.
+
+\begin{itemize}
+   \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+   
+   \item $\mathsf{RS.KeyGen:} ({\sk}, \widetilde{\vk}) \gets (g^x, \tilde{g}^x)$, return $({\sk}, \widetilde{\vk})$
+   
+   \item $\mathsf{RS.Sign:}$ ${\sigma} \in \G_1 \gets ({\sigma_1}, {\sigma_2}) = (h, ({\sk} \cdot {\cm})^u)$
+   
+   \item $\mathsf{RS.Rerand:}$ \qquad ${\sigma_1}' \gets {\sigma_1}^{u_\Delta}$ \qquad ${\sigma_2}' \gets ({\sigma_2} \cdot {\sigma_1}^{r_\Delta})^{u_\Delta}$ \qquad $\cm' \gets \cm \cdot g^{r_\Delta}$ \qquad  $\widetilde{\cm}' \gets \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}$
+   
+   \item $\mathsf{RS.Ver}(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ 
+   \[
+   e(\sigma_2', \tilde{g}) = e(h, \vk \cdot \widetilde{\cm'}) \qquad \wedge \qquad  e(\cm', \tilde{g}) = e(g, \widetilde{\cm'}) 
+   \]
+   \[
+    \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{itemize}
+
+
+
+
+
+\subsubsection{$\G_2$ Signature}
+\noindent When $\sigma_2 \in \G_2$, and $\mathsf{RS.Ver}(\cm' \in \G_1, \widetilde{\sigma} \in \G_2)$ is a pairing verification with $\cm' \in \G_1$. Using $\cm' \in \G_1$ we can follow with $\mathsf{PoK}$
+\begin{itemize}
+    \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+
+    \item $\mathsf{RS.KeyGen:} (\widetilde{\sk}, \vk) \gets (\tilde{g}^x, g^x)$, return $(\widetilde{\sk}, \vk))$
+    
+    \item $\mathsf{RS.Sign:}$ $\widetilde{\sigma} \in \G_2 \gets (\widetilde{\sigma_1}, \widetilde{\sigma_2}) = (\tilde{h}, (\tilde{\sk} \cdot \widetilde{\cm})^u)$
+    
+    \item $\mathsf{RS.Rerand:}$ \qquad $\widetilde{\sigma_1}' \gets \widetilde{\sigma_1}^{u_\Delta}$ \qquad $\widetilde{\sigma_2}' \gets (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}$ \qquad $\cm' \gets \cm \cdot g^{r_\Delta}$ \qquad  $\widetilde{\cm}' \gets \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}$
+    
+    \item $\mathsf{RS.Ver}(\vk, \cm', \widetilde{\sigma}') \to \bit:$ 
+    \[
+    e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}',\widetilde{\sigma_1}')
+    \]
+   \[
+    \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{itemize}
+
+
+\subsubsection{$\G_2$ Correctness}
+\begin{enumerate}
+    \item Prove $e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}', \widetilde{\sigma_1}')$
+    
+    \begin{align*}
+        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}) \\
+        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{u_\Delta} \cdot \tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g, \widetilde{\sk}^{u_\Delta}) \cdot e(g, \widetilde{\cm}^{u + u_\Delta}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g^x, \widetilde{h}^{u_\Delta}) \cdot e(g, \widetilde{\cm})^{u + u_\Delta} \cdot e(g,\tilde{h}^{u_\Delta})^{r_{\Delta}} \\
+        &= e(\vk, \widetilde{h}^{u_\Delta}) \cdot e(\cm, \widetilde{h}^{u_\Delta}) \cdot e(g^{r_{\Delta}},\tilde{h}^{u_\Delta}) \\
+        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
+        &= e(\vk \cdot \cm', \sigma_1')  \\
+    \end{align*}
+
+    \item then PoK
+    \[
+        \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{enumerate}
+
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{l|cc|ccc}
+\toprule
+\multirow{2}{*}{\textbf{Scheme}} & \multicolumn{2}{c|}{\textbf{Show}} & \multicolumn{3}{c}{\textbf{Verify}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-6}
+& Credential & PoK & Credential & PoK & Data Sent \\
+\midrule
+PSUTT 
+& \makecell{$4E_{\G_1} + 1E_{\G_2}$} 
+& \makecell{$1E_{\G_1} + 1P$ \\ $MSM(\ell + 1)\G_1$} 
+& \makecell{$1E_{\G_T}$ \\ $4M\text{Loop}\G_T + 1FE_{\G_T}$} 
+& $MSM(\ell + 2)_{\G_1}$ 
+& \makecell{$5\G_1 + 1\G_2 + (\ell + 2)\Z_p$} \\
+\midrule
+PSUTT+LVS 
+& \makecell{$3E_{\G_2} + 1E_{G_1}$} 
+& \makecell{$ 1E_{G_1} +$ \\ $MSM(\ell + 1)_{\G_1}$} 
+& \makecell{$2M\text{Loop}\G_T + 1FE_{\G_T}$} 
+& \makecell{$MSM(\ell + 1)_{\G_1} + 1E_{\G_1} $}
+& \makecell{$2\G_1 + 2\G_2 + (\ell + 1)\Z_p$} \\
+\bottomrule
+\end{tabular}
+\caption{Removed scalar point multiplications and anything in $\F_p$}
+\label{tab:unified-comparison}
+\end{table}
+
+\subsubsection{Optimizations moving to $\sigma \in \G_2$}
+\begin{itemize}
+    \item Show Cred changes from 4EG1 + 1EG2 to 3EG2 + 1EG1 ()
+    \item PoK changes from $1E_{\G_1} + 1P + MSM(\ell + 1)\G_1$ $\quad \Rightarrow \quad$ $ 1E_{G_1} +MSM(\ell + 1)_{\G_1}$ --- We remove the pairing!
+    \item Verify cred changes from $1E_{\G_T} + 4M\text{Loop}\G_T + 1FinalExp_{\G_T}$ $\quad \Rightarrow \quad$ $2M\text{Loop}\G_T + 1FinalExp_{\G_T}$ --- reduce 2 miller loop and 1 GT exponentiation
+\end{itemize}

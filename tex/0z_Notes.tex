@@ -1,4 +1,96 @@
- \item \textbf{Zero-Knowledge Proofs and Sigma Protocols:} Fiat-Shamir introduced practical zero-knowledge protocols \textbf{CITE Fiat Shamir}, Schnorr's identification protocol build the foundation of sigma protocols over the discrete logarithm relations \cite{brands1996privacy, goos_rapid_1997, brands_rethinking_2000} and Camenisch-Stadler formalized proofs of knowledge for group homomorphism which is the building block for proving discrete log relations in commitment schemes \cite{goos_efficient_1997} and damgards work on sigma protocols \cite{damgard_sigma_2010}.
+Identity System
+
+
+% \newpage
+% \subsection{Master Credential Issuance}
+% The master credential issuance protocol enables a user to obtain their root credential from the Master Credential Oracle $\MCO$ while preserving the privacy of their VRF key $k$ and ensuring accountability. The protocol combines verifiable encryption, Verifiable Random Function, Zero Knowledge Proofs, and Rerandomizable PS Signatures over commitments to achieve Sybil Resistance, Revocation, and Anonymity.
+
+% \begin{figure}
+%     \begin{center}
+%     \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
+%     \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
+%     \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_m \gets CM.Setup(BG, \secparam, n)$} \\[1em]
+%     \multicolumn{3}{l}{Credential Oracle: $(SK_m, PK_m) \gets PS.KeyGen(ck_m)$} \\[1em]
+%     \multicolumn{3}{l}{Auditor: $(SK_A, PK_A) \gets TPKE.KeyGen(ck_m)$} \\[1em]
+%     \multicolumn{3}{l}{Auditor setup Revocation List} \\[1em]
+%     \underline{User($s$)} && \underline{MCO($SK_M$)} \\[0.5em]
+%     \multicolumn{3}{l}{$k_1 \gets \Z_p$, \; $C_1 \gets Com([0,k_1,0,0],r)$}\\[1em]
+%     \multicolumn{3}{l}{$\Pi_1 \gets ZKPoK.Prove_{Zeros}(C_1)(k_1, r)$} \\[1em]
+%     & $\xrightarrow{C_1, \Pi_1}$ & \\[1em]
+%     \multicolumn{3}{r}{If $ZKPoK.Verify_{Zeros}(\Pi_1, C_1) = 0, $ return $ \bot$} \\[1em]
+%     \multicolumn{3}{r}{$k_2 \gets \Z_p, \; C_2 \gets Com([s, k_2, "master", attrs], 0)$} \\[1em]
+%     \multicolumn{3}{r}{$C_m \gets C_1 \cdot C_2 = Com([s,k_1+k_2,"master", attrs], r)$} \\[1em]
+%     & $\xleftarrow{C_2, C_m, s, k_2}$ & \\[1em]
+%     \multicolumn{3}{l}{$k \gets k_1 + k_2$} \\[1em]
+%     \multicolumn{3}{l}{$\Pi_2 \gets ZKPoK.Prove_{addition}(C_1, C_2, C_m)(k_1, k_2, k, r)$} \\[1em]
+%     \multicolumn{3}{l}{$\tau \gets Enc(PK_A, k)$} \\[1em]
+%     \multicolumn{3}{l}{$\Pi_3 \gets ZKPOK.Prove_{enc}(C_m)(\tau, k, r)$} \\[1em]
+%     & $\xrightarrow{C_1, C_2, C_m, \Pi_2, \Pi_3, \tau}$ &\\[1em]
+%     \multicolumn{3}{r}{If $ZKPOK.Verify_{addition}(\Pi_2, C_1, C_2, C_m) = 0, \;$ return $\bot$} \\[0.5em]
+%     \multicolumn{3}{r}{If $ZKPOK.Verify_{enc}(C_m)(\Pi_3, PK_A, \tau)  = 0, \;$ return $\bot$} \\[0.5em]
+%     \multicolumn{3}{r}{$\sigma_m \gets PS.Sign(SK_M, C_1)$} \\[0.5em]
+%     \multicolumn{3}{r}{Store Data Record MCO $(C_m, \sigma_m, \tau, \Pi_2, \Pi_3, C_1, C_2, k_2)$ } \\[1em]
+%     & $\xleftarrow{\sigma_m}$ & \\[1em]
+%     \multicolumn{3}{l}{If $PS.Verify(PK_A, \sigma_m, C_m) = 1$, Store $Cred_m(\sigma_m, C_m)$} \\[1em]
+%     \end{tabular}
+%     \end{center}
+%     \caption{Master Credential Issuance}
+%     \label{fig:master-cred-issuance}
+% \end{figure}
+
+
+% \paragraph{Informal Security Analysis}
+
+% The two-party process between the user and master credential oracle ensures sybil resistance of unique identifier $s$; the oracle has access to the user information and checks duplicate issuance within their own identity system. 
+% During VRF key issuance, the anonymity of the master credential is preserved via the secrecy of the VRF key $k$. During the two-party computation, the user's share $k_1$ remains hidden to $\MCO$ via the hiding property of the commitment $C_1$, and malicious commitment usage is prevented by the soundness property of $\Pi_1$. 
+
+% \noindent The user combines  $k_1 + k_2$ to form their VRF key, $\Pi_2$ proves $k_1$ is correctly derived from $C_1$, $k_2$ is derived from $C_2$ and $k$ combines $k_1 + k_2$, $\MCO$'s input to $k$ prevents forgery attempts on the key $k$. The hiding property of the commitments and zero-knowledge property of the proofs ensures correct protocol adherence while maintaining private computation. Revocation is enabled by encryption of the VRF key $k$ with the public key of the Auditor $PK_A$. $\Pi_3$ proves that $\tau$ is an encryption of the committed key $k$. $\tau$ is stored with the credential oracle maintaining privacy during normal operation. Finally, the protocol prevents replay attacks by using interactive zero-knowledge proofs requiring a challenge from the verifier, fresh commitment randomness, and $\MCO$'s input of their share of the VRF key $k_2$ preventing existing transcript reuse.
+
+
+
+% \newpage
+% \subsection{Context Credential Issuance}
+% Context Credential Issuance enables a user to obtain a context-specific credential while proving ownership of a valid master credential. The user first constructs a commitment to their context credential attributes, including their identity $s$ and a deterministic nullifier derived from their VRF key $k$ and the credential context $ctx$. Through zero-knowledge proofs, the user demonstrates their master credential is valid and unrevoked, and proves the context commitment is well-formed with the same identity $s$. The nullifier $\tau$ = $VRF(k,ctx)$ prevents multiple credentials for the same context while maintaining privacy. Upon successful verification, the Context Credential Oracle signs the commitment and records the nullifier.
+% \begin{figure}
+%         \begin{center}
+%         \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
+%         \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
+%         \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_c \gets CM.Setup(BG, \secparam, n)$} \\[1em]
+%         \multicolumn{3}{l}{Credential Oracle: $(SK_c, PK_c) \gets PS.KeyGen(ck_c)$} \\[1em]
+%         \underline{User($Cred_m, s, k$)} && \underline{CCO($SK_c$)} \\[0.5em]
+%         \multicolumn{3}{l}{$\delta \gets VRF(k, ctx)$} \\[1em]
+%         \multicolumn{3}{l}{$r* \sample Z_p, \; C_c \gets Com([s,\delta,ctx,attrs],r*)$} \\[1em]
+%         \multicolumn{3}{l}{$\Pi_4 \gets ZKPoK.Prove_{selective-disclosure}(C_c,\delta,ctx,attrs)(s, r*)$} \\[1em]
+%         \multicolumn{3}{l}{$r' \sample \Z_p, Cred_{m}' \gets Cred.Rerand(Cred_{m}, r')$} \\[1em]
+%         \multicolumn{3}{l}{$\Pi_5 \gets ZKSoK.Prove(Cred_m')(s,k,master,attrs,r')$} \\[1em]
+%         \multicolumn{3}{l}{Parse $Cred_m'$ as $C_m', \sigma_m'$} \\[1em]
+%         \multicolumn{3}{l}{$\Pi_6 \gets ZKPoK.Prove_{reciprocal}(C_m', C_c,ctx)(s,k,r',r*)$}  \\[1em]
+%         \multicolumn{3}{l}{$\Pi_7 \gets ZKPoK.Prove_{equality}(C_m', C_c)(s, r)$} \\[1em]
+%         & $\xrightarrow{Cred_m', C_c, \Pi_4, \Pi_5, \Pi_6, \Pi_7}$ & \\[1em]
+%         \multicolumn{3}{r}{If} \\[1em]
+%         \multicolumn{3}{r}{$ZKPok.Verify_{selective-disclosure}(\Pi_4, C_c)(\delta, ctx, attrs)$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$ZKSoK.Verify(\Pi_5, Cred_m')$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$ZKPoK.Verify_{reciprocal}(\Pi_6, C_m', C_c, ctx)$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$ZKPoK.Verify_{equality}(\Pi_7, C_m', C_c)$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$\sigma_c \gets PS.Sign(SK_c, C_c)$} \\[1em]
+%         \multicolumn{3}{r}{Store Data Record CCO $(C_c, \sigma_c, \delta, \Pi_4, \Pi_5, \Pi_6, \Pi_7 )$} \\[1em]
+%         & $\xleftarrow{\sigma_c}$& \\[1em]
+%         \multicolumn{3}{l}{If $PS.Verify(PK_c,\sigma_c, C_c) = 1$, Store $Cred_c(\sigma_c, C_c)$} \\[1em]
+%         \end{tabular}
+%         \end{center}
+%     \caption{Context Credential Issuance}
+%     \label{fig:context-cred-issuance}
+% \end{figure}
+
+
+
+
+
+
+
+
+
+\item \textbf{Zero-Knowledge Proofs and Sigma Protocols:} Fiat-Shamir introduced practical zero-knowledge protocols \textbf{CITE Fiat Shamir}, Schnorr's identification protocol build the foundation of sigma protocols over the discrete logarithm relations \cite{brands1996privacy, goos_rapid_1997, brands_rethinking_2000} and Camenisch-Stadler formalized proofs of knowledge for group homomorphism which is the building block for proving discrete log relations in commitment schemes \cite{goos_efficient_1997} and damgards work on sigma protocols \cite{damgard_sigma_2010}.
 
     \item \textbf{Pairing-based Signatures: } Boneh-Lynn-Shacham (BLS) \cite{goos_short_2001} introduced the first short signature using bilinear pairings, Boneh-Boyen-Shacham (BBS) \cite{hutchison_short_2004} showed how to sign committed messages, Camenisch-Lysyanskaya \cite{cimato_signature_2003, hutchison_signature_2004} demonstrated how pairings enable signature randomization.
 
