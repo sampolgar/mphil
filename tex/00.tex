@@ -16,6 +16,19 @@ Short Summary: We build a new anonymous credential building block for multi-issu
     \item section \ref{sec:evaluation} shows privacy and sybil resistance can be low-overhead, also shows our benchmarks for proving complex statements about credentials is more efficient than SOTA
 \end{enumerate}
 
+\subsection{Organization Update 8/2}
+We build a new anonymous credential building block for multi-issuer, multi-credential systems with an improved credential and sigma proof for sybil resistance. 
+
+Outline and Contributions
+\begin{itemize}
+    \item \ref{sec:commitment} Outline the variant of Pedersen Commitments we use, we prove position binding in SDLP (first to do that)
+    \item \ref{sec:pssignature} Outline the variant of PS signatures we use, we prove security in AGM (best detailed proof) and improve verification efficiency and proof size compared to SOTA. We show why it's the best for complex use cases
+    \item \ref{sec:sigmaproofs} Outline sigma protocols we use in the anonymous credential system, create the inverse protocol to prove hidden VRF
+    \item \ref{sec:mimc} use the above 3 in a new multishow multiissuer anonymous credential system with sybil resistance
+    \item \ref{sec:evaluation} Analysis of the SOTA pairing based anonymous credentials
+\end{itemize}
+
+
 
 \subsection{Related Work}
 
@@ -448,7 +461,7 @@ The protocol must satisfy:
 
 
 \newpage
-\section{Symmetric Bilinear Rerandomizable Vector Commitments}
+\section{Symmetric Rerandomizable Vector Commitments}\label{sec:commitment}
 We now introduce a specialized Pedersen commitment scheme from \cite{tomescu2022utt} and prove tight security as the building block for our anonymous credential system. Our construction extends the classical Pedersen Commitment scheme with three properties that are required for our multi-issuer, multi-credential setting construction:
 \begin{enumerate}
     \item \textbf{Position Binding: } we need to commit to a vector of attributes $\{m_1, \ldots, m_n\}$ while ensuring the individual positions within the commitment remain binding. Position binding is useful when proving relations about specific committed attributes across multiple credentials. 
@@ -775,7 +788,7 @@ Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $
 % 
 % % % % % % % % % % 
 \newpage
-\section{Rerandomizable Signature over Commitments} 
+\section{Rerandomizable Signature over Commitments}\label{sec:pssignature}
 \subsubsection{Definition}
 \begin{definition}[Rerandomizable Signature over Commitments]
     A rerandomizable signature scheme over commitments $\mathsf{RS}$ is a tuple $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Rerand}, \mathsf{Ver}, \mathsf{VerKey})$ of PPT algorithms where:
@@ -1930,80 +1943,58 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 % 
 % % % % % % % % % % 
 \section{Zero-Knowledge Proofs}
-\subsection{Preliminaries}
-% Basic definitions, notation, properties
+Zero-Knowledge Proofs (ZKPs) enable a prover $\Prover$ to demonstrate the validity of a statement $x$ while keeping the witness $w$ secret. In anonymous credentials, ZKPs allow a user to prove possession of a credential, validity of its attributes, and comply with policies without revealing the sensitive underlying data. 
 
-\subsection{Interactive Proofs and Zero-Knowledge}
-
-Interactive proofs allow a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ of the validity of some statement, while potentially keeping certain information private. In the context of anonymous credentials, these proofs serve as fundamental building blocks for demonstrating possession of credentials without revealing unnecessary information.
-
-\subsection{Motivating $\Sigma$-Protocols}
-
-The canonical example motivating $\Sigma$-protocols is Schnorr's identification scheme. Consider a prover who knows the discrete logarithm $w$ of a public group element $h$ with respect to generator $g$ in a group $\mathbb{G}$ of prime order $q$. Formally, the relation is:
-
-\[
-    \mathcal{R}_{\mathsf{DL}} = \{(h,w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}
-\]
-
-\begin{protocol}{Schnorr's Protocol}{schnorr}
-\textbf{Common Input:} Group element $h \in \mathbb{G}$\\
-\textbf{Prover Input:} $w \in \mathbb{Z}_q$ such that $h = g^w$
-\begin{enumerate}
-    \item $\mathcal{P}$ samples $r \sample \Z_q$, computes $a = g^r$
-    \item $\mathcal{V}$ samples challenge $e \sample \{0,1\}^t$ where $2^t < q$
-    \item $\mathcal{P}$ computes $z = r + ew \mod q$
-    \item $\mathcal{V}$ accepts if $g^z = a \cdot h^e$
-\end{enumerate}
-\end{protocol}
-
-This protocol exhibits three important properties:
-
+\subsection{Interactive Proof Systems, the Prover $\Prover$ and Verifier $\Verifier$}
+An interactive proof system for a language L consists of two probabilistic interactive Turing machines $(\Prover, \Verifier)$, where $\Prover$ is the prover and $\Verifier$ is the verifier. The system must satisfy:
 \begin{itemize}
-    \item \textbf{Knowledge Soundness:} Given transcripts $(a,e,z)$ and $(a,e',z')$ where $e \neq e'$, one can efficiently extract $w = (z-z')(e-e')^{-1} \mod q$
-    \item \textbf{Special Honest-Verifier Zero-Knowledge:} For any fixed challenge $e$, one can efficiently simulate accepting transcripts by sampling $z \sample \Z_q$ and computing $a = g^z h^{-e}$
-    \item \textbf{Three-Move Structure:} The protocol follows a commitment-challenge-response pattern that enables efficient composition
+\item \textbf{Completeness}: For all $x \in L$, 
+    \[ \Pr[(\Prover,\Verifier)(x) = 1] \geq 1 - \epsilon(|x|) \]
+\item \textbf{Soundness}: For all $x \notin L$ and any malicious prover $\Prover^*$,
+    \[ \Pr[(\Prover^*,\Verifier)(x) = 1] \leq \delta(|x|) \]
+where $\epsilon(|x|)$ and $\delta(|x|)$ are negligible functions.
 \end{itemize}
 
-These properties form the basis for defining $\Sigma$-protocols, a framework that captures Schnorr's protocol and many other practical proof systems. The framework provides precise definitions and composition theorems while retaining the efficiency of the underlying protocols.
+\subsection{Proofs of Knowledge and the Extractor $\mathcal{E}$}
+While soundness ensures validity of statements, many cryptographic applications require stronger guarantees about the prover's knowledge. A proof of knowledge introduces the concept of an extractor $\mathcal{E}$ that, given rewindable access to any prover $\Prover^*$ that succeeds with non-negligible probability, can efficiently extract a valid witness $w$. Formally, for any prover $\Prover^*$:
+
+\[ \Pr[\mathcal{E}^{\Prover^*}(x) = w : (x,w) \in R] \geq \Pr[(\Prover^*,\Verifier)(x) = 1] - \nu(|x|) \]
+
+where $\nu(|x|)$ is negligible and $R$ is the underlying relation.
+
+\noindent Informally, the knowledge extractor is a theoretical construct that demonstrates a successful prover must actually "know" the witness rather than just being able to convince the verifier. The extractor achieves this by "rewinding" the prover to an earlier state in the protocol and presenting different challenges. If the prover can successfully respond to multiple challenges using the same initial commitment, the extractor can combine these responses to compute the actual witness. This "forking" technique, first formalized by Pointcheval and Stern, ensures that a prover cannot simply follow a strategy that works with non-negligible probability without actually possessing the witness.
 
 
 
+\subsection{Zero-Knowledge and the Simulation $\mathcal{S}$ Paradigm}
+Zero-knowledge strengthens interactive proofs through the simulation paradigm. The key insight is that if a simulator $\mathcal{S}$ can produce transcripts indistinguishable from real protocol interactions without access to the witness, then the protocol reveals no knowledge beyond the statement's validity. 
 
-
-
-
-
-\subsection{Relations and Protocol Structure}
-
-In constructing zero-knowledge proofs, we begin by precisely defining what it means to prove knowledge of some secret information. Following Damgård's formalization, we work with binary relations $R \subseteq \{0,1\}^* \times \{0,1\}^*$. For $(x,w) \in R$, we call $x$ the statement and $w$ the witness. The relation must be polynomially bounded: if $(x,w) \in R$, then $|w| \leq p(|x|)$ for some polynomial $p(\cdot)$.
-
-For example, in your credential system, a typical relation might be:
-\[
-    \mathcal{R}_{\mathsf{CM}} = \left\{ (\mathsf{cm}, (m,r)) \;\middle|\; \mathsf{cm} = g^{m}h^r \right\}
+Formally, for all probabilistic polynomial-time verifiers $\Verifier^*$, there exists a probabilistic polynomial-time simulator $\mathcal{S}$ such that for all $x \in L$:
+\[ 
+\{\text{VIEW}_{\Verifier^*}(\Prover,\Verifier^*)(x)\} \approx_c \{\mathcal{S}(x)\} 
 \]
-where $\mathsf{cm}$ is a Pedersen commitment and $(m,r)$ constitute its opening.
+\noindent where VIEW represents the verifier's view of the real protocol interaction and $\approx_c$ denotes computational indistinguishability.
+
+\noindent Informally, the simulator paradigm provides a powerful proof technique for demonstrating zero-knowledge. If an efficient algorithm (the simulator) can generate protocol transcripts without access to any witness (the secret), and these transcripts are computationally indistinguishable from real protocol executions, that is, they look the same, then the verifier must not be able to learn anything meaningful about the witness during actual protocol runs. This is because anything the verifier could compute from a real interaction could equally well be computed from the simulated transcripts. The simulator effectively demonstrates that the verifier's view of the protocol can be reconstructed without any knowledge of the secret witness, a concept first introduced by Goldwasser, Micali, and Rackoff in their seminal 1985 paper.
+
 
 \subsection{$\Sigma$-Protocol Template}
-A $\Sigma$-protocol follows a specific three-move structure, traditionally called "commitment-challenge-response":
+A $\Sigma$-protocol follows a specific three-move structure, Commit, Challenge, Response:
 
 \begin{protocol}{$\Sigma$-Protocol Template}{sigma-template}
 \textbf{Common Input:} Statement $x$\\
 \textbf{Prover Input:} Witness $w$ such that $(x,w) \in R$
     \begin{enumerate}
-        \item $\mathcal{P}$ computes first message $a$ (the commitment) and sends it to $\mathcal{V}$
-        \item $\mathcal{V}$ sends a random $t$-bit challenge $e$
-        \item $\mathcal{P}$ computes response $z$ and sends it to $\mathcal{V}$
+        \item \textbf{Commitment:} $\mathcal{P}$ computes first message $a$ (the commitment) and sends it to $\mathcal{V}$
+        \item \textbf{Challenge:} $\mathcal{V}$ sends a random $t$-bit challenge $e$
+        \item \textbf{Response:} $\mathcal{P}$ computes response $z$ and sends it to $\mathcal{V}$
         \item $\mathcal{V}$ accepts if verification predicate $\phi(x,a,e,z)=1$
     \end{enumerate}
 \end{protocol}
 
 
-
-
-
 \subsection{$\Sigma$-Protocol Framework}
-
-A $\Sigma$-protocol for relation $R$ is a three-move public-coin protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ that follows our template structure while satisfying three specific properties. Let's examine each property carefully:
+A $\Sigma$-protocol for relation $R$ is a three-move public-coin protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ that follows our template structure while satisfying three specific properties"
 
 \begin{definition}[$\Sigma$-Protocol]
 A protocol $\pi$ is a $\Sigma$-protocol for relation $R$ if it is a three-move public-coin protocol and satisfies:
@@ -2016,19 +2007,70 @@ A protocol $\pi$ is a $\Sigma$-protocol for relation $R$ if it is a three-move p
 \end{itemize}
 \end{definition}
 
-An important subtlety in this definition is the "special" nature of both the soundness and zero-knowledge properties. Special soundness requires extraction from any pair of accepting transcripts with the same first message, which is stronger than standard knowledge extraction. Similarly, special HVZK requires simulation for any given challenge, not just a random one.
 
-For a relation $R$, we denote by $L_R$ the language
+\noindent Special soundness requires extraction from any pair of accepting transcripts with the same first message, which is stronger than standard knowledge extraction. Similarly, special HVZK requires simulation for any given challenge, not just a random one.
+
+
+\subsection{Schnorr's Zero Knowledge Proof of Knowledge}
+The canonical example is Schnorr's identification scheme. Consider a prover who knows the discrete logarithm $w$ of a public group element $h$ with respect to generator $g$ in a cyclic group $\G$ of prime order $q$. Formally, the relation is:
+
 \[
-    L_R = \{x \mid \exists w : (x,w) \in R\}
+    \mathcal{R}_{\mathsf{DL}} = \{(h,w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}
 \]
 
-A crucial consequence of special soundness is that any $\Sigma$-protocol for $R$ is also an interactive proof system for language $L_R$ with soundness error $2^{-t}$ where $t$ is the challenge length. This follows because any prover successfully responding to more than one challenge must know a witness.
+\begin{protocol}{Schnorr's Protocol}{schnorr}
+\textbf{Common Input:} Group element $h \in \mathbb{G}$\\
+\textbf{Prover Input:} $w \in \mathbb{Z}_q$ such that $h = g^w$
+\begin{enumerate}
+    \item \textbf{Commitment:} $\mathcal{P}$ samples $r \sample \Z_q$, computes $a = g^r$
+    \item \textbf{Challenge:} $\mathcal{V}$ samples challenge $e \sample \{0,1\}^t$ where $2^t < q$
+    \item \textbf{Response:} $\mathcal{P}$ computes $z = r + ew \mod q$
+    \item $\mathcal{V}$ accepts if $g^z = a \cdot h^e$
+\end{enumerate}
+\end{protocol}
+
+We show this satisfies $\Sigma$-protocol the 3 properties
+
+\begin{itemize}
+    \item \textbf{Completeness:} If $\mathcal{P}$ and $\mathcal{V}$ follow the protocol on common input $x$ and private input $w$ to $\mathcal{P}$ where $(x,w) \in R$, then $\mathcal{V}$ always accepts.
+    
+    \item \textbf{Special Soundness:} Given transcripts $(a,e,z)$ and $(a,e',z')$ where $e \neq e'$, one can efficiently extract $w = \frac{(z-z')}{(e-e')} \mod q$
+    
+    \item \textbf{Special Honest-Verifier Zero-Knowledge:} For any fixed challenge $e$, there exists a simulator $\mathcal{S}$ that can efficiently simulate accepting transcripts by sampling $z \sample \Z_q$ and computing $a = g^z h^{-e}$
+
+    
+\end{itemize}
 
 
+\subsubsection{Notation}
 
+\subsection{Relations and Languages}
+We begin by defining the fundamental notion of a relation and its associated language. For a relation $\mathcal{R}$, we define its language $L_\mathcal{R}$ as:
+\[
+    L_\mathcal{R} = \{x \mid \exists w : (x,w) \in \mathcal{R}\}
+\]
+where $x$ represents the statement to be proven and $w$ represents the witness.
 
+\subsection{Basic Cryptographic Relations}
+The discrete logarithm relation, which forms the basis for many of our constructions, is defined as:
+\[
+    \mathcal{R}_{\mathsf{DL}} = \{((g,h),w) \in (\mathbb{G} \times \mathbb{G}) \times \mathbb{Z}_q : h = g^w\}
+\]
+where $g$ is explicitly included as part of the statement. In practice, when $g$ is a fixed system parameter, we often use the simplified notation:
+\[
+    \mathcal{R}_{\mathsf{DL}} = \{(h,w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}
+\]
 
+For Pedersen commitments, where both the commitment and its opening are part of the proof, we define:
+\[
+    \mathcal{R}_{\mathsf{com}} = \{(C,(m,r)) \in \mathbb{G} \times (\mathbb{Z}_q \times \mathbb{Z}_q) : C = g^m h^r\}
+\]
+
+When proving relations between multiple commitments, we extend this notation. For example, proving equality of committed values:
+\[
+    \mathcal{R}_{\mathsf{eq}} = \{((C_1,C_2),(m,r_1,r_2)) \in (\mathbb{G} \times \mathbb{G}) \times (\mathbb{Z}_q \times \mathbb{Z}_q \times \mathbb{Z}_q) : 
+    C_1 = g^m h^{r_1} \land C_2 = g^m h^{r_2}\}
+\]
 
 
 
@@ -2037,102 +2079,17 @@ A crucial consequence of special soundness is that any $\Sigma$-protocol for $R$
 \subsection{Core Proof Protocols}
 % Individual atomic proofs used in your system
 
+
+
+
 \subsection{Compound Statements}
 % How the basic proofs are combined
 
+
+
+
 \subsection{Protocol-Specific Proofs}
 % Your master and context credential specific proof constructions
-
-
-
-
-
-
-
-\section{Construction of $\Sigma$-protocols}\label{sec:sigmaproofs}
-
-Outline of this section
-- Introduce interactive proofs
-- Definition and Property
-- Our Contribution
-
-
-
-
-
-
-
-
-
-
-
-We use the notation of Camenisch and Stadler to represent proofs of knowledge of discrete logarithms relations and the validity of statements about discrete logarithms. 
-
-\[
-    \mathcal{R} = \left\{ (\alpha, \beta, \gamma) | \; y = g^{\alpha}h^{\beta} \; \wedge \; \tilde{y} = \tilde{g}^{\alpha}h^{\gamma} \right\}
-\]
-
-The relation $\mathcal{R}$ denotes a zero knowledge proof ofknowledge of private integers $\alpha, \beta, \gamma$ such that $\tilde{y} = \tilde{g}^{\alpha}h^{\gamma}$ holds. $y, g, h$ are elements of some group $\G$ and $\tilde{y}, \tilde{g}, \tilde{h}$ are elements of some group $\tilde{\G}$. 
-
-
-
-% $<g>, <h>$ - what does this mean? refer to CL04
-
-
-\begin{enumerate}
-    \item Completeness: an honest prover who knows the opening will always convince the verifier.
-    
-    \item Special Soundness: Show that given two accepting transcripts $(T, c, \{s\}_{i=1}^n, u)$ and $(T, c', \{s'\}_{i=1}^n, u')$ for $c \neq c'$ we can extract a valid witness.
-    
-    \item Honest Verifier Zero Knowledge: construct a simulator that given a challenge $c$, produces transcripts indistinguishable from real protocol runs.
-\end{enumerate}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2261,6 +2218,17 @@ The relation $\mathcal{R}$ denotes a zero knowledge proof ofknowledge of private
     \end{itemize}
     Thus, the simulated transcripts are perfectly indistinguishable from real protocol transcripts.
 \end{proof}
+
+
+
+I’m writing a paper on Anonymous Credentials in cryptography, can you be my supervisor with decades of experience in cryptography research papers but also getting things done, you focus on the important bigger picture things and help remind me when I’m straying off track or getting stuck in the weeds. Our joint aim is to move forwards on writing a paper and make progress. If I ask for feedback, mostly give it to me in latex code copy block. 
+
+
+
+
+
+
+
 
 
 \begin{corollary}[Proof of Zero Values]
