@@ -1943,10 +1943,15 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 % 
 % % % % % % % % % % 
 \section{Zero-Knowledge Proofs}
-Zero-Knowledge Proofs (ZKPs) enable a prover $\Prover$ to demonstrate the validity of a statement $x$ while keeping the witness $w$ secret. In anonymous credentials, ZKPs allow a user to prove possession of a credential, validity of its attributes, and comply with policies without revealing the sensitive underlying data. 
+Zero-Knowledge Proofs (ZKPs) enable a prover $\Prover$ to demonstrate the validity of a statement $x$ while keeping the witness $w$ secret. In anonymous credentials, ZKPs allow a user to prove possession of a credential, validity of its attributes, and comply with policies while revealing none or minimal sensitive underlying data. 
+
+Signpost
+1. Introduce Zero Knolwedge Proofs
+2. Present the core protocols
+3. 
 
 \subsection{Interactive Proof Systems, the Prover $\Prover$ and Verifier $\Verifier$}
-An interactive proof system for a language L consists of two probabilistic interactive Turing machines $(\Prover, \Verifier)$, where $\Prover$ is the prover and $\Verifier$ is the verifier. The system must satisfy:
+An interactive proof system for a language L consists of two probabilistic interactive Turing machines $(\Prover, \Verifier)$, where $\Prover$ is the prover and $\Verifier$ is the verifier, in Anonymous Credentials, $\Prover$ is a user with a credential signed by an Issuer, $\Verifier$ is any public system wanting to verify the user's identity and attributes. The system must satisfy:
 \begin{itemize}
 \item \textbf{Completeness}: For all $x \in L$, 
     \[ \Pr[(\Prover,\Verifier)(x) = 1] \geq 1 - \epsilon(|x|) \]
@@ -1956,13 +1961,13 @@ where $\epsilon(|x|)$ and $\delta(|x|)$ are negligible functions.
 \end{itemize}
 
 \subsection{Proofs of Knowledge and the Extractor $\mathcal{E}$}
-While soundness ensures validity of statements, many cryptographic applications require stronger guarantees about the prover's knowledge. A proof of knowledge introduces the concept of an extractor $\mathcal{E}$ that, given rewindable access to any prover $\Prover^*$ that succeeds with non-negligible probability, can efficiently extract a valid witness $w$. Formally, for any prover $\Prover^*$:
+While soundness ensures the validity of statements,  many cryptographic applications require stronger guarantees about the prover's knowledge. A proof of knowledge introduces the concept of an extractor $\mathcal{E}$ that, given rewindable access to any prover $\Prover^*$ that succeeds with non-negligible probability, can efficiently extract a valid witness $w$. Formally, for any prover $\Prover^*$:
 
 \[ \Pr[\mathcal{E}^{\Prover^*}(x) = w : (x,w) \in R] \geq \Pr[(\Prover^*,\Verifier)(x) = 1] - \nu(|x|) \]
 
 where $\nu(|x|)$ is negligible and $R$ is the underlying relation.
 
-\noindent Informally, the knowledge extractor is a theoretical construct that demonstrates a successful prover must actually "know" the witness rather than just being able to convince the verifier. The extractor achieves this by "rewinding" the prover to an earlier state in the protocol and presenting different challenges. If the prover can successfully respond to multiple challenges using the same initial commitment, the extractor can combine these responses to compute the actual witness. This "forking" technique, first formalized by Pointcheval and Stern, ensures that a prover cannot simply follow a strategy that works with non-negligible probability without actually possessing the witness.
+\noindent Informally, the knowledge extractor is a theoretical construct that demonstrates a successful prover must actually "know" the witness rather than just being able to convince the verifier. The extractor achieves this by rewinding the prover to an earlier state in the protocol and presenting different challenges. If the prover can successfully respond to multiple challenges using the same initial commitment, the extractor can combine these responses to compute the actual witness. This "forking" technique, first formalized by Pointcheval and Stern, ensures that a prover cannot simply follow a strategy that works with non-negligible probability without actually possessing the witness.
 
 
 
@@ -1981,7 +1986,7 @@ Formally, for all probabilistic polynomial-time verifiers $\Verifier^*$, there e
 \subsection{$\Sigma$-Protocol Template}
 A $\Sigma$-protocol follows a specific three-move structure, Commit, Challenge, Response:
 
-\begin{protocol}{$\Sigma$-Protocol Template}{sigma-template}
+\begin{protocol}{$\Sigma$-Protocol Template}{prot-sigma-template}
 \textbf{Common Input:} Statement $x$\\
 \textbf{Prover Input:} Witness $w$ such that $(x,w) \in R$
     \begin{enumerate}
@@ -1994,7 +1999,7 @@ A $\Sigma$-protocol follows a specific three-move structure, Commit, Challenge, 
 
 
 \subsection{$\Sigma$-Protocol Framework}
-A $\Sigma$-protocol for relation $R$ is a three-move public-coin protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ that follows our template structure while satisfying three specific properties"
+A $\Sigma$-protocol for relation $R$ is a three-move public-coin protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ that follows our template structure while satisfying three properties
 
 \begin{definition}[$\Sigma$-Protocol]
 A protocol $\pi$ is a $\Sigma$-protocol for relation $R$ if it is a three-move public-coin protocol and satisfies:
@@ -2012,24 +2017,27 @@ A protocol $\pi$ is a $\Sigma$-protocol for relation $R$ if it is a three-move p
 
 
 \subsection{Schnorr's Zero Knowledge Proof of Knowledge}
-The canonical example is Schnorr's identification scheme. Consider a prover who knows the discrete logarithm $w$ of a public group element $h$ with respect to generator $g$ in a cyclic group $\G$ of prime order $q$. Formally, the relation is:
+The canonical example of a $\Sigma$-protocol is Schnorr's identification scheme which demonstrates proof of knowledge of a discrete logarithm, where a prover convinces a verifier they know $w$ such that $h = g^w$ without revealing $w$.
 
+\noindent For a cyclic group $\mathbb{G}$ of prime order $q$ with generator $g$, the relation is formally defined as:
 \[
     \mathcal{R}_{\mathsf{DL}} = \{(h,w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}
 \]
 
-\begin{protocol}{Schnorr's Protocol}{schnorr}
+\noindent $\mathcal{R}_{\mathsf{DL}}$ captures the statement $x$, that $h$ is the public key derived from secret key $w$.
+
+\begin{protocol}{Schnorr's Protocol}{schnorr}\label{prot:schnorr}
 \textbf{Common Input:} Group element $h \in \mathbb{G}$\\
 \textbf{Prover Input:} $w \in \mathbb{Z}_q$ such that $h = g^w$
 \begin{enumerate}
-    \item \textbf{Commitment:} $\mathcal{P}$ samples $r \sample \Z_q$, computes $a = g^r$
-    \item \textbf{Challenge:} $\mathcal{V}$ samples challenge $e \sample \{0,1\}^t$ where $2^t < q$
-    \item \textbf{Response:} $\mathcal{P}$ computes $z = r + ew \mod q$
-    \item $\mathcal{V}$ accepts if $g^z = a \cdot h^e$
+    \item \textbf{Commitment:} $\Prover$ samples $r \sample \Z_q$, computes $a = g^r$
+    \item \textbf{Challenge:} $\Verifier$ samples challenge $e \sample \{0,1\}^t$ where $2^t < q$
+    \item \textbf{Response:} $\Prover$ computes $z = r + ew \mod q$
+    \item Verification: $\Verifier$ accepts if $g^z = a \cdot h^e$
 \end{enumerate}
 \end{protocol}
 
-We show this satisfies $\Sigma$-protocol the 3 properties
+\noindent We show this satisfies $\Sigma$-protocol the 3 properties
 
 \begin{itemize}
     \item \textbf{Completeness:} If $\mathcal{P}$ and $\mathcal{V}$ follow the protocol on common input $x$ and private input $w$ to $\mathcal{P}$ where $(x,w) \in R$, then $\mathcal{V}$ always accepts.
@@ -2058,18 +2066,18 @@ The discrete logarithm relation, which forms the basis for many of our construct
 \]
 where $g$ is explicitly included as part of the statement. In practice, when $g$ is a fixed system parameter, we often use the simplified notation:
 \[
-    \mathcal{R}_{\mathsf{DL}} = \{(h,w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}
+    \mathcal{R}_{\mathsf{DL}} = \{(h,w): h = g^w\}
 \]
 
 For Pedersen commitments, where both the commitment and its opening are part of the proof, we define:
 \[
-    \mathcal{R}_{\mathsf{com}} = \{(C,(m,r)) \in \mathbb{G} \times (\mathbb{Z}_q \times \mathbb{Z}_q) : C = g^m h^r\}
+    \mathcal{R}_{\mathsf{com}} = \{(\cm,(m,r)) : \cm = g^m h^r\}
 \]
 
 When proving relations between multiple commitments, we extend this notation. For example, proving equality of committed values:
 \[
-    \mathcal{R}_{\mathsf{eq}} = \{((C_1,C_2),(m,r_1,r_2)) \in (\mathbb{G} \times \mathbb{G}) \times (\mathbb{Z}_q \times \mathbb{Z}_q \times \mathbb{Z}_q) : 
-    C_1 = g^m h^{r_1} \land C_2 = g^m h^{r_2}\}
+    \mathcal{R}_{\mathsf{eq}} = \{(\cm_1, \cm_2),(m,r_1,r_2)) : 
+    \cm_1 = g^m h^{r_1} \land \cm_2 = g^m h^{r_2}\}
 \]
 
 
