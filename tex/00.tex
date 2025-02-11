@@ -388,38 +388,6 @@ where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access 
 
 
 
-\begin{definition}[NP Relation and Language]
-A relation $\mathcal{R} \subseteq \{0,1\}^* \times \{0,1\}^*$ is an NP relation if:
-\begin{itemize}
-    \item There exists a polynomial $p(\cdot)$ such that for all $(x,w) \in \mathcal{R}$, $|w| \leq p(|x|)$
-    \item Membership in $\mathcal{R}$ can be verified in polynomial time
-\end{itemize}
-We define the language $\mathcal{L}_\mathcal{R} = \{x \mid \exists w : (x,w) \in \mathcal{R}\}$. Here, $x$ is called the statement and $w$ the witness.
-\end{definition}
-
-\sam{come back and build out the definition more}
-
-\begin{definition}[Sigma Protocol]
-A Sigma protocol for relation $\mathcal{R}$ is a three-move protocol between a prover $\mathcal{P}$ and verifier $\mathcal{V}$ with the following form:
-\begin{itemize}
-    \item Common input: statement $x$
-    \item Prover's private input: witness $w$ such that $(x,w) \in \mathcal{R}$
-\end{itemize}
-The protocol proceeds as:
-\begin{enumerate}
-    \item $\mathcal{P}$ sends a commitment $a$ to $\mathcal{V}$
-    \item $\mathcal{V}$ sends a random challenge $e \sample \{0,1\}^t$
-    \item $\mathcal{P}$ sends a response $z$
-\end{enumerate}
-A transcript $(a,e,z)$ is accepting if $\mathcal{V}$'s verification predicate $\phi(x,a,e,z)=1$.
-The protocol must satisfy:
-\begin{itemize}
-    \item Completeness: If $(x,w) \in \mathcal{R}$, then an honest $\mathcal{P}(x,w)$ convinces $\mathcal{V}(x)$ with probability 1
-    \item Special Soundness: There exists a polynomial-time extractor $\mathcal{E}$ that, given any $x$ and accepting transcripts $(a,e,z)$ and $(a,e',z')$ with $e \neq e'$, outputs $w$ such that $(x,w) \in \mathcal{R}$
-    \item Special Honest-Verifier Zero-Knowledge: There exists a PPT simulator $\mathcal{S}$ that, on input $x$ and challenge $e$, outputs $(a,e,z)$ with the same distribution as honest transcripts
-\end{itemize}
-\end{definition}
-
 
 
 % % % % % % % % % % 
@@ -2989,45 +2957,49 @@ A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a t
 \end{itemize}
 
 \subsection{Construction}
-Our VRF construction builds upon the following primitives:
+We instantiate our VRF with a prime-order group $\G$ and generator $g$, we assume the existence of two pedersen commitments, with at a minimum, key $k$ in one, and $\textsf{ctx}$ in the other, for example, $\cm_k = g^k h^{r_1}$, $\cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}$. In practice, the commitments may have a different structure but should reduce to this format. 
 
-\paragraph{Building Blocks:}
+\noindent Let $\G$ be a prime-order group with generator $g$, our VRF scheme consists of
 \begin{itemize}
-    \item Prime-order group $\G$ with generator $g$
-    \item Pedersen commitments $\cm_k = g^k h^{r_1}$, $\cm_{\text{ctx}} = g^{\text{ctx}} h^{r_2}$
+    \item $\mathsf{Eval}(k, \textsf{ctx}):$ Compute $m_1 = k + \text{ctx} \bmod q$, output Nullifier $\textsf{N} = g^{1/m}$
+
+    \item $\mathsf{Prove}(pk, \textsf{ctx}, \textsf{N}, \Pi^{\mathcal{R}_{\textsf{VRF}}}):$ use $\Sigma$-protocol to prove the relation 
+    \[
+    \mathcal{R}_{\mathsf{vrf}} = \left\{ (\cm_k, \cm_{\textsf{ctx}}, \mathsf{N}), (k, \textsf{ctx}, r_1, r_2) \; \Big| \;  \cm_k = g^k h^{r_1} \; \land \;
+            \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2} \land \textsf{N} = g^{1/(k + \textsf{ctx})} \right\}
+    \]
+    \item $\mathsf{Prove}$
 \end{itemize}
-
-\paragraph{Algorithms:}
-The VRF consists of two main algorithms:
-
-\begin{enumerate}
-    \item $\mathsf{Eval}(sk, \text{ctx}):$
-    \begin{itemize}
-        \item Compute $m = k + \text{ctx} \bmod q$
-        \item Output nullifier $N = g^{1/m}$
-    \end{itemize}
-
-    \item $\mathsf{Verify}(pk, \text{ctx}, N, \pi):$
-    \begin{itemize}
-        \item Use $\Sigma$-protocol (Fig. 1) to prove:
-        \[
-            \exists (k, \text{ctx}, r_1, r_2) : \cm_k = g^k h^{r_1} \land
-            \cm_{\text{ctx}} = g^{\text{ctx}} h^{r_2} \land N = g^{1/(k + \text{ctx})}
-        \]
-    \end{itemize}
-\end{enumerate}
 
 The security of this construction follows from the $q$-DHI assumption presented earlier and the binding property of Pedersen commitments. The $\Sigma$-protocol used in verification ensures zero-knowledge while maintaining the uniqueness property required for Sybil resistance.
 
 \paragraph{Correctness:} The correctness of our VRF follows from the algebraic structure of the prime-order group and the properties of the Pedersen commitment scheme. For any valid key pair $(sk, pk)$ and context $\text{ctx}$, the verification equation will always be satisfied when evaluated honestly.
 
-\paragraph{Security Analysis:} The security of our construction rests on three key properties:
-\begin{enumerate}
-    \item \textbf{Uniqueness:} Follows from the discrete logarithm assumption in $\G$
-    \item \textbf{Pseudorandomness:} Reduces to the $q$-DHI assumption
-    \item \textbf{Zero-Knowledge:} Inherited from the underlying $\Sigma$-protocol
-\end{enumerate}
+\begin{theorem}[VRF Correctness via Multiplicative Inverses]
+Under the discrete logarithm assumption, proving the equality $m_1 \cdot m_2 = 1$ for commitments $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$ is equivalent to verifying the correctness of the VRF output $\textsf{Nullifier} = g^{m_2}$. Specifically:
+\begin{itemize}
+    \item Completeness: A valid VRF output always satisfies $m_1 \cdot m_2 = 1$.
+    \item Soundness: Any adversary forging a nullifier must break either the binding of the commitments or the $q$-DHI assumption.
+\end{itemize}
+\end{theorem}
 
+\begin{proof}[Sybil Resistance Sketch]
+\begin{itemize}
+    \item \textbf{Uniqueness:} Direct consequence of the VRF’s unique provability. If two nullifiers $\textsf{N}_0, \textsf{N}_1$ exist for the same $(k, \textsf{ctx})$, then $m_1 \cdot m_2^{(0)} = m_1 \cdot m_2^{(1)} = 1$, violating the uniqueness of inverses in $\Zp^*$.
+    
+    \item \textbf{Unlinkability:} Follows from the zero-knowledge property of the $\Sigma$-protocol. The proof reveals only the validity of $m_1 \cdot m_2 = 1$, not $m_1$ or $m_2$.
+    
+    \item \textbf{Soundness:} By the extractability of the $\Sigma$-protocol, any valid nullifier must satisfy $\textsf{N} = g^{1/(k + \textsf{ctx})}$. Binding of Pedersen commitments ensures $m_1 = k + \textsf{ctx}$, thus $\textsf{N}$ is uniquely tied to the credentials.
+\end{itemize}
+\end{proof}
+
+
+\paragraph{Core Reduction}  
+The Sybil resistance mechanism reduces VRF verification to proving a multiplicative inverse relationship between committed values. Specifically, the $\Sigma$-protocol in Protocol~\ref{proto:vrf-verify} demonstrates that:
+\begin{itemize}
+    \item The nullifier $\textsf{N} = g^{m_2}$ is derived from $m_2 = 1/m_1$, where $m_1 = k + \textsf{ctx}$.
+    \item The auxiliary commitments $\cm_3, \cm_4$ enforce $m_1 \cdot m_2 = 1$ algebraically, ensuring the nullifier’s structural correctness.
+\end{itemize}
 
 
 
@@ -3112,12 +3084,13 @@ The protocol satisfies the following security properties:
     The simulated transcript is perfectly indistinguishable from a real transcript as the distribution of responses $(s_1, s_2, u_1, u_2, u_3, u_4)$ is uniform in both cases, and the commitments are uniquely determined by the verification equations.
 \end{itemize}
 
-\paragraph{Connection to VRF Security:} 
-The special soundness property ensures that any prover who can produce valid proofs must know valid openings of the commitments satisfying the multiplicative inverse relation. This directly implies the uniqueness property of the VRF - two different VRF outputs would require different inverse relationships, contradicting the binding of the commitments.
-
-The zero-knowledge property ensures that the proof reveals nothing about the committed values beyond their multiplicative inverse relationship, which is essential for the pseudorandomness of the VRF output. This separation between verifiability and secrecy allows us to achieve both properties simultaneously.
-
-
+\paragraph{Connection to VRF Security (Revised)}  
+The protocol’s soundness guarantees that $\textsf{N} = g^{m_2}$ is valid only if $m_2 = 1/m_1$ for $m_1 = k + \textsf{ctx}$. This is critical because:
+\begin{itemize}
+    \item \textbf{Pseudorandomness:} Under $q$-DHI, $g^{1/m_1}$ is indistinguishable from random without knowledge of $m_1$.
+    \item \textbf{Uniqueness:} The equation $m_1 \cdot m_2 = 1$ has a unique solution in $\Zp^*$, preventing adversarial equivocation.
+\end{itemize}
+Thus, the security of the VRF directly reduces to the hardness of computing discrete logarithms and the soundness of the inverse proof.
 
 
 
