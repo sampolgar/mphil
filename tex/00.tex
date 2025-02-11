@@ -1682,7 +1682,7 @@ The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{
 
 
 \newpage
-˜\subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
+\subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
 \subsubsection{Intuition of our Construction}
 
 Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
@@ -1943,32 +1943,65 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 % 
 % % % % % % % % % % 
 \section{Zero-Knowledge Proofs}
-Zero-Knowledge Proofs (ZKPs) enable a prover $\Prover$ to demonstrate the validity of a statement $x$ while keeping the witness $w$ secret. In anonymous credentials, ZKPs allow a user to prove possession of a credential, validity of its attributes, and comply with policies while revealing none or minimal sensitive underlying data. 
 
-Signpost
-1. Introduce Zero Knolwedge Proofs
-2. Present the core protocols
-3. 
+Zero-Knowledge Proofs (ZKPs) enable a prover $\Prover$ to demonstrate the validity of a statement $x$ while keeping the corresponding witness $w$ secret. In the context of anonymous credentials, ZKPs allow a user to prove possession of a credential, verify the validity of its attributes, and comply with related policies, all while revealing none or only minimal sensitive underlying data.
+
+Efficient Zero-Knowledge Proofs are a fundamental building block of anonymous credential systems. We show that by leveraging the modularity and composability of ZKPs, we construct a suite of protocols that form the backbone of our credential system and intertwine with the security properties of our other components to achieve the fundamental properties of Anonymous Credentials - Correctness, Unforgeability, and Anonymity.
+
+We organize our discussion in three parts
+\begin{enumerate}
+    \item We first introduce the fundamental concepts of zero-knowledge proofs and the core protocols, including interactive proof systems, proofs of knowledge, and $\Sigma$-protocols.
+    \item Next, we extend the discussion to more complex protocols such as compound statements and pairing-based constructs that are commonly used in anonymous credential systems.
+    \item Finally, we present our original contribution: a novel proof of multiplicative inverse. We demonstrate how this protocol is used to prove the correct evaluation of a Verifiable Random Function (VRF) created from secret messages in two distinct commitments, and we provide a detailed analysis comparing its efficiency and performance to previous and alternate work.
+\end{enumerate}
+In the following section, we will leverage these constructions with our rerandomizable signature over commitments to build a multi-issuer, multi-credential anonymous credential system with sybil resistance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsection{Interactive Proof Systems, the Prover $\Prover$ and Verifier $\Verifier$}
-An interactive proof system for a language L consists of two probabilistic interactive Turing machines $(\Prover, \Verifier)$, where $\Prover$ is the prover and $\Verifier$ is the verifier, in Anonymous Credentials, $\Prover$ is a user with a credential signed by an Issuer, $\Verifier$ is any public system wanting to verify the user's identity and attributes. The system must satisfy:
+
+An interactive proof system for a language $L$ consists of two probabilistic interactive Turing machines $(\Prover, \Verifier)$, where $\Prover$ is the prover and $\Verifier$ is the verifier. In the context of Anonymous Credentials, $\Prover$ represents a user holding a credential issued by an Issuer, whereas $\Verifier$ represents any public system tasked with verifying the user's identity and attributes.
+
+The interactive proof system must satisfy the following properties:
 \begin{itemize}
-\item \textbf{Completeness}: For all $x \in L$, 
-    \[ \Pr[(\Prover,\Verifier)(x) = 1] \geq 1 - \epsilon(|x|) \]
-\item \textbf{Soundness}: For all $x \notin L$ and any malicious prover $\Prover^*$,
-    \[ \Pr[(\Prover^*,\Verifier)(x) = 1] \leq \delta(|x|) \]
-where $\epsilon(|x|)$ and $\delta(|x|)$ are negligible functions.
+    \item \textbf{Completeness}: For all $x \in L$, if both parties follow the protocol honestly, then the verifier accepts with overwhelming probability:
+    \[
+        \Pr[(\Prover,\Verifier)(x) = 1] \geq 1 - \epsilon(|x|),
+    \]
+    where $\epsilon(|x|)$ is a negligible function. This property guarantees that honest interactions will almost always lead to acceptance.
+    
+    \item \textbf{Soundness}: For all $x \notin L$ and any (potentially malicious) prover $\Prover^*$, the probability that $\Verifier$ accepts is negligible:
+    \[
+        \Pr[(\Prover^*,\Verifier)(x) = 1] \leq \delta(|x|),
+    \]
+    where $\delta(|x|)$ is a negligible function. This ensures that any attempt by a dishonest prover to convince the verifier of a false statement will be unsuccessful except with negligible probability.
 \end{itemize}
 
-\subsection{Proofs of Knowledge and the Extractor $\mathcal{E}$}
-While soundness ensures the validity of statements,  many cryptographic applications require stronger guarantees about the prover's knowledge. A proof of knowledge introduces the concept of an extractor $\mathcal{E}$ that, given rewindable access to any prover $\Prover^*$ that succeeds with non-negligible probability, can efficiently extract a valid witness $w$. Formally, for any prover $\Prover^*$:
 
-\[ \Pr[\mathcal{E}^{\Prover^*}(x) = w : (x,w) \in R] \geq \Pr[(\Prover^*,\Verifier)(x) = 1] - \nu(|x|) \]
+\subsection{Proofs of Knowledge, the Extractor $\mathcal{E}$, and Signatures of Knowledge}
 
+In many cryptographic settings, including anonymous credential systems, it is not sufficient to simply prove that a statement is valid; one must also ensure that the prover genuinely possesses the underlying secret. This requirement is critical for enforcing non-transferability of credentials and for enabling constructs like signatures of knowledge, where the user not only signs a statement but demonstrates knowledge of a hidden secret key or witness.
+
+A proof of knowledge introduces an extractor $\mathcal{E}$, a theoretical algorithm that—given the ability to rewind a prover $\Prover^*$ that convinces the verifier with non-negligible probability—can efficiently extract the corresponding witness $w$. Formally, for any prover $\Prover^*$,
+\[
+\Pr\big[\mathcal{E}^{\Prover^*}(x) = w : (x,w) \in R\big] \geq \Pr\big[(\Prover^*,\Verifier)(x) = 1\big] - \nu(|x|),
+\]
 where $\nu(|x|)$ is negligible and $R$ is the underlying relation.
 
-\noindent Informally, the knowledge extractor is a theoretical construct that demonstrates a successful prover must actually "know" the witness rather than just being able to convince the verifier. The extractor achieves this by rewinding the prover to an earlier state in the protocol and presenting different challenges. If the prover can successfully respond to multiple challenges using the same initial commitment, the extractor can combine these responses to compute the actual witness. This "forking" technique, first formalized by Pointcheval and Stern, ensures that a prover cannot simply follow a strategy that works with non-negligible probability without actually possessing the witness.
-
+This property is essential when constructing a signature of knowledge, where the signer must prove, in zero-knowledge, that they possess the secret value corresponding to their public credential. The extractor's role here guarantees that any valid proof (or signature) could only have been produced by someone who actually knows the secret witness. In other words, an adversary cannot forge a valid signature-of-knowledge without having genuine knowledge of the secret, which is crucial for preventing credential sharing or transfer. 
 
 
 \subsection{Zero-Knowledge and the Simulation $\mathcal{S}$ Paradigm}
@@ -1981,6 +2014,30 @@ Formally, for all probabilistic polynomial-time verifiers $\Verifier^*$, there e
 \noindent where VIEW represents the verifier's view of the real protocol interaction and $\approx_c$ denotes computational indistinguishability.
 
 \noindent Informally, the simulator paradigm provides a powerful proof technique for demonstrating zero-knowledge. If an efficient algorithm (the simulator) can generate protocol transcripts without access to any witness (the secret), and these transcripts are computationally indistinguishable from real protocol executions, that is, they look the same, then the verifier must not be able to learn anything meaningful about the witness during actual protocol runs. This is because anything the verifier could compute from a real interaction could equally well be computed from the simulated transcripts. The simulator effectively demonstrates that the verifier's view of the protocol can be reconstructed without any knowledge of the secret witness, a concept first introduced by Goldwasser, Micali, and Rackoff in their seminal 1985 paper.
+
+
+
+\subsection{Zero-Knowledge and the Simulation Paradigm}
+
+Zero-knowledge proofs ensure that no additional information is leaked during the proof process beyond the validity of the statement being proven. The central idea behind this guarantee is captured by the simulation paradigm. In this paradigm, one demonstrates that for any efficient (i.e., probabilistic polynomial-time) verifier, there exists a simulator $\mathcal{S}$ that can produce transcripts of interactions that are computationally indistinguishable from those produced in an actual honest execution of the protocol.
+
+\noindent Formally, for every probabilistic polynomial-time verifier $\Verifier^*$ and for every statement $x \in L$, there exists a probabilistic polynomial-time simulator $\mathcal{S}$ such that the verifier's view generated during its interaction with the honest prover $\Prover$,
+\[
+\{\text{VIEW}_{\Verifier^*}(\Prover, \Verifier^*)(x)\},
+\]
+is computationally indistinguishable from the output of the simulator,
+\[
+\{\mathcal{S}(x)\}.
+\]
+We denote this equivalence by:
+\[
+\{\text{VIEW}_{\Verifier^*}(\Prover, \Verifier^*)(x)\} \approx_c \{\mathcal{S}(x)\}.
+\]
+
+\noindent The fundamental implication of this property is that, since the simulator can produce convincing transcripts without access to any witness, the verifier gains no additional knowledge about the secret; the simulator demonstrates that every piece of information the verifier observes could have been generated independently, hence ensuring the zero-knowledge property.
+
+
+
 
 
 \subsection{$\Sigma$-Protocol Template}
@@ -2081,23 +2138,788 @@ When proving relations between multiple commitments, we extend this notation. Fo
 \]
 
 
+\subsection{Relations and Languages}
+
+A central concept in constructing zero-knowledge protocols is that of a relation and its corresponding language. In cryptographic proofs, a relation $\mathcal{R}$ is defined as a subset of pairs $(x, w)$ where $x$ is a statement and $w$ is the associated witness such that a predetermined predicate $\phi$ is satisfied. The language associated with $\mathcal{R}$, denoted $L_\mathcal{R}$, is defined as:
+\[
+L_\mathcal{R} = \{ x \mid \exists w \text{ such that } (x, w) \in \mathcal{R} \}.
+\]
+This abstraction enables us to capture the notion of “proof of a statement” as a proof of membership in a language.
+
+For example, consider the discrete logarithm relation, which is a key building block in many protocols:
+\[
+\mathcal{R}_{\mathsf{DL}} = \{ (h, w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w \}.
+\]
+Here, $x = h$ is the public statement and $w$ is the discrete logarithm relative to the generator $g$.
+
+Similarly, for commitment schemes, notably the Pedersen commitment, the relation is captured as:
+\[
+\mathcal{R}_{\mathsf{com}} = \{ (\cm, (m, r)) : \cm = g^m h^r \}.
+\]
+In this context, the language consists of all valid commitments, and the corresponding witness includes both the message $m$ and the randomness $r$.
 
 
 
-\subsection{Core Proof Protocols}
-% Individual atomic proofs used in your system
 
 
 
 
-\subsection{Compound Statements}
-% How the basic proofs are combined
 
 
 
 
-\subsection{Protocol-Specific Proofs}
-% Your master and context credential specific proof constructions
+
+
+
+
+
+
+
+% ==============================================================================
+% SubSection Outline: Advanced Proof Protocols for Anonymous Credentials
+% ==============================================================================
+
+% Overall Strategy:
+% -----------------
+% The goal of this section is to illustrate how basic building blocks of zero-knowledge 
+% proofs are composed and tailored to the demands of anonymous credential systems. In 
+% particular, we focus on protocols and constructs that prove knowledge of commitment 
+% openings, linear relations among exponents, and consistency of identical attributes 
+% across multiple credentials. This section serves as the bridge between foundational 
+% concepts and our novel contributions.
+
+
+
+% We propose the following structure:
+
+\section{Advanced Proof Protocols}
+
+% Introduction:
+% Briefly outline the section's objective, emphasizing the need to show how complex 
+% proofs are constructed by combining simpler proofs of knowledge. Note how these are 
+% essential for the security and non-transferability properties in anonymous credentials.
+
+
+Advanced proof protocols are extensions of basic proof protocols
+
+Proof protocols are combined with the properties of other building blocks to enable 
+
+Correctness
+Unforgeability
+Anonymity
+
+
+
+\begin{enumerate}
+    \item Proof of Knowledge (PoK) for the opening of commitments.
+    \item PoK demonstrating linear relations (e.g., that the sum of certain exponents equals a separate exponent).
+    \item PoK of Zero values.
+    \item Signatures of Knowledge that seamlessly integrate both signing and proof of knowledge.
+    \item Multiple commitments and equality proofs for exponents, crucial for proving consistent userid across various credentials.
+\end{enumerate}
+Following this, we will build upon these foundational constructs to introduce our novel contribution: a proof of multiplicative inverse that further enhances the efficiency and expressiveness of verifiable random functions derived from multiple commitments.
+
+Our work underscores that the confluence of these individual security properties forms the backbone of secure anonymous credential systems, enabling a rich set of functionalities while ensuring stringent privacy guarantees.
+
+
+\subsection{Protocol Categories and Their Roles}
+
+
+\subsection{Structure and Flow}
+% - Begin with the simplest constructs (e.g., PoK opening) before moving to protocols that compose these 
+%   basic proofs.
+% - For each protocol, adopt a consistent format:
+%     • \textbf{Protocol Description}: A high-level overview of its purpose and use-case.
+%     • \textbf{Formal Definition and Relation}: The mathematical relation underlying the proof.
+%     • \textbf{Protocol Steps}: A succinct set of steps (or pseudo-code) outlining the interaction.
+%     • \textbf{Security Properties}: A brief discussion on key security aspects such as completeness, soundness, 
+%       and zero-knowledge characteristics.
+%
+% - Conclude the section with a summary that underscores how these building blocks naturally lead to the more 
+%   sophisticated protocols to be introduced in our contribution section.
+
+% Integration with Next Section (Our Contribution):
+% - At the end of this section, briefly mention that the following section will build on these foundations 
+%   to introduce our novel proof of multiplicative inverse, which further enhances the efficiency and expressiveness 
+%   in designing verifiable random functions from multiple commitments.
+
+% This structured approach ensures that readers appreciate both the individual properties of each protocol 
+% and their combinatorial power in constructing secure anonymous credential systems.
+
+
+
+
+
+
+
+
+
+
+
+
+%   1. A brief description of the protocol's purpose in the context of anonymous credentials.
+%   2. A formal definition of the underlying relation and language (if applicable).
+%   3. An outline of the protocol steps (to be detailed in later subsections).
+
+
+
+%     • \textbf{Protocol Description}: A high-level overview of its purpose and use-case.
+%     • \textbf{Formal Definition and Relation}: The mathematical relation underlying the proof.
+%     • \textbf{Protocol Steps}: A succinct set of steps (or pseudo-code) outlining the interaction.
+%     • \textbf{Security Properties}: A brief discussion on key security aspects such as completeness, soundness, 
+%       and zero-knowledge characteristics.
+
+
+
+
+\newpage
+\subsection{Proof of Knowledge for Pedersen Commitment Opening}
+
+In anonymous credential systems, to verify a credential, rather than sending the messages in plainsight, a prover demonstrates knowledge of the opening of a Pedersen commitment without revealing the message or randomness. 
+\[
+    \cm = g^m h^r \text{   and often denoted in shorthand   } \mathsf{CM.Com}([m];r)
+\]
+where \(g, h \in \mathbb{G}\) (a cyclic group of prime order \(q\)), \(m\) is the message, and \(r\) is the randomness. The corresponding relation is
+\[
+    \mathcal{R}_{\mathsf{com}} = \{ (\cm,(m,r)) \;|\; \cm = g^m h^r \}.
+\]
+
+\begin{protocol}{Pedersen Commitment Opening}{ped-open}
+\textbf{Common Input:} Commitment \(\cm\) and public parameters \(g,h \in \mathbb{G}\)\\
+\textbf{Prover Input:} Witness \((m,r)\) such that \(\cm = g^m h^r\)
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples \(\alpha, \rho \sample \Z_q\), computes 
+    \[
+      T \gets g^{\alpha}h^{\rho},
+    \]
+    and sends \(T\) to the verifier.
+    \item \textbf{Challenge:} Verifier samples a challenge \(c \sample \Z_q\) and sends it to the prover.
+    \item \textbf{Response:} Prover computes 
+    \[
+      s \gets \alpha + c\,m \quad \text{and} \quad u \gets \rho + c\,r,
+    \]
+    and sends \((s,u)\) to the verifier.
+    \item \textbf{Verification:} Verifier checks if 
+    \[
+      g^s h^u \stackrel{?}{=} T \cdot \cm^c.
+    \]
+\end{enumerate}
+\end{protocol}
+
+\paragraph{Security Properties:}
+This \(\Sigma\)-protocol template satisfies:
+\begin{itemize}
+    \item \textbf{Completeness:} Honest execution leads the verifier to accept.
+    
+    \item \textbf{Special Soundness and the Extractor:}      Assume that an adversarial prover produces two accepting transcripts for the same commitment \(T\) but with distinct challenges \(c\) and \(c'\):
+    \[
+    (T, c, s, u) \quad \text{and} \quad (T, c', s', u'),
+    \]
+    with \(c \neq c'\). The extractor \(\mathcal{E}\) operates by rewinding the prover to the point immediately after sending \(T\) and then issuing two different challenges \(c\) and \(c'\). Given that in an honest execution the responses satisfy
+    \[
+    s = \alpha + c\,m \quad \text{and} \quad u = \rho + c\,r,
+    \]
+    we have from the two transcripts:
+    \[
+    s - s' = (c - c')\,m \quad \text{and} \quad u - u' = (c - c')\,r.
+    \]
+    Thus, the extractor computes the witness as:
+    \[
+    m = \frac{s - s'}{c - c'} \quad \text{and} \quad r = \frac{u - u'}{c - c'}.
+    \]
+    This demonstrates that any prover capable of producing two valid responses for different challenges must, in fact, know the correct opening \((m, r)\) of the commitment, thereby ensuring the protocol’s special soundness.
+
+
+    
+    \item \textbf{Honest-Verifier Zero-Knowledge:} We proceed with the simulator construction as follows:
+
+    Let $\mathcal{S}$ be a simulator that, given the public input \(\cm\) and a challenge \(c \in \Z_q\), produces a transcript indistinguishable from one generated in an honest run of the protocol. The simulator works as follows:
+    \begin{enumerate}
+        \item \textbf{Random Response Generation:}  
+        \(\mathcal{S}\) uniformly samples \(s, u \sample \Z_q\). These will serve as the simulated responses.
+        
+        \item \textbf{Commitment Computation:}  
+        \(\mathcal{S}\) computes the simulated commitment message by setting
+        \[
+            T \gets g^s h^u \cdot \cm^{-c}.
+        \]
+        This computation ensures that during verification,
+        \[
+            T \cdot \cm^c = g^s h^u,
+        \]
+        thus satisfying the verifier’s check.
+        
+        \item \textbf{Transcript Output:}  
+        The simulator outputs the transcript \((T, c, s, u)\).
+    \end{enumerate}
+
+\paragraph{Justification:}  
+In a real protocol execution, the prover computes \(T = g^{\alpha} h^{\rho}\) with \(\alpha\) and \(\rho\) chosen uniformly at random, and then calculates \(s = \alpha + c\,m\) and \(u = \rho + c\,r\). Since \(\alpha\) and \(\rho\) are uniformly random in \(\Z_q\), it follows that \(s\) and \(u\) are uniformly distributed in \(\Z_q\) as well. In the simulation, by sampling \(s\) and \(u\) uniformly at random, and then setting 
+\[
+    T \gets g^s h^u \cdot \cm^{-c},
+\]
+the simulator produces a transcript with the same distribution as in an honest execution. This construction satisfies the special honest-verifier zero-knowledge property, as the transcript \((T, c, s, u)\) is computationally indistinguishable from transcripts generated during real interactions.
+\end{itemize}
+
+
+
+
+
+\subsection{AND proofs for protocol composition}
+\section*{AND Proof for $\Sigma$-Protocol Composition}
+
+In many applications, such as anonymous credential systems, it is required to prove in zero-knowledge that a prover knows witnesses for two separate statements. Assume we have two relations: 
+\[
+  \mathcal{R}_1 = \{(x_1,w_1) \mid \text{$x_1$ is a valid instance with witness } w_1\}
+\]
+and
+\[
+  \mathcal{R}_2 = \{(x_2,w_2) \mid \text{$x_2$ is a valid instance with witness } w_2\}.
+\]
+For each relation, a $\Sigma$-protocol exists. For instance, the Pedersen commitment opening protocol is a $\Sigma$-protocol for the relation
+\[
+  \mathcal{R}_{\mathsf{com}} = \{(\cm,(m,r)) \mid \cm = g^m h^r\}.
+\]
+Our goal is now to construct an AND proof that convinces a verifier that the prover knows witnesses $w_1$ and $w_2$ such that $(x_1,w_1) \in \mathcal{R}_1$ \emph{and} $(x_2,w_2) \in \mathcal{R}_2$.
+
+
+
+
+
+
+
+
+\begin{protocol}{AND proofs with Pedersen Commitment Openings}{dped-open}
+\textbf{Common Input:} Commitments \(\cm_1,\cm_2\) and public parameters \(g,h \in \mathbb{G}\)\\[1mm]
+\textbf{Prover Input:} Witnesses \((m_1,r_1)\) and \((m_2,r_2)\) such that 
+\[
+  \cm_1 = g^{m_1}h^{r_1} \quad \text{and} \quad \cm_2 = g^{m_2}h^{r_2}.
+\]
+\begin{enumerate}
+    \item \textbf{Commitment:} 
+    Prover samples \(\alpha_1,\rho_1, \alpha_2,\rho_2  \sample \Z_q\), computes 
+        \[
+          T_1 \gets g^{\alpha_1}h^{\rho_1} \text{ for } \cm_1 \quad \wedge \quad T_2 \gets g^{\alpha_2}h^{\rho_2} \text{ for } \cm_2
+        \]
+    
+    sends $T_1,T_2)$ to $\Verifier$
+    
+    \item \textbf{Challenge:} $\Verifier$ samples a challenge \(c \sample \Z_q\) and sends it to the $\Prover$.
+    \item \textbf{Response:} 
+    \begin{enumerate}
+        \item Prover computes 
+        \[
+          s_1 \gets \alpha_1 + c\,m_1,\quad u_1 \gets \rho_1 + c\,r_1, \text{for } \cm_1
+        \]
+        \[
+          s_2 \gets \alpha_2 + c\,m_2,\quad u_2 \gets \rho_2 + c\,r_2, \text{for } \cm_2
+        \]
+        \item Prover sends the responses \((s_1,u_1)\) and \((s_2,u_2)\) to the verifier.
+    \end{enumerate}
+    \item \textbf{Verification:} Verifier accepts if both equations hold
+    \[
+    g^{s_1} h^{u_1} \stackrel{?}{=} T_1 \cdot \cm_1^c \quad \wedge \quad g^{s_2} h^{u_2} \stackrel{?}{=} T_2 \cdot \cm_2^c
+    \]
+\end{enumerate}
+\end{protocol}
+
+This AND proof protocol leverages the security properties of the individual $\Sigma$-protocols. By using a common challenge $c$ for both subprotocols, the overall protocol maintains:
+\begin{itemize}
+  \item \textbf{Completeness,} since honest executions produce valid transcripts;
+  \item \textbf{Special Soundness,} as the extraction of both witnesses is possible from two transcripts with differing challenges; and
+  \item \textbf{Honest-Verifier Zero-Knowledge,} because a simulator can generate indistinguishable transcripts.
+\end{itemize}
+This construction can be extended to other Boolean combinations (such as OR proofs) and alternative cryptographic relations, ensuring robust and modular design in advanced cryptographic protocols.
+
+
+
+
+
+
+
+
+\newpage
+\subsection{Proof of Knowledge for Linear Relations}
+
+In anonymous credential systems, it is often necessary to prove that committed values satisfy linear relationships (e.g., \(m_3 = m_1 + m_2\)) without revealing the individual messages or randomness. Let \(\cm_1 = g^{m_1}h^{r_1}\), \(\cm_2 = g^{m_2}h^{r_2}\), and \(\cm_3 = g^{m_1 + m_2}h^{r_3}\). The relation is defined as:
+\[
+\mathcal{R}_{\mathsf{linear}} = \left\{ 
+    \big((\cm_1, \cm_2, \cm_3), (m_1, m_2, r_1, r_2, r_3)\big) \; 
+    \Big| \; 
+    \cm_1 = g^{m_1}h^{r_1} \, \land \, \cm_2 = g^{m_2}h^{r_2} \, \land \, \cm_3 = g^{m_1 + m_2}h^{r_3} 
+\right\}.
+\]
+
+\begin{protocol}{Linear Relation Proof}{linear-proof}
+\textbf{Common Input:} \(\cm_1, \cm_2, \cm_3\) and public parameters \(g, h \in \mathbb{G}\)\\
+\textbf{Prover Input:} Witness \((m_1, m_2, r_1, r_2, r_3)\) satisfying \(\mathcal{R}_{\mathsf{linear}}\)
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples \(\alpha_1, \alpha_2 \sample \Z_q\) and \(\rho_1, \rho_2, \rho_3 \sample \Z_q\), then computes:
+    \[
+    T_1 \gets g^{\alpha_1}h^{\rho_1}, \quad T_2 \gets g^{\alpha_2}h^{\rho_2}, \quad T_3 \gets g^{\alpha_1 + \alpha_2}h^{\rho_3},
+    \]
+    and sends \(T_1, T_2, T_3\) to the verifier.
+    
+    \item \textbf{Challenge:} Verifier samples \(c \sample \Z_q\) and sends it to the prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    s_1 \gets \alpha_1 + c\,m_1, \quad s_2 \gets \alpha_2 + c\,m_2, \quad s_3 \gets \alpha_1 + \alpha_2 + c\,(m_1 + m_2),
+    \]
+    \[
+    u_1 \gets \rho_1 + c\,r_1, \quad u_2 \gets \rho_2 + c\,r_2, \quad u_3 \gets \rho_3 + c\,r_3,
+    \]
+    and sends \((s_1, s_2, s_3, u_1, u_2, u_3)\) to the verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \[
+    g^{s_1}h^{u_1} \stackrel{?}{=} T_1 \cdot \cm_1^c, \quad 
+    g^{s_2}h^{u_2} \stackrel{?}{=} T_2 \cdot \cm_2^c, \quad 
+    g^{s_3}h^{u_3} \stackrel{?}{=} T_3 \cdot \cm_3^c.
+    \]
+\end{enumerate}
+\end{protocol}
+
+\paragraph{Security Properties:}
+\begin{itemize}
+    \item \textbf{Completeness:} Substituting \(s_i = \alpha_i + c\,m_i\) and \(u_i = \rho_i + c\,r_i\) into the verification equations confirms correctness.
+    
+    \item \textbf{Special Soundness:} Let \((T_1, T_2, T_3, c, s_1, s_2, s_3, u_1, u_2, u_3)\) and \((T_1, T_2, T_3, c', s_1', s_2', s_3', u_1', u_2', u_3')\) be two transcripts with \(c \neq c'\). The extractor \(\mathcal{E}\) computes:
+    \[
+    m_1 = \frac{s_1 - s_1'}{c - c'}, \quad m_2 = \frac{s_2 - s_2'}{c - c'}, \quad r_i = \frac{u_i - u_i'}{c - c'} \;\; (i \in \{1,2,3\}),
+    \]
+    and verifies that \(\cm_3 = g^{m_1 + m_2}h^{r_3}\). This ensures \(m_3 = m_1 + m_2\).
+    
+    \item \textbf{Honest-Verifier Zero-Knowledge:} A simulator \(\mathcal{S}\), given \(c\), samples \(s_1, s_2, s_3, u_1, u_2, u_3 \sample \Z_q\) and computes:
+    \[
+    T_1 \gets g^{s_1}h^{u_1}\cm_1^{-c}, \quad T_2 \gets g^{s_2}h^{u_2}\cm_2^{-c}, \quad T_3 \gets g^{s_3}h^{u_3}\cm_3^{-c}.
+    \]
+    The output transcript \((T_1, T_2, T_3, c, s_1, s_2, s_3, u_1, u_2, u_3)\) is indistinguishable from a real interaction.
+\end{itemize}
+
+\paragraph{Justification:}  
+The protocol preserves the linear relationship \(m_3 = m_1 + m_2\) by enforcing algebraic consistency across the commitments. The extractor leverages the binding property of Pedersen commitments and the linearity of the exponents to recover the witness. The simulator’s ability to retroactively construct valid transcripts ensures no information about \(m_1, m_2, r_i\) is leaked.
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\subsection{Proof of Knowledge of Zero Values}
+
+In anonymous credential systems, selective disclosure often requires proving that specific committed values are zero without revealing their positions. Let \(\cm = \prod_{i=1}^n g_i^{m_i} h^r\) be a Pedersen commitment where subset \(J \subseteq [n]\) satisfies \(m_j = 0\) for \(j \in J\). The relation is:
+\[
+\mathcal{R}_{\mathsf{zero}} = \left\{ (\cm, J), ( \{m_i\}_{i \notin J}, r) \; \Big| \; \cm = \prod_{i=1}^n g_i^{m_i} h^r \land m_j = 0 \ \forall j \in J \right\}.
+\]
+
+\begin{protocol}{Zero-Value Proof}{zero-proof}
+\textbf{Common Input:} \(\cm\), index set \(J\), and public parameters \(g_1,\ldots,g_n,h \in \mathbb{G}\)\\
+\textbf{Prover Input:} Witness \((\{m_i\}_{i \notin J}, r)\) with \(m_j = 0\) for \(j \in J\)
+\begin{enumerate}
+    \item \textbf{Key Modification:} Prover constructs reduced commitment key \(\ck' = (g_i)_{i \notin J} \cup \{h\}\).
+    
+    \item \textbf{Equivalence Proof:} Prover shows \(\cm\) can be expressed under \(\ck'\):
+    \[
+    \cm = \prod_{i \notin J} g_i^{m_i} h^{r}.
+    \]
+    
+    \item \textbf{Standard ZKPoK:} Prover executes a Schnorr-type protocol for \(\ck'\) to demonstrate knowledge of \(\{m_i\}_{i \notin J}\) and \(r\).
+\end{enumerate}
+\end{protocol}
+
+
+
+\subsubsection{Zero-Value Proof Application to Selective Disclosure}
+
+Consider a Pedersen commitment scheme with generators \(g_1, g_2, h \in \mathbb{G}\) and a commitment to two messages \(m_1, m_2\) with randomness \(r\):
+\[
+\cm = g_1^{m_1} g_2^{m_2} h^r.
+\]
+Suppose the prover wishes to disclose \(m_1\) while keeping \(m_2\) and \(r\) private. The protocol proceeds as follows:
+
+\begin{protocol}{Selective Disclosure)}{sel-disclosure}
+\textbf{Common Input:} \(\cm\), generators \(g_1, g_2, h\)\\
+\textbf{Prover Input:} \((m_1, m_2, r)\) such that \(\cm = g_1^{m_1} g_2^{m_2} h^r\)\\
+\textbf{Disclosed Value:} \(m_1\)
+\begin{enumerate}
+    \item \textbf{Disclosure:} Prover sends \(m_1\) to the verifier.
+    \item \textbf{Commitment Adjustment:} Verifier computes 
+    \[
+    \cm' \gets \cm \cdot g_1^{-m_1} = g_2^{m_2} h^r.
+    \]
+    \item \textbf{Proof of Knowledge:} Prover executes a ZKPoK for the relation:
+    \[
+    \mathcal{R}_{\mathsf{hidden}} = \left\{ (\cm', (m_2, r)) \;|\; \cm' = g_2^{m_2} h^r \right\}.
+    \]
+    This is instantiated via a Schnorr-type protocol:
+    \begin{enumerate}
+        \item Prover samples \(\alpha, \rho \sample \Z_p\), computes \(T \gets g_2^{\alpha} h^{\rho}\), and sends \(T\).
+        \item Verifier sends challenge \(c \sample \Z_p\).
+        \item Prover computes responses \(s \gets \alpha + c m_2\), \(u \gets \rho + c r\), and sends \((s, u)\).
+        \item Verifier checks \(g_2^s h^u \stackrel{?}{=} T \cdot (\cm')^c\).
+    \end{enumerate}
+\end{enumerate}
+\end{protocol}
+This can be generalized to multiple hidden and public messages. 
+
+
+
+
+
+
+
+\subsection{Two-Party Secret Sharing Protocol}
+\label{subsec:two-party-secret}
+
+Building on our Pedersen commitment framework (\S\ref{sec:zkp-commitments}), we present a minimal two-party protocol for establishing shared secrets between a user (prover) and issuer. This construction provides the basis for sybil-resistant credential issuance while maintaining privacy.
+
+% \subsubsection{Protocol Definition}
+
+
+\begin{protocol}{Two-Party Secret Sharing with Zero Knowledge}{two-party-secret}
+\textbf{Parties:} User $\mathcal{U}$, Issuer $\mathcal{I}$\\
+\textbf{Public Parameters:} Generators $g_1, g_2, h \in \mathbb{G}$, public identifier $\textsf{id}$\\
+\textbf{Goal:} Establish $s = s_1 + s_2$ where $\mathcal{U}$ contributes $s_1$, $\mathcal{I}$ contributes $s_2$
+
+\begin{enumerate}
+    \item \textbf{Commitment Phase:}
+    \begin{itemize}
+        \item $\mathcal{U}$ chooses $s_1 \sample \Z_p$, randomness $r \sample \Z_p$, computes:
+        \[
+        \cm_1 = \textsf{CM.Com}([0, s_1]; a) = g_1^0 g_2^{s_1} h^r
+        \]
+        and proves in ZKPoK: 
+        \[
+        \mathcal{R} = \left\{ (\cm_1, (s_1, r)) \mid \cm_1 = g_1^{m_1}g_2^{s_1} h^r \land m_1 = 0 \land s_1 \neq 0 \right\}
+        \]
+        
+        \item $\mathcal{I}$ verifies $\mathcal{R}$, chooses $s_2 \sample \Z_p$, computes:
+        \[
+        \cm_2 = \textsf{CM.Com}([\textsf{id}, s_2]; 0) = g_1^{\textsf{id}} g_2^{s_2}
+        \]
+    \end{itemize}
+    
+    \item \textbf{Aggregation:} Compute combined commitment:
+    \[
+    \cm = \cm_1 \cdot \cm_2 = g_1^{\textsf{id}} g_2^{s_1 + s_2} h^r
+    \]
+    $\mathcal{I}$ returns $\cm, \cm_2, s_2$ to $\mathcal{U}$
+    \item \textbf{Verification:} $\mathcal{U}$ verifies:
+    \[
+    \textsf{CM.Open}(\cm, (\textsf{id}, s); r) = \textsf{CM.Open}(\cm_1 \cdot \cm_2, (\textsf{pid}, s_1 + s_2); r)
+    \]
+    
+    \item \textbf{Reconstruction:} The shared secret is $s = s_1 + s_2$ where $\mathcal{I}$ only knows $s_2$.
+    
+\end{enumerate}
+\end{protocol}
+
+
+
+\subsubsection{Security Properties}
+\begin{itemize}
+    \item \textbf{Hiding:} For $\mathcal{U}$: $\rcm_1$ hides $s_1$ under DDH. For $\mathcal{I}$: $\rcm_2$'s structure binds to $\textsf{pid}$ without randomness.
+    
+    \item \textbf{Binding:} The ZKPoK on $\rcm_1$ prevents $\mathcal{U}$ from choosing $s_1 = 0$. Linear composition ensures:
+    \[
+    \Pr[\exists (s_1', a') \neq (s_1, a) : \rcm_1 = g_2^{s_1'} h^{a'}] \leq \textsf{negl}(\lambda)
+    \]
+    
+    \item \textbf{Correctness:} If both parties follow the protocol, $s = s_1 + s_2$ is uniquely determined by:
+    \[
+    \log_{g_2}(\cm \cdot g_1^{-\textsf{id}} h^{-a}) = s_1 + s_2
+    \]
+\end{itemize}
+
+\subsubsection{Application to Anonymous Credentials}
+This protocol enables:
+\begin{itemize}
+    \item \textbf{Sybil Resistance:} The $\textsf{pid}$ binding prevents duplicate issuance
+    \item \textbf{Selective Disclosure:} Users can prove $s \neq 0$ without revealing $s_1, s_2$
+    \item \textbf{Unlinkability:} Multiple credentials with same $s$ remain unlinkable due to independent $a$
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Zero-Knowledge Proof of Non-Zero Secret}
+\label{subsec:zkp-nonzero}
+
+To enforce \(s_1 \neq 0\) in Protocol ~\ref{prot:two-party-secret}, we extend the ZKPoK framework with an inverse existence argument.
+
+\begin{protocol}{ZKPoK for \(s_1 \neq 0\)}{zkpok-nonzero}
+\textbf{Common Input:} \(\rcm_1 = g_2^{s_1}h^a\)\\
+\textbf{Prover Input:} \(s_1 \neq 0, a, t = s_1^{-1} \mod p\)
+\begin{enumerate}
+    \item \textbf{Commitment:}
+    \begin{itemize}
+        \item Prover samples \(\alpha, \beta, \gamma \sample \Z_p\)
+        \item Computes \(T_1 = g_2^\alpha h^\beta\), \(T_2 = g_2^\gamma\)
+        \item Sends \((T_1, T_2)\) to verifier
+    \end{itemize}
+    
+    \item \textbf{Challenge:} Verifier sends \(c \sample \Z_p\)
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_1 = \alpha + c t, \quad z_2 = \beta + c a t, \quad z_3 = \gamma + c s_1
+    \]
+    Sends \((z_1, z_2, z_3)\)
+    
+    \item \textbf{Verification:} Check:
+    \[
+    g_2^{z_1}h^{z_2} \stackrel{?}{=} T_1 \rcm_1^c \quad \text{and} \quad g_2^{z_3} \stackrel{?}{=} T_2 g_2^c
+    \]
+\end{enumerate}
+\end{protocol}
+
+\subsubsection{Security Analysis}
+\begin{itemize}
+    \item \textbf{Completeness:} Follows from:
+    \[
+    g_2^{z_1}h^{z_2} = g_2^{\alpha + c t}h^{\beta + c a t} = T_1(g_2^{s_1}h^a)^{c t} = T_1\rcm_1^c
+    \]
+    \[
+    g_2^{z_3} = g_2^{\gamma + c s_1} = T_2g_2^c
+    \]
+    
+    \item \textbf{Special Soundness:} From two accepting transcripts \((c, z_1, z_2, z_3)\) and \((c', z_1', z_2', z_3')\):
+    \[
+    t = \frac{z_1 - z_1'}{c - c'}, \quad s_1 = \frac{z_3 - z_3'}{c - c'}, \quad a = \frac{(z_2 - z_2') - t(z_3 - z_3')}{c - c'}
+    \]
+    The existence of \(t = s_1^{-1}\) proves \(s_1 \neq 0\)
+    
+    \item \textbf{HVZK:} Simulator \(\mathcal{S}\) on input \(c\):
+    \begin{enumerate}
+        \item Samples \(z_1, z_2, z_3 \sample \Z_p\)
+        \item Computes \(T_1 = g_2^{z_1}h^{z_2}\rcm_1^{-c}\), \(T_2 = g_2^{z_3}g_2^{-c}\)
+        \item Outputs \((T_1, T_2, c, z_1, z_2, z_3)\)
+    \end{enumerate}
+    Indistinguishable due to uniform sampling in \(\Z_p\)
+\end{itemize}
+
+\subsubsection{Protocol Integration}
+Replace Step 1(a) in Protocol~\ref{prot:two-party-secret} with:
+\begin{itemize}
+    \item Prove \(\mathcal{R}_1' = \{(\rcm_1, (s_1, a, t)) \mid \rcm_1 = g_2^{s_1}h^a \land s_1 \cdot t \equiv 1 \mod p\}\)
+    \item Issuer verifies both commitment structure and inverse relationship
+\end{itemize}
+
+\subsubsection{Implications}
+\begin{itemize}
+    \item \textbf{Sybil Resistance:} Prevents \(s_1 = 0\) trivial solutions
+    \item \textbf{Compatibility:} Maintains \(\Sigma\)-protocol structure for composition
+\end{itemize}
+
+
+
+
+
+
+\subsection{Equality Proofs Across Multiple Commitments}
+In many scenarios, $\Prover$ will want to prove that they have a message consistent across their credentials. For example, a consistent user id $\textsf{id}$, the proof will attest that the prover is the owner of all credentials. The protocol is presented as a commitment to a single attribute $m_i$ and randomness $r_i$, however the protocol is generalized to any length message vector and the message being in any position, held secure by the commitments position binding property.
+
+\begin{protocol}{Equality of Secret Exponents between Commitments}{multi-commit-eq}
+\textbf{Common Input:} Commitments $\{\cm_i = g^{m_i}h^{r_i}\}_{i=1}^k$\\
+\textbf{Prover Input:} $\{m_i, r_i\}$ with $m_1 = \cdots = m_k = m$\\
+\textbf{Relation:} $\mathcal{R}_{\mathsf{eq}} = \left\{(\{\cm_i\}, m, \{r_i\}) \mid \cm_i = g^m h^{r_i}\ \forall i\right\}$
+
+\begin{enumerate}
+    \item \textbf{Commitment:}
+    \begin{itemize}
+        \item For each $i$, prover samples $\alpha_i, \rho_i \sample \Z_p$
+        \item Compute $T_i \gets g^{\alpha_i}h^{\rho_i}$, send $\{T_i\}$ to verifier
+    \end{itemize}
+    
+    \item \textbf{Challenge:} Verifier sends $c \sample \Z_p$
+    
+    \item \textbf{Response:}
+    \begin{itemize}
+        \item Compute $s \gets \alpha_1 + c m$ and $u_i \gets \rho_i + c r_i$ for all $i$
+        \item Send $(s, \{u_i\})$
+    \end{itemize}
+    
+    \item \textbf{Verification:} For each $i$:
+    \[
+    g^s h^{u_i} \stackrel{?}{=} T_i \cdot \cm_i^c
+    \]
+\end{enumerate}
+\end{protocol}
+
+
+\paragraph{Security Analysis:}
+\begin{itemize}
+    \item \textbf{Soundness:} Extractor obtains $m = \frac{s - s'}{c - c'}$ from two transcripts, proving $m_i = m\ \forall i$
+    \item \textbf{ZK:} Simulator chooses $s, \{u_i\} \sample \Z_p$, computes $T_i = g^s h^{u_i} \cm_i^{-c}$
+\end{itemize}
+
+\paragraph{Integration with Previous Protocols:}
+Combine with Protocol~\ref{prot:linear-proof} to prove both equality and linear relationships simultaneously:
+
+
+
+
+
+\begin{protocol}{Signature of Knowledge for PS Signatures}{sok-ps}
+\textbf{Common Input:} $(\vk, \cm, \widetilde{\sigma})$ where $\widetilde{\sigma} = (\widetilde{\sigma_1}, \widetilde{\sigma_2})$\\
+\textbf{Prover Input:} $(r, \{m_i\}_{i=1}^\ell)$ such that $\cm = g^r \prod_{i=1}^\ell g_i^{m_i}$
+
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples $\alpha, \{\beta_i\}_{i=1}^\ell \sample \Z_p$ and computes:
+    \[
+        T_1 \gets g^\alpha \prod_{i=1}^\ell g_i^{\beta_i}
+    \]
+    Send $T_1$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \Z_p$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+        s_r \gets \alpha + c \cdot r \quad \text{and} \quad s_i \gets \beta_i + c \cdot m_i \text{ for } i \in [1,\ell]
+    \]
+    Send $(s_r, \{s_i\}_{i=1}^\ell)$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        g^{s_r}\prod_{i=1}^\ell g_i^{s_i} &\stackrel{?}{=} T_1 \cdot \cm^c\\
+        e(g, \widetilde{\sigma_2}) &\stackrel{?}{=} e(\vk \cdot \cm, \widetilde{\sigma_1})
+    \end{align*}
+\end{enumerate}
+\end{protocol}
+
+
+
+\subsection{Signature of Knowledge with Rerandomizable PS Signatures}
+Given the rerandomizable signature scheme
+\begin{itemize}
+    \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+
+    \item $\mathsf{RS.KeyGen:} (\widetilde{\sk}, \vk) \gets (\tilde{g}^x, g^x)$, return $(\widetilde{\sk}, \vk))$
+    
+    \item $\mathsf{RS.Sign:}$ $\widetilde{\sigma} \in \G_2 \gets (\widetilde{\sigma_1}, \widetilde{\sigma_2}) = (\tilde{h}, (\tilde{\sk} \cdot \widetilde{\cm})^u)$
+    
+    \item $\mathsf{RS.Ver}(\vk, \cm, \widetilde{\sigma}) \to \bit:$ 
+    \[
+    e(g, \widetilde{\sigma_2}) = e(\mathsf{vk} \cdot \mathsf{cm},\widetilde{\sigma_1}) \quad \wedge \quad \pi \gets \mathsf{PoK}\{(r , m_1,\ldots,m_\ell): \cm = g^r \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{itemize}
+
+We want to prove the following relation
+
+    \[
+    \mathcal{R} = \left\{(\cm, \widetilde{\sigma}), (r, \{m_i\}) \quad \left| \quad
+    \begin{aligned}
+        e(g, \widetilde{\sigma_2}) = e(\mathsf{vk} \cdot \mathsf{cm},\widetilde{\sigma_1}) \quad \wedge \quad
+        \cm = g^r \prod_{i=1}^\ell g_i^{m_i} \\
+    \end{aligned}\right.\right\}
+    \]
+
+
+
+\paragraph{Security Properties:}
+This -protocol satisfies:
+
+\begin{itemize}
+    \item \textbf{Special Soundness:} 
+    Consider two accepting transcripts for the same first message:
+    \[
+    (T_1, c, s_r, \{s_i\}) \quad \text{and} \quad (T_1, c', s_r', \{s_i'\})
+    \]
+    with $c \neq c'$. From the verification equations:
+    \[
+    g^{s_r}\prod_{i=1}^\ell g_i^{s_i} = T_1 \cdot \cm^c \quad \text{and} \quad
+    g^{s_r'}\prod_{i=1}^\ell g_i^{s_i'} = T_1 \cdot \cm^{c'}
+    \]
+    
+    Dividing these equations:
+    \[
+    g^{s_r - s_r'}\prod_{i=1}^\ell g_i^{s_i - s_i'} = \cm^{c-c'}
+    \]
+    
+    Since $s_r = \alpha + cr$ and $s_i = \beta_i + cm_i$, we can extract:
+    \[
+    r = \frac{s_r - s_r'}{c - c'} \quad \text{and} \quad
+    m_i = \frac{s_i - s_i'}{c - c'} \text{ for } i \in [1,\ell]
+    \]
+    
+    \item \textbf{HVZK:} We construct simulator $\mathcal{S}$ as follows:
+    \begin{enumerate}
+        \item On input $(\cm, c)$, sample $s_r, \{s_i\} \sample \Z_p$
+        \item Compute commitment:
+        \[
+            T_1 \gets g^{s_r}\prod_{i=1}^\ell g_i^{s_i} \cdot \cm^{-c}
+        \]
+        \item Output $(T_1, c, s_r, \{s_i\})$
+    \end{enumerate}
+    
+    The simulated transcript is perfectly indistinguishable from real transcripts because:
+    \begin{itemize}
+        \item In real protocol: $s_r = \alpha + cr$ and $s_i = \beta_i + cm_i$ where $\alpha, \beta_i$ are uniform
+        \item Thus real responses are uniform in $\Z_p$, matching simulator's distribution
+        \item $T_1$ is uniquely determined in both cases by verification equation
+    \end{itemize}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
