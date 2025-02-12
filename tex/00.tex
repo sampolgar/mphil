@@ -2929,9 +2929,9 @@ A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a t
 \begin{itemize}
     \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk):$ Samples secret key $\alpha \sample \Zp^*$, computes public key $pk \gets g^\alpha$, returns $(sk = \alpha, pk)$
     
-    \item $\mathsf{VRF.Eval}(sk, x) \to y:$ Returns output $y \gets g^{1/(x+sk)}$
+    \item $\mathsf{VRF.Eval}(sk, x) \to y, \pi:$ Returns output $y \gets g^{1/(x+sk)}$ and $\pi$ verifies the output $y$
     
-    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \to \bit:$ validates proof $\pi$ that $y = g^{\frac{1}{x+sk}}$, outputs 1 for success, 0 for failure
+    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \to \bit:$ validates proof $\pi$ that $y = g^{1/(x+sk)}$, outputs 1 for success, 0 for failure
 \end{itemize}
 \end{definition}
 
@@ -2939,7 +2939,7 @@ A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a t
     \item \textbf{Correctness:} For all $(sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda)$ and all $x \in \setX$:
     \[
     \Pr\left[\begin{aligned}
-        (y) &\gets \mathsf{VRF.Eval}(sk, x) \\
+        (y, \pi) &\gets \mathsf{VRF.Eval}(sk, x) \\
         1 &\gets \mathsf{VRF.Vfy}(pk, x, y, \pi)
     \end{aligned}\right] = 1
     \]
@@ -2957,23 +2957,26 @@ A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a t
 \end{itemize}
 
 \subsection{Construction}
-We instantiate our VRF with a prime-order group $\G$ and generator $g$, we assume the existence of two pedersen commitments, with at a minimum, key $k$ in one, and $\textsf{ctx}$ in the other, for example, $\cm_k = g^k h^{r_1}$, $\cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}$. In practice, the commitments may have a different structure but should reduce to this format. 
+We instantiate our VRF with a prime-order group $\G$ and generator $g$, we assume the existence of two pedersen commitments, with at a minimum, key $k$ in one, and $\textsf{ctx}$ in the other, for example, $\cm_k = g^k h^{r_1}$, $\cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}$. In practice, the commitments may may have a different structure and more committed messages but require this basic structure. 
 
 \noindent Let $\G$ be a prime-order group with generator $g$, our VRF scheme consists of
 \begin{itemize}
-    \item $\mathsf{Eval}(k, \textsf{ctx}):$ Compute $m_1 = k + \text{ctx} \bmod q$, output Nullifier $\textsf{N} = g^{1/m}$
-
-    \item $\mathsf{Prove}(pk, \textsf{ctx}, \textsf{N}, \Pi^{\mathcal{R}_{\textsf{VRF}}}):$ use $\Sigma$-protocol to prove the relation 
+    \item $\mathsf{VRF.Eval}(k, \textsf{ctx}) \to (\mathsf{N}, \Pi^{\mathcal{R}_{\textsf{VRF}}})$: Compute $m_1 = k + \text{ctx} \bmod q$, $m_2 = 1/m_1$. Compute nullifier $\textsf{N} = g^{m_2}$ and run generate $\Pi^{\mathcal{R}_{\textsf{VRF}}}$ from 
     \[
-    \mathcal{R}_{\mathsf{vrf}} = \left\{ (\cm_k, \cm_{\textsf{ctx}}, \mathsf{N}), (k, \textsf{ctx}, r_1, r_2) \; \Big| \;  \cm_k = g^k h^{r_1} \; \land \;
-            \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2} \land \textsf{N} = g^{1/(k + \textsf{ctx})} \right\}
+        \mathcal{R}_{\mathsf{vrf}} = \left\{ (\cm_k, \cm_{\textsf{ctx}}, \mathsf{N}), (k, \textsf{ctx}, r_1, r_2) \; \Big| \;  \cm_k = g^k h^{r_1} \; \land \;
+                \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2} \land \textsf{N} = g^{1/(k + \textsf{ctx})} \right\}
     \]
-    \item $\mathsf{Prove}$
+
+    \item $\mathsf{VRF.Vfy}(\cm_k, \cm_{\textsf{ctx}}, \mathsf{N}, \Pi^{\mathcal{R}_{\textsf{VRF}}})$
+    
 \end{itemize}
 
 The security of this construction follows from the $q$-DHI assumption presented earlier and the binding property of Pedersen commitments. The $\Sigma$-protocol used in verification ensures zero-knowledge while maintaining the uniqueness property required for Sybil resistance.
 
 \paragraph{Correctness:} The correctness of our VRF follows from the algebraic structure of the prime-order group and the properties of the Pedersen commitment scheme. For any valid key pair $(sk, pk)$ and context $\text{ctx}$, the verification equation will always be satisfied when evaluated honestly.
+
+\subsubsection{VRF Proof generalises to Proof of Multiplicative Inverse}
+
 
 \begin{theorem}[VRF Correctness via Multiplicative Inverses]
 Under the discrete logarithm assumption, proving the equality $m_1 \cdot m_2 = 1$ for commitments $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$ is equivalent to verifying the correctness of the VRF output $\textsf{Nullifier} = g^{m_2}$. Specifically:
@@ -3084,7 +3087,7 @@ The protocol satisfies the following security properties:
     The simulated transcript is perfectly indistinguishable from a real transcript as the distribution of responses $(s_1, s_2, u_1, u_2, u_3, u_4)$ is uniform in both cases, and the commitments are uniquely determined by the verification equations.
 \end{itemize}
 
-\paragraph{Connection to VRF Security (Revised)}  
+\paragraph{Connection to VRF Security}  
 The protocol’s soundness guarantees that $\textsf{N} = g^{m_2}$ is valid only if $m_2 = 1/m_1$ for $m_1 = k + \textsf{ctx}$. This is critical because:
 \begin{itemize}
     \item \textbf{Pseudorandomness:} Under $q$-DHI, $g^{1/m_1}$ is indistinguishable from random without knowledge of $m_1$.
@@ -3093,6 +3096,13 @@ The protocol’s soundness guarantees that $\textsf{N} = g^{m_2}$ is valid only 
 Thus, the security of the VRF directly reduces to the hardness of computing discrete logarithms and the soundness of the inverse proof.
 
 
+% \begin{lemma}[Equivalence to Standard VRF]
+% Under the q-DHI assumption, there exists PPT simulator $\mathcal{S}$ such that:
+% \[
+% \forall x, (\text{N},\pi) \approx_c (\mathsf{Eval}(sk,x), \mathsf{Prove}(sk,x))
+% \]
+% where $\approx_c$ denotes computational indistinguishability.
+% \end{lemma}
 
 
 
@@ -3119,74 +3129,180 @@ Thus, the security of the VRF directly reduces to the hardness of computing disc
 
 
 
-\newpage
-We share a VRF with the issuer to ensure Sybil Resistance for the context as a nullifier.
 
 
-\section{Proof of VRF Output from Committed Attributes}
-Within our anonymous credential system, a user has a Master Credential with a PRF key $k$ committed as 
+\section{Sybil Resistance via VRF with Committed Attributes}
+Anonymous Credential systems have the paradoxical problem of requiring user privacy but preventing users from creating multiple credentials.  Traditional Sybil resistance mechanisms often compromise user anonymity by revealing identifying information or relationships between credentials. Verifiable Random Functions (VRFs) offer a promising solution by enabling the generation of verifiably pseudorandom and deterministic nullifiers from user-specific information, suitable for presentation to an issuer or for revocation lists. Existing VRF-based schemes often rely on computationally intensive bilinear pairings or reveal user attributes, introducing overhead or privacy risks.
+
+\noindent We improve the state of the art by creating a lightweight VRF construction tailored for Anonymous Credential systems with 3 contributions:
+\begin{enumerate}
+        \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure to function efficiently in standard prime-order groups, achieving provable pseudorandomness under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption.
+
+        \item \textbf{Zero-Knowledge Proof of Multiplicative Inverse:} We introduce a novel $\Sigma$-protocol that proves the multiplicative inverse relation between committed values $m_1 = k + \textsf{ctx}$ and $m_2 = 1/m_1$, we use it in our scheme to verify the correctness of the VRF nullifier without revealing user secrets. We show it generalizes naturally for similar requirements in $\Sigma$-protocols, especially those needing to prove the q-DHI.
+
+         \item \textbf{Formal Security Guarantees:} We demonstrate sybil resistance reduces to the security of our construction, the unique provability of the vrf and the soundness of our $\Sigma$-protocol.
+\end{enumerate}
+We first present the preliminaries and foundations of our VRF for committed inputs, the design of our $\Sigma$-protocol, and demonstrate how the integration achieves sybil resistance in anonymous credential systems.
+
+
+\subsection{Problem}
+To understand how we use the VRF within our application, we introduce the application:
+Within our anonymous credential system, a user has a Master Credential with a PRF key $k$ and Context Credential with $\textsf{ctx}$, where $\textsf{ctx}$ is the context, such as $\mathcal{H}(\textit{"DriversLicense"})$ where $\mathcal{H}$ is hashes a string to $\Z_p$
 \[
-\cm_{\textsf{m}} = \mathsf{CM.Com}([\textsf{id}, k, \textsf{ctx}]; r) = g_1^{\textsf{id}}g_2^kh^r
-\]
-A context credential is formatted as 
-\[
-\cm_{\textsf{c}} = \mathsf{CM.Com}([\textsf{id}, \textsf{ctx}]; r_2) = g_1^{\textsf{id}}g_2^{\textsf{ctx}}h^{r_2}
+\cm_{\textsf{m}} = \mathsf{CM.Com}([k, \ldots]; r) = g_1^{k}\ldots h^r \quad \wedge \quad \cm_{\textsf{c}} = \mathsf{CM.Com}([\textsf{ctx}, \ldots]; r_2) = g_1^{\textsf{ctx}} \ldots h^{r_2}
 \]
 During Context Credential issuance, a user must prove to the issuer that their context credential hasn't been issued before, that is, the Context Credential issuance must be \emph{Sybil Resistant}. Our goal is to generate a unique, unlinkable nullifier for a specific context containing something in both the Master Credential and the Context Credential to protect the system from Sybil attacks while also retaining user privacy.
 
 We leverage the structure of the Dodis Yampolisky Verifiable Random Function (VRF)
 \[
-\text{Nullifier } = g^{1/k + \textsf{ctx}}
+\text{Nullifier } \textsf{N} = g^{1/k + \textsf{ctx}}
 \]
 The nullifier's correctness must be verifiable without revealing the key $\mathsf{k}$, the context type $\textsf{ctx}$, or their relationship which will be used during context credential generation, and can be used for revocation where the Nullifier may be added to a revocation list. 
 
-\subsection{Reducing VRF consistency to a Multiplicative Inverse Proof}
-The core challenge is to prove that the nullifier is derived from $\textsf{ctx}$ and $k$ in the credentials. To achieve this, we reparameterize the problem
+
+
+\subsection{Preliminaries}
+
+\begin{definition}[q-DHI Assumption]
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption \cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\Pr\left[ x &\sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) &= g^{1/x} \right] \leq \negl 
+\]
+where the probability is taken over the random choice of $x$ and the random coins of $\mathcal{A}$. Informally, no $\PPT$ adversary can distinguish between $g^{1/\alpha}$ from a random group element.
+\end{definition}
+
+\begin{remark}
+The $q$-DHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption (GDH) as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This equivalence provides a solid theoretical foundation for our VRF construction's security.
+\end{remark}
+
+
+
+
+\begin{definition}[Verifiable Random Function in Prime-Order Group]
+A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a tuple of PPT algorithms $(\mathsf{VRF.Gen}, \mathsf{VRF.Eval}, \mathsf{VRF.Vfy})$ with associated message space $\setX$, output space $\setN$, and proof space $\Pi$, defined as:
+
 \begin{itemize}
-    % \item Let $\cm_1 = \mathsf{CM.Com}([k];r_1)$, Let $\cm_2 = \mathsf{CM.Com}([\mathsf{ctx}];r_2)$
-    \item Let $m_1 = \mathsf{ctx} + k$ (the sum of the PRF key and context)
-    \item let $m_2$ = $\frac{1}{m_1}$ (its multiplicative inverse)
-    \item Let $\cm_1 = \mathsf{CM.Com}([m_1];r_1)$, Let $\cm_2 = \mathsf{CM.Com}([m_2];r_2)$
+    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk):$ Samples secret key $\alpha \sample \Zp^*$, computes public key $pk \gets g^\alpha$, returns $(sk = \alpha, pk)$
+    
+    \item $\mathsf{VRF.Eval}(sk, x) \to \textsf{N}, \pi:$ Returns output $\textsf{N} \gets g^{1/(x+sk)}$ and $\pi$ verifies the output $\textsf{N}$
+    
+    \item $\mathsf{VRF.Vfy}(pk, x, \textsf{N}, \pi) \to \bit:$ validates proof $\pi$ that $\textsf{N} = g^{1/(x+sk)}$, outputs 1 for success, 0 for failure
+\end{itemize}
+\end{definition}
+
+\begin{itemize}
+    \item \textbf{Correctness:} For all $(sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda)$ and all $x \in \setX$:
+    \[
+    \Pr\left[\begin{aligned}
+        (y, \pi) &\gets \mathsf{VRF.Eval}(sk, x) \\
+        1 &\gets \mathsf{VRF.Vfy}(pk, x, \textsf{N}, \pi)
+    \end{aligned}\right] = 1
+    \]
+
+    \item \textbf{Unique Provability:} For any $pk$ (possibly malicious) and $x \in \setX$, no $\PPT$ adversary $\AdvA$ can find two distinct pairs of outputs $(\textsf{N}_0, \pi_0) \neq (\textsf{N}_1, \pi_1)$ such that:
+    \[
+    \mathsf{VRF.Vfy}(pk, x, \textsf{N}_0, \pi_0) = \mathsf{VRF.Vfy}(pk, x, \textsf{N}_1, \pi_1) = 1
+    \]
+
+    \item \textbf{Pseudorandomness:} For every PPT adversary $\advA$, there exists negligible function $\negl$ such that:
+    \[
+    \left|\Pr\left[\mathsf{Exp}_{\mathsf{VRF}}^{\mathsf{PR}}(\AdvA, \lambda) = 1\right] - \frac{1}{2}\right| \leq \negl
+    \]
+    where the pseudorandomness experiment $\mathsf{Exp}_{\mathsf{VRF}}^{\mathsf{PR}}$ is defined in the standard framework for VRFs.
 \end{itemize}
 
-The $\textsf{Nullifier}$ is now $g^{m_2}$
 
-To prove consistency, we show
+\subsection{Computing VRF on Committed Inputs}
+We first recall the classical Dodis Yampolskiy VRF construction with bilinear pairings, we demonstrate with Type-3 pairings as they are generally used in practice. Let $\G_1, \G_2, \G_T$ be groups of a bilinear map with prime order $p$ where $g_1, g_2$ are generators for $\G_1, \G_2$ respectively and $e$ is an efficient map from $\G_1 \times \G_2 \to \G_T$:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(\secparam)$: Samples $k \sample \Z_p$, set $pk = g^k$ 
+    
+    \item $\mathsf{VRF.Eval}(k, \textsf{ctx}) \to $(\mathsf{N}, \pi)$: $\pi = e(g_1, g_2)^{1/(k + \textsf{ctx})}$, $\mathsf{N} = g_2^{1/(k + \textsf{ctx})}$ 
+    
+    \item $\mathsf{VRF.Vfy}(pk, \textsf{ctx}, \mathsf{N}, \pi) \to \bit$: assert $\quad$ $e(g^{\textsf{ctx}} \cdot pk, \mathsf{N})  \stackrel{?}{=} e(g_1, g_2) \quad \wedge \quad \pi  \stackrel{?}{=} e(g_1, \mathsf{N})$
+\end{itemize}
+
+$\mathsf{Eval}$ computes the nullifier $\textsf{N}$ and generates a proof $\pi$ to prove that anyone in possession of $pk$ and the input $\textsf{ctx}$ can verify $\textsf{N}$ was computed correctly. $\mathsf{Vfy}$ resembles a signature verification as it binds  the public key $pk$, input $\textsf{ctx}$, and nullifier output together. 
+
+The first pairing binds the public input $pk, \mathsf{ctx}$ with $\mathsf{N}$
+\begin{align*}
+    e(g_1^\mathsf{ctx} \cdot pk, \mathsf{N})  \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1^\mathsf{ctx}, g_2^{1/(k + \mathsf{ctx})}) \cdot  e(pk, g_2^{1/(k + \mathsf{ctx})}) \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1^\mathsf{ctx}, g_2)^{1/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{1/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1, g_2)^{\mathsf{ctx}/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{k/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1, g_2)^{\mathsf{ctx} + k/(k + \mathsf{ctx})}  \quad =& \quad e(g_1, g_2) \\
+\end{align*}
+
+\begin{align*}
+     \pi  \quad  \stackrel{?}{=}& \quad e(g_1, \mathsf{N}) \\
+     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2^{1/(k + \mathsf{ctx})}) \\
+     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2)^{1/(k + \textsf{ctx})} \\
+\end{align*}
+
+And the second pairing binds the proof $\pi$ to \mathsf{N}$
+
+\subsubsection{Informal Security analysis of Bilinear Pairing VRF}
+\begin{itemize}
+    \item \textbf{Correctness:} Follows directly from pairing properties. The algebraic structure ensures verification equations hold when computed honestly.
+    
+    \item \textbf{Unique Provability:} Each nullifier $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ is uniquely determined by the pairing equation $e(g_1^{k + \textsf{ctx}}, \mathsf{N}) = e(g_1, g_2)$. A forgery requires solving DLOG to create  $g_2^{1/(k+\textsf{ctx}')} = \mathsf{N}$.
+    
+    \item \textbf{Pseudorandomness:} Relies on the $q$-DHI assumption in bilinear groups. Given $g_1, g_1^k, g_1^{k^2}, \ldots$, distinguishing $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ from random reduces to computing $g_2^{1/k}$ (a $q$-DHI instance).
+\end{itemize}
+
+
+
+
+
+\subsection{From Pairings to Multiplicative Inverses}
+The classical Dodis-Yampolskiy VRF uses pairings to verify the relationship between inputs and outputs through the equation:
+\[
+e(g_1^{\textsf{ctx}} \cdot pk, \mathsf{N}) = e(g_1, g_2)
+\]
+
+Our key insight is that this pairing equation fundamentally verifies a multiplicative relationship. When we expand the left side:
+\[
+e(g_1^{\textsf{ctx}} \cdot g_1^k, g_2^{1/(k + \textsf{ctx})}) = e(g_1, g_2)
+\]
+we are effectively proving that $(k + \textsf{ctx}) \cdot \frac{1}{k + \textsf{ctx}} = 1$. 
+
+This observation suggests an alternative approach: instead of using pairings to verify this relationship, we can prove it directly through a carefully constructed $\Sigma$-protocol. Let:
+\begin{itemize}
+    \item $m_1 = k + \textsf{ctx}$ (committed in $\cm_1$)
+    \item $m_2 = \frac{1}{k + \textsf{ctx}}$ (committed in $\cm_2$)
+\end{itemize}
+
+The VRF nullifier is then simply $\mathsf{N} = g^{m_2}$, and verification reduces to proving:
 \begin{enumerate}
-    \item $\cm_1 = g^{m_1}h^{r_1}$
-    \item $\cm_2 = g^{m_2}h^{r_2}$
-    \item Auxilliary commitments $\cm_3 = \cm_1^{m_2}h^{r_3}$ and $\cm_4 = h^{r_4}$ enforce $m_1 \cdot m_2 = 1$ via
-    \[
-    \frac{\cm_3}{\cm_4} = g^{m1 \cdot m_2} = g^1 = g
-    \]
-    Which directly ties the VRF output $g^{m_2}$ to the validity of the multiplicative inverse relation
+    \item $m_1$ is correctly formed from committed values $k$ and $\textsf{ctx}$
+    \item $m_1 \cdot m_2 = 1$ (multiplicative inverse relation)
+    \item $\mathsf{N} = g^{m_2}$ (nullifier structure)
 \end{enumerate}
 
-
-\begin{theorem}
-    proving $m_1 \cdot m_2 = 1$ is equivalent to verifying the correctness of the VRF under the hardness of the discrete log assumption
-\end{theorem}
+This reformulation eliminates the need for pairings while maintaining the security properties of the original VRF. The challenge now becomes constructing an efficient $\Sigma$-protocol that proves these relationships without revealing the underlying values.
 
 
 
+\subsection{Commitment Structure for VRF Verification}
+To privately prove the VRF relationship, we commit to both the input relationship and multiplicative inverse:
+
+\begin{itemize}
+    \item Primary commitments to inputs:
+        \[\cm_k = g^k h^{r_1}, \quad \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}\]
+    
+    \item Derived commitment to their sum:
+        \[\cm_3 = g^{m_1} h^{r_3} \text{ where } m_1 = k + \textsf{ctx}\]
+    
+    \item Commitment to the inverse:
+        \[\cm_4 = g^{m_2} h^{r_4} \text{ where } m_2 = \frac{1}{m_1}\]
+\end{itemize}
+
+The algebraic structure of these commitments enables our $\Sigma$-protocol to efficiently prove the multiplicative inverse relationship while maintaining zero-knowledge.
 
 
-\subsection{Analysis}
-\begin{enumerate}
-    \item Standard VRF
-    \item UTT VRF
-    \item ours
-\end{enumerate}
-
-
-
-
-
-
-
-
-
-
+\subsection{$\Sigma$-Protocol Construction}
+Given these commitments, we construct a $\Sigma$-protocol that proves the VRF relationship in zero-knowledge. The protocol leverages auxiliary commitments $\cm_3, \cm_4$ to enforce the multiplicative inverse relationship:
 
 
 
@@ -3194,6 +3310,76 @@ To prove consistency, we show
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Let $\G$ be a prime-order group with Pedersen commitments $\cm_1 = g^{m_1}h^{r_1}$, $\cm_2 = g^{m_2}h^{r_2}$. We construct a Σ-protocol to prove $m_1 \cdot m_2 = 1 \mod p$ without revealing $m_1, m_2, r_1, r_2$.
+
+% % protocol here
+
+% \subsubsection{Security Intuition}
+% \begin{itemize}
+%     \item \textbf{Completeness:} Honest executions satisfy all verification equations by algebraic design.
+%     \item \textbf{Soundness:} Extracting $m_1, m_2$ from two transcripts forces $m_1 \cdot m_2 = 1$ (via binding of Pedersen commitments).
+%     \item \textbf{Zero-Knowledge:} Simulated transcripts are indistinguishable due to masked randomness.
+% \end{itemize}
+
+
+
+
+
+
+% \subsubsection{VRF Verification via sigma-Protocol}
+% The sigma-protocol replaces pairing-based checks in two ways:
+% \begin{itemize}
+%     \item \textbf{Nullifier Binding:} Instead of pairing equations, the protocol enforces $\textsf{N} = g^{m_2}$ where $m_2 = 1/m_1$ and $m_1 = k + \textsf{ctx}$.
+%     \item \textbf{Uniqueness:} The extractor ensures only one valid $\textsf{N}$ per $(k, \textsf{ctx})$, analogous to pairing-derived uniqueness.
+% \end{itemize}
+
+% \subsubsection{Pseudorandomness Under q-DHI}
+% Pseudorandomness of $\textsf{N} = g^{1/(k+\textsf{ctx})}$ now reduces directly to the $q$-DHI assumption in prime-order groups, mirroring the bilinear case but without pairings. Adversaries cannot distinguish $\textsf{N}$ from random unless they solve $g^{1/\alpha}$ for $\alpha = k + \textsf{ctx}$.
 
 
 
