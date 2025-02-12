@@ -1286,14 +1286,17 @@ We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous 
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
 
     \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
-
-    \item $\mathsf{UserKeygen}(\secparam) \to (\usk)$ is a probabilistic algorithm. Outputs user secret key $\usk$ consisting of PRF key $k$ and identity string $s$
-
-    \item $(\mathsf{Obtain Master}(usk_m, \textbf{m}, aux), \mathsf{IssueMaster}(osk_m, cm, aux)) \to Cred_m:$ An interactive protocol. $Obtain Master$ is a probabilistic algorithm run by a user, inputs secret key, credential attribute vector $\textbf{m}$, and auxiliary info. $Issue Master$ is a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuer secret key $osk_m$, and auxiliary info. Outputs a master credential $Cred_m$ binding $cm$ to the issuer signature.
     
-    \item $(\mathsf{Obtain Context}(usk_c, \textbf{m}, Cred_m, aux), \mathsf{Issue Context}(opk_m, Cred_m', osk_c, cm, aux)) \to Cred_c:$ An interactive protocol. $Obtain Context$ is a probabilistic algorithm run by a user, inputs master credential $Cred_m$ and corresponding organisation public key $opk_m$, the users new secret key $usk_c$, credential attribute vector $\textbf{m}$, and auxiliary info. $Issue Context$ is a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuer secret key $osk_c$, and auxiliary info. Outputs a credential $Cred_c$ binding $cm$ to the issuer signature.
+    \item $\mathsf{UserCommit}(\opk, \vec{m}) \rightarrow (\cm, r)$ is a probabilistic algorithm that takes as input the organization's public key $\opk$ and a vector of messages $\vec{m}$. It outputs a commitment $\cm$ and opening value $r$. The algorithm can be used to generate both master credential commitments $\cm_{\mathsf{m}}$ and context credential commitments $\cm_{\mathsf{ctx}}$.
 
-    \item $(\mathsf{Show}(\{usk_i, cred_i\}_{i=1}^n, \phi), \mathsf{Verify}(\{cred'_i, opk_i\}_{i=1}^n, \pi)) \to \bit$ An interactive protocol. $Show$ is a probabilistic algorithm run by a user. Takes $n$ secret keys, $n$ credentials, and predicate statement $\phi$. $Verify$ is a deterministic algorithm run by a verifier, takes $n$ randomized credentials $cred'$ and associated public keys $opk$ and proof $\pi$. Outputs 1 if verification succeeds, otherwise 0.
+    \item $(\mathsf{ObtainMaster}(\opk, \cm_{\mathsf{m}}, r, aux), \mathsf{IssueMaster}(osk, \cm_{\mathsf{m}}, aux)) \rightarrow (\mathsf{cred_m}, \bot)$ is an interactive protocol between a user and issuing organization. The user runs $\mathsf{ObtainMaster}$ with organization public key $\opk$, commitment $\cm_{\mathsf{m}}$, opening value $r$, and auxiliary information $aux$. The organization runs $\mathsf{IssueMaster}$ with issuing secret key $osk$, commitment $\cm_{\mathsf{m}}$, and auxiliary information $aux$. The protocol outputs a master credential $\mathsf{cred_m}$ to the user and $\bot$ to the issuer.
+    
+    \item $(\mathsf{Obtain Context}(\mathsf{cm_c}, r_c, \mathsf{cred_m}, aux), \mathsf{Issue Context}(\mathsf{opk_m}, \mathsf{cred_m}, \mathsf{osk_c}, \mathsf{cm_c}, aux)) \to \mathsf{cred_c}:$ An interactive protocol between a user and an issuing organization. $Obtain Context$ is a probabilistic algorithm run by a user, inputs master credential $Cred_m$ and corresponding organisation public key $opk_m$ for verification. Also inputs $\mathsf{cm_c}, r_c$ the new committed values and randomness. 
+    $\mathsf{Issue Context}$ s a probabilistic algorithm run by an issuing organization that takes a commitment $cm$, issuer secret key $osk_c$, and auxiliary info. Outputs a credential $Cred_c$ binding $cm_c$ to the issuer signature.
+
+    \item $(\mathsf{ObtainContext}(\opk_m, \cm_{\mathsf{ctx}},\mathsf{cred_m}, r, aux), \mathsf{IssueContext}(\opk_m, \mathsf{cred_m}, \osk_{\mathsf{ctx}}, \cm_{\mathsf{ctx}}, aux)) \rightarrow (\mathsf{cred_{ctx}}, \bot)$ is an interactive protocol between a user and issuing organization. The user runs $\mathsf{ObtainContext}$ with master credential verification key $\opk_m$, context commitment $\cm_{\mathsf{ctx}}$, opening value $r$, master credential $\mathsf{cred_m}$, and auxiliary information $aux$. The organization runs $\mathsf{IssueContext}$ with master credential verification key $\opk_m$, master credential $\mathsf{cred_m}$, context issuing key $\osk_{\mathsf{ctx}}$, commitment $\cm_{\mathsf{ctx}}$, and auxiliary information $aux$. The protocol outputs a context credential $\mathsf{cred_{ctx}}$ to the user and $\bot$ to the issuer.
+
+    \item $(\mathsf{Show}(\{\cm_i, r_i, \mathsf{cred}_i\}_{i=1}^n, \phi), \mathsf{Verify}(\{\mathsf{cred}'_i, \opk_i\}_{i=1}^n, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with $n$ commitment-opening pairs $(\cm_i, r_i)$, their corresponding credentials $\mathsf{cred}_i$, and a predicate $\phi$. The verifier runs $\mathsf{Verify}$ with $n$ rerandomized credentials $\mathsf{cred}'_i$, their associated organization public keys $\opk_i$, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
 \end{itemize}
 \end{definition}
 
@@ -1327,8 +1330,8 @@ At the beginning of each experiment, the following state is maintained:
 \noindent \textbf{User Management:} The system maintains:
 \begin{itemize}
 \item Sets $\mathsf{HU}$ and $\mathsf{CU}$ of honest and corrupted users
-\item Lists $\mathsf{UPK}$, $\mathsf{USK}$ tracking user keypairs
-\item Lists $\mathsf{CRED}$, $\mathsf{COM}$, $\mathsf{OWNR}$ recording credentials, their commitments, and ownership
+% \item Lists $\mathsf{UPK}$, $\mathsf{USK}$ tracking user keypairs
+\item Lists $\mathsf{CRED}$, $\mathsf{COM}$, $\mathsf{OPEN}$, $\mathsf{OWNR}$ recording credentials, their commitments, their openings, and ownership
 \end{itemize}
 
 \noindent \textbf{Challenge State:} For the anonymity game, sets $\mathcal{J}_{\mathsf{LoR}}$ and $\mathcal{I}_{\mathsf{LoR}}$ track credential tuples and corresponding users during challenge phases.
@@ -1341,7 +1344,11 @@ At the beginning of each experiment, the following state is maintained:
 
 \noindent  \textbf{The Oracles.} The security properties are defined via experiments where an adversary $\mathcal{A}$ interacts with the following oracles:
 
-\noindent $\mathcal{O}_{\mathsf{HU}}(i)$ - By calling this honest user oracle with identity $i \in \mathbb{N}$, $\mathcal{A}$ can add $i$ to the set $\mathsf{HU}$ of honest users. The oracle generates $(\mathsf{usk}[i], \mathsf{upk}[i]) \sample \mathsf{UserKeyGen}(\mathsf{opk})$, adds $i$ to $\mathsf{HU}$, and returns $\mathsf{upk}[i]$.
+\noindent $\mathcal{O}_{\mathsf{HU}}(i)$ - By calling this honest user oracle with identity $i \in \mathbb{N}$, $\mathcal{A}$ can add $i$ to the set $\mathsf{HU}$ of honest users. The oracle 
+
+
+The oracle generates $(\mathsf{usk}[i], \mathsf{upk}[i]) \sample \mathsf{UserKeyGen}(\mathsf{opk})$, adds $i$ to $\mathsf{HU}$, and returns $\mathsf{upk}[i]$.
+
 
 \noindent $\mathcal{O}_{\mathsf{CU}}(i, \mathsf{upk})$ - By calling this corrupt user oracle with identity $i$ and optional public key $\mathsf{upk}$, $\mathcal{A}$ can either register a new corrupt user (if $i \notin \mathsf{HU}$) or corrupt an honest user (if $i \in \mathsf{HU}$). In the latter case, $\mathcal{A}$ receives $\mathsf{usk}[i]$ and all credentials.
 
@@ -1655,25 +1662,34 @@ The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{
 
 Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
 
-\begin{enumerate}
-    \item \textbf{Modified Rerandomizable Pointcheval-Sanders Signatures:} 
-    Our construction builds on Pointcheval-Sanders signatures which provide constant-sized signatures and efficient verification via bilinear pairings. We employ the modification in \cite{tomescu2022utt}, rather than randomizing just the signature, then proving knowledge of messages with respect to the randomized signature, we first randomize the commitment with $u_\Delta$, then randomize the signature with the commitment randomness $u_\Delta$ and new randomness $r_\Delta$.
+\paragraph{Randomized Signature over Commitments}
+    % \item \textbf{Modified Rerandomizable Pointcheval-Sanders Signatures:} 
+    % Our construction builds on Pointcheval-Sanders signatures which provide constant-sized signatures and efficient verification via bilinear pairings. We employ the modification in \cite{tomescu2022utt}, rather than randomizing just the signature, then proving knowledge of messages with respect to the randomized signature, we first randomize the commitment with $u_\Delta$, then randomize the signature with the commitment randomness $u_\Delta$ and new randomness $r_\Delta$.
     
-    The modification removes the need to run zero-knowledge protocols on the randomized signature, which are bespoke for this scheme and often needed in anonymous credentials e.g. \cite{sako_short_2016, hutchison_signature_2004}. Instead, ours outputs a verified randomized Pedersen commitment to be used in standardized zero-knowledge proof protocols \cite{stephan_krenn_proposal_nodate}, which are widely used with security reducing to the original PS signature under the q-SDH assumption. Furthermore, our modification avoids sigma protocols with computation in $\G_2$ significantly reducing overhead. 
+    % The modification removes the need to run zero-knowledge protocols on the randomized signature, which are bespoke for this scheme and often needed in anonymous credentials e.g. \cite{sako_short_2016, hutchison_signature_2004}. Instead, ours outputs a verified randomized Pedersen commitment to be used in standardized zero-knowledge proof protocols \cite{stephan_krenn_proposal_nodate}, which are widely used with security reducing to the original PS signature under the q-SDH assumption. Furthermore, our modification avoids sigma protocols with computation in $\G_2$ significantly reducing overhead. 
     
-    \item \textbf{Commitment Scheme: } 
-    We employ a dual Pedersen Commitment, inspired by \cite{tomescu2022utt} that maintains commitments in both $\G_1$ and $\G_2$ of our bilinear group, which is needed to support the modification mentioned above. We leverage key properties of Pedersen Commitments throughout our system
-    \begin{enumerate}
-        \item Perfect hiding supports statistical zero knowledge 
-        \item Computational binding under the discrete log assumption supports unforgeability of signatures
-        \item Position binding adds functionality to our zero knowledge proof protocols, specifically for proving attributes at the same position of a message vector are equal
-        \item Homomorphic properties support complex interactive protocols as in Figures \ref{fig:master-cred-issuance}
-    \end{enumerate}
+    % \item \textbf{Commitment Scheme: } 
+    % We employ a dual Pedersen Commitment, inspired by \cite{tomescu2022utt} that maintains commitments in both $\G_1$ and $\G_2$ of our bilinear group, which is needed to support the modification mentioned above. We leverage key properties of Pedersen Commitments throughout our system
+    % \begin{enumerate}
+    %     \item Perfect hiding supports statistical zero knowledge 
+    %     \item Computational binding under the discrete log assumption supports unforgeability of signatures
+    %     \item Position binding adds functionality to our zero knowledge proof protocols, specifically for proving attributes at the same position of a message vector are equal
+    %     \item Homomorphic properties support complex interactive protocols as in Figures \ref{fig:master-cred-issuance}
+    % \end{enumerate}
 
-    \item \textbf{Zero-Knowledge Proofs} 
-    Our construction liberally employs Sigma protocols for proving statements about committed attributes. While these proofs scale linearly with attributes and credentials being verified i.e., $\mathcal{O}(n + m)$ where $n$ attributes across $m$ credentials. The security reduces to the discrete logarithm assumption in the underlying groups, aligning with our commitment scheme security assumptions. The combination of Sigma protocols and Pedersen commitments enables: Selective attribute disclosure, complex predicate proofs over committed values, Support for AND/OR/NOT logic, and greater than proofs.
-
-\end{enumerate}
+\paragraph{$\Sigma$-protocols}
+Our construction liberally employs $\Sigma$-protocols for proving statements about committed attributes. 
+\begin{itemize}
+    \item $\Pi^{\mathcal{R}_{\mathsf{com}}}$ represents the Pedersen Commitment opening proof of relation $\mathcal{R}_{\mathsf{com}}$  \ref{pok-com}
+    \item $\Pi^{\mathcal{R}_{\mathsf{and}}}$ \ref{pok-and}
+    \item $\Pi^{\mathcal{R}_{\mathsf{linear}}}$ \ref{pok-linear}
+    \item $\Pi^{\mathcal{R}_{\mathsf{zero}}}$ \ref{pok-zero}
+    \item $\Pi^{\mathcal{R}_{\mathsf{two-party}}}$ \ref{pok-2party}
+    \item $\Pi^{\mathcal{R}_{\mathsf{non-zero}}}$ \ref{pok-nonzero}
+    \item $\Pi^{\mathcal{R}_{\mathsf{equality}}}$ \ref{pok-eq}
+    \item $\Pi^{\mathcal{R}_{\mathsf{sok}}}$ \ref{pok-ps}
+    \item $\Pi^{\mathcal{R}_{\mathsf{vrf}}}$ \ref{pok-vrf}
+\end{itemize}
 
 
 \subsubsection{Example} Consider an employers recruitment scenario where they wish to verify personal information, $\phi$ requires proving three credentials as in Figure \ref{fig:three-creds} :
@@ -1798,7 +1814,7 @@ The master credential issuance protocol enables a user to obtain their root cred
     \begin{center}
     \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
     \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
-    \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_m \gets CM.Setup(BG, \secparam, n)$} \\[1em]
+    \multicolumn{3}{l}{System: $(\G_1, \G_2, \G_T, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_m \gets CM.Setup(BG, \secparam, n)$} \\[1em]
     \multicolumn{3}{l}{Credential Oracle: $(SK_m, PK_m) \gets PS.KeyGen(ck_m)$} \\[1em]
     \multicolumn{3}{l}{System setup User List $\mathcal{U}$} \\[1em]
     \underline{User($s$)} && \underline{MCO($SK_M$)} \\[0.5em]
@@ -1830,6 +1846,71 @@ The two-party process between the user and master credential oracle ensures sybi
 During VRF key issuance, the anonymity of the master credential is preserved via the secrecy of the VRF key $k$. During the two-party computation, the user's share $k_1$ remains hidden to $\MCO$ via the hiding property of the commitment $C_1$, and malicious commitment usage is prevented by the soundness property of $\Pi_1$. 
 
 \noindent The user combines  $k_1 + k_2$ to form their VRF key, $\Pi_2$ proves $k_1$ is correctly derived from $C_1$, $k_2$ is derived from $C_2$ and $k$ combines $k_1 + k_2$, $\MCO$'s input to $k$ prevents forgery attempts on the key $k$. The hiding property of the commitments and zero-knowledge property of the proofs ensures correct protocol adherence while maintaining private computation. Revocation is enabled by encryption of the VRF key $k$ with the public key of the Auditor $PK_A$. $\Pi_3$ proves that $\tau$ is an encryption of the committed key $k$. $\tau$ is stored with the credential oracle maintaining privacy during normal operation. Finally, the protocol prevents replay attacks by using interactive zero-knowledge proofs requiring a challenge from the verifier, fresh commitment randomness, and $\MCO$'s input of their share of the VRF key $k_2$ preventing existing transcript reuse.
+
+
+
+    % \item \textbf{Unforgeability}: A malicious user can't show/verify attributes for credentials they don't own, can't mix credentials from different users, can't present a valid multi-credential proof without controlling all constituent credentials, can't replay a credential show from a different honest user. 
+    
+    % \item \textbf{Anonymity:} A malicious verifier or organization can't identify the user or learn about the user more than the public information presented in the protocol, and that the credential satisfies the verification statement. The malicious verifier can't link multiple showings of the same credential, and for any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
+
+Unforgeable
+- user has to do 2 party protocol to generate key k, means user can't forge it
+- also user needs to prove zeros in the commitment, so they can't forge their attribute values
+- they need to prove 
+
+Anonymous
+- users prf key k is anonymous
+- 
+
+
+
+
+
+
+Notes on security reduction
+Because we changed from UPK, USK, The simulator needs to 
+- Generate user identities (satisfied by CM.Com)
+- Extract user secrets when needed (possible through r)
+- Link users across queries (achieved through cm)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2241,7 +2322,7 @@ Our work underscores that the confluence of these individual security properties
 
 
 \newpage
-\subsection{Proof of Knowledge for Pedersen Commitment Opening}
+\subsection{Proof of Knowledge for Pedersen Commitment Opening}\label{pok-com}
 
 In anonymous credential systems, to verify a credential, rather than sending the messages in plainsight, a prover demonstrates knowledge of the opening of a Pedersen commitment without revealing the message or randomness. 
 \[
@@ -2333,7 +2414,7 @@ the simulator produces a transcript with the same distribution as in an honest e
 
 
 
-\subsection{AND proofs for protocol composition}
+\subsection{AND proofs for protocol composition}\label{pok-and}
 
 In many applications, such as anonymous credential systems, it is required to prove in zero-knowledge that a prover knows witnesses for two separate statements. Assume we have two relations: 
 \[
@@ -2406,7 +2487,7 @@ This construction can be extended to other Boolean combinations (such as OR proo
 
 
 \newpage
-\subsection{Proof of Knowledge for Linear Relations}
+\subsection{Proof of Knowledge for Linear Relations}\label{pok-linear}
 
 In anonymous credential systems, it is often necessary to prove that committed values satisfy linear relationships (e.g., \(m_3 = m_1 + m_2\)) without revealing the individual messages or randomness. Let \(\cm_1 = g^{m_1}h^{r_1}\), \(\cm_2 = g^{m_2}h^{r_2}\), and \(\cm_3 = g^{m_1 + m_2}h^{r_3}\). The relation is defined as:
 \[
@@ -2478,7 +2559,7 @@ The protocol preserves the linear relationship \(m_3 = m_1 + m_2\) by enforcing 
 
 
 \newpage
-\subsection{Proof of Knowledge of Zero Values}
+\subsection{Proof of Knowledge of Zero Values}\label{pok-zero}
 
 In anonymous credential systems, selective disclosure often requires proving that specific committed values are zero without revealing their positions. Let \(\cm = \prod_{i=1}^n g_i^{m_i} h^r\) be a Pedersen commitment where subset \(J \subseteq [n]\) satisfies \(m_j = 0\) for \(j \in J\). The relation is:
 \[
@@ -2502,7 +2583,7 @@ In anonymous credential systems, selective disclosure often requires proving tha
 
 
 
-\subsubsection{Zero-Value Proof Application to Selective Disclosure}
+\subsubsection{Zero-Value Proof Application to Selective Disclosure}\label{pok-disclose}
 
 Consider a Pedersen commitment scheme with generators \(g_1, g_2, h \in \mathbb{G}\) and a commitment to two messages \(m_1, m_2\) with randomness \(r\):
 \[
@@ -2541,8 +2622,7 @@ This can be generalized to multiple hidden and public messages.
 
 
 \newpage
-\subsection{Two-Party Secret Sharing Protocol}
-\label{subsec:two-party-secret}
+\subsection{Two-Party Secret Sharing Protocol}\label{pok-2party}
 
 Building on our Pedersen commitment framework (\S\ref{sec:zkp-commitments}), we present a minimal two-party protocol for establishing shared secrets between a user (prover) and issuer. This construction provides the basis for sybil-resistant credential issuance while maintaining privacy.
 
@@ -2626,7 +2706,7 @@ This protocol enables:
 
 
 
-\subsection{Zero-Knowledge Proof of Non-Zero Secret}
+\subsection{Zero-Knowledge Proof of Non-Zero Secret}\label{pok-nonzero}
 \label{subsec:zkp-nonzero}
 
 To enforce \(s_1 \neq 0\) in Protocol ~\ref{prot:two-party-secret}, we extend the ZKPoK framework with an inverse existence argument.
@@ -2700,7 +2780,7 @@ Replace Step 1(a) in Protocol~\ref{prot:two-party-secret} with:
 
 
 
-\subsection{Equality Proofs Across Multiple Commitments}
+\subsection{Equality Proofs Across Multiple Commitments}\label{pok-eq}
 In many scenarios, $\Prover$ will want to prove that they have a message consistent across their credentials. For example, a consistent user id $\textsf{id}$, the proof will attest that the prover is the owner of all credentials. The protocol is presented as a commitment to a single attribute $m_i$ and randomness $r_i$, however the protocol is generalized to any length message vector and the message being in any position, held secure by the commitments position binding property.
 
 \[
@@ -2782,7 +2862,7 @@ Combine with Protocol~\ref{prot:linear-proof} to prove both equality and linear 
 
 
 
-\subsection{Signature of Knowledge with Rerandomizable PS Signatures}
+\subsection{Signature of Knowledge with Rerandomizable PS Signatures}\label{pok-ps}
 Given the rerandomizable signature scheme
 \begin{itemize}
     \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
@@ -3059,10 +3139,10 @@ To privately prove the VRF relationship, we commit to both the input relationshi
         \[\cm_k = g^k h^{r_1}, \quad \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}\]
     
     \item Derived commitment to their sum:
-        \[\cm_3 = g^{m_1} h^{r_3} \text{ where } m_1 = k + \textsf{ctx}\]
+        \[\cm_3 = \cm_k^{\textsf{ctx}} h^{r_3}
     
     \item Commitment to the inverse:
-        \[\cm_4 = g^{m_2} h^{r_4} \text{ where } m_2 = \frac{1}{m_1}\]
+        \[\cm_4 = \cm^{m_2} h^{r_4} \text{ where } m_2 = \frac{1}{m_1}\]
 \end{itemize}
 
 The algebraic structure of these commitments enables our $\Sigma$-protocol to efficiently prove the multiplicative inverse relationship while maintaining zero-knowledge.
@@ -3080,7 +3160,7 @@ to enforce the multiplicative inverse relationship: $\Pi^{\mathcal{R}_{\textsf{V
 
 
 \newpage
-\begin{protocol}{VRF Output Verification}{vrf-verify}
+\begin{protocol}{VRF Output Verification}{vrf-verify}\label{pok-vrf}
 \textbf{Common Input:} Commitments $\cm_1, \cm_2$, group generator $g$, and public parameters $h \in \G$\\
 \textbf{Prover Input:} Witness $(m_1, m_2, r_1, r_2, r_3, r_4)$ such that:
 \begin{itemize}
@@ -3187,6 +3267,23 @@ Under the discrete logarithm assumption, proving the equality $m_1 \cdot m_2 = 1
     \item \textbf{Soundness:} By the extractability of the $\Sigma$-protocol, any valid nullifier must satisfy $\textsf{N} = g^{1/(k + \textsf{ctx})}$. Binding of Pedersen commitments ensures $m_1 = k + \textsf{ctx}$, thus $\textsf{N}$ is uniquely tied to the credentials.
 \end{itemize}
 \end{proof}
+
+
+\subsection{Performance Evaluation}
+
+Dodis Yampolskiy
+\begin{itemize}
+    \item Gen = 1 exponentiation 
+    \item GT exponentiation, g2 exponentiation 
+    \item 1 g1 mul + 2 pairing + 2 GT equality check
+\end{itemize}
+
+UTT
+
+
+Us
+cm3 = g^m1h^r3
+cm4 = 
 
 
 

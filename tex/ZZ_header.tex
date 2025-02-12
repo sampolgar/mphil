@@ -4,7 +4,7 @@
 \usepackage{wasysym} 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{hyperref}
+% \usepackage{hyperref}
 \usepackage{verbatim}
 \usepackage{tikz}
 \usetikzlibrary{positioning,calc}
@@ -16,6 +16,8 @@
 % \usepackage[normalem]{ulem}
 \usepackage{booktabs}
 \usepackage{bookmark}
+% \usepackage[bookmarks=true]{hyperref} 
+
 \usepackage{array}
 \usepackage[capitalise,noabbrev]{cleveref}
 \usepackage{cite}
@@ -147,6 +149,24 @@ keys
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb, xcolor, enumitem, mdframed}
 \usepackage[most]{tcolorbox}
+
+
+\usepackage{etoolbox}
+\makeatletter
+\let\llncs@addcontentsline\addcontentsline
+\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
+\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
+\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
+\setcounter{tocdepth}{2}
+\makeatother
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+
+
+
+
+
 
 \makeatletter
 % First, clear the current definitions
