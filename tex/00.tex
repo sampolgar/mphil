@@ -1276,6 +1276,7 @@ If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
 
 
 \cleardoublepage
+
 \section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
 
 We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous Credentials off the model in \cite{fuchsbauer_structure-preserving_2019}
@@ -1447,70 +1448,73 @@ A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correc
 
 
 
+
+
+
+
+
+
 \newpage
-
-\subsubsection{Unforgeability}
-Unforgeability models security against malicious users. The definition gives the adversary (representing malicious users) access to oracles 
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{HU}}$ to create honest users, $\mathcal{O}_{\mathsf{CU}}$ to corrupt users
-    \item $\mathcal{O}_{\mathsf{ObtIss}}$ Complete honest Obtain-Issue protocol execution between honest user and issuer
-    \item $\mathcal{O}_{\mathsf{Issue}}$ Protocol interaction where $\AdvA$ plays malicious user to obtain credentials from honest issuer
-    \item $\mathcal{O}_{\mathsf{Show}}$: Observe honest users' credential showings
-\end{itemize}
-Note that the unforgeability game lacks access to $\mathcal{O}_{\mathsf{Obtain}}$ because it models malicious issuer behavior. 
-
-\noindent The game proceeds as follows:
-\begin{enumerate}
-    \item Honest issuer generates keys $(\osk, \opk) \gets \mathsf{OrgKeyGen(\secparam)}$
-    \item $\AdvA$ can create/corrupt users, obtain credentials legitimately, and observe honest showings
-    \item $\AdvA$ wins if it produces a valid showing for attributes not contained in any credential owned by corrupt users
-\end{enumerate}
-This captures threats of individual credential forgeries, credential pooling attempts, and replay attacks.
-
+\subsection{Unforgeability}
+Unforgeability is formalized as a game between a challenger and an adversary $\mathcal{A}$, where $\mathcal{A}$ can interact with honest users and issuers through oracles modeling real-world capabilities. The adversary succeeds if it produces a valid proof that violates one of five forgery conditions. 
 \begin{definition}[MIMC-ABC Unforgeability]
-\noindent A Multi-Issuer Multi-Credential Anonymous Credential system provides unforgeability if no probabilistic polynomial-time adversary $\mathcal{A}$ can:
-\begin{enumerate}
-    \item forge valid credentials for honest users
-    \item use credentials belonging to other users
-    \item combine multiple credentials to create new ones
-    \item replay a credential showing from a different user
-\end{enumerate}
-
-\noindent More formally, for any PPT adversary $\mathcal{A}$, the following probability is negligible in $\lambda$:
-\[ \Pr[\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
+A MIMC-ABC system is unforgeable if for all $\PPT$ adversaries $\mathcal{A}$, the following experiment outputs 1 with negligible probability:
+\[
+\Pr[\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) = 1] \leq \negl
+\]
 \end{definition}
 
-\noindent \textbf{MIMC-ABC Unforgeability} 
-The experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
+\noindent $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$ proceeds as follows:
 
 \begin{enumerate}
-    \item Setup Phase:
-    \begin{itemize}
-        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$
-        \item Initialize $\mathsf{HU, CU} \gets \emptyset$
-        \item Initialize $\mathsf{CRED, COM, OWNR} \gets \emptyset$
-    \end{itemize}
+    \item \textbf{Setup}: $\ppar \sample \mathsf{Setup}(1^\lambda)$, for each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(\ppar)$.  
+        \begin{itemize}
+            \item $\ppar \sample \mathsf{Setup}(1^\lambda)$
+            \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(\ppar)$
+            \item Initialize $\mathsf{HU}, \mathsf{CU}, \mathsf{CRED}, \mathsf{COM}, \mathsf{OWNR} \gets \emptyset$
+        \end{itemize}
+    \item \textbf{Adversarial Interaction}: $\mathcal{A}$ receives $\{\opk_i\}_{i \in [n]}$ and adaptively queries:
+\begin{itemize}
+    \item $\mathcal{O}_{\mathsf{HU}}(i) \rightarrow \cm[i]$: Add honest user $i$
+    \item $\mathcal{O}_{\mathsf{CU}}(i, \cm) \rightarrow \{\cm[i], r[i], \mathsf{cred}[i]\}$: Corrupt user $i$
+    \item $\mathcal{O}_{\mathsf{ObtIss}}(i, \vec{m}) \rightarrow \mathsf{cred}$: Obtain credential for honest user $i$
+    \item $\mathcal{O}_{\mathsf{Issue}}(\cm) \rightarrow \top/\bot$: Obtain credential as malicious user
+    \item $\mathcal{O}_{\mathsf{Show}}(\{\mathsf{cred}_j\}, \phi) \rightarrow \pi$: Observe honest showings
+\end{itemize}
+    \item \textbf{Forgery (Validity Condition)}: $\mathcal{A}$ outputs $(\pi^*, \phi^*, \{\mathsf{cred}_i\}_{i=1}^k)$.  
 
-    \item Query Phase: $\mathcal{A}^{\mathcal{O}}(1^\lambda, \{opk_i\}_{i \in [n]})$ where $\mathcal{O}$ includes:
+    \item \textbf{Win} if:
     \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}, \mathcal{O}_{\mathsf{CU}}$ (user management)
-        \item $\mathcal{O}_{\mathsf{ObtIss}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
-        \item $\mathcal{O}_{\mathsf{Show}}$ (showing protocol)
-    \end{itemize}
+        \item \textbf{Type 1 (Credential Forgery)}: 
+        $\exists j \in [k]$ where $\mathsf{cred}_j^*$ satisfies either:
+        \begin{enumerate}
+            \item $\mathsf{cred}_j^* \notin \mathsf{CRED}$ (never issued)
+            \item $\mathsf{OWNR}[\mathsf{cred}_j^*] \in \mathsf{HU} \setminus \mathsf{CU}$ (belongs to uncorrupted honest user)
+        \end{enumerate}
 
-    \item Forgery Phase: $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [k]}, \phi, \pi)$
+        \item \textbf{Type 2 (Proof-Statement Inconsistency)}: 
+        $\mathsf{Verify}(\{\mathsf{cred}_i^*, \opk_i\}_{i=1}^k, \phi^*, \pi^*) = 1$ but either:
+        \begin{enumerate}
+            \item The committed attributes don't satisfy $\phi^*$: 
+            For the commitments $\{\cm_i^*\}_{i=1}^k$ corresponding to $\{\mathsf{cred}_i^*\}_{i=1}^k$,
+            $\forall \{\vec{m}_i, r_i\}_{i=1}^k$ such that $\cm_i^* = \mathsf{UserCommit}(\opk_i, \vec{m}_i; r_i)$,
+            we have $\phi^*(\{\vec{m}_i\}_{i=1}^k) = 0$
+            
+            \item The proof claims a false relationship: 
+            The commitments $\{\cm_i^*\}_{i=1}^k$ contain valid attributes $\{\vec{m}_i\}_{i=1}^k$, but
+            $\pi^*$ proves a statement about these attributes that doesn't hold
+        \end{enumerate}
 
-    \item The experiment returns 1 if:
-    \begin{itemize}
-        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [k]}, \pi) = 1$ and
-        \item At least one of the following holds:
-            \begin{enumerate}
-                \item $\exists i: \mathsf{cred}_i \notin \mathsf{CRED}$ (credential forgery)
-                \item $\exists i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ (mixed ownership)
-                \item $\mathsf{OWNR}(\mathsf{cred}_1) \in \mathsf{HU}$ (honest user credential misuse)
-            \end{enumerate}
-    \end{itemize}
 \end{enumerate}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1524,148 +1528,146 @@ The experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A
 
 
 \newpage
-\subsubsection{Anonymity}
-Anonymity models security against malicious issuers and verifiers. The definition gives the adversary $\AdvA$ (representing malicious issuer and verifier) access to oracles
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{HU}}$ to create honest users, $\mathcal{O}_{\mathsf{CU}}$ to corrupt users
-    \item $\mathcal{O}_{\mathsf{Obtain}}$: Protocol interaction where $\AdvA$ plays malicious issuer to issue credentials to honest users
-    \item $\mathcal{O}_{\mathsf{Show}}$: Protocol interaction where $\AdvA$ plays malicious verifier observing credential showings
-    \item $\mathcal{O}_{\mathsf{LoR}}$: The challenge oracle providing $\AdvA$ showing transcripts from either credential $j_0$ or $j_1$ based on challenge bit $b$
-\end{itemize}
-Note that the anonymity game lacks access to $\mathcal{O}{\mathsf{Issue}}$ because, as a malicious issuer, it can use its $(opk, osk)$ in a real protocol run, and lacks access to $\mathcal{O}_{\mathsf{ObtIss}}$ as that oracle models honest issuance. Instead, the anonymity game needs $\mathcal{O}_{\mathsf{Obtain}}$ to allow honest users to obtain credentials from the malicious issuer ($\AdvA$).
-
-\noindent The Anonymity Game proceeds as follows
-\begin{enumerate}
-    \item $\AdvA$ generates (potentially) malicious organization keys $(opk, st) \gets \AdvA(\secparam)$
-    \item $\AdvA$ can create honest users, issue them credentials (as a malicious issuer), and observe their showings (as a malicious verifier)
-    \item For the challenge, $\AdvA$ selects 2 users' credentials and must distinguish which is being shown
-    \item $\AdvA$ wins if it correctly guesses bit $b$ used by $\mathcal{O}_{\mathsf{LoR}}$
-\end{enumerate}
+\subsection{Anonymity} 
 
 \begin{definition}[MIMC-ABC Anonymity]
-A Multi-Issuer Multi-Credential Anonymous Credential system provides anonymity if no probabilistic polynomial-time adversary $\mathcal{A}$ can:
-
-\begin{enumerate}
-    \item learn any information beyond the public information
-    \item link multiple showings of the same credential
-    \item correlate different credentials belonging to the same user
-    \item identify which credentials were issued by the same issuer
-\end{enumerate}
-
-\noindent More formally, for any PPT adversary $\mathcal{A}$, the following advantage is negligible in $\lambda$:
-\[ \mathsf{Adv}^{\mathsf{anon}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) := |\Pr[\mathsf{Exp}^{\mathsf{anon\mbox{-}1}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] - \Pr[\mathsf{Exp}^{\mathsf{anon\mbox{-}0}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1]| \leq \mathsf{negl}(\lambda) \]
+A MIMC-ABC system provides anonymity if for all PPT adversaries $\mathcal{A}$,
+\[
+\adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) := \left|\Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}1}_{\mathcal{A}}(\lambda)=1] - \Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}0}_{\mathcal{A}}(\lambda)=1]\right| \leq \negl
+\]
+where the experiment $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$ proceeds as:
 \end{definition}
 
-
-\noindent \textbf{MIMC-ABC Anonymity Experiment.} 
-The experiment $\mathsf{Exp}^{\mathsf{anon\mbox{-}b}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
-
 \begin{enumerate}
-    \item Setup Phase:
+    \item \textbf{Setup Phase:}
     \begin{itemize}
-        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$
-        \item Initialize $\mathsf{HU, CU} \gets \emptyset$
-        \item Initialize $\mathsf{CRED, COM, OWNR} \gets \emptyset$
-        \item Initialize $\mathcal{J}_{\mathsf{LoR}}, \mathcal{I}_{\mathsf{LoR}} \gets \emptyset$
+        \item $\ppar \sample \mathsf{Setup}(1^\lambda)$
+        \item $(st, \{opk_i\}_{i \in [n]}) \sample \mathcal{A}(\ppar)$ Adversary generates (potentially malicious) keys
+        \item Initialize $\mathsf{HU}, \mathsf{CU}, \mathsf{CRED}, \mathsf{COM}, \mathsf{OWNR} \gets \emptyset$
+        \item $\mathcal{J}_{\mathsf{LoR}}, \mathcal{I}_{\mathsf{LoR}} \gets \emptyset$ 
         \item Sample challenge bit $b \sample \{0,1\}$
     \end{itemize}
 
-    \item Query Phase: $\mathcal{A}^{\mathcal{O}}(1^\lambda, \{opk_i\}_{i \in [n]})$ where $\mathcal{O}$ includes:
+    \item \textbf{Query Phase:} $\mathcal{A}(st)$ adaptively accesses:
     \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}, \mathcal{O}_{\mathsf{CU}}$ (user management)
-        \item $\mathcal{O}_{\mathsf{Obtain}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
-        \item $\mathcal{O}_{\mathsf{Show}}$ (showing protocol)
-        \item $\mathcal{O}_{\mathsf{LoR}}$ (challenge oracle)
+        \item $\mathcal{O}_{\mathsf{HU}}(i) \rightarrow \cm[i]$ Add honest user $i$, register $\cm[i]$
+        
+        \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupt user $i$ (learn secrets; invalidates future $\mathcal{O}{\mathsf{LoR}}$ queries on $i$).  
+        
+        \item $\mathcal{O}_{\mathsf{Obtain}}(i, \cm)$: Observe Honest user $i$ obtaining credential on $\cm$ from $\mathcal{A}$ (malicious issuer).
+        
+        \item $\mathcal{O}_{\mathsf{Show}}(\{\mathsf{cred}_j\}, \phi)$: Observe honest showings $\{\mathsf{cred}_j\}$. 
+        
+        \item $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi) \rightarrow \pi$: Challenge oracle, detailed below.
     \end{itemize}
 
-    \item Challenge Phase: 
-    $\mathcal{A}$ can query $\mathcal{O}_{\mathsf{LoR}}(\mathsf{Creds}_0, \mathsf{Creds}_1, \phi)$ where:
-    \begin{itemize}
-        \item $\mathsf{Creds}_b = (\mathsf{cred}_{b,1},...,\mathsf{cred}_{b,n})$ for $b \in \{0,1\}$
-        \item Credentials in each tuple must belong to the same user
-        \item Both credential sets must satisfy predicate $\phi$
-    \end{itemize}
+    \item \textbf{Challenge Handling for $\mathcal{O}_{\mathsf{LoR}}$}:
+    \begin{enumerate}
+        \item Parse $\mathsf{Creds}_b = (\mathsf{cred}_{b,1},\ldots,\mathsf{cred}_{b,n})$ 
+        \item Check $\forall j: \mathsf{OWNR}[\mathsf{cred}_{0,j}] = i_0 \land \mathsf{OWNR}[\mathsf{cred}_{1,j}] = i_1$ 
+        \item Require $i_0,i_1 \in \mathsf{HU}$
+        \item Verify $\phi(\{\mathsf{cred}_{0,j}\}) = \phi(\{\mathsf{cred}_{1,j}\}) = 1$ 
+        \item If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset \land (\mathsf{Creds}_0, \mathsf{Creds}_1) \notin \mathcal{J}_{\mathsf{LoR}}$: abort 
+        \item $\pi_b \gets \mathsf{Show}(\mathsf{Creds}_b, \phi)$ using bit $b$
+        \item Update $\mathcal{J}_{\mathsf{LoR}} \gets \mathcal{J}_{\mathsf{LoR}} \cup \{(\mathsf{Creds}_0,\mathsf{Creds}_1)\}$
+        \item Return $\pi_b$
+    \end{enumerate}
 
-    \item $\mathcal{A}$ outputs a guess $b' \in \{0,1\}$
-
-    \item The experiment returns 1 if $b = b'$
+    \item \textbf{Win Condition}: $\mathcal{A}$ outputs $b'$.
+    Experiment returns 1 if:
+    \begin{enumerate}
+        \item $b' = b$ 
+        \item No trivial wins: $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ 
+        \item No credential leakage: $\forall (\mathsf{Creds}_0,\mathsf{Creds}_1) \in \mathcal{J}_{\mathsf{LoR}}$, neither $i_0$ nor $i_1$ were corrupted
+       \end{enumerate}
 \end{enumerate}
+
+
+\begin{remark}
+This extends \cite{fuchsbauer_structure-preserving_2019}'s anonymity game by:
+\begin{itemize}
+    \item Tracking credential ownership across multiple issuers
+    \item Formalizing multi-credential linkage through $\mathcal{J}_{\mathsf{LoR}}$
+\end{itemize}
+\end{remark}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 \newpage
-\subsubsection{Credential Binding}
-Credential binding models security against malicious users attempting to combine credentials across different user identities. The definition gives the adversary (representing malicious users) access to oracles
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{HU}}$ to create honest users, $\mathcal{O}_{\mathsf{CU}}$ to corrupt users
-    \item $\mathcal{O}_{\mathsf{ObtIss}}$ Complete honest Obtain-Issue protocol execution between honest user and issuer
-    \item $\mathcal{O}_{\mathsf{Issue}}$ Protocol interaction where $\AdvA$ plays malicious user to obtain credentials from honest issuer
-\end{itemize}
-Note that like unforgeability, the binding game lacks access to $\mathcal{O}_{\mathsf{Obtain}}$ as it models malicious user behavior. We also omit $\mathcal{O}_{\mathsf{Show}}$ since observing honest showings does not help in violating binding property.
-
-\noindent The game proceeds as follows:
-\begin{enumerate}
-    \item Each honest issuer generates keys $(osk_i, opk_i) \gets \mathsf{OrgKeyGen(\secparam)}$
-    \item $\AdvA$ can create/corrupt users and obtain credentials legitimately from honest issuers
-    \item $\AdvA$ wins if it produces a valid proof linking credentials that were issued to different user identifiers
-\end{enumerate}
-This captures the essential requirement that credentials can only be combined in proofs if they share the same underlying user identity, analogous to the binding property in commitment schemes but extended to the multi-credential setting.
-
-We define Binding Constraint and then use it in the Credential Binding game. 
-\begin{definition}[Binding Constraint]
-A predicate $\phi$ contains a binding constraint if it requires proving equality of user identifiers across credentials. Formally, $\phi \in \Phi_{\mathsf{binding}}$ if:
-\begin{enumerate}
-    \item $\phi: \mathsf{CRED}^k \rightarrow \{0,1\}$ where $k \geq 2$
-    \item For credentials $\{\mathsf{cred}_i\}_{i \in [n]}$ with user identifiers $\{s_i\}_{i \in [n]}$:
-        \[ \phi(\{\mathsf{cred}_i\}_{i \in [n]}) = 1 \implies s_1 = s_2 = ... = s_n \]
-    \item The proof $\pi$ must demonstrate knowledge of openings that satisfy this equality
-\end{enumerate}
-\end{definition}
-
+\subsection{Credential Binding}
 \begin{definition}[MIMC-ABC Credential Binding]
-A Multi-Issuer Multi-Credential Anonymous Credential system provides credential binding if no probabilistic polynomial-time adversary $\mathcal{A}$ can successfully combine credentials from different user identities into a valid proof. Specifically, $\mathcal{A}$ cannot:
-\begin{enumerate}
-    \item produce a valid proof linking credentials issued to different user identifiers
-    \item create a valid multi-credential proof without knowing all constituent credential openings
-    \item forge proofs that falsely demonstrate credential ownership consistency across issuers
-\end{enumerate}
-
-\noindent More formally, for any PPT adversary $\mathcal{A}$, the following probability is negligible in $\lambda$:
-\[ \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda) = 1] \leq \mathsf{negl}(\lambda) \]
+A MIMC-ABC system provides credential binding if for all PPT adversaries $\mathcal{A}$,
+\[
+\mathsf{Adv}^{\mathsf{bind}}_{\mathcal{A}}(\lambda) := \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)=1] \leq \negl
+\]
+where the experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$ proceeds as:
 \end{definition}
 
-\noindent \textbf{MIMC-ABC Credential Binding} 
-The experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(1^\lambda)$ proceeds as follows:
+\noindent $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$:
 
 \begin{enumerate}
-    \item Setup Phase:
+    \item \textbf{Setup}:
     \begin{itemize}
-        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \sample \mathsf{OrgKeyGen}(1^\lambda)$
-        \item Initialize $\mathsf{HU, CU} \gets \emptyset$
-        \item Initialize $\mathsf{CRED, COM, OWNR} \gets \emptyset$
+        \item $\ppar \sample \mathsf{Setup}(1^\lambda)$ 
+        \item For each issuer $i \in [n]$: $(\osk_i, \opk_i) \sample \mathsf{OrgKeyGen}(\ppar)$
+        \item Initialize $\mathsf{HU}, \mathsf{CU}, \mathsf{CRED}, \mathsf{COM}, \mathsf{OWNR} \gets \emptyset$
     \end{itemize}
-
-    \item Query Phase: $\mathcal{A}^{\mathcal{O}}(1^\lambda, \{opk_i\}_{i \in [n]})$ where $\mathcal{O}$ includes:
+    
+    \item \textbf{Adversarial Interaction}: $\mathcal{A}$ receives $\{\opk_i\}_{i \in [n]}$ and queries:
     \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}, \mathcal{O}_{\mathsf{CU}}$ (user management)
-        \item $\mathcal{O}_{\mathsf{ObtIss}}, \mathcal{O}_{\mathsf{Issue}}$ (credential operations)
+        \item $\mathcal{O}_{\mathsf{HU}}(i) \rightarrow \cm[i]$: Add honest user
+        \item $\mathcal{O}_{\mathsf{CU}}(i, \cm)$: Corrupt user (reveals secrets)
+        \item $\mathcal{O}_{\mathsf{ObtIss}}(i, \vec{m})$: Obtain honest credentials
+        \item $\mathcal{O}_{\mathsf{Obtain}}(i, \cm)$: Interact with malicious issuer
+        \item $\mathcal{O}_{\mathsf{Issue}}(\cm)$: Issue to malicious user
+        \item $\mathcal{O}_{\mathsf{Show}}(\{\mathsf{cred}_j\}, \phi)$: Observe showings
     \end{itemize}
-
-    \item Challenge Phase: $\mathcal{A}$ outputs $(\{\mathsf{cred}_i\}_{i \in [n]}, \phi, \pi)$
-
-    \item The experiment returns 1 if:
+    
+    \item \textbf{Forgery}: $\mathcal{A}$ outputs $(\pi^*, \phi^*, \{\mathsf{cred}_j^*\}_{j=1}^k)$
+    
+    \item \textbf{Win} if:
     \begin{enumerate}
-        \item $\phi \in \Phi_{\mathsf{binding}}$
-        \item $\mathsf{Verify}(opk, \phi, \{\mathsf{cred}_i\}_{i \in [n]}, \pi) = 1$
-        \item At least one of:
-            \begin{enumerate}
-                \item $\exists \; i,j: \mathsf{OWNR}(\mathsf{cred}_i) \neq \mathsf{OWNR}(\mathsf{cred}_j)$ - credentials from different owners
-                \item $\exists \; i: \mathsf{cred}_i \notin \mathsf{CRED}$ - a forged credential
-                \item $\exists \; i: \mathsf{OWNR}(\mathsf{cred}_i) \notin \mathsf{CU}$ - using honest user's credential
-            \end{enumerate}
+        \item $\mathsf{Verify}(\{\mathsf{cred}_j^*, \opk_j\}_{j=1}^k, \phi^*, \pi^*) = 1$
+        \item $\exists j_1,j_2 \in [k]$ with $\mathsf{OWNR}[\mathsf{cred}_{j_1}^*] \neq \mathsf{OWNR}[\mathsf{cred}_{j_2}^*]$ 
+        \item $\forall j \in [k]: \mathsf{cred}_j^* \in \mathsf{CRED} \land \mathsf{OWNR}[\mathsf{cred}_j^*] \in \mathsf{HU} \setminus \mathsf{CU}$
     \end{enumerate}
 \end{enumerate}
+
+\begin{remark}
+This binding property enforces credential ownership consistency:
+\begin{itemize}
+    \item Prevents "credential mixing" attacks across users
+    \item Maintains integrity of multi-credential proofs
+    \item Complements unforgeability by addressing cross-user composition
+\end{itemize}
+\end{remark}
+
+
+
+
+
 
 
 
@@ -3034,18 +3036,18 @@ We first present the preliminaries and foundations of our VRF for committed inpu
 
 \subsection{Problem}
 To understand how we use the VRF within our application, we introduce the application:
-Within our anonymous credential system, a user has a Master Credential with a PRF key $k$ and Context Credential with $\textsf{ctx}$, where $\textsf{ctx}$ is the context, such as $\mathcal{H}(\textit{"DriversLicense"})$ where $\mathcal{H}$ is hashes a string to $\Z_p$
+Within our anonymous credential system, a user has a Master Credential with a VRF key $k$ and Context Credential with $\textsf{ctx}$, where $\textsf{ctx}$ is the context, such as $\mathcal{H}(\textit{"DriversLicense"})$ where $\mathcal{H}$ is hashes a string to $\Z_p$
 \[
 \cm_{\textsf{m}} = \mathsf{CM.Com}([k, \ldots]; r) = g_1^{k}\ldots h^r \quad \wedge \quad \cm_{\textsf{c}} = \mathsf{CM.Com}([\textsf{ctx}, \ldots]; r_2) = g_1^{\textsf{ctx}} \ldots h^{r_2}
 \]
 During Context Credential issuance, a user must prove to the issuer that their context credential hasn't been issued before, that is, the Context Credential issuance must be \emph{Sybil Resistant}. Our goal is to generate a unique, unlinkable nullifier for a specific context containing something in both the Master Credential and the Context Credential to protect the system from Sybil attacks while also retaining user privacy.
 
-We leverage the structure of the Dodis Yampolisky Verifiable Random Function (VRF)
+We leverage the structure and properties of the Dodis Yampolisky Verifiable Random Function (VRF)
 \[
 \text{Nullifier } \textsf{N} = g^{1/k + \textsf{ctx}}
 \]
-The nullifier's correctness must be verifiable without revealing the key $\mathsf{k}$, the context type $\textsf{ctx}$, or their relationship which will be used during context credential generation, and can be used for revocation where the Nullifier may be added to a revocation list. 
 
+The Nullifier takes on the properties of correctness, pseudorandomness, and provable uniqueness from the VRF which we exploit in our protocol.
 
 
 \subsection{Preliminaries}
@@ -3053,7 +3055,7 @@ The nullifier's correctness must be verifiable without revealing the key $\maths
 \begin{definition}[q-DHI Assumption]
 Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption \cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
-\Pr\left[ x &\sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) &= g^{1/x} \right] \leq \negl 
+\Pr\left[ x \sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x} \right] \leq \negl 
 \]
 where the probability is taken over the random choice of $x$ and the random coins of $\mathcal{A}$. Informally, no $\PPT$ adversary can distinguish between $g^{1/\alpha}$ from a random group element.
 \end{definition}
