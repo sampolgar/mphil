@@ -771,7 +771,7 @@ Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $
 
             \item $\mathsf{RS.Ver}(\mathsf{pk = (pp, vk, ck), cm}, \sigma) \rightarrow \bit$: is a deterministic algorithm, takes as input the public key $\mathsf{pk}$, $\cm \in \mathcal{C}$ and signature $\sigma$, outputs 1 for successful verification, otherwise 0. 
 
-            \item $\mathsf{RS.VerKey}(\mathsf{sk, pk = (pp, vk, ck)})$ 
+            \item $\mathsf{RS.VerKey}(\mathsf{sk, pk = (pp, vk, ck)}) \to \bit:$ is a deterministic algorithm that takes in a secret key $\sk$ and verification key $\vk$, checks for consistency and returns 1 for success, 0 for failure
         \end{itemize}
 \end{definition}
 
@@ -858,7 +858,7 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
         \}
     \]
 
-        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit$
+        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ checks $e(\sk, \vk) = 1\G_T$ outputs 1 for success or 0 for failure. 
 \end{itemize}
 
 
@@ -1054,26 +1054,30 @@ If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
 
 \section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
 
+\subsection{Notation}
+The MIMC-ABC system is run for obtaining a master and context credential, differing in the obtain, issue and show, verify algorithms. 
+We generalize the notation for elements but also subscript elements when expressed explicitly; $ \cm$ is a commitment that could be Master or Context, whereas $\cmm, \cmc$ are explicitly for Master and Context, respectively.
+
 We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous Credentials off the model in \cite{fuchsbauer_structure-preserving_2019}
 
 \subsection{Syntax}
-\begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute based Anonymous Credential system consists of the following $\PPT$ algorithms:
+\begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
     \begin{itemize}
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
 
     \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
+
+    \item $\mathsf{UKeygen}(\ppar) \to (\usk)$: is a probabilistic algorithm that takes public parameters $\ppar$, outputs users secret key $\usk$
     
-    \item $\mathsf{UserCommit}(\opk, \vec{m}) \rightarrow (\cm, r)$ is a probabilistic algorithm that takes as input the organization's public key $\opk$ and a vector of messages $\vec{m}$. It outputs a commitment $\cm$ and opening value $r$. The algorithm can be used to generate both master credential commitments $\cm_{\mathsf{m}}$ and context credential commitments $\cm_{\mathsf{ctx}}$.
+    \item $\mathsf{UserCommit}(\opk, \vec{m}, \usk) \rightarrow (\cm)$ is a probabilistic algorithm that takes as input the organization's public key $\opk$, a vector of messages $\vec{m}$ and the user's secret key $\usk$ which will be the randomness in the commitment. It outputs a commitment $\cm = \CMCom([\vec{m}];\usk)$.
 
-    \item $(\mathsf{ObtainMaster}(\opk, \cm_{\mathsf{m}}, r, aux), \mathsf{IssueMaster}(osk, \cm_{\mathsf{m}}, aux)) \rightarrow (\mathsf{cred_m}, \bot)$ is an interactive protocol between a user and issuing organization. The user runs $\mathsf{ObtainMaster}$ with organization public key $\opk$, commitment $\cm_{\mathsf{m}}$, opening value $r$, and auxiliary information $aux$. The organization runs $\mathsf{IssueMaster}$ with issuing secret key $osk$, commitment $\cm_{\mathsf{m}}$, and auxiliary information $aux$. The protocol outputs a master credential $\mathsf{cred_m}$ to the user and $\bot$ to the issuer.
-
-
-    \item $(\mathsf{ObtainContext}(\opk_m, \cm_{\mathsf{ctx}},\mathsf{cred_m}, r, aux), \mathsf{IssueContext}(\opk_m, \mathsf{cred_m}, \osk_{\mathsf{ctx}}, \cm_{\mathsf{ctx}}, aux)) \rightarrow (\mathsf{cred_{ctx}}, \bot)$ is an interactive protocol between a user and issuing organization. The user runs $\mathsf{ObtainContext}$ with master credential verification key $\opk_m$, context commitment $\cm_{\mathsf{ctx}}$, opening value $r$, master credential $\mathsf{cred_m}$, and auxiliary information $aux$. The organization runs $\mathsf{IssueContext}$ with master credential verification key $\opk_m$, master credential $\mathsf{cred_m}$, context issuing key $\osk_{\mathsf{ctx}}$, commitment $\cm_{\mathsf{ctx}}$, and auxiliary information $aux$. The protocol outputs a context credential $\mathsf{cred_{ctx}}$ to the user and $\bot$ to the issuer.
+    \item $(\mathsf{Obtain}(\cm, \usk, \opk,  \phi, aux), \mathsf{Issue}(\osk, \cm, \phi, \{\Pi\}_i, aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. Can be used 
+    for obtaining a master or context credential $\credm, \credc$. $\mathsf{Obtain}$ The user inputs their commitment $\cm$ and $\usk$ and generates a proof of knowledge satisfying statement $\phi$. Obtaining a Context Credential requires verifying a master credential and consistency of user id between master and context which we represent as auxiliary information $aux$. $\mathsf{Issue}$ Issuer runs this with their secret key $\osk$, commitment $\cm$, verifies proofs $\{\Pi\}_i$ against the statement $\phi$. 
+    The protocol outputs a credential $\cred$ to the user and $\bot$ to the issuer.
 
     \item $(\mathsf{Show}(\{\cm_i, r_i, \mathsf{cred}_i\}_{i=1}^n, \phi), \mathsf{Verify}(\{\mathsf{cred}'_i, \opk_i\}_{i=1}^n, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with $n$ commitment-opening pairs $(\cm_i, r_i)$, their corresponding credentials $\mathsf{cred}_i$, and a predicate $\phi$. The verifier runs $\mathsf{Verify}$ with $n$ rerandomized credentials $\mathsf{cred}'_i$, their associated organization public keys $\opk_i$, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
 \end{itemize}
 \end{definition}
-
 
 
 \subsection{Security Model}
@@ -1468,6 +1472,23 @@ This binding property enforces credential ownership consistency:
 
 Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
 
+\subsection{Working Draft Notes for Construction}
+\begin{itemize}
+   \item Extractable commitment openings
+   \item  Signature uniqueness properties
+   \item  Explicit freshness mechanism
+   \item  Clear randomization structure
+\end{itemize}
+
+
+$\Pi_{\mathsf{Com}} := \mathsf{PoK}\{(m_1,\ldots,m_\ell,r): 
+    \mathsf{cm} = g^r\prod_{i=1}^\ell g_i^{m_i}\}$
+
+$    \Pi_{\mathsf{Show}} := \mathsf{PoK}\{(r, \{m_i\}_{i=1}^\ell): 
+    \mathsf{cm}' = g^r\prod_{i=1}^\ell g_i^{m_i} \wedge
+    e(\sigma_2, \tilde{g}) = e(\sigma_1, \mathsf{vk} \cdot \widetilde{\mathsf{cm}}')\}$
+
+
 \paragraph{Randomized Signature over Commitments}
     % \item \textbf{Modified Rerandomizable Pointcheval-Sanders Signatures:} 
     % Our construction builds on Pointcheval-Sanders signatures which provide constant-sized signatures and efficient verification via bilinear pairings. We employ the modification in \cite{tomescu2022utt}, rather than randomizing just the signature, then proving knowledge of messages with respect to the randomized signature, we first randomize the commitment with $u_\Delta$, then randomize the signature with the commitment randomness $u_\Delta$ and new randomness $r_\Delta$.
@@ -1610,20 +1631,22 @@ This ensures:
 
 
 
-adf
 
 \newpage
 \subsection{Master Credential Issuance}
-The master credential issuance protocol enables a user to obtain their root credential from the Master Credential Oracle $\MCO$ while preserving the privacy of their VRF key $k$ and ensuring accountability. The protocol combines verifiable encryption, Verifiable Random Function, Zero Knowledge Proofs, and Rerandomizable PS Signatures over commitments to achieve Sybil Resistance, Revocation, and Anonymity.
+The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is modelled as a signature over commitment $\cm_m = \mathsf{CM.Com}([\id, \ctx]; r)$
+
+
 
 \begin{figure}
     \begin{center}
     \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
-    \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
-    \multicolumn{3}{l}{System: $(\G_1, \G_2, \G_T, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_m \gets CM.Setup(BG, \secparam, n)$} \\[1em]
-    \multicolumn{3}{l}{Credential Oracle: $(SK_m, PK_m) \gets PS.KeyGen(ck_m)$} \\[1em]
-    \multicolumn{3}{l}{System setup User List $\mathcal{U}$} \\[1em]
-    \underline{User($s$)} && \underline{MCO($SK_M$)} \\[0.5em]
+    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$} \\[0.5em]
+    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg,p) \sample \BGGen(\secparam), \; \mathsf{ck_m} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$}\\[1em]
+    \multicolumn{3}{l}{$(\skm, \vkm) \sample \mathsf{RS.KeyGen}(\mathsf{ck_m}), \; \text{ Return } (\oskm, \opkm) = ((\skm),(\vkm, \ckm))$}\\[1em]
+    \multicolumn{3}{l}{$\mathsf{(Obtain, Issue)}: \cmm = \CMCom([0,0];r), \pirzero(\cmm) = \zkpok\{(\cmm, r)| \cmm = g_1^0g_2^0g^r\}$}\\[1em]
+    % user proves they created an empty commitment, organisation proves they created their key correctly
+    $\underline{\mathsf{(Obtain)}}$ && $\underline{\mathsf{(Issue)}}$ \\[0.5em]
     \multicolumn{3}{l}{$k_1 \gets \Z_p$, \; $\cm_1 \gets \mathsf{CM.Com}([0,k_1,0,0],r)$}\\[1em]
     \multicolumn{3}{l}{$\Pi_1 \gets ZKPoK.Prove_{Zeros}(C_1)(k_1, r)$} \\[1em]
     & $\xrightarrow{C_1, \Pi_1}$ & \\[1em]

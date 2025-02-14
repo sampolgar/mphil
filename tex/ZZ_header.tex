@@ -68,13 +68,6 @@ keys
 
 
 
-\newcommand{\vt}{\mathsf{vt}}
-\newcommand{\wx}{\mathsf{wx}}
-\newcommand{\wxone}{\mathsf{w_1x}}
-\newcommand{\wxtwo}{\mathsf{w_2x}}
-\newcommand{\wxhat}{\mathsf{\hat{w}x}}
-% \newcommand{\x}{\mathsf{x}}
-
 \newcommand{\acu}{\mathsf{ACU}}
 \newcommand{\acusetup}{\mathsf{ACU.Setup}}
 \newcommand{\acuadd}{\mathsf{ACU.Add}}
@@ -118,18 +111,15 @@ keys
 \newcommand{\sn}{\mathsf{sn}}
 \newcommand{\pid}{\mathsf{pid}}
 \newcommand{\ccm}{\mathsf{ccm}}
-\newcommand{\cm}{\mathsf{cm}}
 \newcommand{\rcm}{\mathsf{rcm}}
 \newcommand{\vcm}{\mathsf{vcm}}
 \newcommand{\vrf}{\mathsf{vrf}}
 \newcommand{\rcd}{\mathsf{rcd}}
 \newcommand{\prnid}{\mathsf{prnid}}
-\newcommand{\nullif}{\mathsf{nullif}}
 \newcommand{\PRF}{\mathsf{PRF}}
 \newcommand{\RL}{\mathcal{RL}}
 \newcommand{\CL}{\mathcal{CL}}
 \newcommand{\UL}{\mathcal{UL}}
-\newcommand{\cred}{\mathsf{cred}}
 
 
 
@@ -394,18 +384,6 @@ keys
 \newcommand{\Stretch}{\ensuremath{\mathsf{Stretch}}\xspace}
 \newcommand{\Trapdoor}{\ensuremath{\mathsf{Trapdoor}}\xspace}
 
-% \newcommand{\pk}{\ensuremath{\mathsf{pk}}\xspace}
-% \newcommand{\sk}{\ensuremath{\mathsf{sk}}\xspace}
-\newcommand{\ek}{\ensuremath{\mathsf{ek}}\xspace}
-% \newcommand{\vk}{\ensuremath{\mathsf{vk}}\xspace}
-\newcommand{\pvk}{\ensuremath{\mathsf{pvk}}\xspace}
-\newcommand{\PVK}{\ensuremath{\mathsf{PVK}}\xspace}
-% \newcommand{\hk}{\ensuremath{\mathsf{hk}}\xspace}
-\newcommand{\aux}{\ensuremath{{\mathsf{aux}}}\xspace}
-\newcommand{\crs}{\ensuremath{{\mathsf{crs}}}\xspace}
-\newcommand{\param}{\ensuremath{{\mathsf{par}}}\xspace}
-\newcommand{\trap}{\ensuremath{\mathcal{T}}\xspace}
-\newcommand{\eps}{\varepsilon}
 
 %--------------------------------------------------------
 % Hard problems
@@ -457,10 +435,8 @@ keys
 % New from NDSS paper
 %--------------------------------------------------------
 
-
-
-% \newcommand{\Lr}{\mathcal{L}}
-% \newcommand{\Rr}{\mathcal{R}}
+\newcommand{\CMcom}{\mathsf{CM.Com}}
+\newcommand{\CMrand}{\mathsf{CM.Rerand}}
 
 % credential
 \newcommand{\mcm}{\mathsf{mcm}}
@@ -468,54 +444,57 @@ keys
 \newcommand{\idcom}{\mathsf{idcm}}
 \newcommand{\ccd}{\mathsf{ccd}}
 \newcommand{\cd}{\mathsf{cd}}
-\newcommand{\ctx}{\mathsf{ctx}}
-\newcommand{\tcm}{\mathsf{tcm}}
+
+
 
 % Protocol
-% \newcommand{\sk}{\mathsf{sk}} 
-\newcommand{\skvect}{\mathsf{\textbf{sk}}}
-% \newcommand{\pk}{\mathsf{pk}}
-\newcommand{\pkvect}{\mathsf{\textbf{pk}}}
-\newcommand{\usk}{\mathsf{usk}} %User sk
-\newcommand{\upk}{\mathsf{upk}} %User pk
-\newcommand{\osk}{\mathsf{osk}} %Org/Authority sk
-\newcommand{\opk}{\mathsf{opk}} %Org/Authority sk
+\newcommand{\cred}{\mathsf{cred}}
+\newcommand{\CMCom}{\mathsf{CM.Com}}
+\newcommand{\id}{\mathsf{id}}
+\newcommand{\ctx}{\mathsf{ctx}}
+\newcommand{\ppar}{\mathsf{pp}}
+
+% Generalized sk, vk, osk, opk
+\renewcommand{\sk}{\mathsf{sk}}
+\renewcommand{\vk}{\mathsf{vk}}
+\newcommand{\osk}{\mathsf{osk}}
+\newcommand{\opk}{\mathsf{opk}}
+\newcommand{\ck}{\mathsf{ck}}
+\newcommand{\cm}{\mathsf{cm}}
+\newcommand{\usk}{\mathsf{usk}}
+
+% Master Credential 
+\newcommand{\oskm}{\mathsf{osk_m}}
+\newcommand{\opkm}{\mathsf{opk_m}}
+\newcommand{\skm}{\mathsf{sk_m}}
+\newcommand{\vkm}{\mathsf{vk_m}}
+\newcommand{\ckm}{\mathsf{ck_m}}
+\newcommand{\cmm}{\mathsf{cm_m}}
+\newcommand{\credm}{\mathsf{cred_m}}
+
+
+% Context Credential 
+\newcommand{\oskc}{\mathsf{osk_c}}
+\newcommand{\opkc}{\mathsf{opk_c}}
+\newcommand{\skc}{\mathsf{sk_c}}
+\newcommand{\vkc}{\mathsf{vk_c}}
+\newcommand{\ckc}{\mathsf{ck_c}}
+\newcommand{\cmc}{\mathsf{cm_c}}
+\newcommand{\credc}{\mathsf{cred_c}}
+
+% ZK POKS
+
+\newcommand{\pirzero}{\Pi^{\mathcal{R}_{\mathsf{zero}}}}
+\newcommand{\rzero}{{\mathcal{R}_{\mathsf{zero}}}}
+
+\newcommand{\zkpok}{{\mathsf{ZKPoK}}}
 
 % Prover Verifier
 \newcommand{\Prover}{\mathcal{P}}
 \newcommand{\Verifier}{\mathcal{V}}
 \newcommand{\Adv}{\mathcal{A}}
 
-% format
 
-\newcommand{\pST}{\; \vert \;}
-% \newcommand{\pST}{\; \mid \;}
-\newcommand{\Nat}{\mathbb{N}}
-
-% Commitment
-\newcommand{\ck}{\mathsf{ck}}
-\newcommand{\ckvect}{\mathsf{\textbf{ck}}}
-\newcommand{\C}{\mathsf{C}}
-\newcommand{\CS}{\mathsf{CS}}
-\newcommand{\Cvect}{\mathsf{\textbf{C}}}
-\newcommand{\Com}{\mathsf{Com}}
-% \newcommand{\aux}{\mathsf{aux}}
-
-% \newcommand{\vk}{\mathsf{vk}} 
-\newcommand{\ppar}{\mathsf{pp}}
-\newcommand{\mku}{\mathsf{mk}_u}
-\newcommand{\uid}{\mathsf{uid}}
-\newcommand{\skc}{\mathsf{skc}_i}
-\newcommand{\pkc}{\mathsf{pkc}}
-\newcommand{\papername}{\mathsf{papername}}
-
-% \newcommand{\m}{\textbf{m}}
-\newcommand{\x}{\textbf{x}}
-\newcommand{\y}{\textbf{y}}
-\newcommand{\messagespace}{\mathcal{M}}
-\newcommand{\setspace}{\mathcal{S}}
-
-% \newcommand{\PRF}{\mathsf{PRF}}
 \newcommand{\VRF}{\mathsf{VRF}}
 \renewcommand{\secparam}{\mathsf{1^{\lambda}}}
 
@@ -524,8 +503,6 @@ keys
 % PS Sig & Pedersen Commitment 
 %
 \newcommand{\PPT}{\mathsf{PPT}}
-\newcommand{\Sig}{\mathsf{Sig}}
-\newcommand{\PS}{\mathsf{PS}}
 
 \newcommand{\tilg}{\tilde{g}}
 \newcommand{\tilh}{\tilde{h}}
@@ -533,14 +510,6 @@ keys
 \newcommand{\tilx}{\tilde{X}}
 \newcommand{\tily}{\tilde{Y}}
 
-
-
-
-
-\newcommand{\CMcom}{\mathsf{CM.Com}}
-\newcommand{\CMrand}{\mathsf{CM.Rerand}}
-\newcommand{\CMsym}{\mathsf{CM.Sym}}
-\newcommand{\vect}[1]{\textbf{#1}}
 
 
 %--------------------------------------------------------
