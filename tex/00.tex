@@ -824,7 +824,7 @@ the distribution of $\mathsf{RS.Rerand}(\pk, \sigma, \mu)$ is identical to $\mat
 
 
 
-\subsubsection{Construction}
+\subsubsection{Construction}\label{sig-construction}
 We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as input into our rerandomizable signature scheme $\mathsf{RS}$. We copy the algorithm below for convenience.
 \begin{itemize}
     \item $\mathsf{CM.Setup}(\secparam, \ell, (y_i, \ldots, y_{\ell} \in \Z_p^{\ell})) \to \ck:$  
@@ -860,11 +860,8 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
 
         \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
         \[
-        \mathcal{R}_{\mathsf{verkey}} = \{(\pk = (\vk, \ck), (x, \{y_i\}_{i=1}^\ell)): 
-        \vk = \tilde{g}^x \wedge
-        \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-    \]
-        
+        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+        \]
         
 \end{itemize}
 
@@ -1266,13 +1263,13 @@ A MIMC-ABC system is unforgeable if for all $\PPT$ adversaries $\mathcal{A}$, th
             \item Initialize $\mathsf{HU}, \mathsf{CU}, \mathsf{CRED}, \mathsf{COM}, \mathsf{OWNR} \gets \emptyset$
         \end{itemize}
     \item \textbf{Adversarial Interaction}: $\mathcal{A}$ receives $\{\opk_i\}_{i \in [n]}$ and adaptively queries:
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{HU}}(i) \rightarrow \cm[i]$: Add honest user $i$
-    \item $\mathcal{O}_{\mathsf{CU}}(i, \cm) \rightarrow \{\cm[i], r[i], \mathsf{cred}[i]\}$: Corrupt user $i$
-    \item $\mathcal{O}_{\mathsf{ObtIss}}(i, \vec{m}) \rightarrow \mathsf{cred}$: Obtain credential for honest user $i$
-    \item $\mathcal{O}_{\mathsf{Obtain}}(\cm) \rightarrow \top/\bot$: Obtain credential as malicious user
-    \item $\mathcal{O}_{\mathsf{Show}}(\{\mathsf{cred}_j\}, \phi) \rightarrow \pi$: Observe honest showings
-\end{itemize}
+        \begin{itemize}
+            \item $\mathcal{O}_{\mathsf{HU}}(i) \rightarrow \cm[i]$: Add honest user $i$
+            \item $\mathcal{O}_{\mathsf{CU}}(i, \cm) \rightarrow \{\cm[i], r[i], \mathsf{cred}[i]\}$: Corrupt user $i$
+            \item $\mathcal{O}_{\mathsf{ObtIss}}(i, \vec{m}) \rightarrow \mathsf{cred}$: Obtain credential for honest user $i$
+            \item $\mathcal{O}_{\mathsf{Obtain}}(\cm) \rightarrow \top/\bot$: Obtain credential as malicious user
+            \item $\mathcal{O}_{\mathsf{Show}}(\{\mathsf{cred}_j\}, \phi) \rightarrow \pi$: Observe honest showings
+        \end{itemize}
     \item \textbf{Forgery (Validity Condition)}: $\mathcal{A}$ outputs $(\pi^*, \phi^*, \{\mathsf{cred}_i\}_{i=1}^k)$.  
 
     \item \textbf{Win} if:
@@ -1296,13 +1293,42 @@ A MIMC-ABC system is unforgeable if for all $\PPT$ adversaries $\mathcal{A}$, th
             The commitments $\{\cm_i^*\}_{i=1}^k$ contain valid attributes $\{\vec{m}_i\}_{i=1}^k$, but
             $\pi^*$ proves a statement about these attributes that doesn't hold
         \end{enumerate}
-
+    \end{itemize}
 \end{enumerate}
 
 
 
 
+\newpage
+Let $\mathcal{A}$ be a PPT adversary. Consider the following experiment $\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\text{-}ABC},\mathcal{A}}(\lambda)$:
+\begin{enumerate}
+    \item Setup:
+    \begin{itemize}
+        \item $\mathsf{pp} \gets \mathsf{Setup}(1^\lambda)$
+        \item For each issuer $i \in [n]$: $(osk_i, opk_i) \gets \mathsf{OrgKeyGen}(\mathsf{pp})$
+        \item Initialize $\mathsf{HU}, \mathsf{CU}, \mathsf{CRED}, \mathsf{COM}, \mathsf{OWNR} \gets \emptyset$
+    \end{itemize}
+    
+    \item $\mathcal{A}$ receives $\{opk_i\}_{i \in [n]}$ and may query:
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}(i)$: Add honest user $i$
+        \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupt user $i$
+        \item $\mathcal{O}_{\mathsf{ObtIss}}(i,\vec{m})$: Obtain credential for honest user $i$
+        \item $\mathcal{O}_{\mathsf{Show}}(\{cred_j\}, \phi)$: Observe honest showings
+    \end{itemize}
+    
+    \item $\mathcal{A}$ outputs $(\pi^*, \phi^*, \{cred^*_i\}_{i=1}^k)$
+\end{enumerate}
 
+The experiment outputs 1 if:
+\begin{itemize}
+    \item Type 1: $\exists j \in [k]$ where $cred^*_j \notin \mathsf{CRED}$ or $\mathsf{OWNR}[cred^*_j] \in \mathsf{HU} \setminus \mathsf{CU}$
+    \item Type 2: $\mathsf{Verify}(\{cred^*_i, opk_i\}_{i=1}^k, \phi^*, \pi^*) = 1$ but either:
+    \begin{itemize}
+        \item The committed attributes don't satisfy $\phi^*$
+        \item The proof claims a false relationship
+    \end{itemize}
+\end{itemize}
 
 
 
@@ -1609,7 +1635,9 @@ This ensures:
 
 
 
-
+        \[
+        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+        \]
 
 
 
@@ -1617,36 +1645,26 @@ This ensures:
 
 \newpage
 \subsection{Master Credential Issuance}
-The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is modelled as a signature over commitment $\cm_m = \mathsf{CM.Com}([\id, \ctx]; r)$
+The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is modelled as a signature over commitment $\cmm = \mathsf{CM.Com}([\id, \ctx]; r)$
 
-
+\todonote{keys: \ref{pok-keys}}
 
 \begin{figure}
     \begin{center}
-    \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
     \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$} \\[0.5em]
     \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg,p) \sample \BGGen(\secparam), \; \mathsf{ck_m} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$}\\[1em]
     \multicolumn{3}{l}{$(\skm, \vkm) \sample \mathsf{RS.KeyGen}(\mathsf{ck_m}), \; \text{ Return } (\oskm, \opkm) = ((\skm),(\vkm, \ckm))$}\\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{UserKeyGen}(1^{\lambda})}: \usk \sample \Z_p, \text{ Return } \usk$} \\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}: \pirzero(\cmm = \CMCom([0,0];\usk)) = \zkpok\{(\cmm, \usk)| \cmm = g_1^0g_2^0g^{\usk}\}$}\\[1em]
-    \multicolumn{3}{l}{$\Pi^{\mathcal{R}_{\mathsf{opk}}}(\sk, \vk) = \zkpok\{(x, \sk, r) | \cm = g^xh^r \wedge \tilde{cm} = \tilde{g}^x\tilde{h}^r e(\sk,\vk) = 1\G_T\} \mathsf{VerKeyGen}$} \\[1em]
-    % user proves they created an empty commitment, organisation proves they created their key correctly
-    $\underline{\mathsf{(Obtain)}}$ && $\underline{\mathsf{(Issue)}}$ \\[0.5em]
-    \multicolumn{3}{l}{$k_1 \gets \Z_p$, \; $\cm_1 \gets \mathsf{CM.Com}([0,k_1,0,0],r)$}\\[1em]
-    \multicolumn{3}{l}{$\Pi_1 \gets ZKPoK.Prove_{Zeros}(C_1)(k_1, r)$} \\[1em]
-    & $\xrightarrow{C_1, \Pi_1}$ & \\[1em]
-    \multicolumn{3}{r}{If $ZKPoK.Verify_{Zeros}(\Pi_1, C_1) = 0, $ return $ \bot$} \\[1em]
-    \multicolumn{3}{r}{$k_2 \gets \Z_p, \; C_2 \gets Com([s, k_2, "master", attrs], 0)$} \\[1em]
-    \multicolumn{3}{r}{$C_m \gets C_1 \cdot C_2 = Com([s,k_1+k_2,"master", attrs], r)$} \\[1em]
-    & $\xleftarrow{C_2, C_m, s, k_2}$ & \\[1em]
-    \multicolumn{3}{l}{$k \gets k_1 + k_2$} \\[1em]
-    \multicolumn{3}{l}{$\Pi_2 \gets ZKPoK.Prove_{addition}(C_1, C_2, C_m)(k_1, k_2, k, r)$} \\[1em]
-    & $\xrightarrow{C_1, C_2, C_m, \Pi_2, \Pi_3, \tau}$ &\\[1em]
-    \multicolumn{3}{r}{If $ZKPOK.Verify_{addition}(\Pi_2, C_1, C_2, C_m) = 0, \;$ return $\bot$} \\[0.5em]
-    \multicolumn{3}{r}{$\sigma_m \gets PS.Sign(SK_M, C_1)$} \\[0.5em]
-    \multicolumn{3}{r}{Store Data Record MCO $(C_m, \sigma_m, \tau, \Pi_2, \Pi_3, C_1, C_2, k_2)$ } \\[1em]
-    & $\xleftarrow{\sigma_m}$ & \\[1em]
-    \multicolumn{3}{l}{If $PS.Verify(PK_A, \sigma_m, C_m) = 1$, Store $Cred_m(\sigma_m, C_m)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
+    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\cm_1, \usk)| \cm_1 = g_1^0g_2^0g^{\usk}\}$}\\[1em]
+    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) | \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$}\\[1em]
+    $\underline{\mathsf{Obtain}(\usk, \opk)}$ && $\underline{\mathsf{Issue(\cm, \vec{m}, \osk)}}$ \\[1em]
+    If  $\pirverkey(\sk, \vk, \ck)$ fails, return $\bot$ & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & \\[1em]
+    $\cm_1 = \CMCom([0,0];\usk)$ & $\xrightarrow{\pirzero(\cm_1)}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
+    \multicolumn{3}{r}{$\cm_2 = \CMCom([\id, \ctx]; 0), \; \cmm = \cm_1 \cdot \cm_2 $} \\[1em]
+    If $\cmm \neq \CMCom([\id, \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, \ctx, \sigmam}$ & $\sigmam \sample \RSSign(\cmm, \osk)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$ return $\bot$} \\[1em]
     \end{tabular}
     \end{center}
     \caption{Master Credential Issuance}
@@ -1656,61 +1674,7 @@ The master credential issuance protocol enables a user to obtain their root cred
 
 \paragraph{Informal Security Analysis}
 
-The two-party process between the user and master credential oracle ensures sybil resistance of unique identifier $s$; the oracle has access to the user information and checks duplicate issuance within their own identity system. 
-During VRF key issuance, the anonymity of the master credential is preserved via the secrecy of the VRF key $k$. During the two-party computation, the user's share $k_1$ remains hidden to $\MCO$ via the hiding property of the commitment $C_1$, and malicious commitment usage is prevented by the soundness property of $\Pi_1$. 
-
-\noindent The user combines  $k_1 + k_2$ to form their VRF key, $\Pi_2$ proves $k_1$ is correctly derived from $C_1$, $k_2$ is derived from $C_2$ and $k$ combines $k_1 + k_2$, $\MCO$'s input to $k$ prevents forgery attempts on the key $k$. The hiding property of the commitments and zero-knowledge property of the proofs ensures correct protocol adherence while maintaining private computation. Revocation is enabled by encryption of the VRF key $k$ with the public key of the Auditor $PK_A$. $\Pi_3$ proves that $\tau$ is an encryption of the committed key $k$. $\tau$ is stored with the credential oracle maintaining privacy during normal operation. Finally, the protocol prevents replay attacks by using interactive zero-knowledge proofs requiring a challenge from the verifier, fresh commitment randomness, and $\MCO$'s input of their share of the VRF key $k_2$ preventing existing transcript reuse.
-
-
-
-    % \item \textbf{Unforgeability}: A malicious user can't show/verify attributes for credentials they don't own, can't mix credentials from different users, can't present a valid multi-credential proof without controlling all constituent credentials, can't replay a credential show from a different honest user. 
-    
-    % \item \textbf{Anonymity:} A malicious verifier or organization can't identify the user or learn about the user more than the public information presented in the protocol, and that the credential satisfies the verification statement. The malicious verifier can't link multiple showings of the same credential, and for any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
-
-Unforgeable
-- user has to do 2 party protocol to generate key k, means user can't forge it
-- also user needs to prove zeros in the commitment, so they can't forge their attribute values
-- they need to prove 
-
-Anonymous
-- users prf key k is anonymous
-- 
-
-
-
-
-
-
-Notes on security reduction
-Because we changed from UPK, USK, The simulator needs to 
-- Generate user identities (satisfied by CM.Com)
-- Extract user secrets when needed (possible through r)
-- Link users across queries (achieved through cm)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+The two-party process between the user and master credential oracle ensures sybil resistance of unique identifier $\id$; the oracle has access to the user information and checks duplicate issuance within their own identity system. $\User$'s $\usk$ remains hidden via the hiding property of the commitment $\cm_1$ malicious use prevented by $\pirzero$
 
 
 
@@ -1810,12 +1774,12 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
         \item Analogous to binding breaks in commitment schemes
     \end{itemize}
     
-    \item \textbf{Context/Linking Forgery}
-    \begin{itemize}
-        \item Adversary creates false relationships between credentials
-        \item Reduces to VRF uniqueness property
-        \item Moved to separate Credential Binding security property
-    \end{itemize}
+    % \item \textbf{Context/Linking Forgery}
+    % \begin{itemize}
+    %     \item Adversary creates false relationships between credentials
+    %     \item Reduces to VRF uniqueness property
+    %     \item Moved to separate Credential Binding security property
+    % \end{itemize}
 \end{enumerate}
 
 \subsection{Credential Structure}
@@ -2912,7 +2876,7 @@ This -protocol satisfies:
 
 
 \newpage
-\subsection{Correctness of Keys for protection against Malicious Issuer}\label{pok-ps}
+\subsection{Correctness of Keys for protection against Malicious Issuer}\label{pok-keys}
 Given the commitment key and secret and verification key, we require the issuer to prove in zero knowledge the correctness of their key computation to prevent malicious key usage that could break cryptographic primitives like the commitment scheme and signature scheme.
 \begin{itemize}
     \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
@@ -2920,12 +2884,9 @@ Given the commitment key and secret and verification key, we require the issuer 
 \end{itemize}
 
 We want to prove the following relation:
-\[
-\mathcal{R}_O = \{(\pk = (\vk, \ck), \sk): 
-    \exists x, \{y_i\}_{i=1}^\ell \text{ s.t. }
-    sk = g^x \wedge vk = \tilde{g}^x \wedge
-    \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-\]
+    \[
+    \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+    \]
 
 \begin{protocol}{Key Validation Protocol}{key-val}
 \textbf{Common Input:} $(\vk, \{g_i, \tilde{g}_i\}_{i=1}^\ell)$\\
