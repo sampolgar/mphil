@@ -858,8 +858,17 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
         \}
     \]
 
-        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ checks $e(\sk, \vk) = 1\G_T$ outputs 1 for success or 0 for failure. 
+        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
+        \[
+        \mathcal{R}_{\mathsf{verkey}} = \{(\pk = (\vk, \ck), (x, \{y_i\}_{i=1}^\ell)): 
+        \vk = \tilde{g}^x \wedge
+        \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+    \]
+        
+        
 \end{itemize}
+
+
 
 
 \subsubsection{Security of our Construction}
@@ -1067,12 +1076,10 @@ We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous 
 
     \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
 
-    \item $\mathsf{UKeygen}(\ppar) \to (\usk)$: is a probabilistic algorithm that takes public parameters $\ppar$, outputs users secret key $\usk$
-    
-    \item $\mathsf{UserCommit}(\opk, \vec{m}, \usk) \rightarrow (\cm)$ is a probabilistic algorithm that takes as input the organization's public key $\opk$, a vector of messages $\vec{m}$ and the user's secret key $\usk$ which will be the randomness in the commitment. It outputs a commitment $\cm = \CMCom([\vec{m}];\usk)$.
+    \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: is a probabilistic algorithm that takes public parameters $\ppar$, outputs users secret key $\usk$
 
-    \item $(\mathsf{Obtain}(\cm, \usk, \opk,  \phi, aux), \mathsf{Issue}(\osk, \cm, \phi, \{\Pi\}_i, aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. Can be used 
-    for obtaining a master or context credential $\credm, \credc$. $\mathsf{Obtain}$ The user inputs their commitment $\cm$ and $\usk$ and generates a proof of knowledge satisfying statement $\phi$. Obtaining a Context Credential requires verifying a master credential and consistency of user id between master and context which we represent as auxiliary information $aux$. $\mathsf{Issue}$ Issuer runs this with their secret key $\osk$, commitment $\cm$, verifies proofs $\{\Pi\}_i$ against the statement $\phi$. 
+    \item $(\mathsf{Obtain}(\vec{m}, \usk, \opk,  \phi, aux), \mathsf{Issue}(\osk, \cm, \phi, \{\Pi\}_i, aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. Can be used 
+    for obtaining a master or context credential $\credm, \credc$. $\mathsf{Obtain}$ The user inputs their message vector $\vec{m}$ and $\usk$, generates a commitment $\cm = \CMCom([\vec{m}];\usk)$ and proof of knowledge satisfying statement $\phi$. Obtaining a Context Credential requires verifying a master credential and consistency of user id $\id$ between master and context which we represent as auxiliary information $aux$. $\mathsf{Issue}$ Issuer runs this with their secret key $\osk$, commitment $\cm$, verifies proofs $\{\Pi\}_i$ against the statement $\phi$. 
     The protocol outputs a credential $\cred$ to the user and $\bot$ to the issuer.
 
     \item $(\mathsf{Show}(\{\cm_i, r_i, \mathsf{cred}_i\}_{i=1}^n, \phi), \mathsf{Verify}(\{\mathsf{cred}'_i, \opk_i\}_{i=1}^n, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with $n$ commitment-opening pairs $(\cm_i, r_i)$, their corresponding credentials $\mathsf{cred}_i$, and a predicate $\phi$. The verifier runs $\mathsf{Verify}$ with $n$ rerandomized credentials $\mathsf{cred}'_i$, their associated organization public keys $\opk_i$, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
@@ -1089,11 +1096,17 @@ Our Multi Issuer, Multi Credential Anonymous Credential system satisfies the fol
 \begin{enumerate}
     \item \textbf{Correctness: } a showing of a valid set of credentials and their corresponding commitments always verifies if the credentials are issued honestly and with respect to their corresponding issuer public keys. 
     
-    \item \textbf{Unforgeability}: A malicious user can't show/verify attributes for credentials they don't own, can't mix credentials from different users, can't present a valid multi-credential proof without controlling all constituent credentials, can't replay a credential show from a different honest user. 
-    
+    \item \textbf{Unforgeability}:
+    A malicious user cannot forge credentials or generate false proofs about valid credentials. More formally, our scheme provides unforgeability against two distinct types of attacks:
+    \begin{itemize}
+        \item Type-1 Forgery: An adversary cannot produce a valid credential that either was never legitimately issued by the credential system, or belongs to an honest, uncorrupted user.
+        \item Type-2 Forgery: An adversary, even with access to valid credentials, cannot generate accepting proofs that either claim attributes inconsistent with the underlying commitment, or assert false relationships about legitimately committed attributes.
+    \end{itemize}
+
+    \todonote{fix this def  up}
     \item \textbf{Anonymity:} A malicious verifier or organization can't identify the user or learn about the user more than the public information presented in the protocol, and that the credential satisfies the verification statement. The malicious verifier can't link multiple showings of the same credential, and for any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
 
-    \item \textbf{Credential Binding}: A malicious user cannot produce valid proofs linking credentials unless they were legitimately issued to the same user identifier. Specifically, an adversary cannot: combine credentials from different users into a valid multi-credential proof, even if each credential is individually valid. Can't create a valid linking proof without knowing the user secret for all constituent credentials, and can't forge proofs that falsely demonstrate credential ownership consistency
+    \textbf{Credential Binding}: A malicious user cannot create valid proofs combining multiple credentials unless they were legitimately issued to the same user identifier. Specifically, when a proof statement requires demonstrating consistent ownership across credentials, an adversary cannot: (1) combine credentials from different users, even if each credential is individually valid, or (2) create proofs without knowing all credential openings.
 
 \end{enumerate}
 
@@ -1192,7 +1205,7 @@ A Multi-Issuer Multi-Credential Anonymous Credential system is correct if honest
 
 \noindent More formally:
 
-\begin{definition}[MIMC-ABC Correctness]
+\begin{definition}[Correctness]
 A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correct if for all security parameters $\lambda \in \mathbb{N}$, all polynomially-bounded $n \in \mathbb{N}$, all valid predicates $\phi$, and all attribute vectors $\{\vec{m}_i\}_{i \in [n]}$ of valid lengths, the following probability is 1:
 \[
         \Pr
@@ -1395,16 +1408,19 @@ This extends \cite{fuchsbauer_structure-preserving_2019}'s anonymity game by:
 
 
 \newpage
-\subsection{Credential Binding}
 \begin{definition}[MIMC-ABC Credential Binding]
+A Multi-Issuer Multi-Credential Anonymous Credential system provides credential binding if no $\PPT$ adversary $\mathcal{A}$ can successfully combine credentials from different user identities into a valid proof. Specifically, $\mathcal{A}$ cannot:
+\begin{enumerate}
+    \item produce a valid proof linking credentials issued to different user identifiers
+    \item create a valid multi-credential proof without knowing all constituent credential openings
+\end{enumerate}
+
 A MIMC-ABC system provides credential binding if for all PPT adversaries $\mathcal{A}$,
 \[
 \mathsf{Adv}^{\mathsf{bind}}_{\mathcal{A}}(\lambda) := \Pr[\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)=1] \leq \negl
 \]
 where the experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$ proceeds as:
 \end{definition}
-
-\noindent $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda)$:
 
 \begin{enumerate}
     \item \textbf{Setup}:
@@ -1419,18 +1435,20 @@ where the experiment $\mathsf{Exp}^{\mathsf{bind}}_{\mathsf{MIMC\mbox{-}ABC},\ma
         \item $\mathcal{O}_{\mathsf{HU}}(i) \rightarrow \cm[i]$: Add honest user
         \item $\mathcal{O}_{\mathsf{CU}}(i, \cm)$: Corrupt user (reveals secrets)
         \item $\mathcal{O}_{\mathsf{ObtIss}}(i, \vec{m})$: Obtain honest credentials
-        \item $\mathcal{O}_{\mathsf{Obtain}}(i, \cm)$: Interact with malicious issuer
         \item $\mathcal{O}_{\mathsf{Issue}}(\cm)$: Issue to malicious user
-        \item $\mathcal{O}_{\mathsf{Show}}(\{\mathsf{cred}_j\}, \phi)$: Observe showings
     \end{itemize}
     
     \item \textbf{Forgery}: $\mathcal{A}$ outputs $(\pi^*, \phi^*, \{\mathsf{cred}_j^*\}_{j=1}^k)$
     
     \item \textbf{Win} if:
     \begin{enumerate}
+        \item $\phi^* \in \Phi_{\mathsf{binding}}$ where:
+        \begin{itemize}
+            \item $\phi^*: \mathsf{CRED}^k \rightarrow \{0,1\}$ with $k \geq 2$
+            \item Requires proof of consistent user identifiers
+        \end{itemize}
         \item $\mathsf{Verify}(\{\mathsf{cred}_j^*, \opk_j\}_{j=1}^k, \phi^*, \pi^*) = 1$
         \item $\exists j_1,j_2 \in [k]$ with $\mathsf{OWNR}[\mathsf{cred}_{j_1}^*] \neq \mathsf{OWNR}[\mathsf{cred}_{j_2}^*]$ 
-        \item $\forall j \in [k]: \mathsf{cred}_j^* \in \mathsf{CRED} \land \mathsf{OWNR}[\mathsf{cred}_j^*] \in \mathsf{HU} \setminus \mathsf{CU}$
     \end{enumerate}
 \end{enumerate}
 
@@ -1442,6 +1460,9 @@ This binding property enforces credential ownership consistency:
     \item Complements unforgeability by addressing cross-user composition
 \end{itemize}
 \end{remark}
+
+
+
 
 
 
@@ -1519,69 +1540,31 @@ Our construction liberally employs $\Sigma$-protocols for proving statements abo
 \end{itemize}
 
 
-\subsubsection{Example} Consider an employers recruitment scenario where they wish to verify personal information, $\phi$ requires proving three credentials as in Figure \ref{fig:three-creds} :
-\begin{enumerate}
-    \item Possession of a valid master credential
-    \item Possession of a driver's license
-    \item An Australian University degree (revealing the degree name)
-\end{enumerate}
-
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Master Credential}{%
-                s: 12345, \\
-                k: 89898, \\
-                ctx: "master", \\
-                exp: 01/01/2030, \\
-                \ldots \\
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                s: 12345, \\
-                \delta: VRF(k, "dmv"), \\
-                ctx: "dmv", \\
-                exp: 02/02/2027, \\
-                \ldots \\
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{University Degree}{%
-                s: 12345, \\
-                \delta: VRF(k, "usyd{-}bcompsc"), \\
-                ctx: "usyd{-}bcompsc", \\
-                issued: 06/06/2020, \\
-                \ldots \\
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Three Example Credentials}
-    \label{fig:three-creds}
-\end{figure}
-
-\noindent A user with three valid credentials first rerandomizes their signatures and commitments:
-\begin{align*}
-    \cm_i' \gets& \mathsf{Com.Rerand}(\cm_i, \Delta_{r_i}) \text{ for } i \in [1,3] \\
-    \sigma_i' \gets& \mathsf{PS.Rerand}(\sigma_i, \Delta_{r_i}, \Delta_{u_i} \text{ for } i \in [1,3])
-\end{align*}
-The rerandomized credentials and commitments $\cm_i', \sigma_i'$ are now indistinguishable from their original issuance.  
-Next, the user and verifier interact in a two-party protocol where the user first verifies the randomized signatures and their commitments, 
+\subsubsection{Example} a user has multiple credentials and wishes to prove them together, where $\ctx$ is a string denoting the context, for example, $\credm$ may be $"government"$ and $\credc$ may be $"DMV"$ for a driver's license
 \[
-\mathsf{PS.Verify}(\sigma_i',\cm_i',pk_i') = 1 \quad \forall i \in [3]
+\credm = \RSSign(\CMCom([\id, \ctx]; \uskm)) \quad \wedge \quad \credc = \RSSign(\CMCom([\id, \ctx]; \uskc))
 \]
 
-\noindent Let $\mathcal{R}$ be a relation for public input $(\sigma_m', \sigma_d', \sigma_u', pk_m, pk_d, pk_u, \cm_m', \cm_d', \cm_u')$ where:
+% \noindent A user with three valid credentials first rerandomizes their signatures and commitments:
+% \begin{align*}
+%     \cm_i' \gets& \mathsf{Com.Rerand}(\cm_i, \Delta_{r_i}) \text{ for } i \in [1,3] \\
+%     \sigma_i' \gets& \mathsf{PS.Rerand}(\sigma_i, \Delta_{r_i}, \Delta_{u_i} \text{ for } i \in [1,3])
+% \end{align*}
+% The rerandomized credentials and commitments $\cm_i', \sigma_i'$ are now indistinguishable from their original issuance.  
+% Next, the user and verifier interact in a two-party protocol where the user first verifies the randomized signatures and their commitments, 
+% \[
+% \mathsf{PS.Verify}(\sigma_i',\cm_i',pk_i') = 1 \quad \forall i \in [3]
+% \]
 
-$\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, u_\Delta, \mathsf{ctx}_m, \mathsf{ctx}_d, \mathsf{ctx}_u, \mathsf{exp}_m, \mathsf{exp}_d, \mathsf{issued}_u)$:
-\begin{align*}
-    \cm_m &= \mathsf{CM.Com}([s, k, \mathsf{ctx}_m, \mathsf{exp}_m]; r_m) \; \wedge \; \mathsf{exp}_m > \mathsf{today} \; \wedge \mathsf{ctx}_m = \text{"master"} \; \wedge\\
-    \cm_d &= \mathsf{CM.Com}([s, \delta_d, \mathsf{ctx}_d, \mathsf{exp}_d]; r_d) \; \wedge \; \mathsf{exp}_d > \mathsf{today} \; \wedge \mathsf{ctx}_d = \text{"dmv"} \; \wedge\\
-    \cm_u &= \mathsf{CM.Com}([s, u_\Delta, \mathsf{ctx}_u, \mathsf{issued}_u]; r_u) \; \wedge \; \mathsf{ctx}_u \in \mathcal{D} \; \wedge\\
-    s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
-\end{align*}
+% \noindent Let $\mathcal{R}$ be a relation for public input $(\sigma_m', \sigma_d', \sigma_u', pk_m, pk_d, pk_u, \cm_m', \cm_d', \cm_u')$ where:
+
+% $\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, u_\Delta, \mathsf{ctx}_m, \mathsf{ctx}_d, \mathsf{ctx}_u, \mathsf{exp}_m, \mathsf{exp}_d, \mathsf{issued}_u)$:
+% \begin{align*}
+%     \cm_m &= \mathsf{CM.Com}([s, k, \mathsf{ctx}_m, \mathsf{exp}_m]; r_m) \; \wedge \; \mathsf{exp}_m > \mathsf{today} \; \wedge \mathsf{ctx}_m = \text{"master"} \; \wedge\\
+%     \cm_d &= \mathsf{CM.Com}([s, \delta_d, \mathsf{ctx}_d, \mathsf{exp}_d]; r_d) \; \wedge \; \mathsf{exp}_d > \mathsf{today} \; \wedge \mathsf{ctx}_d = \text{"dmv"} \; \wedge\\
+%     \cm_u &= \mathsf{CM.Com}([s, u_\Delta, \mathsf{ctx}_u, \mathsf{issued}_u]; r_u) \; \wedge \; \mathsf{ctx}_u \in \mathcal{D} \; \wedge\\
+%     s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
+% \end{align*}
 
 
 
@@ -1644,7 +1627,9 @@ The master credential issuance protocol enables a user to obtain their root cred
     \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$} \\[0.5em]
     \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg,p) \sample \BGGen(\secparam), \; \mathsf{ck_m} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$}\\[1em]
     \multicolumn{3}{l}{$(\skm, \vkm) \sample \mathsf{RS.KeyGen}(\mathsf{ck_m}), \; \text{ Return } (\oskm, \opkm) = ((\skm),(\vkm, \ckm))$}\\[1em]
-    \multicolumn{3}{l}{$\mathsf{(Obtain, Issue)}: \cmm = \CMCom([0,0];r), \pirzero(\cmm) = \zkpok\{(\cmm, r)| \cmm = g_1^0g_2^0g^r\}$}\\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{UserKeyGen}(1^{\lambda})}: \usk \sample \Z_p, \text{ Return } \usk$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}: \pirzero(\cmm = \CMCom([0,0];\usk)) = \zkpok\{(\cmm, \usk)| \cmm = g_1^0g_2^0g^{\usk}\}$}\\[1em]
+    \multicolumn{3}{l}{$\Pi^{\mathcal{R}_{\mathsf{opk}}}(\sk, \vk) = \zkpok\{(x, \sk, r) | \cm = g^xh^r \wedge \tilde{cm} = \tilde{g}^x\tilde{h}^r e(\sk,\vk) = 1\G_T\} \mathsf{VerKeyGen}$} \\[1em]
     % user proves they created an empty commitment, organisation proves they created their key correctly
     $\underline{\mathsf{(Obtain)}}$ && $\underline{\mathsf{(Issue)}}$ \\[0.5em]
     \multicolumn{3}{l}{$k_1 \gets \Z_p$, \; $\cm_1 \gets \mathsf{CM.Com}([0,k_1,0,0],r)$}\\[1em]
@@ -2926,11 +2911,146 @@ This -protocol satisfies:
 
 
 
+\newpage
+\subsection{Correctness of Keys for protection against Malicious Issuer}\label{pok-ps}
+Given the commitment key and secret and verification key, we require the issuer to prove in zero knowledge the correctness of their key computation to prevent malicious key usage that could break cryptographic primitives like the commitment scheme and signature scheme.
+\begin{itemize}
+    \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+    \item $\mathsf{RS.KeyGen:} (\sk, \vk) \gets (g^x, \tilde{g}^x)$, return $(\sk, \vk)$
+\end{itemize}
+
+We want to prove the following relation:
+\[
+\mathcal{R}_O = \{(\pk = (\vk, \ck), \sk): 
+    \exists x, \{y_i\}_{i=1}^\ell \text{ s.t. }
+    sk = g^x \wedge vk = \tilde{g}^x \wedge
+    \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+\]
+
+\begin{protocol}{Key Validation Protocol}{key-val}
+\textbf{Common Input:} $(\vk, \{g_i, \tilde{g}_i\}_{i=1}^\ell)$\\
+\textbf{Prover Input:} $(x, \{y_i\}_{i=1}^\ell)$ such that $\vk = \tilde{g}^x$ and $g_i = g^{y_i}, \tilde{g}_i = \tilde{g}^{y_i}$
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples $\alpha, \{\beta_i\}_{i=1}^\ell \sample \Z_p$ and computes:
+    \begin{itemize}
+        \item $T_1 = g^\alpha, \tilde{T}_1 = \tilde{g}^\alpha$
+        \item For $i \in [1,\ell]: T_i = g^{\beta_i}, \tilde{T}_i = \tilde{g}^{\beta_i}$
+    \end{itemize}
+    Send $\{T_1, \tilde{T}_1, \{T_i, \tilde{T}_i\}_{i=1}^\ell\}$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \Z_p$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \begin{itemize}
+        \item $z_x = \alpha + cx$
+        \item For $i \in [1,\ell]: z_i = \beta_i + cy_i$
+    \end{itemize}
+    Send $(z_x, \{z_i\}_{i=1}^\ell)$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        g^{z_x} &\stackrel{?}{=} T_1 \cdot sk^c\\
+        \tilde{g}^{z_x} &\stackrel{?}{=} \tilde{T}_1 \cdot vk^c\\
+        \forall i \in [1,\ell]: g^{z_i} &\stackrel{?}{=} T_i \cdot g_i^c\\
+        \tilde{g}^{z_i} &\stackrel{?}{=} \tilde{T}_i \cdot \tilde{g}_i^c
+    \end{align*}
+\end{enumerate}
+\end{protocol}
+
+
+
+
+\subsection{Correctness of Keys for protection against Malicious Issuer}\label{pok-ps}
+Given the commitment key and verification key, we require the issuer to prove in zero knowledge the correctness of their key computation. 
+\begin{itemize}
+    \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+    \item $\mathsf{RS.KeyGen:} (\sk, \vk) \gets (g^x, \tilde{g}^x)$, return $(\sk, \vk)$
+\end{itemize}
+
+We want to prove the following relation:
+\[
+\mathcal{R}_O = \{(\pk = (\vk, \ck), (x, \{y_i\}_{i=1}^\ell)): 
+    \vk = \tilde{g}^x \wedge
+    \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+\]
+
+\begin{protocol}{Key Validation Protocol}{key-val}
+\textbf{Common Input:} $(\vk, \{g_i, \tilde{g}_i\}_{i=1}^\ell)$\\
+\textbf{Prover Input:} $(x, \{y_i\}_{i=1}^\ell)$ such that $\vk = \tilde{g}^x$ and $g_i = g^{y_i}, \tilde{g}_i = \tilde{g}^{y_i}$
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover:
+    \begin{itemize}
+        \item Samples $\alpha, \{\beta_i\}_{i=1}^\ell, \rho \sample \Z_p$
+        \item Computes commitment to sk: $C_{sk} = g^x h^\rho$
+        \item Computes $\tilde{T}_1 = \tilde{g}^\alpha$
+        \item For $i \in [1,\ell]: T_i = g^{\beta_i}, \tilde{T}_i = \tilde{g}^{\beta_i}$
+    \end{itemize}
+    Send $(C_{sk}, \tilde{T}_1, \{T_i, \tilde{T}_i\}_{i=1}^\ell)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \Z_p$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \begin{itemize}
+        \item $z_x = \alpha + cx$
+        \item $z_\rho = \rho + cr'$ where $r'$ is randomness used in $C_{sk}$
+        \item For $i \in [1,\ell]: z_i = \beta_i + cy_i$
+    \end{itemize}
+    Send $(z_x, z_\rho, \{z_i\}_{i=1}^\ell)$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        \tilde{g}^{z_x} &\stackrel{?}{=} \tilde{T}_1 \cdot vk^c\\
+        g^{z_x}h^{z_\rho} &\stackrel{?}{=} C_{sk}^c\\
+        \forall i \in [1,\ell]: g^{z_i} &\stackrel{?}{=} T_i \cdot g_i^c\\
+        \tilde{g}^{z_i} &\stackrel{?}{=} \tilde{T}_i \cdot \tilde{g}_i^c
+    \end{align*}
+\end{enumerate}
+\end{protocol}
 
 
 
 
 
+\paragraph{Security Properties:}
+This $\Sigma$-protocol satisfies:
+\begin{itemize}
+    \item \textbf{Special Soundness:} Given two accepting transcripts 
+    $(C_{sk}, \tilde{T}_1, \{T_i, \tilde{T}_i\}, c, z_x, z_\rho, \{z_i\})$ and 
+    $(C_{sk}, \tilde{T}_1, \{T_i, \tilde{T}_i\}, c', z_x', z_\rho', \{z_i'\})$ 
+    with $c \neq c'$, we can extract:
+    \[
+    x = \frac{z_x - z_x'}{c - c'} \quad \text{and} \quad
+    y_i = \frac{z_i - z_i'}{c - c'} \text{ for } i \in [1,\ell]
+    \]
+    
+    The validity of the extracted values follows from the verification equations:
+    \begin{align*}
+        \tilde{g}^{z_x} &= \tilde{T}_1 \cdot vk^c &\implies& \tilde{g}^x = vk\\
+        g^{z_x}h^{z_\rho} &= C_{sk}^c &\implies& g^x = C_{sk}/h^\rho\\
+        g^{z_i} &= T_i \cdot g_i^c &\implies& g^{y_i} = g_i\\
+        \tilde{g}^{z_i} &= \tilde{T}_i \cdot \tilde{g}_i^c &\implies& \tilde{g}^{y_i} = \tilde{g}_i
+    \end{align*}
+    
+    \item \textbf{HVZK:} We construct simulator $\mathcal{S}$ as follows:
+    \begin{enumerate}
+        \item On input $c$, sample $z_x, z_\rho, \{z_i\} \sample \Z_p$
+        \item Sample $\rho \sample \Z_p$ and compute $C_{sk} = g^x h^\rho$
+        \item Compute commitments:
+        \begin{align*}
+            \tilde{T}_1 &= \tilde{g}^{z_x} \cdot vk^{-c}\\
+            T_i &= g^{z_i} \cdot g_i^{-c}, \tilde{T}_i = \tilde{g}^{z_i} \cdot \tilde{g}_i^{-c}
+        \end{align*}
+        \item Output $(C_{sk}, \tilde{T}_1, \{T_i, \tilde{T}_i\}, c, z_x, z_\rho, \{z_i\})$
+    \end{enumerate}
+    
+    The simulated transcript is perfectly indistinguishable from real transcripts because:
+    \begin{itemize}
+        \item In real protocol: $z_x = \alpha + cx$ and $z_i = \beta_i + cy_i$ where $\alpha, \beta_i$ are uniform
+        \item $z_\rho$ is uniform as it masks the secret commitment randomness
+        \item All responses are uniform in $\Z_p$, matching simulator's distribution
+        \item Commitments are uniquely determined by verification equations
+    \end{itemize}
+\end{itemize}
 
 
 
@@ -3387,6 +3507,72 @@ cm4 =
 % Private Identity System from MIMC-ABC
 % 
 % % % % % % % % % % 
+
+
+
+% \subsubsection{Example} Consider an employers recruitment scenario where they wish to verify personal information, $\phi$ requires proving three credentials as in Figure \ref{fig:three-creds} :
+% \begin{enumerate}
+%     \item Possession of a valid master credential
+%     \item Possession of a driver's license
+%     \item An Australian University degree (revealing the degree name)
+% \end{enumerate}
+
+% \begin{figure}
+%         \begin{pchstack}[boxed, center, space=4em]
+%             \begin{pcvstack}
+%                 \procedure[space=auto]{Master Credential}{%
+%                 \id: 12345, \\
+%                 k: 89898, \\
+%                 \ctx: "master", \\
+%                 \ldots \\
+%                 }
+%             \end{pcvstack}
+%             \pcvspace
+%             \begin{pcvstack}
+%                 \procedure[space=auto]{Driver License}{%
+%                 \id: 12345, \\
+%                 \delta: VRF(k, "dmv"), \\
+%                 \ctx: "dmv", \\
+%                 \ldots \\
+%                 }
+%             \end{pcvstack}
+%             \pcvspace
+%             \begin{pcvstack}
+%                 \procedure[space=auto]{University Degree}{%
+%                 \id: 12345, \\
+%                 \delta: VRF(k, "usyd{-}bcompsc"), \\
+%                 \ctx: "usyd{-}bcompsc", \\
+%                 \ldots \\
+%                 }
+%             \end{pcvstack}
+%         \end{pchstack}
+%     \caption{Three Example Credentials}
+%     \label{fig:three-creds}
+% \end{figure}
+
+% \noindent A user with three valid credentials first rerandomizes their signatures and commitments:
+% \begin{align*}
+%     \cm_i' \gets& \mathsf{Com.Rerand}(\cm_i, \Delta_{r_i}) \text{ for } i \in [1,3] \\
+%     \sigma_i' \gets& \mathsf{PS.Rerand}(\sigma_i, \Delta_{r_i}, \Delta_{u_i} \text{ for } i \in [1,3])
+% \end{align*}
+% The rerandomized credentials and commitments $\cm_i', \sigma_i'$ are now indistinguishable from their original issuance.  
+% Next, the user and verifier interact in a two-party protocol where the user first verifies the randomized signatures and their commitments, 
+% \[
+% \mathsf{PS.Verify}(\sigma_i',\cm_i',pk_i') = 1 \quad \forall i \in [3]
+% \]
+
+% \noindent Let $\mathcal{R}$ be a relation for public input $(\sigma_m', \sigma_d', \sigma_u', pk_m, pk_d, pk_u, \cm_m', \cm_d', \cm_u')$ where:
+
+% $\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, u_\Delta, \mathsf{ctx}_m, \mathsf{ctx}_d, \mathsf{ctx}_u, \mathsf{exp}_m, \mathsf{exp}_d, \mathsf{issued}_u)$:
+% \begin{align*}
+%     \cm_m &= \mathsf{CM.Com}([s, k, \mathsf{ctx}_m, \mathsf{exp}_m]; r_m) \; \wedge \; \mathsf{exp}_m > \mathsf{today} \; \wedge \mathsf{ctx}_m = \text{"master"} \; \wedge\\
+%     \cm_d &= \mathsf{CM.Com}([s, \delta_d, \mathsf{ctx}_d, \mathsf{exp}_d]; r_d) \; \wedge \; \mathsf{exp}_d > \mathsf{today} \; \wedge \mathsf{ctx}_d = \text{"dmv"} \; \wedge\\
+%     \cm_u &= \mathsf{CM.Com}([s, u_\Delta, \mathsf{ctx}_u, \mathsf{issued}_u]; r_u) \; \wedge \; \mathsf{ctx}_u \in \mathcal{D} \; \wedge\\
+%     s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
+% \end{align*}
+
+
+
 
 
 
