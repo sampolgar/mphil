@@ -1075,9 +1075,9 @@ We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous 
 
     \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: is a probabilistic algorithm that takes public parameters $\ppar$, outputs users secret key $\usk$
 
-    \item $(\mathsf{Obtain}(\vec{m}, \usk, \opk,  \phi, aux), \mathsf{Issue}(\osk, \cm, \phi, \{\Pi\}_i, aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. Can be used 
-    for obtaining a master or context credential $\credm, \credc$. $\mathsf{Obtain}$ The user inputs their message vector $\vec{m}$ and $\usk$, generates a commitment $\cm = \CMCom([\vec{m}];\usk)$ and proof of knowledge satisfying statement $\phi$. Obtaining a Context Credential requires verifying a master credential and consistency of user id $\id$ between master and context which we represent as auxiliary information $aux$. $\mathsf{Issue}$ Issuer runs this with their secret key $\osk$, commitment $\cm$, verifies proofs $\{\Pi\}_i$ against the statement $\phi$. 
-    The protocol outputs a credential $\cred$ to the user and $\bot$ to the issuer.
+    \item $(\mathsf{ObtainMaster}(\vec{m}, \usk, \opk, aux), \mathsf{IssueMaster}(\osk, \cm, aux)) \rightarrow (\credm, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m}$ and secret key $\usk$. The issuer inputs their secret key $\osk$. The protocol outputs a master credential $\credm$ to the user and $\bot$ to the issuer.
+
+    \item $(\mathsf{ObtainContext}(\vec{m}, \usk, \opk, \credm, aux), \mathsf{IssueContext}(\osk, \cm, \opk_m, aux)) \rightarrow (\credc, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m}$, secret key $\usk$, and master credential $\credm$. The issuer inputs their secret key $\osk$ and the verification key of the master credential $\opk_m$. The protocol outputs a context credential $\credc$ to the user and $\bot$ to the issuer.
 
     \item $(\mathsf{Show}(\{\cm_i, r_i, \mathsf{cred}_i\}_{i=1}^n, \phi), \mathsf{Verify}(\{\mathsf{cred}'_i, \opk_i\}_{i=1}^n, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with $n$ commitment-opening pairs $(\cm_i, r_i)$, their corresponding credentials $\mathsf{cred}_i$, and a predicate $\phi$. The verifier runs $\mathsf{Verify}$ with $n$ rerandomized credentials $\mathsf{cred}'_i$, their associated organization public keys $\opk_i$, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
 \end{itemize}
@@ -1191,7 +1191,7 @@ where $b$ is the challenge bit and $\phi: \mathsf{COM}^n \rightarrow \{0,1\}$ va
 Informally, the Left-or-Right oracle $\mathcal{O}_{\mathsf{LoR}}$ models unlinkability, $\mathcal{A}$ submits two credeential sets $\mathsf{Creds}_{b} \in \bit$, executes $\mathsf{Show}$ using $\mathsf{Creds_b}$ and their commitments. As in EUF-CMA, $\mathcal{A}'s$ goal is to choose which set was used, capturing the intuition that multiple showings of the same credentials should be unlinkable. The oracle maintains $\mathcal{J}_{\mathsf{LoR}}$ for consistency across challenge queries.
 
 
-\subsection{MIMC-ABC Correctness}
+\subsection{Correctness}
 A Multi-Issuer Multi-Credential Anonymous Credential system is correct if honestly generated credentials verify successfully both individually and in composition. Specifically:
 
 \begin{enumerate}
@@ -1245,8 +1245,8 @@ A Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) is correc
 
 \newpage
 \subsection{Unforgeability}
-Unforgeability is formalized as a game between a challenger and an adversary $\mathcal{A}$, where $\mathcal{A}$ can interact with honest users and issuers through oracles modeling real-world capabilities. The adversary succeeds if it produces a valid proof that violates one of five forgery conditions. 
-\begin{definition}[MIMC-ABC Unforgeability]
+Unforgeability is modelled as a malicious user trying to create fake credentials or generating false proofs about credentials, the adversary succeeds if it produces a valid proof that violates the two types of forgeries below.
+\begin{definition}[Unforgeability]
 A MIMC-ABC system is unforgeable if for all $\PPT$ adversaries $\mathcal{A}$, the following experiment outputs 1 with negligible probability:
 \[
 \Pr[\mathsf{Exp}^{\mathsf{unf}}_{\mathsf{MIMC\mbox{-}ABC},\mathcal{A}}(\lambda) = 1] \leq \negl
@@ -1434,8 +1434,9 @@ This extends \cite{fuchsbauer_structure-preserving_2019}'s anonymity game by:
 
 
 \newpage
-\begin{definition}[MIMC-ABC Credential Binding]
-A Multi-Issuer Multi-Credential Anonymous Credential system provides credential binding if no $\PPT$ adversary $\mathcal{A}$ can successfully combine credentials from different user identities into a valid proof. Specifically, $\mathcal{A}$ cannot:
+\subsection{Identity Binding} 
+\begin{definition}[Identity Binding]
+A Multi-Issuer Multi-Credential Anonymous Credential system provides Identity Binding if no $\PPT$ adversary $\mathcal{A}$ can successfully combine credentials from different user identities into a valid proof. Specifically, $\mathcal{A}$ cannot:
 \begin{enumerate}
     \item produce a valid proof linking credentials issued to different user identifiers
     \item create a valid multi-credential proof without knowing all constituent credential openings
@@ -1823,55 +1824,27 @@ To proceed with security proofs, we should:
 
 
 
+\begin{theorem}[Master Credential Type 1 Unforegability]
+    If the rerandomizable signature scheme $\mathsf{RS}$ is EUF-CMA secure, then no $\PPT$ adversary can win the MIMC-ABC unforgeability game with Type 1 forgery with non-negligible probability
+\end{theorem}
+
+\begin{proof}
+    We construct an adversary $\AdvB$ against the EUF-CMA security of $\mathsf{RS}$ using any adversary $\AdvA$ that produces a Type-1 forgery. $\AdvB$ is as follows:
+
+    \begin{enumerate}
+        \item \textbf{Setup: } $\AdvB$ receives the EUF-CMA challenge $(\vk^*, \ck^*):$
+            \begin{itemize}
+                \item Set master issuer key $\opkm = (\vk^*, \ck^*)$
+                \item Initialize $$
+            \end{itemize}
 
 
-\subsection{Progress Summary}
-
-We've established three key components of our security analysis:
-
-\begin{enumerate}
-   \item \textbf{Security Framework}
-   \begin{itemize}
-       \item Taxonomized forgery types following Camenisch-Lysyanskaya's methodology
-       \item Identified distinct credential structures and their properties
-       \item Outlined reduction strategy following Pointcheval-Sanders
-   \end{itemize}
-
-   \item \textbf{PS-LRSW Understanding}
-   \begin{itemize}
-       \item Challenger provides $(g, X=g^x, Y=g^y)$
-       \item Oracle $\mathcal{O}(m)$ returns $(h, h^{x+my})$ for random $h$
-       \item Challenge requires forgery $(m^*, P_1^*, P_2^*)$ where:
-           \begin{itemize}
-               \item $m^*$ never queried
-               \item $P_1^* \neq 1$
-               \item $e(P_1^*, X\cdot\tilde{Y}^{m^*}) = e(P_2^*, g_2)$
-           \end{itemize}
-   \end{itemize}
-
-   \item \textbf{Reduction Structure} (single-issuer case)
-   \begin{itemize}
-       \item Embedding challenge elements in commitment bases
-       \item Oracle simulation strategy outlined
-       \item Forgery extraction mechanism identified
-   \end{itemize}
-\end{enumerate}
-
-\subsection{Next Technical Steps}
-To complete our Type 1 unforgeability proof:
-
-\begin{enumerate}
-   \item Detail oracle simulation for credential issuance
-   \item Specify forgery extraction mechanism
-   \item Extend to multi-issuer setting
-   \item Analyze reduction tightness
-\end{enumerate}
-
-Would you like to proceed with detailing the oracle simulation phase of our reduction?
+        \item \textbf{Oracle Simulation: }
 
 
-
-
+        \item \textbf{Extraction Phase: }
+    \end{enumerate}
+\end{proof}
 
 
 
