@@ -988,16 +988,16 @@ If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
     \]
 \end{itemize}
 
-\noindent \paragraph{4. Analysis}
+% \noindent \paragraph{4. Analysis}
 
-\begin{itemize}
-    \item Total advantage partitions as $\epsilon \leq \epsilon_0 + \epsilon_1 + \frac{q_v + q_s + 1}{p}$
-    \item The $\frac{1}{p}$ term accounts for coefficient collisions in setup
-    \item Verification queries add $\frac{q_v}{p}$ error probability and
-\end{itemize}
-\[
-\Adv^{\mathsf{euf\mbox{-}cca}}_{\mathcal{A}} \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0} + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1} + \frac{q_v + q_s}{p}
-\]
+% \begin{itemize}
+%     \item Total advantage partitions as $\epsilon \leq \epsilon_0 + \epsilon_1 + \frac{q_v + q_s + 1}{p}$
+%     \item The $\frac{1}{p}$ term accounts for coefficient collisions in setup
+%     \item Verification queries add $\frac{q_v}{p}$ error probability and
+% \end{itemize}
+% \[
+% \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathcal{A}} \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0} + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1} + \frac{q_v + q_s}{p}
+% \]
 \end{proof}
 
 
@@ -1604,7 +1604,6 @@ commitment $\cm_i \gets \mathsf{CM.Commit}([attr_1,\ldots,attr_n]; r)$ to $n$ at
 \subsubsection{Freshness}
 To prevent replay attacks in credential show/verify protocols, we employ an interactive challenge-response mechanism as per Sigma protocols \textbf{Cite Sigma Protocols}. During showing, the verifier provides a random challenge that must be incorporated in the zero-knowledge proofs, ensuring uniqueness of each showing. Interaction could be removed using the Fiat-Shamir transform \textbf{Cite Fiat Shamir}, this would require verifiers to maintain a list of used proofs introducing overhead and potential security concerns in a multi-verifier/distributed setting.
 
-\newpage
 \subsubsection{Malicious Organization Keys.}
 For our PS signature-based ABC system, we define an NP-relation $\mathcal{R}_O$ capturing well-formed organization keys:
 $$ ((pk, pp_{cm}), (sk, r)) \in \mathcal{R}_O \iff \mathsf{PS.VKey}(sk, pk) = 1 \land pp_{cm} = \mathsf{Setup}(1^\lambda; r) $$
@@ -1616,23 +1615,6 @@ This ensures:
     \item The organization knows its PS signing key $sk$
     \item The commitment parameters $pp_{cm}$ are properly generated with known randomness $r$
 \end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1666,6 +1648,7 @@ The master credential issuance protocol enables a user to obtain their root cred
     \multicolumn{3}{r}{$\cm_2 = \CMCom([\id, \ctx]; 0), \; \cmm = \cm_1 \cdot \cm_2 $} \\[1em]
     If $\cmm \neq \CMCom([\id, \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, \ctx, \sigmam}$ & $\sigmam \sample \RSSign(\cmm, \osk)$ \\[1em]
     \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$ return $\bot$} \\[1em]
+    $\underline{\mathsf{Show}(\usk, \cmm)}$ && $\underline{\mathsf{Verify(\cmm', \vec{m}, \opkm)}}$ \\[1em]
     \end{tabular}
     \end{center}
     \caption{Master Credential Issuance}
@@ -1834,12 +1817,26 @@ To proceed with security proofs, we should:
     \begin{enumerate}
         \item \textbf{Setup: } $\AdvB$ receives the EUF-CMA challenge $(\vk^*, \ck^*):$
             \begin{itemize}
-                \item Set master issuer key $\opkm = (\vk^*, \ck^*)$
-                \item Initialize $$
+                \item Set master issuer key $opk_m = (vk^*, ck^*)$
+                \item Initialize $HU, CU, CRED \leftarrow \emptyset$
+                \item Give $opk_m$ to $\AdvA$
             \end{itemize}
 
 
-        \item \textbf{Oracle Simulation: }
+        \item \textbf{Oracle Simulation: } $\AdvB$ simulates the following oracles
+        \begin{itemize}
+            \item $\mathcal{O}_{HU}(i)$: Sample $usk_i \gets \mathbb{Z}_p$, Add $i$ to $HU$, Return $usk_i$
+            \item $\mathcal{O}_{ObtainMaster}(i, \vec{m})$:
+                \begin{itemize}
+                    \item If $i \notin HU$ return $\bot$
+                    \item Run knowledge extractor $\mathcal{E}$ on proof $\pi$ to get $(\vec{m}', r)$
+                    \item Verify $cm = \mathsf{CM.Com}([\vec{m}']; r)$
+                    \item If verification fails: return $\bot$
+                    \item Query EUF-CMA signing oracle on $cm$ to get $\sigma$
+                    \item Store $(cm, \sigma, \vec{m}', r)$ in $CRED$
+                    \item Return $(cm, \sigma)$
+                \end{itemize}
+        \end{itemize}
 
 
         \item \textbf{Extraction Phase: }
@@ -2849,51 +2846,6 @@ This -protocol satisfies:
 
 
 \newpage
-\subsection{Correctness of Keys for protection against Malicious Issuer}\label{pok-keys}
-Given the commitment key and secret and verification key, we require the issuer to prove in zero knowledge the correctness of their key computation to prevent malicious key usage that could break cryptographic primitives like the commitment scheme and signature scheme.
-\begin{itemize}
-    \item $\mathsf{CM.Setup:} \ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
-    \item $\mathsf{RS.KeyGen:} (\sk, \vk) \gets (g^x, \tilde{g}^x)$, return $(\sk, \vk)$
-\end{itemize}
-
-We want to prove the following relation:
-    \[
-    \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-    \]
-
-\begin{protocol}{Key Validation Protocol}{key-val}
-\textbf{Common Input:} $(\vk, \{g_i, \tilde{g}_i\}_{i=1}^\ell)$\\
-\textbf{Prover Input:} $(x, \{y_i\}_{i=1}^\ell)$ such that $\vk = \tilde{g}^x$ and $g_i = g^{y_i}, \tilde{g}_i = \tilde{g}^{y_i}$
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples $\alpha, \{\beta_i\}_{i=1}^\ell \sample \Z_p$ and computes:
-    \begin{itemize}
-        \item $T_1 = g^\alpha, \tilde{T}_1 = \tilde{g}^\alpha$
-        \item For $i \in [1,\ell]: T_i = g^{\beta_i}, \tilde{T}_i = \tilde{g}^{\beta_i}$
-    \end{itemize}
-    Send $\{T_1, \tilde{T}_1, \{T_i, \tilde{T}_i\}_{i=1}^\ell\}$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \Z_p$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \begin{itemize}
-        \item $z_x = \alpha + cx$
-        \item For $i \in [1,\ell]: z_i = \beta_i + cy_i$
-    \end{itemize}
-    Send $(z_x, \{z_i\}_{i=1}^\ell)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        g^{z_x} &\stackrel{?}{=} T_1 \cdot sk^c\\
-        \tilde{g}^{z_x} &\stackrel{?}{=} \tilde{T}_1 \cdot vk^c\\
-        \forall i \in [1,\ell]: g^{z_i} &\stackrel{?}{=} T_i \cdot g_i^c\\
-        \tilde{g}^{z_i} &\stackrel{?}{=} \tilde{T}_i \cdot \tilde{g}_i^c
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-
-
 \subsection{Correctness of Keys for protection against Malicious Issuer}\label{pok-ps}
 Given the commitment key and verification key, we require the issuer to prove in zero knowledge the correctness of their key computation. 
 \begin{itemize}
@@ -3707,6 +3659,76 @@ What is the takeaway message from the evaluation?
     \item For non-private system, we enable privacy with little overhead. Our building block sigma protocol for private sybil resistance adds negligible overhead. 
     \item For private system, but better efficiency, we have a SOTA paper TACT/S3ID (in the comparison table). Their paper does multi-attribute/multi-issuer credentials (they issue 1 credential per attribute), but their benchmarks don't show the complexity in verifying credentials together, or proving statements about their credential which they say would have non-negligible impact and theirs is lower bound. For us, by using simpler and well-known construction, we are more efficient (need to test this but I think so due to their construction) and better functionality. 
 \end{itemize}
+
+
+
+
+
+
+\begin{table}[t]
+\centering
+\caption{Multi-Credential Verification Performance}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Scheme} & \textbf{5 Creds} & \textbf{10 Creds} & \textbf{20 Creds} \\
+\midrule
+BBS+ \cite{CDL16}     & xxx ms & xxx ms & xxx ms \\
+Standard PS \cite{PS16} & xxx ms & xxx ms & xxx ms \\
+PS-UTT (Ours)          & xxx ms & xxx ms & xxx ms \\
+\bottomrule
+\end{tabular}
+\vspace{1ex}
+\begin{center}
+\small\textit{All measurements averaged over 100 runs with 10 attributes per credential}
+\end{center}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Detailed Performance Analysis of Multi-Credential Systems}
+\begin{tabular}{llrrr}
+\toprule
+& & \multicolumn{3}{c}{\textbf{Number of Credentials}} \\
+\cmidrule(lr){3-5}a
+\textbf{Scheme} & \textbf{Metric} & \textbf{5} & \textbf{10} & \textbf{20} \\
+\midrule
+\multirow{3}{*}{BBS+} 
+& Prover Time (ms)   & xxx & xxx & xxx \\
+& Verifier Time (ms) & xxx & xxx & xxx \\
+& Proof Size (bytes) & xxx & xxx & xxx \\
+\midrule
+\multirow{3}{*}{Standard PS}
+& Prover Time (ms)   & xxx & xxx & xxx \\
+& Verifier Time (ms) & xxx & xxx & xxx \\
+& Proof Size (bytes) & xxx & xxx & xxx \\
+\midrule
+\multirow{3}{*}{PS-UTT (Ours)}
+& Prover Time (ms)   & xxx & xxx & xxx \\
+& Verifier Time (ms) & xxx & xxx & xxx \\
+& Proof Size (bytes) & xxx & xxx & xxx \\
+\bottomrule
+\end{tabular}
+\vspace{1ex}
+\begin{center}
+\small\textit{All measurements performed on [CPU specs] with 10 attributes per credential, averaged over 100 runs}
+\end{center}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
