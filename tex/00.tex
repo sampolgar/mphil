@@ -849,12 +849,12 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
     \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
         Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
     \[
-        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u \cdot u_\Delta, r \cdot r_\Delta): 
+        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u + u_\Delta, r + r_\Delta): 
     \]
     \[
          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
         e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
-        \cm' = g^{r \cdot r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+        \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
         \}
     \]
 
@@ -1628,9 +1628,7 @@ This ensures:
 
 \newpage
 \subsection{Master Credential Issuance}
-The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is modelled as a signature over commitment $\cmm = \mathsf{CM.Com}([\id, \ctx]; r)$
-
-\todonote{keys: \ref{pok-keys}}
+The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is a signature $\sigmam$ over commitment $\cmm = \mathsf{CM.Com}([\id, \ctx]; \uskm)$
 
 \begin{figure}
     \begin{center}
@@ -1642,13 +1640,21 @@ The master credential issuance protocol enables a user to obtain their root cred
     \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
     \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\cm_1, \usk)| \cm_1 = g_1^0g_2^0g^{\usk}\}$}\\[1em]
     \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) | \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$}\\[1em]
-    $\underline{\mathsf{Obtain}(\usk, \opk)}$ && $\underline{\mathsf{Issue(\cm, \vec{m}, \osk)}}$ \\[1em]
+    $\underline{\mathsf{Obtain}(\uskm, \opkm)}$ && $\underline{\mathsf{Issue(\cmm, \vec{m}, \oskm)}}$ \\[1em]
     If  $\pirverkey(\sk, \vk, \ck)$ fails, return $\bot$ & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & \\[1em]
     $\cm_1 = \CMCom([0,0];\usk)$ & $\xrightarrow{\pirzero(\cm_1)}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
     \multicolumn{3}{r}{$\cm_2 = \CMCom([\id, \ctx]; 0), \; \cmm = \cm_1 \cdot \cm_2 $} \\[1em]
-    If $\cmm \neq \CMCom([\id, \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, \ctx, \sigmam}$ & $\sigmam \sample \RSSign(\cmm, \osk)$ \\[1em]
-    \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$ return $\bot$} \\[1em]
-    $\underline{\mathsf{Show}(\usk, \cmm)}$ && $\underline{\mathsf{Verify(\cmm', \vec{m}, \opkm)}}$ \\[1em]
+    If $\cmm \neq \CMCom([\id, \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, \ctx, \sigmam}$ & $u \sample \Z_p$, $\sigmam \sample \RSSign(\cmm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$, return $\bot$} \\[1em]
+    \multicolumn{3}{l}{Else, return $\credm \gets (\sigmam, \cmm, \opkm)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\vec{m},\usk')| \cmm' = \CMCom([\vec{m}]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1\}$}\\[1em]
+    $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
+    \multicolumn{3}{l}{Let $\credm = (\sigmam, \cmm, \uskm, \opkm)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
+    \multicolumn{3}{l}{$\sigmam' = (\sigmamone^{u_\Delta}, (\sigmamtwo \cdot \sigmamone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigmam, \usk_\Delta, u_\Delta)$}\\[1em]
+    \multicolumn{3}{l}{$\cmm' = (\cmm \cdot g^{\usk_\Delta}) \gets \CMRand(\cmm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
+    \multicolumn{3}{l}{$\credm' = (\sigmam', \cmm', \usk', u_\Delta)$}\\[1em]
+    $\credm' = (\sigmam', \cmm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\credm')}$ & If $\pirsok(\credm')$ fails, return 0, else 1\\[1em]
     \end{tabular}
     \end{center}
     \caption{Master Credential Issuance}
@@ -1665,6 +1671,39 @@ The two-party process between the user and master credential oracle ensures sybi
 
 
 
+\newpage
+\subsection{Context Credential Issuance}
+The context credential issuance protocol enables a user to obtain a context credential linked to their root credential. The Context Credential $\credc$ contains a signature $\sigmac$ over commitment $\cmc = \mathsf{CM.Com}([\id, \ctx]; \uskc)$ issued by $\mathcal{I}_{\mathsf{c}}$
+
+
+\begin{figure}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{(\mathsf{OrgKeyGen}, \mathsf{UserKeyGen}):}$ proceed analogously to Master Credential} \\[1em] %, outputs are $\ckc, \skc, \vkc, \oskc, \opkc, \uskc$
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
+    \multicolumn{3}{l}{$\pirverkey$ proceed analogously to Master Credential}\\[1em]
+    \multicolumn{3}{l}{$\pirdisclose(\cmc) = \zkpok\{(\id, \ctx, \usk)| \cmc = g_1^{\id}g_2^{\ctx}g^{\uskc} \wedge \ctx = "context"\}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\usk')| \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
+    \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
+    $\underline{\mathsf{Obtain}(\uskc, \opkc)}$ && $\underline{\mathsf{Issue(\cmc, \oskc)}}$ \\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirdisclose(\cmc), \pireq(\cmm', \cmc) }$} \\[1em]
+    \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirdisclose(\cmc)$, or $\pireq(\cmm', \cmc)$ fails, return $\bot$.} \\[1em]
+    If $\cmc \neq \CMCom([\id, \ctx];\uskc) \; $ or  & $\xleftarrow{\cmc, \id, \ctx, \sigmac}$ & Else, $u \sample \Z_p$, $\sigmac \sample \RSSign(\cmc, \oskc, u)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmac, \cmc, \opkc) = 0$, return $\bot$} \\[1em]
+    \multicolumn{3}{l}{Else, return $\credc \gets (\sigmac, \cmc, \opkc)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\vec{m},\usk')| \cmm' = \CMCom([\vec{m}]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1\}$}\\[1em]
+    $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
+    \multicolumn{3}{l}{Let $\credm = (\sigmam, \cmm, \uskm, \opkm)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
+    \multicolumn{3}{l}{$\sigmam' = (\sigmamone^{u_\Delta}, (\sigmamtwo \cdot \sigmamone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigmam, \usk_\Delta, u_\Delta)$}\\[1em]
+    \multicolumn{3}{l}{$\cmm' = (\cmm \cdot g^{\usk_\Delta}) \gets \CMRand(\cmm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
+    \multicolumn{3}{l}{$\credm' = (\sigmam', \cmm', \usk', u_\Delta)$}\\[1em]
+    $\credm' = (\sigmam', \cmm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\credm')}$ & If $\pirsok(\credm')$ fails, return 0, else 1\\[1em]
+    \end{tabular}
+    \end{center}
+    \caption{Master Credential Issuance}
+    \label{fig:master-cred-issuance}
+\end{figure}
 
 
 
