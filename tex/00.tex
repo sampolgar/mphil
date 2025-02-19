@@ -192,7 +192,7 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 \section{Preliminaries}\label{sec:preliminaries}
 \subsection{Notation}
 Let $\N$ is the set of positive integers $\{1,2,3,\ldots\}$. If $x$ is a string, then $|x|$ is its length, if $S$ is a set, $|S|$ denotes its size. If $\lambda \in \N$, then $\secparam$ denotes the string of $\lambda$ ones. If $n$ is an integer, then $[n] = \{1, \ldots,n\}.$ If $S$ is a set, then $s \sample S$ denotes the operation of picking an element $s$ of $S$ uniformly at random. $\$$ denotes randomized algorithm output. We use $z \gets A()$ and $z = A()$ interchangably for deterministic assignment where $z$ is the output of a deterministic algorithm $A$ and $z \gets A(x,y,\ldots)$ is the output of a deterministic algorithm with inputs $x,y,\ldots$ when the set, sum, or product has a single index. 
-The notation $\vect{x}$ is used to denote the vector $(x_0, \ldots,x_n)$ or $(x_1, \ldots, x_n)$ where $n$ and choice of $0, 1$ will be clear from the context.
+The notation $\vec{x}$ is used to denote the vector $(x_0, \ldots,x_n)$ or $(x_1, \ldots, x_n)$ where $n$ and choice of $0, 1$ will be clear from the context.
 
 % notation from Algebraic MAC's
 The notation $\{x_i\}_1^n, \sum_1^n x_i, \prod_1^n x_i$ are shorthand for $\{x_i\}_{i=1}^n, \sum_{i=1}^n x_i$ and $\prod_{i=1}^n x_i$ respectively. 
@@ -788,7 +788,7 @@ A rerandomizable signature scheme over commitments is correct if for all securit
 
 
 
-\begin{definition}$[\mathsf{RS}$ EUF-CCA]
+\begin{definition}[EUF-CCA]
 A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen-commitment attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
     \begin{align*}
         &\Pr\left[
@@ -1060,6 +1060,8 @@ If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
 
 \section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
 
+\noindent Anonymous Credential Systems (ACS) \cite{chaum1985security,hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016, fuchsbauer_structure-preserving_2019} address privacy concerns but face challenges balancing privacy with accountability, orthogonally, unconditionally anonymous payment systems have demonstrated how unconditional anonymity can enable system abuse. Current systems focus on protecting against sybil attacks \cite{crites_syra_2024, rabaninejad_attribute-based_nodate}, enabling revocation \cite{goos_dynamic_2002, robshaw_uc_2016, camenisch_scalable_2016, baldimtsi_accumulators_2017}, rich attribute-based credential authentication \cite{rosenberg_zk-creds_2022, babel_bringing_2023} but very few implement all. The tension between privacy and accountability has become increasingly critical as governments worldwide, particularly the EU's Digital Identity Framework \cite{noauthor_regulation_2024}, move toward privacy-preserving digital identity wallets. These challenges motivate the need for a comprehensive identity system that achieves privacy, accountability, and practical deployment requirements simultaneously.
+
 \subsection{Notation}
 The MIMC-ABC system is run for obtaining a master and context credential, differing in the obtain, issue and show, verify algorithms. 
 We generalize the notation for elements but also subscript elements when expressed explicitly; $ \cm$ is a commitment that could be Master or Context, whereas $\cmm, \cmc$ are explicitly for Master and Context, respectively.
@@ -1100,10 +1102,16 @@ Our Multi Issuer, Multi Credential Anonymous Credential system satisfies the fol
         \item Type-2 Forgery: An adversary, even with access to valid credentials, cannot generate accepting proofs that either claim attributes inconsistent with the underlying commitment, or assert false relationships about legitimately committed attributes.
     \end{itemize}
 
-    \todonote{fix this def  up}
-    \item \textbf{Anonymity:} A malicious verifier or organization can't identify the user or learn about the user more than the public information presented in the protocol, and that the credential satisfies the verification statement. The malicious verifier can't link multiple showings of the same credential, and for any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
+    \item \textbf{Anonymity:} A malicious verifier or organization can't identify the identity of the credential owner learn about the user more than the public information presented in the protocol, and that the credential satisfies the verification statement. The malicious verifier can't link multiple showings of the same credential, and for any set of credentials $\{Cred_1,\dots,Cred_n\}$ satisfying a predicate $\phi$, the adversary cannot distinguish whether they belong to the same or different users.
 
-    \textbf{Credential Binding}: A malicious user cannot create valid proofs combining multiple credentials unless they were legitimately issued to the same user identifier. Specifically, when a proof statement requires demonstrating consistent ownership across credentials, an adversary cannot: (1) combine credentials from different users, even if each credential is individually valid, or (2) create proofs without knowing all credential openings.
+    A malicious verifier or issuing organisation can't 
+    \begin{itemize}
+        \item Type-1 Anonymity: can't learn more about the user than the public information presented in the protocol and that the credentials satisfy the verification statement
+        \item Type-2 Anonymity: can't link multiple showings of the same credentials
+        \item Type-3 Anonymity: for any set of credentials $\{\cred_1, \ldots, \cred_\ell\}$ satisfying a predicate $\phi$ the adversary cannot distinguish whether they belong to the same or different users (without having learned it from a proof???)
+    \end{itemize}
+
+    \textbf{Identity Binding}: A malicious user cannot create valid proofs combining multiple credentials unless they were legitimately issued to the same user identifier. Specifically, when a proof statement requires demonstrating consistent ownership across credentials, an adversary cannot: (1) combine credentials from different users, even if each credential is individually valid, or (2) create proofs without knowing all credential openings.
 
 \end{enumerate}
 
@@ -1133,10 +1141,9 @@ At the beginning of each experiment, the following state is maintained:
 
 \noindent \textbf{The Oracles.} The security properties are defined via experiments where an adversary $\mathcal{A}$ interacts with the following oracles:
 
-\noindent $\mathcal{O}_{\mathsf{HU}}(i)$ - By calling this honest user oracle with identity $i \in \mathbb{N}$, $\mathcal{A}$ can add $i$ to the set $\mathsf{HU}$ of honest users. The oracle generates $(\cm[i], r[i]) \sample \mathsf{UserCommit}(\mathsf{opk}, \vec{m})$, adds $i$ to $\mathsf{HU}$, and returns $\cm[i]$.
+\noindent $\mathcal{O}_{\mathsf{HU}}(i)$ - By calling this honest user oracle with identity $i \in \mathbb{N}$, $\mathcal{A}$ can add $i$ to the set $\mathsf{HU}$ of honest users. The oracle generates $\usk[i] \sample \mathsf{UserKeyGen}(\ppar)$ adds $i$ to $\mathsf{HU}$, and returns $\usk[i]$.
 
-\noindent $\mathcal{O}_{\mathsf{CU}}(i, \cm)$ - By calling this corrupt user oracle with identity $i$ and optional commitment $\cm$, $\mathcal{A}$ can either register a new corrupt user (if $i \notin \mathsf{HU}$) or corrupt an honest user (if $i \in \mathsf{HU}$). In the latter case, $\mathcal{A}$ receives $\{(\cm_j[i], r_j[i])\}_{j \in \{\mathsf{m}, \mathsf{ctx}\}}$ and all credentials, where $(\cm_{\mathsf{m}}[i], r_{\mathsf{m}}[i])$ denotes the master credential commitment pair and $(\cm_{\mathsf{ctx}}[i], r_{\mathsf{ctx}}[i])$ denotes the context credential commitment pair.
-
+\noindent $\mathcal{O}_{\mathsf{CU}}(i)$ - $\AdvA$ calls the corrupt user oracle with identity $i$, if user is honest: $i \in \mathsf{HU}$, $\AdvA$ receives its secret keys and credentials. If $i$ doesn't exist, creates a new corrupt user.
 
 \noindent $\mathcal{O}_{\mathsf{ObtIss}}(i, \vec{m}, aux)$ - This oracle represents the honest user execution of the Obtain-Issue protocol between an honest user and honest organization. By calling this obtain-issue oracle with identity $i$, message vector $\vec{m}$, and auxiliary information $aux$, $\mathcal{A}$ initiates an honest credential issuance. If $i \notin \mathsf{HU}$, returns $\bot$. Otherwise, computes $(\cm, r) \sample \mathsf{UserCommit}(\opk, \vec{m})$ and runs:
 \[
@@ -1510,67 +1517,34 @@ This binding property enforces credential ownership consistency:
 
 
 
-
-
-
-
 \newpage
 \subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
 \subsubsection{Intuition of our Construction}
 
-Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
+% Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
 
-\subsection{Working Draft Notes for Construction}
-\begin{itemize}
-   \item Extractable commitment openings
-   \item  Signature uniqueness properties
-   \item  Explicit freshness mechanism
-   \item  Clear randomization structure
-\end{itemize}
-
-
-$\Pi_{\mathsf{Com}} := \mathsf{PoK}\{(m_1,\ldots,m_\ell,r): 
-    \mathsf{cm} = g^r\prod_{i=1}^\ell g_i^{m_i}\}$
-
-$    \Pi_{\mathsf{Show}} := \mathsf{PoK}\{(r, \{m_i\}_{i=1}^\ell): 
-    \mathsf{cm}' = g^r\prod_{i=1}^\ell g_i^{m_i} \wedge
-    e(\sigma_2, \tilde{g}) = e(\sigma_1, \mathsf{vk} \cdot \widetilde{\mathsf{cm}}')\}$
+% \subsection{Working Draft Notes for Construction}
+% \begin{itemize}
+%    \item Extractable commitment openings
+%    \item  Signature uniqueness properties
+%    \item  Explicit freshness mechanism
+%    \item  Clear randomization structure
+% \end{itemize}
 
 
-\paragraph{Randomized Signature over Commitments}
-    % \item \textbf{Modified Rerandomizable Pointcheval-Sanders Signatures:} 
-    % Our construction builds on Pointcheval-Sanders signatures which provide constant-sized signatures and efficient verification via bilinear pairings. We employ the modification in \cite{tomescu2022utt}, rather than randomizing just the signature, then proving knowledge of messages with respect to the randomized signature, we first randomize the commitment with $u_\Delta$, then randomize the signature with the commitment randomness $u_\Delta$ and new randomness $r_\Delta$.
-    
-    % The modification removes the need to run zero-knowledge protocols on the randomized signature, which are bespoke for this scheme and often needed in anonymous credentials e.g. \cite{sako_short_2016, hutchison_signature_2004}. Instead, ours outputs a verified randomized Pedersen commitment to be used in standardized zero-knowledge proof protocols \cite{stephan_krenn_proposal_nodate}, which are widely used with security reducing to the original PS signature under the q-SDH assumption. Furthermore, our modification avoids sigma protocols with computation in $\G_2$ significantly reducing overhead. 
-    
-    % \item \textbf{Commitment Scheme: } 
-    % We employ a dual Pedersen Commitment, inspired by \cite{tomescu2022utt} that maintains commitments in both $\G_1$ and $\G_2$ of our bilinear group, which is needed to support the modification mentioned above. We leverage key properties of Pedersen Commitments throughout our system
-    % \begin{enumerate}
-    %     \item Perfect hiding supports statistical zero knowledge 
-    %     \item Computational binding under the discrete log assumption supports unforgeability of signatures
-    %     \item Position binding adds functionality to our zero knowledge proof protocols, specifically for proving attributes at the same position of a message vector are equal
-    %     \item Homomorphic properties support complex interactive protocols as in Figures \ref{fig:master-cred-issuance}
-    % \end{enumerate}
+% $\Pi_{\mathsf{Com}} := \mathsf{PoK}\{(m_1,\ldots,m_\ell,r): 
+%     \mathsf{cm} = g^r\prod_{i=1}^\ell g_i^{m_i}\}$
 
-\paragraph{$\Sigma$-protocols}
-Our construction liberally employs $\Sigma$-protocols for proving statements about committed attributes. 
-\begin{itemize}
-    \item $\Pi^{\mathcal{R}_{\mathsf{com}}}$ represents the Pedersen Commitment opening proof of relation $\mathcal{R}_{\mathsf{com}}$  \ref{pok-com}
-    \item $\Pi^{\mathcal{R}_{\mathsf{and}}}$ \ref{pok-and}
-    \item $\Pi^{\mathcal{R}_{\mathsf{linear}}}$ \ref{pok-linear}
-    \item $\Pi^{\mathcal{R}_{\mathsf{zero}}}$ \ref{pok-zero}
-    \item $\Pi^{\mathcal{R}_{\mathsf{two-party}}}$ \ref{pok-2party}
-    \item $\Pi^{\mathcal{R}_{\mathsf{non-zero}}}$ \ref{pok-nonzero}
-    \item $\Pi^{\mathcal{R}_{\mathsf{equality}}}$ \ref{pok-eq}
-    \item $\Pi^{\mathcal{R}_{\mathsf{sok}}}$ \ref{pok-ps}
-    \item $\Pi^{\mathcal{R}_{\mathsf{vrf}}}$ \ref{pok-vrf}
-\end{itemize}
+% $    \Pi_{\mathsf{Show}} := \mathsf{PoK}\{(r, \{m_i\}_{i=1}^\ell): 
+%     \mathsf{cm}' = g^r\prod_{i=1}^\ell g_i^{m_i} \wedge
+%     e(\sigma_2, \tilde{g}) = e(\sigma_1, \mathsf{vk} \cdot \widetilde{\mathsf{cm}}')\}$
 
 
-\subsubsection{Example} a user has multiple credentials and wishes to prove them together, where $\ctx$ is a string denoting the context, for example, $\credm$ may be $"government"$ and $\credc$ may be $"DMV"$ for a driver's license
-\[
-\credm = \RSSign(\CMCom([\id, \ctx]; \uskm)) \quad \wedge \quad \credc = \RSSign(\CMCom([\id, \ctx]; \uskc))
-\]
+
+% \subsubsection{Example} a user has multiple credentials and wishes to prove them together, where $\ctx$ is a string denoting the context, for example, $\credm$ may be $"government"$ and $\credc$ may be $"DMV"$ for a driver's license
+% \[
+% \credm = \RSSign(\CMCom([\id, \ctx]; \uskm)) \quad \wedge \quad \credc = \RSSign(\CMCom([\id, \ctx]; \uskc))
+% \]
 
 % \noindent A user with three valid credentials first rerandomizes their signatures and commitments:
 % \begin{align*}
@@ -1627,7 +1601,7 @@ This ensures:
 
 
 \newpage
-\subsection{Master Credential Issuance}
+\subsection{Master Credential Protocol}
 The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is a signature $\sigmam$ over commitment $\cmm = \mathsf{CM.Com}([\id, \ctx]; \uskm)$
 
 \begin{figure}
@@ -1653,12 +1627,11 @@ The master credential issuance protocol enables a user to obtain their root cred
     \multicolumn{3}{l}{Let $\credm = (\sigmam, \cmm, \uskm, \opkm)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
     \multicolumn{3}{l}{$\sigmam' = (\sigmamone^{u_\Delta}, (\sigmamtwo \cdot \sigmamone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigmam, \usk_\Delta, u_\Delta)$}\\[1em]
     \multicolumn{3}{l}{$\cmm' = (\cmm \cdot g^{\usk_\Delta}) \gets \CMRand(\cmm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
-    \multicolumn{3}{l}{$\credm' = (\sigmam', \cmm', \usk', u_\Delta)$}\\[1em]
     $\credm' = (\sigmam', \cmm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\credm')}$ & If $\pirsok(\credm')$ fails, return 0, else 1\\[1em]
     \end{tabular}
     \end{center}
-    \caption{Master Credential Issuance}
-    \label{fig:master-cred-issuance}
+    \caption{Master Credential Protocol}
+    \label{fig:master-cred-protocol}
 \end{figure}
 
 
@@ -1672,7 +1645,7 @@ The two-party process between the user and master credential oracle ensures sybi
 
 
 \newpage
-\subsection{Context Credential Issuance}
+\subsection{Context Credential Protocol}
 The context credential issuance protocol enables a user to obtain a context credential linked to their root credential. The Context Credential $\credc$ contains a signature $\sigmac$ over commitment $\cmc = \mathsf{CM.Com}([\id, \ctx]; \uskc)$ issued by $\mathcal{I}_{\mathsf{c}}$
 
 
@@ -1685,25 +1658,29 @@ The context credential issuance protocol enables a user to obtain a context cred
     \multicolumn{3}{l}{$\pirdisclose(\cmc) = \zkpok\{(\id, \ctx, \usk)| \cmc = g_1^{\id}g_2^{\ctx}g^{\uskc} \wedge \ctx = "context"\}$}\\[1em]
     \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\usk')| \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
     \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
-    $\underline{\mathsf{Obtain}(\uskc, \opkc)}$ && $\underline{\mathsf{Issue(\cmc, \oskc)}}$ \\[1em]
-    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirdisclose(\cmc), \pireq(\cmm', \cmc) }$} \\[1em]
+    $\underline{\mathsf{Obtain}(\uskc, \opkc, \vec{m})}$ && $\underline{\mathsf{Issue(\cmc, \oskc)}}$ \\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirdisclose(\cmc), \pireq(\cmm', \cmc') }$} \\[1em]
     \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirdisclose(\cmc)$, or $\pireq(\cmm', \cmc)$ fails, return $\bot$.} \\[1em]
     If $\cmc \neq \CMCom([\id, \ctx];\uskc) \; $ or  & $\xleftarrow{\cmc, \id, \ctx, \sigmac}$ & Else, $u \sample \Z_p$, $\sigmac \sample \RSSign(\cmc, \oskc, u)$ \\[1em]
     \multicolumn{3}{l}{If $\RSVer(\sigmac, \cmc, \opkc) = 0$, return $\bot$} \\[1em]
     \multicolumn{3}{l}{Else, return $\credc \gets (\sigmac, \cmc, \opkc)$} \\[1em]
     \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
-    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\vec{m},\usk')| \cmm' = \CMCom([\vec{m}]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1\}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\uskm')| \cmm' = \CMCom([\id, \ctx]; \uskm') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credc') = \zkpok\{(\id, \ctx,\uskc')| \cmc' = \CMCom([\id, \ctx]; \uskc') \wedge \RSVer(\sigmac', \opkc) = 1 \wedge \ctx = "context"\}$}\\[1em]
+    \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
     $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
-    \multicolumn{3}{l}{Let $\credm = (\sigmam, \cmm, \uskm, \opkm)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
-    \multicolumn{3}{l}{$\sigmam' = (\sigmamone^{u_\Delta}, (\sigmamtwo \cdot \sigmamone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigmam, \usk_\Delta, u_\Delta)$}\\[1em]
-    \multicolumn{3}{l}{$\cmm' = (\cmm \cdot g^{\usk_\Delta}) \gets \CMRand(\cmm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
-    \multicolumn{3}{l}{$\credm' = (\sigmam', \cmm', \usk', u_\Delta)$}\\[1em]
-    $\credm' = (\sigmam', \cmm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\credm')}$ & If $\pirsok(\credm')$ fails, return 0, else 1\\[1em]
+    \multicolumn{3}{l}{Compute $\credm', \credc'$ analogously to Master Credential}\\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirsok(\credc'), \pireq(\cmm', \cmc')}$} \\[1em]
+    \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirsok(\credc')$, or $\pireq(\cmm', \cmc')$ fails, return 0, Else 1}\\[1em]
     \end{tabular}
     \end{center}
-    \caption{Master Credential Issuance}
-    \label{fig:master-cred-issuance}
+    \caption{Context Credential Protocol}
+    \label{fig:context-cred-protocol}
 \end{figure}
+
+
+
+
 
 
 
@@ -1716,38 +1693,6 @@ The context credential issuance protocol enables a user to obtain a context cred
 
 
 \newpage
-\subsection{Context Credential Issuance}
-Context Credential Issuance enables a user to obtain a context-specific credential while proving ownership of a valid master credential. The user first constructs a commitment to their context credential attributes, including their identity $s$ and a deterministic nullifier derived from their VRF key $k$ and the credential context $ctx$. Through zero-knowledge proofs, the user demonstrates their master credential is valid and unrevoked, and proves the context commitment is well-formed with the same identity $s$. The nullifier $\tau$ = $VRF(k,ctx)$ prevents multiple credentials for the same context while maintaining privacy. Upon successful verification, the Context Credential Oracle signs the commitment and records the nullifier.
-\begin{figure}
-        \begin{center}
-        \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
-        \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
-        \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_c \gets CM.Setup(BG, \secparam, n)$} \\[1em]
-        \multicolumn{3}{l}{Credential Oracle: $(SK_c, PK_c) \gets PS.KeyGen(ck_c)$} \\[1em]
-        \underline{User($Cred_m, s, k$)} && \underline{CCO($SK_c$)} \\[0.5em]
-        \multicolumn{3}{l}{$\delta \gets VRF(k, ctx)$} \\[1em]
-        \multicolumn{3}{l}{$r* \sample Z_p, \; C_c \gets Com([s,\delta,ctx,attrs],r*)$} \\[1em]
-        \multicolumn{3}{l}{$\Pi_4 \gets ZKPoK.Prove_{selective-disclosure}(C_c,\delta,ctx,attrs)(s, r*)$} \\[1em]
-        \multicolumn{3}{l}{$r' \sample \Z_p, Cred_{m}' \gets Cred.Rerand(Cred_{m}, r')$} \\[1em]
-        \multicolumn{3}{l}{$\Pi_5 \gets ZKSoK.Prove(Cred_m')(s,k,master,attrs,r')$} \\[1em]
-        \multicolumn{3}{l}{Parse $Cred_m'$ as $C_m', \sigma_m'$} \\[1em]
-        \multicolumn{3}{l}{$\Pi_6 \gets ZKPoK.Prove_{reciprocal}(C_m', C_c,ctx)(s,k,r',r*)$}  \\[1em]
-        \multicolumn{3}{l}{$\Pi_7 \gets ZKPoK.Prove_{equality}(C_m', C_c)(s, r)$} \\[1em]
-        & $\xrightarrow{Cred_m', C_c, \Pi_4, \Pi_5, \Pi_6, \Pi_7}$ & \\[1em]
-        \multicolumn{3}{r}{If} \\[1em]
-        \multicolumn{3}{r}{$ZKPok.Verify_{selective-disclosure}(\Pi_4, C_c)(\delta, ctx, attrs)$ = 1 $\; \wedge$} \\[1em]
-        \multicolumn{3}{r}{$ZKSoK.Verify(\Pi_5, Cred_m')$ = 1 $\; \wedge$} \\[1em]
-        \multicolumn{3}{r}{$ZKPoK.Verify_{reciprocal}(\Pi_6, C_m', C_c, ctx)$ = 1 $\; \wedge$} \\[1em]
-        \multicolumn{3}{r}{$ZKPoK.Verify_{equality}(\Pi_7, C_m', C_c)$ = 1 $\; \wedge$} \\[1em]
-        \multicolumn{3}{r}{$\sigma_c \gets PS.Sign(SK_c, C_c)$} \\[1em]
-        \multicolumn{3}{r}{Store Data Record CCO $(C_c, \sigma_c, \delta, \Pi_4, \Pi_5, \Pi_6, \Pi_7 )$} \\[1em]
-        & $\xleftarrow{\sigma_c}$& \\[1em]
-        \multicolumn{3}{l}{If $PS.Verify(PK_c,\sigma_c, C_c) = 1$, Store $Cred_c(\sigma_c, C_c)$} \\[1em]
-        \end{tabular}
-        \end{center}
-    \caption{Context Credential Issuance}
-    \label{fig:context-cred-issuance}
-\end{figure}
 
 
 
@@ -1846,41 +1791,199 @@ To proceed with security proofs, we should:
 
 
 
-\begin{theorem}[Master Credential Type 1 Unforegability]
-    If the rerandomizable signature scheme $\mathsf{RS}$ is EUF-CMA secure, then no $\PPT$ adversary can win the MIMC-ABC unforgeability game with Type 1 forgery with non-negligible probability
+% \begin{theorem}[Master Credential Type 1 Unforegability]
+%     If the rerandomizable signature scheme $\mathsf{RS}$ is EUF-CMA secure, then no $\PPT$ adversary can win the MIMC-ABC unforgeability game with Type 1 forgery with non-negligible probability
+% \end{theorem}
+
+% \begin{proof}
+%     We construct an adversary $\AdvB$ against the EUF-CMA security of $\mathsf{RS}$ using any adversary $\AdvA$ that produces a Type-1 forgery. $\AdvB$ is as follows:
+
+%     \begin{enumerate}
+%         \item \textbf{Setup: } $\AdvB$ receives the EUF-CMA challenge $(\vk^*, \ck^*):$
+%             \begin{itemize}
+%                 \item Set master issuer key $opk_m = (vk^*, ck^*)$
+%                 \item Initialize $HU, CU, CRED \leftarrow \emptyset$
+%                 \item Give $opk_m$ to $\AdvA$
+%             \end{itemize}
+
+
+%         \item \textbf{Oracle Simulation: } $\AdvB$ simulates the following oracles
+%         \begin{itemize}
+%             \item $\mathcal{O}_{HU}(i)$: Sample $usk_i \gets \mathbb{Z}_p$, Add $i$ to $HU$, Return $usk_i$
+%             \item $\mathcal{O}_{ObtainMaster}(i, \vec{m})$:
+%                 \begin{itemize}
+%                     \item If $i \notin HU$ return $\bot$
+%                     \item Run knowledge extractor $\mathcal{E}$ on proof $\pi$ to get $(\vec{m}', r)$
+%                     \item Verify $cm = \mathsf{CM.Com}([\vec{m}']; r)$
+%                     \item If verification fails: return $\bot$
+%                     \item Query EUF-CMA signing oracle on $cm$ to get $\sigma$
+%                     \item Store $(cm, \sigma, \vec{m}', r)$ in $CRED$
+%                     \item Return $(cm, \sigma)$
+%                 \end{itemize}
+%         \end{itemize}
+
+
+%         \item \textbf{Extraction Phase: }
+%     \end{enumerate}
+% \end{proof}
+
+
+% \begin{theorem}[Master Credential Type 1 Unforgeability]
+% If the rerandomizable signature scheme RS is EUF-CMA secure, then no PPT adversary can win 
+% the MIMC-ABC unforgeability game with Type 1 forgery with non-negligible probability.
+% \end{theorem}
+
+% \begin{proof}
+% We construct an adversary B against the EUF-CMA security of RS using any adversary A that 
+% produces a Type 1 forgery. B operates as follows:
+
+% \paragraph{Setup.} Upon receiving EUF-CMA challenge $(pk^* = (vk^*, ck^*))$:
+% \begin{itemize}
+%     \item Set master issuer key $opk_m = (vk^*, ck^*)$
+%     \item Initialize $HU, CU, CRED \leftarrow \emptyset$
+%     \item Give $opk_m$ to A
+% \end{itemize}
+
+% \paragraph{Oracle Simulation.} B simulates the following oracles:
+
+% $\mathcal{O}_{HU}(i)$:
+% \begin{itemize}
+%     \item Sample $usk_i \gets \mathbb{Z}_p$
+%     \item Add $i$ to $HU$
+%     \item Return $usk_i$
+% \end{itemize}
+
+% $\mathcal{O}_{CU}(i)$:
+% \begin{itemize}
+%     \item If $i \in HU \setminus CU$:
+%         \begin{itemize}
+%             \item Add $i$ to $CU$
+%             \item Return all credentials and secrets for user $i$
+%         \end{itemize}
+%     \item Return $\bot$
+% \end{itemize}
+
+% $\mathcal{O}_{ObtainMaster}(i, \vec{m})$:
+% \begin{itemize}
+%     \item If $i \notin HU$ return $\bot$
+%     \item Compute $cm = \mathsf{CM.Com}([\vec{m}]; usk_i)$
+%     \item Receive proof $\pi$ from $\mathcal{A}$ proving knowledge of opening
+%     \item Run knowledge extractor $\mathcal{E}$ on $\pi$ to get $(\vec{m}', usk')$
+%     \item Verify $cm = \mathsf{CM.Com}([\vec{m}']; usk')$
+%     \item If verification fails: return $\bot$
+%     \item Query EUF-CMA signing oracle on $cm$ to get $\sigma$
+%     \item Store $(cm, \sigma, \vec{m}', usk')$ in $CRED$
+%     \item Return $(cm, \sigma)$
+% \end{itemize}
+
+% $\mathcal{O}_{Show}$ operates normally using stored credentials.
+
+% \paragraph{Forgery Extraction.} When A outputs $(π^*, cred^* = (cm^*, σ^*))$:
+
+% \begin{itemize}
+%     \item Run knowledge extractor $\mathcal{E}$ on $π^*$ to obtain $(\vec{m}^*, usk^*)$
+%     \item Verify commitment: $cm^* = \mathsf{CM.Com}([\vec{m}^*]; usk^*)$
+%     \item Verify signature: $e(σ_2, \tilde{g}) = e(σ_1, vk^* \cdot \widehat{cm^*})$
+%     \item If either verification fails: abort
+% \end{itemize}
+
+% B distinguishes between two forgery cases:
+
+% \paragraph{Case 1 (New Commitment).} If $cm^* \notin CRED$:
+% \begin{itemize}
+%     \item $(cm^*, σ^*)$ is a valid EUF-CMA forgery because:
+%         \begin{itemize}
+%             \item $σ^*$ verifies under $vk^*$
+%             \item $cm^*$ was never queried to signing oracle
+%         \end{itemize}
+%     \item Output $(cm^*, σ^*)$ to break EUF-CMA
+% \end{itemize}
+
+% \paragraph{Case 2 (Credential Theft).} If $\exists(cm, σ, \vec{m}, usk) \in CRED$ where:
+% \begin{itemize}
+%     \item $cm = cm^*$
+%     \item Owner $i \in HU$ (honest user)
+%     Then:
+%     \item $(cm^*, σ^*)$ is a valid EUF-CMA forgery because:
+%         \begin{itemize}
+%             \item The commitment was signed for honest user $i$
+%             \item $\mathcal{A}$ could not have known $usk_i$ to create valid proof
+%         \end{itemize}
+%     \item Output $(cm^*, σ^*)$ to break EUF-CMA
+% \end{itemize}
+
+% \paragraph{Analysis.} If $\mathcal{A}$ succeeds with non-negligible probability $ε$, then B breaks 
+% EUF-CMA security of RS with probability at least $ε - negl(λ)$ where $negl(λ)$ accounts for:
+% \begin{itemize}
+%     \item Knowledge extraction failure probability
+%     \item Commitment scheme binding failure probability
+% \end{itemize}
+
+% The reduction succeeds because any Type 1 forgery must either be a new commitment (Case 1) or 
+% reuse a commitment from an honest user (Case 2). In either case, B produces a valid EUF-CMA 
+% forgery against the PS signature scheme.
+% \end{proof}
+
+
+
+
+
+
+
+
+% \section{Notes 19/2}
+
+% What changes in the mimc scenario?
+
+% Unforgeability: 
+
+
+% Forgery scenarios
+% - combining attributes from different issuers maliciously
+% - context credential decoupling: use context credential without a valid master credential
+% -- mitigation: enforce credential chains (enforce all credentials are valid + equal is true)
+
+% False predicate 
+
+
+
+
+\subsection{Master Credential Type-1 Forgery}
+\begin{theorem}
+    If the signature scheme $\RS$ is EUF-CCA secure and the commitment scheme $\CM$ is binding, then no $\PPT$ adversary $AdvA$ can forge a master credential with non-negligible probability.
 \end{theorem}
 
-\begin{proof}
-    We construct an adversary $\AdvB$ against the EUF-CMA security of $\mathsf{RS}$ using any adversary $\AdvA$ that produces a Type-1 forgery. $\AdvB$ is as follows:
-
-    \begin{enumerate}
-        \item \textbf{Setup: } $\AdvB$ receives the EUF-CMA challenge $(\vk^*, \ck^*):$
-            \begin{itemize}
-                \item Set master issuer key $opk_m = (vk^*, ck^*)$
-                \item Initialize $HU, CU, CRED \leftarrow \emptyset$
-                \item Give $opk_m$ to $\AdvA$
-            \end{itemize}
+\subsubsection{Reduction}
+\begin{itemize}
+    \item \textbf{Setup: } Receive EUF-CCA challenger's public key $pk*$, set as master issuer public key $opkm$. Maintain lists CRED, COM, REL (relation between creds and users)
+    \item \textbf{Oracle Simulation: } B simulates A's environment
+    \item \textbf{Forgery Extraction: }
+\end{itemize}
 
 
-        \item \textbf{Oracle Simulation: } $\AdvB$ simulates the following oracles
-        \begin{itemize}
-            \item $\mathcal{O}_{HU}(i)$: Sample $usk_i \gets \mathbb{Z}_p$, Add $i$ to $HU$, Return $usk_i$
-            \item $\mathcal{O}_{ObtainMaster}(i, \vec{m})$:
-                \begin{itemize}
-                    \item If $i \notin HU$ return $\bot$
-                    \item Run knowledge extractor $\mathcal{E}$ on proof $\pi$ to get $(\vec{m}', r)$
-                    \item Verify $cm = \mathsf{CM.Com}([\vec{m}']; r)$
-                    \item If verification fails: return $\bot$
-                    \item Query EUF-CMA signing oracle on $cm$ to get $\sigma$
-                    \item Store $(cm, \sigma, \vec{m}', r)$ in $CRED$
-                    \item Return $(cm, \sigma)$
-                \end{itemize}
-        \end{itemize}
 
 
-        \item \textbf{Extraction Phase: }
-    \end{enumerate}
-\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3496,6 +3599,38 @@ cm4 =
 %     s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
 % \end{align*}
 
+% \subsection{Context Credential Issuance}
+% Context Credential Issuance enables a user to obtain a context-specific credential while proving ownership of a valid master credential. The user first constructs a commitment to their context credential attributes, including their identity $s$ and a deterministic nullifier derived from their VRF key $k$ and the credential context $ctx$. Through zero-knowledge proofs, the user demonstrates their master credential is valid and unrevoked, and proves the context commitment is well-formed with the same identity $s$. The nullifier $\tau$ = $VRF(k,ctx)$ prevents multiple credentials for the same context while maintaining privacy. Upon successful verification, the Context Credential Oracle signs the commitment and records the nullifier.
+% \begin{figure}
+%         \begin{center}
+%         \begin{tabular}{l@{\hspace{12em}}c@{\hspace{12em}}l}
+%         \multicolumn{3}{l}{$\underline{Setup(1^{\lambda}, 1^n)}$:} \\[0.5em]
+%         \multicolumn{3}{l}{System: $(\G_1, \G_2, e, g, \tilg ) \gets BG.Gen(\secparam, p), \; ck_c \gets CM.Setup(BG, \secparam, n)$} \\[1em]
+%         \multicolumn{3}{l}{Credential Oracle: $(SK_c, PK_c) \gets PS.KeyGen(ck_c)$} \\[1em]
+%         \underline{User($Cred_m, s, k$)} && \underline{CCO($SK_c$)} \\[0.5em]
+%         \multicolumn{3}{l}{$\delta \gets VRF(k, ctx)$} \\[1em]
+%         \multicolumn{3}{l}{$r* \sample Z_p, \; C_c \gets Com([s,\delta,ctx,attrs],r*)$} \\[1em]
+%         \multicolumn{3}{l}{$\Pi_4 \gets ZKPoK.Prove_{selective-disclosure}(C_c,\delta,ctx,attrs)(s, r*)$} \\[1em]
+%         \multicolumn{3}{l}{$r' \sample \Z_p, Cred_{m}' \gets Cred.Rerand(Cred_{m}, r')$} \\[1em]
+%         \multicolumn{3}{l}{$\Pi_5 \gets ZKSoK.Prove(Cred_m')(s,k,master,attrs,r')$} \\[1em]
+%         \multicolumn{3}{l}{Parse $Cred_m'$ as $C_m', \sigma_m'$} \\[1em]
+%         \multicolumn{3}{l}{$\Pi_6 \gets ZKPoK.Prove_{reciprocal}(C_m', C_c,ctx)(s,k,r',r*)$}  \\[1em]
+%         \multicolumn{3}{l}{$\Pi_7 \gets ZKPoK.Prove_{equality}(C_m', C_c)(s, r)$} \\[1em]
+%         & $\xrightarrow{Cred_m', C_c, \Pi_4, \Pi_5, \Pi_6, \Pi_7}$ & \\[1em]
+%         \multicolumn{3}{r}{If} \\[1em]
+%         \multicolumn{3}{r}{$ZKPok.Verify_{selective-disclosure}(\Pi_4, C_c)(\delta, ctx, attrs)$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$ZKSoK.Verify(\Pi_5, Cred_m')$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$ZKPoK.Verify_{reciprocal}(\Pi_6, C_m', C_c, ctx)$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$ZKPoK.Verify_{equality}(\Pi_7, C_m', C_c)$ = 1 $\; \wedge$} \\[1em]
+%         \multicolumn{3}{r}{$\sigma_c \gets PS.Sign(SK_c, C_c)$} \\[1em]
+%         \multicolumn{3}{r}{Store Data Record CCO $(C_c, \sigma_c, \delta, \Pi_4, \Pi_5, \Pi_6, \Pi_7 )$} \\[1em]
+%         & $\xleftarrow{\sigma_c}$& \\[1em]
+%         \multicolumn{3}{l}{If $PS.Verify(PK_c,\sigma_c, C_c) = 1$, Store $Cred_c(\sigma_c, C_c)$} \\[1em]
+%         \end{tabular}
+%         \end{center}
+%     \caption{Context Credential Issuance}
+%     \label{fig:context-cred-issuance}
+% \end{figure}
 
 
 
