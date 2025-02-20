@@ -1,4 +1,8 @@
- \section{Introduction}\label{sec:intro}
+% 
+% Literature Review https://arxiv.org/pdf/2501.07209
+% 
+
+\section{Introduction}\label{sec:intro}
 Digital Identity systems form the foundation of online trust and authentication, processing billions of verifications daily \cite{noauthor_happy_2021, pang_zanzibar_nodate}. Traditional centralized systems, while effective for regulatory compliance \cite{eltayeb_crucial_2024}, suffer from significant privacy and security vulnerabilities. Ongoing data breaches \cite{zhang_data_2022} affect billions of users, demonstrating the risks of storing identity data and centralizing systems. Decentralized Identity (DID) is a loosely defined framework (W3C specification) having evolved over the past 2 decades, offering users greater control over their credentials \cite{soltani_survey_2021}, many concrete implementations struggle to balance privacy with accountability \cite{maram2021candid} for the required feature set. 
 
 
@@ -1675,14 +1679,7 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 
 \newpage
-\section{Security Properties}
-
-Unforgeability
-Single-credential: Standard EUF-CMA security from your underlying signature scheme
-Multi-credential: Credential binding and cross-credential consistency
-- no user can present credentials with different identities
-- cannot mix and match attributes across credentials
-- cannot reuse credentials across contexts
+\section{Security Properties Update - trying to differentiate the single credential and multiple credential protocol}
 
 Unforgeability
 Single Credential
@@ -1709,6 +1706,77 @@ The reduction theorem flow should be
 2. multi-credential multi-issuer security definitions
 3. reduction theorem showing relationship (optional)
 4. security proof leveraging reduction 
+
+
+\subsection{Unforgeability}
+\begin{itemize}
+    \item Challenger Setup
+    \item Adversary Query Oracle
+    \item Simulation / Forgery
+    \item Win Condition
+\end{itemize}
+The game tracks $\CRED, \COM, \OWNR$, $\AdvA$ has access to oracles $(\OHU, \OCU, \OOBTISS, \OSHOW)$ modelling the adversaries real-world actions. 
+
+Lists $\CRED, \OWNR, \COM$ let us define a forgery, by EUF-CMA definition, if $verify(\credm, \cmm, \opkm) = 1$ and $\credm \times \cmm \notin \CRED \times \COM$ then it's a forgery!. Also used for reductions to primitives.
+
+\todonote{Sam to go through these again}
+The Unforgeability Adversary has access to 
+\begin{itemize}
+    \item $\OHU:$ $\AdvA$ creates honest users => Create honest users that $\AdvA$ can interact with but not control
+    \item $\OCU:$ allows an adversary to corrupt a user, like hacking a user account and revealing their secrets => models insider threats, users whose secrets are known to $\AdvA$
+    \item $\OOBTISS:$ models $\AdvA$ observing legitimate credential issuance for message $m$. => $\AdvA$ controls inputs, execution must follow protocol
+    \item $\OSHOW:$ shows legitimate credential usage satisfying a predicate $\phi$ => $\AdvA$ learns what's revealed in showing protocol
+\end{itemize}
+
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
+        \pccomment{Challenger Setup} \\
+        \text{Initialize } \CRED, \MSG = \emptyset \\
+        \ppar \gets \Setup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \pccomment{$\AdvA$ queries oracles} \\
+        \AdvA^{\OHU, \OOBTISS}(\opk) \\
+        \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
+        \pccomment{$\AdvA$ wins if } \\
+        \Verify(\cred^*, m^*, \opk) = 1 \wedge m^* \notin \MSG\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \pcreturn \text{Honest User } i \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \MSG[i] = m \\
+         \CRED[i] = (\cred, m) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The pseudorandomness game with adversary $\adv$ and PRF $(PRF.Gen, f)$}
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1969,17 +2037,17 @@ The reduction theorem flow should be
 
 
 
-\subsection{Master Credential Type-1 Forgery}
-\begin{theorem}
-    If the signature scheme $\RS$ is EUF-CCA secure and the commitment scheme $\CM$ is binding, then no $\PPT$ adversary $AdvA$ can forge a master credential with non-negligible probability.
-\end{theorem}
+% \subsection{Master Credential Type-1 Forgery}
+% \begin{theorem}
+%     If the signature scheme $\RS$ is EUF-CCA secure and the commitment scheme $\CM$ is binding, then no $\PPT$ adversary $AdvA$ can forge a master credential with non-negligible probability.
+% \end{theorem}
 
-\subsubsection{Reduction}
-\begin{itemize}
-    \item \textbf{Setup: } Receive EUF-CCA challenger's public key $pk*$, set as master issuer public key $opkm$. Maintain lists CRED, COM, REL (relation between creds and users)
-    \item \textbf{Oracle Simulation: } B simulates A's environment
-    \item \textbf{Forgery Extraction: }
-\end{itemize}
+% \subsubsection{Reduction}
+% \begin{itemize}
+%     \item \textbf{Setup: } Receive EUF-CCA challenger's public key $pk*$, set as master issuer public key $opkm$. Maintain lists CRED, COM, REL (relation between creds and users)
+%     \item \textbf{Oracle Simulation: } B simulates A's environment
+%     \item \textbf{Forgery Extraction: }
+% \end{itemize}
 
 
 

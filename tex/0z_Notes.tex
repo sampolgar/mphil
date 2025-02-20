@@ -794,3 +794,216 @@ z_{r4} = \rho_4 + e \cdot r_4 \<\< \\
 \<\< C_4^e \cdot T_4 \stackrel{?}{=}  h^{z_{r4}}\\
 \<\< C_3/C_4 = g \\
 }
+
+
+
+
+
+
+Notes 20/2 trying to understand basics of proofs w/o the oracles
+
+% Unforgeability
+% Single Credential
+% - Standard EUF-CMA security
+% - Credential integrity within one context
+
+% Multi-Credential
+% - Cross-credential consistency: credentials with same identity must have consistent attributes
+% - Context separation: valid credentials must be used in their intended context
+% - Non-transferability: credentials from different identities cannot be combined
+
+% Anonymity
+% Single Credential
+% - Unlinkable showings
+% - zero-knowledge attestation (implies selective disclosure)
+
+% Multi Credential
+% - Cross-credential unlinkability: multiple credential showings are unlinkable while proving consistent identity
+% - identity binding with privacy: prove identity consistency across credentials in secret
+
+
+% The reduction theorem flow should be 
+% 1. single credential security definitions
+% 2. multi-credential multi-issuer security definitions
+% 3. reduction theorem showing relationship (optional)
+% 4. security proof leveraging reduction 
+
+
+
+
+
+% \subsection{Single Issuer Base Case}
+
+% Game-UFCMA(λ): 
+% 1. Setup:
+%    - pp ← Setup(1^λ)
+%    - (sk, pk) ← OrgKeyGen(pp)
+   
+% 2. Oracle Access:
+%    - ObtainCred(id, ctx, attrs): Issues single credential
+%    - Show(cred): Executes showing protocol
+   
+% 3. Win Condition:
+%    A outputs (cred*, π*) where:
+%    - Verify(cred*, π*) = 1
+%    - cred* not result of ObtainCred query
+
+
+
+% Game-ID-Binding(λ):
+% 1. Setup:
+%    - pp ← Setup(1^λ)
+   
+% 2. Oracle Access:
+%    - ObtainCred(id, ctx, attrs): As above
+%    - Show(cred_set): Takes set of credentials
+   
+% 3. Win Condition:
+%    A outputs (cred_set*, π*) where:
+%    - All credentials verify individually
+%    - π* proves they share same identity
+%    - But credentials actually contain different identities
+
+
+
+
+
+% Game-Multi-Issuer-Binding(λ):
+% 1. Setup:
+%    - pp ← Setup(1^λ)
+%    - For i = 1 to n:
+%      (ski, pki) ← OrgKeyGen(pp)
+   
+% 2. Oracle Access:
+%    - ObtainCred(i, id, ctx, attrs): Get credential from issuer i
+%    - Show(cred_set): Takes credentials from multiple issuers
+   
+% 3. Win Condition:
+%    A outputs ({cred_1*,...,cred_n*}, π*) where:
+%    - All credentials verify with respective pki
+%    - π* proves consistent identity across all credentials
+%    - But ∃ i,j: cred_i*.id ≠ cred_j*.id
+
+
+% Reduction Theorem for Unforgeability
+% Theorem 1: If protocol Π achieves:
+% (1) Single-issuer unforgeability (Game-UFCMA)
+% (2) Identity binding across commitments (Game-ID-Binding)
+% (3) Zero-knowledge proofs are sound
+
+% Then Π achieves multi-issuer unforgeability (Game-Multi-Issuer-Binding)
+
+% Sketch:
+% If adversary A breaks multi-issuer security, we construct adversary B that:
+% 1. Simulates all but one issuer (call it target issuer i*)
+% 2. Uses A's forgery to break single-issuer security for i*
+% 3. Leverages π^Req proof to ensure consistency
+
+
+% Formal Reduction Proof (with 2 games)
+
+% Game 0: Original multi-issuer unforgeability game
+% - Multiple issuers (sk_i, pk_i)
+% - Adversary gets credentials across issuers
+% - Wins if forges valid credential set with inconsistent identities
+
+% Game 1: Hybrid with single target issuer
+% - Choose random issuer i* as target
+% - Simulate all other issuers honestly
+% - Forward i* queries to single-issuer challenger
+
+% Key Lemma: |Pr[Game 0] - Pr[Game 1]| ≤ negl(λ)
+
+% Reduction B works as follows
+
+% B(pk_target):
+% 1. Setup:
+%    - Get target pk_target from challenger
+%    - Generate (sk_i, pk_i) for all i ≠ target
+%    - Give {pk_i} to A
+
+% 2. Handle queries:
+%    - For i ≠ target: Execute protocol honestly
+%    - For i = target: Forward to challenger
+   
+% 3. Extract forgery:
+%    - When A outputs ({cred_i}, π^Req)
+%    - If forgery involves target, use it
+%    - π^Req guarantees consistent id binding
+
+
+
+% Formal reduction proof showing hybrid games
+% Game 0: Full multi-issuer game (original)
+
+% Game 1: Single target issuer + simulated others
+% - As before, but explicitly tracks query patterns
+
+% Game 2: Commitment consistency isolation
+% - Replace π^Req verification with direct id check
+% - Shows reliance on commitment scheme binding
+
+% Game 3: ZK proof extraction
+% - Add knowledge extractor for π^Req
+% - Demonstrates how ZK soundness is used
+
+% Game 4: Signature consistency
+% - Isolate where EUF-CMA of signature scheme is used
+
+
+% The crucial transitions showing probability changes
+% Pr[Game 0 → Game 1] ≤ 1/n   (n = number of issuers)
+% Pr[Game 1 → Game 2] ≤ ε_com (commitment binding)
+% Pr[Game 2 → Game 3] ≤ ε_zk  (ZK soundness)
+% Pr[Game 3 → Game 4] ≤ ε_sig (EUF-CMA security)
+
+
+% 1. Detailed Game Transitions
+
+% Game 0 → Game 1: Targeting Single Issuer
+% - Choose random target issuer i* ∈ [n]
+% - For all i ≠ i*: 
+%   * Generate (ski, pki) ← OrgKeyGen(pp)
+%   * Simulate credential issuance honestly
+% - For i*: Use challenger's public key
+% Key: Probability of guessing correct target = 1/n
+
+% Game 1 → Game 2: Commitment Consistency
+% - Replace π^Req verification with explicit check:
+%   * Extract witness (id, ctx, usk) from commitments
+%   * Verify id matches across all credentials
+% - Relies on commitment binding property
+% Key: If commitments bind to different ids but π^Req verifies, break binding
+
+% Game 2 → Game 3: ZK Extraction
+% - Run ZK extractor to get (id, ctx, usk) from π^Req
+% - Compare extracted values with commitment openings
+% Key: If values differ, break ZK soundness
+
+% Game 3 → Game 4: Signature Security
+% - Use extracted values to forge single signature
+% - If all previous checks pass but signature verifies, break EUF-CMA
+
+
+% 2. Knowledge Extractor Usage in Game 3
+
+% Extract(π^Req):
+% 1. Run ZK extractor to get witness w = (id, ctxm, ctxc, uskm, uskc)
+% 2. Check commitment consistency:
+%    * cmm = CM.Com([id, ctxm]; uskm)
+%    * cmc = CM.Com([id, ctxc]; uskc)
+% 3. Verify cross-credential binding:
+%    * Both commitments use same id
+%    * Contexts match protocol requirements
+
+
+% 3. Connection to Protocol Construction
+% π^Req(cmm', cmc) = ZKPoK{(id, ctxm, ctxc, uskm, uskc) | 
+%     cmm = CM.Com([id, ctxm]; uskm) ∧ 
+%     cmc = CM.Com([id, ctxc]; uskc)}
+
+% Consider: Why do we need both commitment binding and ZK soundness? Because:
+
+% Commitment binding ensures the id can't change after commitment
+% ZK soundness ensures π^Req actually proves knowledge of same id
+
