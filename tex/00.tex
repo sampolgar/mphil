@@ -644,7 +644,7 @@ The scheme inherits the additive homomorphic properties of Pedersen commitments:
 
 
 \begin{theorem}
-    In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\mathbb{G}$, then our RVC scheme satisfies position binding. Specifically, for any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
+    In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG$, then our RVC scheme satisfies position binding. Specifically, for any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
     \[
         \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda) \leq \ell \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\mathbb{G}}(\lambda)
     \]
@@ -1521,53 +1521,6 @@ This binding property enforces credential ownership consistency:
 \subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
 \subsubsection{Intuition of our Construction}
 
-% Our construction builds a new anonymous credential building block for multi-issuer, multi-credential systems. The key insight is combining three well-known cryptographic primitives using clever modifications that achieves privacy, efficiency, and practical deployment requirements.
-
-% \subsection{Working Draft Notes for Construction}
-% \begin{itemize}
-%    \item Extractable commitment openings
-%    \item  Signature uniqueness properties
-%    \item  Explicit freshness mechanism
-%    \item  Clear randomization structure
-% \end{itemize}
-
-
-% $\Pi_{\mathsf{Com}} := \mathsf{PoK}\{(m_1,\ldots,m_\ell,r): 
-%     \mathsf{cm} = g^r\prod_{i=1}^\ell g_i^{m_i}\}$
-
-% $    \Pi_{\mathsf{Show}} := \mathsf{PoK}\{(r, \{m_i\}_{i=1}^\ell): 
-%     \mathsf{cm}' = g^r\prod_{i=1}^\ell g_i^{m_i} \wedge
-%     e(\sigma_2, \tilde{g}) = e(\sigma_1, \mathsf{vk} \cdot \widetilde{\mathsf{cm}}')\}$
-
-
-
-% \subsubsection{Example} a user has multiple credentials and wishes to prove them together, where $\ctx$ is a string denoting the context, for example, $\credm$ may be $"government"$ and $\credc$ may be $"DMV"$ for a driver's license
-% \[
-% \credm = \RSSign(\CMCom([\id, \ctx]; \uskm)) \quad \wedge \quad \credc = \RSSign(\CMCom([\id, \ctx]; \uskc))
-% \]
-
-% \noindent A user with three valid credentials first rerandomizes their signatures and commitments:
-% \begin{align*}
-%     \cm_i' \gets& \mathsf{Com.Rerand}(\cm_i, \Delta_{r_i}) \text{ for } i \in [1,3] \\
-%     \sigma_i' \gets& \mathsf{PS.Rerand}(\sigma_i, \Delta_{r_i}, \Delta_{u_i} \text{ for } i \in [1,3])
-% \end{align*}
-% The rerandomized credentials and commitments $\cm_i', \sigma_i'$ are now indistinguishable from their original issuance.  
-% Next, the user and verifier interact in a two-party protocol where the user first verifies the randomized signatures and their commitments, 
-% \[
-% \mathsf{PS.Verify}(\sigma_i',\cm_i',pk_i') = 1 \quad \forall i \in [3]
-% \]
-
-% \noindent Let $\mathcal{R}$ be a relation for public input $(\sigma_m', \sigma_d', \sigma_u', pk_m, pk_d, pk_u, \cm_m', \cm_d', \cm_u')$ where:
-
-% $\mathcal{R}$ = {$(s, k, r_m, r_d, r_u, \delta_d, u_\Delta, \mathsf{ctx}_m, \mathsf{ctx}_d, \mathsf{ctx}_u, \mathsf{exp}_m, \mathsf{exp}_d, \mathsf{issued}_u)$:
-% \begin{align*}
-%     \cm_m &= \mathsf{CM.Com}([s, k, \mathsf{ctx}_m, \mathsf{exp}_m]; r_m) \; \wedge \; \mathsf{exp}_m > \mathsf{today} \; \wedge \mathsf{ctx}_m = \text{"master"} \; \wedge\\
-%     \cm_d &= \mathsf{CM.Com}([s, \delta_d, \mathsf{ctx}_d, \mathsf{exp}_d]; r_d) \; \wedge \; \mathsf{exp}_d > \mathsf{today} \; \wedge \mathsf{ctx}_d = \text{"dmv"} \; \wedge\\
-%     \cm_u &= \mathsf{CM.Com}([s, u_\Delta, \mathsf{ctx}_u, \mathsf{issued}_u]; r_u) \; \wedge \; \mathsf{ctx}_u \in \mathcal{D} \; \wedge\\
-%     s &= \cm_m[0] = \cm_d[0] = \cm_u[0]
-% \end{align*}
-
-
 
 
 
@@ -1722,71 +1675,139 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 
 \newpage
-\section{Security Analysis Framework}
+\section{Security Properties}
 
-\subsection{Forgery Classifications}
-3 categories of forgeries
+Unforgeability
+Single-credential: Standard EUF-CMA security from your underlying signature scheme
+Multi-credential: Credential binding and cross-credential consistency
+- no user can present credentials with different identities
+- cannot mix and match attributes across credentials
+- cannot reuse credentials across contexts
 
-\begin{enumerate}
-    \item \textbf{Classic Credential Forgery}
-    \begin{itemize}
-        \item Adversary forges a credential that was never issued
-        \item Reduces to PS-LRSW assumption
-        \item Similar to standard EUF-CMA security for signatures
-    \end{itemize}
+Unforgeability
+Single Credential
+- Standard EUF-CMA security
+- Credential integrity within one context
+
+Multi-Credential
+- Cross-credential consistency: credentials with same identity must have consistent attributes
+- Context separation: valid credentials must be used in their intended context
+- Non-transferability: credentials from different identities cannot be combined
+
+Anonymity
+Single Credential
+- Unlinkable showings
+- zero-knowledge attestation (implies selective disclosure)
+
+Multi Credential
+- Cross-credential unlinkability: multiple credential showings are unlinkable while proving consistent identity
+- identity binding with privacy: prove identity consistency across credentials in secret
+
+
+The reduction theorem flow should be 
+1. single credential security definitions
+2. multi-credential multi-issuer security definitions
+3. reduction theorem showing relationship (optional)
+4. security proof leveraging reduction 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \subsection{Forgery Classifications}
+% 3 categories of forgeries
+
+% \begin{enumerate}
+%     \item \textbf{Classic Credential Forgery}
+%     \begin{itemize}
+%         \item Adversary forges a credential that was never issued
+%         \item Reduces to PS-LRSW assumption
+%         \item Similar to standard EUF-CMA security for signatures
+%     \end{itemize}
     
-    \item \textbf{Credential Binding Break}
-    \begin{itemize}
-        \item Adversary combines valid credentials from different users
-        \item Reduces to position binding of Pedersen commitments under SDLP
-        \item Analogous to binding breaks in commitment schemes
-    \end{itemize}
+%     \item \textbf{Credential Binding Break}
+%     \begin{itemize}
+%         \item Adversary combines valid credentials from different users
+%         \item Reduces to position binding of Pedersen commitments under SDLP
+%         \item Analogous to binding breaks in commitment schemes
+%     \end{itemize}
     
-    % \item \textbf{Context/Linking Forgery}
-    % \begin{itemize}
-    %     \item Adversary creates false relationships between credentials
-    %     \item Reduces to VRF uniqueness property
-    %     \item Moved to separate Credential Binding security property
-    % \end{itemize}
-\end{enumerate}
+%     % \item \textbf{Context/Linking Forgery}
+%     % \begin{itemize}
+%     %     \item Adversary creates false relationships between credentials
+%     %     \item Reduces to VRF uniqueness property
+%     %     \item Moved to separate Credential Binding security property
+%     % \end{itemize}
+% \end{enumerate}
 
-\subsection{Credential Structure}
-Our system employs two types of credentials with distinct commitment structures:
+% \subsection{Credential Structure}
+% Our system employs two types of credentials with distinct commitment structures:
 
-\subsubsection{Master Credential}
-\begin{equation*}
-    cm_m = \text{Com}([id, k, \text{"master"}, attrs]; r)
-\end{equation*}
-where:
-\begin{itemize}
-    \item $id$: unique identifier
-    \item $k$: VRF key
-    \item $\text{"master"}$: fixed context string
-    \item $attrs$: additional attributes
-    \item $r$: commitment randomness
-\end{itemize}
+% \subsubsection{Master Credential}
+% \begin{equation*}
+%     cm_m = \text{Com}([id, k, \text{"master"}, attrs]; r)
+% \end{equation*}
+% where:
+% \begin{itemize}
+%     \item $id$: unique identifier
+%     \item $k$: VRF key
+%     \item $\text{"master"}$: fixed context string
+%     \item $attrs$: additional attributes
+%     \item $r$: commitment randomness
+% \end{itemize}
 
-\subsubsection{Context Credential}
-\begin{equation*}
-    cm_c = \text{Com}([id, \text{VRF}(k, ctx), ctx, attrs]; r)
-\end{equation*}
-where:
-\begin{itemize}
-    \item $id$: same identifier as master credential
-    \item $\text{VRF}(k, ctx)$: deterministic nullifier
-    \item $ctx$: context-specific identifier
-    \item $attrs$: context-specific attributes
-    \item $r$: fresh commitment randomness
-\end{itemize}
+% \subsubsection{Context Credential}
+% \begin{equation*}
+%     cm_c = \text{Com}([id, \text{VRF}(k, ctx), ctx, attrs]; r)
+% \end{equation*}
+% where:
+% \begin{itemize}
+%     \item $id$: same identifier as master credential
+%     \item $\text{VRF}(k, ctx)$: deterministic nullifier
+%     \item $ctx$: context-specific identifier
+%     \item $attrs$: context-specific attributes
+%     \item $r$: fresh commitment randomness
+% \end{itemize}
 
-\subsection{Next Steps}
-To proceed with security proofs, we should:
-\begin{enumerate}
-    \item Formalize the unforgeability game definition
-    \item Detail the Credential Binding security property
-    \item Construct reductions for each forgery type
-    \item Analyze the tightness of our reductions
-\end{enumerate}
+% \subsection{Next Steps}
+% To proceed with security proofs, we should:
+% \begin{enumerate}
+%     \item Formalize the unforgeability game definition
+%     \item Detail the Credential Binding security property
+%     \item Construct reductions for each forgery type
+%     \item Analyze the tightness of our reductions
+% \end{enumerate}
 
 
 
@@ -3127,6 +3148,14 @@ This $\Sigma$-protocol satisfies:
 
 \section{Sybil Resistance via VRF with Committed Attributes}
 Anonymous Credential systems have the paradoxical problem of requiring user privacy but preventing sybil attacks where users create multiple credentials. Traditional Sybil resistance mechanisms often compromise user anonymity by revealing identifying information or relationships between credentials. Verifiable Random Functions (VRFs) offer a promising solution by enabling the generation of verifiably pseudorandom and deterministic nullifiers from user-specific information, suitable for presentation to an issuer or for revocation lists. Existing VRF-based schemes often rely on computationally intensive bilinear pairings or reveal user attributes, introducing overhead or privacy risks.
+
+
+Sybil Resistance
+- Single-credential: UnlinkOne identity per context
+- Multi-credential: Cross-context consistency
+- - Cannot obtain multiple credentials for same (identity, context) pair
+- - Master credential properly controls derivation of context credentials
+
 
 \noindent We improve the state of the art by creating a lightweight VRF construction tailored for Anonymous Credential systems with 3 contributions:
 \begin{enumerate}
