@@ -1522,7 +1522,7 @@ This binding property enforces credential ownership consistency:
 
 
 \newpage
-\subsection{MIMC-ABC Construction}\label{sec:mimcabc-construction}
+\subsection{Construction}\label{sec:mimcabc-construction}
 \subsubsection{Intuition of our Construction}
 
 
@@ -1678,27 +1678,66 @@ $user$ sends $(\pi, attrs_{\phi})$ to $rely$, $rely$ verifies $\pi$ against $acc
 
 
 
+
+
+
+
 \newpage
-\section{Security Properties Update - trying to differentiate the single credential and multiple credential protocol}
+\section{Security Properties Framework}
+\subsection{Base Properties (Single Credential)}
+\begin{itemize}
+    \item \textbf{Unforgeability:}
+    \begin{itemize}
+        \item Type-1: Cannot forge new credentials (EUF-CMA)
+        \item Type-2: Cannot create false proofs about valid credentials (Soundness)
+        \item Note: Verification requires both signature validity AND proof soundness
+    \end{itemize}
+    
+    \item \textbf{Attribute Soundness:}
+    \begin{itemize}
+        \item Committed attributes satisfy verification predicate
+        \item ZKP soundness ensures honest attribute revelation
+        \item Relationship to commitment scheme binding property
+    \end{itemize}
 
-Unforgeability
-Single Credential
-- Standard EUF-CMA security
-- Credential integrity within one context
+    \item \textbf{Base Anonymity:}
+    \begin{itemize}
+        \item Unlinkable showings (rerandomization)
+        \item Selective disclosure via ZK proofs
+        \item User identity remains hidden
+    \end{itemize}
+\end{itemize}
 
-Multi-Credential
-- Cross-credential consistency: credentials with same identity must have consistent attributes
-- Context separation: valid credentials must be used in their intended context
-- Non-transferability: credentials from different identities cannot be combined
+\subsection{Extended Properties (Multi-Credential)}
+\begin{itemize}
+    \item \textbf{Cross-Credential Unforgeability:}
+    \begin{itemize}
+        \item Extends Type-1: No forged credentials across contexts
+        \item Extends Type-2: No false cross-credential proofs
+        \item Implies: Base unforgeability in each context
+    \end{itemize}
 
-Anonymity
-Single Credential
-- Unlinkable showings
-- zero-knowledge attestation (implies selective disclosure)
+    \item \textbf{Identity Consistency:}
+    \begin{itemize}
+        \item Cross-credential identity binding
+        \item Attribute consistency across credentials
+        \item Requires: Knowledge of all credential openings
+    \end{itemize}
 
-Multi Credential
-- Cross-credential unlinkability: multiple credential showings are unlinkable while proving consistent identity
-- identity binding with privacy: prove identity consistency across credentials in secret
+    \item \textbf{Multi-Show Anonymity:}
+    \begin{itemize}
+        \item Cross-credential unlinkability while maintaining consistency
+        \item Private identity proofs across credentials
+        \item Implies: Base anonymity for each credential
+    \end{itemize}
+\end{itemize}
+
+Key changes between single and multiple issuer
+\begin{enumerate}
+    \item Base Unforgeability + Identity Binding $\implies$ Cross-Credential Unforgeability
+    \item Base Anonymity + Consistent Identity $\implies$  Multi-Show Anonymity
+    \item Attribute Soundness + Cross-Credential Binding $\implies$ Identity Consistency
+\end{enumerate}
 
 
 The reduction theorem flow should be 
@@ -1706,6 +1745,10 @@ The reduction theorem flow should be
 2. multi-credential multi-issuer security definitions
 3. reduction theorem showing relationship (optional)
 4. security proof leveraging reduction 
+
+
+
+
 
 
 \subsection{Unforgeability}
@@ -1719,7 +1762,6 @@ The game tracks $\CRED, \COM, \OWNR$, $\AdvA$ has access to oracles $(\OHU, \OCU
 
 Lists $\CRED, \OWNR, \COM$ let us define a forgery, by EUF-CMA definition, if $verify(\credm, \cmm, \opkm) = 1$ and $\credm \times \cmm \notin \CRED \times \COM$ then it's a forgery!. Also used for reductions to primitives.
 
-\todonote{Sam to go through these again}
 The Unforgeability Adversary has access to 
 \begin{itemize}
     \item $\OHU:$ $\AdvA$ creates honest users => Create honest users that $\AdvA$ can interact with but not control
@@ -1729,36 +1771,128 @@ The Unforgeability Adversary has access to
 \end{itemize}
 
 
+\subsection{Basic Unforgeability Version 1}
+Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
 \begin{figure}
 \begin{pchstack}[boxed, center, space=1em]
     \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
         \pccomment{Challenger Setup} \\
-        \text{Initialize } \CRED, \MSG = \emptyset \\
+        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
         \ppar \gets \Setup(\secparam) \\
         (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
         \pccomment{$\AdvA$ queries oracles} \\
         \AdvA^{\OHU, \OOBTISS}(\opk) \\
         \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
         \pccomment{$\AdvA$ wins if } \\
-        \Verify(\cred^*, m^*, \opk) = 1 \wedge m^* \notin \MSG\\
+        \Verify(\cred^*, m^*, \opk) = 1 \; \wedge\\
+        m^* \notin \MSG \; \wedge \; 
+        \cred^* \notin \CRED[i] \text{ for all } i\\
     }
     \begin{pcvstack}
         \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i \\
             \pcreturn \text{Honest User } i \\
         }
         \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \bot \\
             \MSG[i] = m \\
-         \CRED[i] = (\cred, m) \\
+            \CRED[i] = (\cred, m) \\
+            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
+            \pcreturn \cred \\
         }
     \end{pcvstack}
 \end{pchstack}
-  \caption{The pseudorandomness game with adversary $\adv$ and PRF $(PRF.Gen, f)$}
+  \caption{The $\EUFCMA$ game, single credential, step 1}
+  \label{fig:prf}
+\end{figure}
+
+
+
+\subsection{Basic Unforgeability Version 2}
+We change to sets because we use a multi-credential multi-issuer environment. $\HU$ is a set of honest user indices $\{i_1, \ldots\}$
+
+Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
+        \pccomment{Challenger Setup} \\
+        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
+        \text{ where } \CRED \subseteq \{(\cred,m)\}, \MSG \subseteq \{m\} \\
+        \ppar \gets \Setup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \pccomment{$\AdvA$ queries oracles} \\
+        \AdvA^{\OHU, \OOBTISS}(\opk) \\
+        \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
+        \pccomment{$\AdvA$ wins if } \\
+        \Verify(\cred^*, m^*, \opk) = 1 \; \wedge\\
+        m^* \notin \MSG \; \wedge \; 
+        \cred^* \notin \CRED\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i \\
+            \pcreturn \text{Honest User } i \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \bot \\
+            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
+            \CRED = \CRED \cup  \{(\cred, m)\} \\
+            \MSG = \MSG \cup \{m\} \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The $\EUFCMA$ game, single credential, step 1}
   \label{fig:prf}
 \end{figure}
 
 
 
 
+
+
+\subsection{Basic Unforgeability Version 3 - Adding Commitments and ZKP}
+
+
+Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
+        \pccomment{Challenger Setup} \\
+        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
+        \CRED \subseteq \{(\cred,m)\}, \MSG \subseteq \{m\} \\
+        \ppar \gets \Setup(\secparam), \ck \gets \CMCom(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \pccomment{$\AdvA$ queries oracles} \\
+        \AdvA^{\OHU, \OOBTISS}(\opk) \\
+        \AdvA \text{ outputs forgery } (\cred^*, \cm^*, \m^*, \usk^*, \pi^*)  \\
+        \pccomment{$\AdvA$ wins if } \\
+        \pirsok(\cred^*, \cm^*, \m^*, \usk^*) = 1 \text{ such that}\\
+        \cm^* = \CMCom([m^*]; \usk^*) \; \wedge\\
+        \RSVer(\cred^*, \cm^*, \opk) = 1 \; \wedge \\
+        (\cred^*, \cm^*, \m^*) \notin \CRED\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i \\
+            \pcreturn \text{Honest User } i \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \bot \\
+            \usk \in \Z_p \sample \UserKeyGen(\secparam) \\
+            \cm \gets \CMCom([m]; \usk) \\
+            \pirdisclose = \zkpok\{(m, \usk) | \cm = \CMCom([m];\usk)\} \\
+            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
+            \pcif \ZKVerify(\pirdisclose, \cm) = 0, return \bot \\
+            \CRED := \CRED \cup  \{(\cred, \cm, m)\} \\
+            \MSG = \MSG \cup \{m\} \\
+            \pcreturn (\cred, \cm) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The $\EUFCMA$ game, single credential, step 1}
+  \label{fig:prf}
+\end{figure}
 
 
 
