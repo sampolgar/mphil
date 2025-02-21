@@ -1531,7 +1531,11 @@ We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous 
 
 \subsubsection{Outline}
 Our credential system operates over attribute space $\Z_p$ with arbitrary string attributes mapped to field elements by a collision-resistant hash function $H: \bit^* \to \Z_p$. A credential for user $i$ consists of a 
-commitment $\cm_i \gets \mathsf{CM.Commit}([attr_1,\ldots,attr_n]; r)$ to $n$ attributes with randomness $r \sample \Z_p^*$, a Pointcheval-Sanders signature $\sigma \gets \mathsf{PS.Sign}(\cm_i, \mathsf{osk})$ on the commitment, verifiable by $\mathsf{PS.Verify}(\sigma, \cm_i, \mathsf{opk}) = 1$
+commitment $\cm_i \gets \mathsf{CM.Commit}([m]; \usk$) where $m$ is e.g. $[\id, \ctx]$ with randomness denote by $\usk \sample \Z_p^*$, a Pointcheval-Sanders signature $\sigma \gets \mathsf{PS.Sign}(\cm_i, \mathsf{osk})$ on the commitment, verifiable by $\mathsf{PS.Verify}(\sigma, \cm_i, \mathsf{opk}) = 1$
+
+% Issuance: A user commits to attributes [m] (e.g., [id, ctx]) using a secret key usk, obtains a rerandomizable signature σ on the commitment cm, forming a credential cred = (σ, cm, opk).
+% Showing: The user rerandomizes the credential to (σ', cm') and provides a ZK proof π proving that cm' commits to some [m] and σ' is a valid signature on cm'.
+% Anonymity: Rerandomization ensures unlinkability, but unforgeability must prevent unauthorized showings.
 
 \subsubsection{Freshness}
 To prevent replay attacks in credential show/verify protocols, we employ an interactive challenge-response mechanism as per Sigma protocols \textbf{Cite Sigma Protocols}. During showing, the verifier provides a random challenge that must be incorporated in the zero-knowledge proofs, ensuring uniqueness of each showing. Interaction could be removed using the Fiat-Shamir transform \textbf{Cite Fiat Shamir}, this would require verifiers to maintain a list of used proofs introducing overhead and potential security concerns in a multi-verifier/distributed setting.
@@ -2181,259 +2185,72 @@ Changes
 \end{figure}
 
 
+\newpage
+\subsection{Unforgeability Base Case Single Issuer}
+\begin{enumerate}
+    \item \textbf{Setup:}
+    \begin{itemize}
+        \item $\HU, \CU$ are modelled as sets e.g. $\HU \gets \HU \cup \{i\}$ as sets prevent deuplicates
+        \item $\CRED$: each entry in $\CRED$ is a tuple $(\cred, \cm, m, i)$ where $\cred = (\sigma, \cm, \opk)$ includes the signature $\sigma$ and commitment $\cm$, $m$ and $i$ track the message and user. 
+        \item $\OWNR$: is a map supporting query $\OWNR[\cred] = i$
+    \end{itemize}
+    \item \textbf{Oracles}
+    \begin{itemize}
+        \item $\OHU$ creates an honest user $i$ with secret key $\usk[i]$ modelling legitimate users
+        \item $\OCU$ corrupts an honest user $i$, giving adversary $\usk[i]$ and all credentials issued to $i$
+        \item $\OOBTISS$ issues a credential $\cred$ to an honest user $i$. Receives $m$ as input, computes commitment $\cm \gets \CMCom([m]; \usk[i])$ and $\cred \gets (\Obtain(\usk[i],))$
+    \end{itemize}
+    \item \textbf{Adversary Goal: } 
+    \item \textbf{Win Condition: } The adversary output must be valid, and can't have come from a corrupt user. That is,
+    $\adv$ must produce a valid, new output, not a trivial forgery, such as stealing someone's credentials, modeled by $\OCU$, which we reject in our win condition as well as $\adv$ using a rerandomized version of the corrupt user credential. 
+\end{enumerate}
+
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathsf{Experiment}$ $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam) \\
+        \ck \gets \CMSetup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \{\HU, \CU, \CRED\} \gets \emptyset,  \OWNR \gets \{\} \\
+        \pccomment{Adversary Interaction} \\
+        \AdvA^{\OHU, \OCU, \OOBTISS, \OSHOW}(\opk, \ck) \\
+        \AdvA \text{ outputs } (\cred'^*, \cm'^*, \pi^*) \\
+        \pccomment{Winning Condition} \\
+        \Verify(\cred'^*, \cm'^*, \opk, \pi^*) = 1 \\
+        \land \forall \cred \text{ where } \OWNR[\cred] \in \CU, \\
+        \cred'^* \text{ is not a rerandomization of } \cred \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \pcif i \notin \HU \\ 
+            \t \HU \gets \HU \cup \{i\} \\
+            \t \usk[i] \sample \UserKeyGen(\secparam) \\
+            \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pcif i \in \HU \land i \notin \CU \\
+            \t \CU \gets \CU \cup \{i\} \\
+            \pcreturn \usk[i], \\
+            \{(\cred, \cm, m, i) \in \CRED \mid \OWNR[\cred] = i\} \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \cm \gets \CMCom([m]; \usk[i]) \\
+            \t \cred \gets (\Obtain(\usk[i], \cm), \Issue(\osk, \cm)) \\
+            \t \CRED \gets \CRED \cup \{(\cred, \cm, m, i)\} \\
+            \t \OWNR[\cred] \gets i \\
+            \pcreturn \cred \\
+        }
+        \procedure[]{$\OSHOW(i)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \text{Select } (\cred, \cm, m, i) \in \CRED \\
+            \t (\cred', \cm', \pi) \gets \Show(\cred) \\
+            \pcreturn (\cred', \cm', \pi) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% \subsection{Forgery Classifications}
-% 3 categories of forgeries
-
-% \begin{enumerate}
-%     \item \textbf{Classic Credential Forgery}
-%     \begin{itemize}
-%         \item Adversary forges a credential that was never issued
-%         \item Reduces to PS-LRSW assumption
-%         \item Similar to standard EUF-CMA security for signatures
-%     \end{itemize}
-    
-%     \item \textbf{Credential Binding Break}
-%     \begin{itemize}
-%         \item Adversary combines valid credentials from different users
-%         \item Reduces to position binding of Pedersen commitments under SDLP
-%         \item Analogous to binding breaks in commitment schemes
-%     \end{itemize}
-    
-%     % \item \textbf{Context/Linking Forgery}
-%     % \begin{itemize}
-%     %     \item Adversary creates false relationships between credentials
-%     %     \item Reduces to VRF uniqueness property
-%     %     \item Moved to separate Credential Binding security property
-%     % \end{itemize}
-% \end{enumerate}
-
-% \subsection{Credential Structure}
-% Our system employs two types of credentials with distinct commitment structures:
-
-% \subsubsection{Master Credential}
-% \begin{equation*}
-%     cm_m = \text{Com}([id, k, \text{"master"}, attrs]; r)
-% \end{equation*}
-% where:
-% \begin{itemize}
-%     \item $id$: unique identifier
-%     \item $k$: VRF key
-%     \item $\text{"master"}$: fixed context string
-%     \item $attrs$: additional attributes
-%     \item $r$: commitment randomness
-% \end{itemize}
-
-% \subsubsection{Context Credential}
-% \begin{equation*}
-%     cm_c = \text{Com}([id, \text{VRF}(k, ctx), ctx, attrs]; r)
-% \end{equation*}
-% where:
-% \begin{itemize}
-%     \item $id$: same identifier as master credential
-%     \item $\text{VRF}(k, ctx)$: deterministic nullifier
-%     \item $ctx$: context-specific identifier
-%     \item $attrs$: context-specific attributes
-%     \item $r$: fresh commitment randomness
-% \end{itemize}
-
-% \subsection{Next Steps}
-% To proceed with security proofs, we should:
-% \begin{enumerate}
-%     \item Formalize the unforgeability game definition
-%     \item Detail the Credential Binding security property
-%     \item Construct reductions for each forgery type
-%     \item Analyze the tightness of our reductions
-% \end{enumerate}
-
-
-
-
-% \begin{theorem}[Master Credential Type 1 Unforegability]
-%     If the rerandomizable signature scheme $\mathsf{RS}$ is EUF-CMA secure, then no $\PPT$ adversary can win the MIMC-ABC unforgeability game with Type 1 forgery with non-negligible probability
-% \end{theorem}
-
-% \begin{proof}
-%     We construct an adversary $\AdvB$ against the EUF-CMA security of $\mathsf{RS}$ using any adversary $\AdvA$ that produces a Type-1 forgery. $\AdvB$ is as follows:
-
-%     \begin{enumerate}
-%         \item \textbf{Setup: } $\AdvB$ receives the EUF-CMA challenge $(\vk^*, \ck^*):$
-%             \begin{itemize}
-%                 \item Set master issuer key $opk_m = (vk^*, ck^*)$
-%                 \item Initialize $HU, CU, CRED \leftarrow \emptyset$
-%                 \item Give $opk_m$ to $\AdvA$
-%             \end{itemize}
-
-
-%         \item \textbf{Oracle Simulation: } $\AdvB$ simulates the following oracles
-%         \begin{itemize}
-%             \item $\mathcal{O}_{HU}(i)$: Sample $usk_i \gets \mathbb{Z}_p$, Add $i$ to $HU$, Return $usk_i$
-%             \item $\mathcal{O}_{ObtainMaster}(i, \vec{m})$:
-%                 \begin{itemize}
-%                     \item If $i \notin HU$ return $\bot$
-%                     \item Run knowledge extractor $\mathcal{E}$ on proof $\pi$ to get $(\vec{m}', r)$
-%                     \item Verify $cm = \mathsf{CM.Com}([\vec{m}']; r)$
-%                     \item If verification fails: return $\bot$
-%                     \item Query EUF-CMA signing oracle on $cm$ to get $\sigma$
-%                     \item Store $(cm, \sigma, \vec{m}', r)$ in $CRED$
-%                     \item Return $(cm, \sigma)$
-%                 \end{itemize}
-%         \end{itemize}
-
-
-%         \item \textbf{Extraction Phase: }
-%     \end{enumerate}
-% \end{proof}
-
-
-% \begin{theorem}[Master Credential Type 1 Unforgeability]
-% If the rerandomizable signature scheme RS is EUF-CMA secure, then no PPT adversary can win 
-% the MIMC-ABC unforgeability game with Type 1 forgery with non-negligible probability.
-% \end{theorem}
-
-% \begin{proof}
-% We construct an adversary B against the EUF-CMA security of RS using any adversary A that 
-% produces a Type 1 forgery. B operates as follows:
-
-% \paragraph{Setup.} Upon receiving EUF-CMA challenge $(pk^* = (vk^*, ck^*))$:
-% \begin{itemize}
-%     \item Set master issuer key $opk_m = (vk^*, ck^*)$
-%     \item Initialize $HU, CU, CRED \leftarrow \emptyset$
-%     \item Give $opk_m$ to A
-% \end{itemize}
-
-% \paragraph{Oracle Simulation.} B simulates the following oracles:
-
-% $\mathcal{O}_{HU}(i)$:
-% \begin{itemize}
-%     \item Sample $usk_i \gets \mathbb{Z}_p$
-%     \item Add $i$ to $HU$
-%     \item Return $usk_i$
-% \end{itemize}
-
-% $\mathcal{O}_{CU}(i)$:
-% \begin{itemize}
-%     \item If $i \in HU \setminus CU$:
-%         \begin{itemize}
-%             \item Add $i$ to $CU$
-%             \item Return all credentials and secrets for user $i$
-%         \end{itemize}
-%     \item Return $\bot$
-% \end{itemize}
-
-% $\mathcal{O}_{ObtainMaster}(i, \vec{m})$:
-% \begin{itemize}
-%     \item If $i \notin HU$ return $\bot$
-%     \item Compute $cm = \mathsf{CM.Com}([\vec{m}]; usk_i)$
-%     \item Receive proof $\pi$ from $\mathcal{A}$ proving knowledge of opening
-%     \item Run knowledge extractor $\mathcal{E}$ on $\pi$ to get $(\vec{m}', usk')$
-%     \item Verify $cm = \mathsf{CM.Com}([\vec{m}']; usk')$
-%     \item If verification fails: return $\bot$
-%     \item Query EUF-CMA signing oracle on $cm$ to get $\sigma$
-%     \item Store $(cm, \sigma, \vec{m}', usk')$ in $CRED$
-%     \item Return $(cm, \sigma)$
-% \end{itemize}
-
-% $\mathcal{O}_{Show}$ operates normally using stored credentials.
-
-% \paragraph{Forgery Extraction.} When A outputs $(π^*, cred^* = (cm^*, σ^*))$:
-
-% \begin{itemize}
-%     \item Run knowledge extractor $\mathcal{E}$ on $π^*$ to obtain $(\vec{m}^*, usk^*)$
-%     \item Verify commitment: $cm^* = \mathsf{CM.Com}([\vec{m}^*]; usk^*)$
-%     \item Verify signature: $e(σ_2, \tilde{g}) = e(σ_1, vk^* \cdot \widehat{cm^*})$
-%     \item If either verification fails: abort
-% \end{itemize}
-
-% B distinguishes between two forgery cases:
-
-% \paragraph{Case 1 (New Commitment).} If $cm^* \notin CRED$:
-% \begin{itemize}
-%     \item $(cm^*, σ^*)$ is a valid EUF-CMA forgery because:
-%         \begin{itemize}
-%             \item $σ^*$ verifies under $vk^*$
-%             \item $cm^*$ was never queried to signing oracle
-%         \end{itemize}
-%     \item Output $(cm^*, σ^*)$ to break EUF-CMA
-% \end{itemize}
-
-% \paragraph{Case 2 (Credential Theft).} If $\exists(cm, σ, \vec{m}, usk) \in CRED$ where:
-% \begin{itemize}
-%     \item $cm = cm^*$
-%     \item Owner $i \in HU$ (honest user)
-%     Then:
-%     \item $(cm^*, σ^*)$ is a valid EUF-CMA forgery because:
-%         \begin{itemize}
-%             \item The commitment was signed for honest user $i$
-%             \item $\mathcal{A}$ could not have known $usk_i$ to create valid proof
-%         \end{itemize}
-%     \item Output $(cm^*, σ^*)$ to break EUF-CMA
-% \end{itemize}
-
-% \paragraph{Analysis.} If $\mathcal{A}$ succeeds with non-negligible probability $ε$, then B breaks 
-% EUF-CMA security of RS with probability at least $ε - negl(λ)$ where $negl(λ)$ accounts for:
-% \begin{itemize}
-%     \item Knowledge extraction failure probability
-%     \item Commitment scheme binding failure probability
-% \end{itemize}
-
-% The reduction succeeds because any Type 1 forgery must either be a new commitment (Case 1) or 
-% reuse a commitment from an honest user (Case 2). In either case, B produces a valid EUF-CMA 
-% forgery against the PS signature scheme.
-% \end{proof}
-
-
-
-
-
-
-
-
-% \section{Notes 19/2}
-
-% What changes in the mimc scenario?
-
-% Unforgeability: 
-
-
-% Forgery scenarios
-% - combining attributes from different issuers maliciously
-% - context credential decoupling: use context credential without a valid master credential
-% -- mitigation: enforce credential chains (enforce all credentials are valid + equal is true)
-
-% False predicate 
-
-
-
-
-% \subsection{Master Credential Type-1 Forgery}
-% \begin{theorem}
-%     If the signature scheme $\RS$ is EUF-CCA secure and the commitment scheme $\CM$ is binding, then no $\PPT$ adversary $AdvA$ can forge a master credential with non-negligible probability.
-% \end{theorem}
-
-% \subsubsection{Reduction}
-% \begin{itemize}
-%     \item \textbf{Setup: } Receive EUF-CCA challenger's public key $pk*$, set as master issuer public key $opkm$. Maintain lists CRED, COM, REL (relation between creds and users)
-%     \item \textbf{Oracle Simulation: } B simulates A's environment
-%     \item \textbf{Forgery Extraction: }
-% \end{itemize}
 
 
 
