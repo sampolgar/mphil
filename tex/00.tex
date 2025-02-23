@@ -792,8 +792,8 @@ A rerandomizable signature scheme over commitments is correct if for all securit
 
 
 
-\begin{definition}[EUF-CCA]
-A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen-commitment attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\begin{definition}[EUF-CMA]
+A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen message (commitment) attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
     \begin{align*}
         &\Pr\left[
             \begin{array}{l}
@@ -2254,9 +2254,43 @@ Changes
 
 
 
+\subsection{Unforgeability Single Issuer Reduction}
+An adversary attempts to forge the signature, the commitment, or the credential. 
+We want to show our system is secure by linking our primitives - signature, commitment, zero knowledge proofs, to underlying primitives.
+
+We will assume A can break the security and forge a credential; then we construct a simulator B that uses A to break the security. 
 
 
+\begin{definition}[EUF-CMA]
+A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen message (commitment) attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+    \begin{align*}
+        &\Pr\left[
+            \begin{array}{l}
+                \mathsf{BG} \gets \mathsf{BGGen}(1^{\secparam}), \\
+                \mathsf{ck} \gets \mathsf{CM.KeyGen}(\mathsf{BG}), \\
+                (\sk, \pk) \gets \mathsf{KeyGen}(\mathsf{BG}), \\
+                (m^*, \cm^*, \sigma^*) \gets \mathcal{A}^{\mathsf{Sign}(\sk, \cdot)}(\pk) \\
+                \end{array}
+                \quad : \quad
+                \begin{array}{l}
+                \cm^* = \mathsf{CM.Com}(\mathsf{ck}, m^*, r^*) \land \\
+                \mathsf{RS.Ver}(\pk, \sigma^*, m^*) = 1 \land \\
+                \cm^* \notin Q_{\cm}
+            \end{array}
+        \right] \leq \negl
+    \end{align*}
+where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
+\end{definition}
 
+Step 1. Define the Game, the Unforgeability Experiment
+Step 2. Understand the primitives and their definitions. 
+We have
+\begin{enumerate}
+    \item Rerandomizable signature scheme $\RS$, with $\EUFCMA$ security and the oracle $\OSIGN$ 
+    \item Commitment Scheme $\CM$, with perfect hiding and binding 
+    \item Zero Knowledge Proofs $\ZKP$ with soundness and zero knowledge
+\end{enumerate}
+But I also have $\RS$ and $\CM$ proved unforgeable in its own reduction. But I'll just work through these reductions to get an idea of why I got there again.
 
 
 
