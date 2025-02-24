@@ -1756,597 +1756,6 @@ The reduction theorem flow should be
 
 
 
-\subsection{Unforgeability}
-\begin{itemize}
-    \item Challenger Setup
-    \item Adversary Query Oracle
-    \item Simulation / Forgery
-    \item Win Condition
-\end{itemize}
-The game tracks $\CRED, \COM, \OWNR$, $\AdvA$ has access to oracles $(\OHU, \OCU, \OOBTISS, \OSHOW)$ modelling the adversaries real-world actions. 
-
-Lists $\CRED, \OWNR, \COM$ let us define a forgery, by EUF-CMA definition, if $verify(\credm, \cmm, \opkm) = 1$ and $\credm \times \cmm \notin \CRED \times \COM$ then it's a forgery!. Also used for reductions to primitives.
-
-The Unforgeability Adversary has access to 
-\begin{itemize}
-    \item $\OHU:$ $\AdvA$ creates honest users => Create honest users that $\AdvA$ can interact with but not control
-    \item $\OCU:$ allows an adversary to corrupt a user, like hacking a user account and revealing their secrets => models insider threats, users whose secrets are known to $\AdvA$
-    \item $\OOBTISS:$ models $\AdvA$ observing legitimate credential issuance for message $m$. => $\AdvA$ controls inputs, execution must follow protocol
-    \item $\OSHOW:$ shows legitimate credential usage satisfying a predicate $\phi$ => $\AdvA$ learns what's revealed in showing protocol
-\end{itemize}
-
-
-\subsection{Basic Unforgeability Version 1}
-Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
-        \pccomment{Challenger Setup} \\
-        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
-        \ppar \gets \Setup(\secparam) \\
-        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-        \pccomment{$\AdvA$ queries oracles} \\
-        \AdvA^{\OHU, \OOBTISS}(\opk) \\
-        \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
-        \pccomment{$\AdvA$ wins if } \\
-        \Verify(\cred^*, m^*, \opk) = 1 \; \wedge\\
-        m^* \notin \MSG \; \wedge \; 
-        \cred^* \notin \CRED[i] \text{ for all } i\\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i \\
-            \pcreturn \text{Honest User } i \\
-        }
-        \procedure[]{$\OOBTISS(i, m)$}{%
-            \pcif i \notin \HU, \bot \\
-            \MSG[i] = m \\
-            \CRED[i] = (\cred, m) \\
-            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{The $\EUFCMA$ game, single credential, step 1}
-  \label{fig:prf}
-\end{figure}
-
-
-
-\subsection{Basic Unforgeability Version 2}
-We change to sets because we use a multi-credential multi-issuer environment. $\HU$ is a set of honest user indices $\{i_1, \ldots\}$
-
-Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
-        \pccomment{Challenger Setup} \\
-        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
-        \text{ where } \CRED \subseteq \{(\cred,m)\}, \MSG \subseteq \{m\} \\
-        \ppar \gets \Setup(\secparam) \\
-        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-        \pccomment{$\AdvA$ queries oracles} \\
-        \AdvA^{\OHU, \OOBTISS}(\opk) \\
-        \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
-        \pccomment{$\AdvA$ wins if } \\
-        \Verify(\cred^*, m^*, \opk) = 1 \; \wedge\\
-        m^* \notin \MSG \; \wedge \; 
-        \cred^* \notin \CRED\\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i \\
-            \pcreturn \text{Honest User } i \\
-        }
-        \procedure[]{$\OOBTISS(i, m)$}{%
-            \pcif i \notin \HU, \bot \\
-            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
-            \CRED = \CRED \cup  \{(\cred, m)\} \\
-            \MSG = \MSG \cup \{m\} \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{The $\EUFCMA$ game, single credential, step 2}
-  \label{fig:prf}
-\end{figure}
-
-
-
-
-
-
-\subsection{Basic Unforgeability Version 3 - Adding Commitments and ZKP}
-
-
-Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
-        \CRED \subseteq \{(\cred,m)\}, \MSG \subseteq \{m\} \\
-        \ppar \gets \Setup(\secparam), \ck \gets \CMCom(\secparam) \\
-        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-        \pccomment{$\AdvA$ queries oracles} \\
-        \AdvA^{\OHU, \OOBTISS}(\opk) \\
-        \AdvA \text{ outputs forgery } (\cred^*, \cm^*, \m^*, \usk^*, \pi^*)  \\
-        \pccomment{$\AdvA$ wins if } \\
-        \pirsok(\cred^*, \cm^*, \m^*, \usk^*) = 1 \text{ such that}\\
-        \cm^* = \CMCom([m^*]; \usk^*) \; \wedge\\
-        \RSVer(\cred^*, \cm^*, \opk) = 1 \; \wedge \\
-        (\cred^*, \cm^*, \m^*) \notin \CRED\\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i \\
-            \pcreturn \text{Honest User } i \\
-        }
-        \procedure[]{$\OOBTISS(i, m)$}{%
-            \pcif i \notin \HU, \bot \\
-            \usk \in \Z_p \sample \UserKeyGen(\secparam) \\
-            \cm \gets \CMCom([m]; \usk) \\
-            \pirdisclose = \zkpok\{(m, \usk) | \cm = \CMCom([m];\usk)\} \\
-            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
-            \pcif \ZKVerify(\pirdisclose, \cm) = 0, return \bot \\
-            \CRED := \CRED \cup  \{(\cred, \cm, m)\} \\
-            \MSG = \MSG \cup \{m\} \\
-            \pcreturn (\cred, \cm) \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{The $\UNFONE$ game, single credential, step 3}
-  \label{fig:prf}
-\end{figure}
-
-
-
-
-
-
-
-
-
-
-\subsection{Type 1 Unforgeability V4}
-Changes
-\begin{itemize}
-    \item Changing $m$ to $aux$ to include proofs later
-    \item adding Corrupt User list $\CU$
-    \item changing game to $\UNFONE$
-\end{itemize}
-
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \ppar \gets \Setup(\secparam)\\
-        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
-        \text{Initialize } \HU, \CU \CRED, \OWNR = \emptyset \\
-        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
-        \pccomment{Winning Condition } \\
-        \AdvA \text{ outputs } (\cred^*, j) \text{ where}: \\
-        \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
-        \t \text{Either } \\
-        \t \t \cred^* \notin \CRED \pclinecomment{Fresh Forgery} \\
-        \t \text{ OR } \\
-        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \pclinecomment{Stolen Credential} \\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i, \pcreturn i \\
-        }
-        \procedure[]{$\OCU(i)$}{%
-            \pccomment{Can only corrupt Honest User} \\
-            \pcif i \in \HU, \CU[i] = i \\
-            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
-        }
-        \procedure[]{$\OOBTISS(i, aux)$}{%
-            \pcif i \notin \HU \vee i \in \CU, \bot \\
-            \cred \gets (\Obtain(\usk[i], aux), \Issue(\osk, aux)) \\
-            \text{Add } (\cred, i) to (\CRED, \OWNR) \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{The }
-  \label{fig:prf}
-\end{figure}
-
-
-
-
-
-
-
-\subsection{Type 1 Unforgeability V5}
-Changes
-\begin{itemize}
-    \item Adding $\ISSUER$ issuer state tracking for multi credential multi issuer environment
-    \item Adding $\PARENT$ mapping context credentials to master credentials
-\end{itemize}
-
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \ppar \gets \Setup(\secparam)\\
-        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
-        \text{Initialize } \HU, \CU, \CRED, \OWNR = \emptyset \\
-        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
-        \pccomment{Winning Condition } \\
-        \AdvA \text{ outputs } (\cred^*, j) \text{ where}: \\
-        \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
-        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
-        \t \text{ OR } \\
-        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
-        \t \text{ OR } \\
-        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i, \pcreturn i \\
-        }
-        \procedure[]{$\OCU(i)$}{%
-            \pccomment{Can only corrupt Honest User} \\
-            \pcif i \in \HU, \CU[i] = i \\
-            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
-        }
-        \procedure[]{$\OOBTISS(i, aux)$}{%
-            \pcif i \notin \HU \vee i \in \CU, \bot \\
-            \cred \gets (\Obtain(\usk[i], aux), \Issue(\osk, aux)) \\
-            \text{Add } (\cred, i) to (\CRED, \OWNR) \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{The }
-  \label{fig:prf}
-\end{figure}
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Type 1 Unforgeability V6}
-Changes
-\begin{itemize}
-    \item Adding $\CTX$ mapping credentials to their context
-    \item adding connection between master and context credential in ObtIss
-\end{itemize}
-
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \ppar \gets \Setup(\secparam)\\
-        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
-        \text{Initialize } \HU, \CU, \CRED, \OWNR, \ISSUER, \CTX = \emptyset \\
-        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
-        \pccomment{Winning Condition } \\
-        \AdvA \text{ outputs } (\cred^*, i^*, j) \text{ where}: \\
-        \t \Verify(\cred^*, \opk_j, \ctx^*) = 1 \; \text{AND} \\
-        % \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
-        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
-        \t \text{ OR } \\
-        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
-        \t \text{ OR } \\
-        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
-        \t \text{ OR } \\
-        \t \t \CTX[\cred^*] \neq \ctx^* \quad \pclinecomment{Wrong Context} \\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i, \pcreturn i \\
-        }
-        \procedure[]{$\OCU(i)$}{%
-            \pccomment{Can only corrupt Honest User} \\
-            \pcif i \in \HU, \CU[i] = i \\
-            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
-        }
-        \procedure[]{$\OOBTISS(i, \ctx, aux)$}{%
-            \pcif i \notin \HU \vee i \in \CU, \bot \\
-            \pcif \ctx \neq "master": \\
-            \t \text{Require } \exists \; \credm \text{ where } \\
-            \t \CTX[\credm] = "master" \text{ AND } \OWNR[\credm] = i \\
-            \cred \gets (\Obtain(\usk[i], \ctx, aux), \Issue(\osk, \ctx, aux)) \\
-            \text{Add } (\cred, i, \ctx) to (\CRED, \OWNR, \CTX) \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{V6 }
-  \label{fig:prf}
-\end{figure}
-
-
-
-
-\newpage
-\subsection{Type 1 Unforgeability V7}
-Changes
-\begin{itemize}
-    \item Adding $\CTX$ mapping credentials to their context
-    \item adding connection between master and context credential in ObtIss
-\end{itemize}
-
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \ppar \gets \Setup(\secparam)\\
-        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
-        \text{Initialize } \HU, \CU, \CRED, \OWNR, \ISSUER, \CTX, \PARENT = \emptyset \\
-        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
-        \pccomment{Winning Condition } \\
-        \AdvA \text{ outputs } (\cred^*, i^*, j, \ctx) \text{ where}: \\
-        \t \Verify(\cred^*, \opk_j, \ctx^*) = 1 \; \text{AND} \\
-        % \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
-        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
-        \t \text{ OR } \\
-        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
-        \t \text{ OR } \\
-        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
-        \t \text{ OR } \\
-        \t \t \CTX[\cred^*] \neq \ctx^* \quad \pclinecomment{Wrong Context} \\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i, \pcreturn i \\
-        }
-        \procedure[]{$\OCU(i)$}{%
-            \pccomment{Can only corrupt Honest User} \\
-            \pcif i \in \HU, \CU[i] = i \\
-            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
-        }
-        \procedure[]{$\OOBTISS(i, \ctx, aux)$}{%
-            \pcif i \notin \HU \vee i \in \CU, \bot \\
-            \pcif \ctx \neq "master": \\
-            \t \text{Require } \exists \; \credm \text{ where } \\
-            \t \CTX[\credm] = "master" \text{ AND } \OWNR[\credm] = i \\
-            \cred \gets (\Obtain(\usk[i], \ctx, aux), \Issue(\osk, \ctx, aux)) \\
-            \text{Add } (\cred, i, \ctx) to (\CRED, \OWNR, \CTX) \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{V7 }
-  \label{fig:prf}
-\end{figure}
-
-
-
-
-
-
-
-
-
-
-\newpage
-\subsection{Type 1 Unforgeability V8}
-Changes
-\begin{itemize}
-    \item Adding $\ID$ mapping credentials to user identifier
-    \item adding connection between master and context credential in ObtIss
-\end{itemize}
-
-\begin{figure}
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \ppar \gets \Setup(\secparam)\\
-        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
-        \text{Initialize } \HU, \CU, \CRED, \OWNR, \ISSUER, \CTX, \PARENT = \emptyset \\
-        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
-        \pccomment{Winning Condition } \\
-        \AdvA \text{ outputs } (\cred^*, i^*, j, \ctx) \text{ where}: \\
-        \t \Verify(\cred^*, \opk_j, \ctx^*) = 1 \; \text{AND} \\
-        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
-        \t \text{ OR } \\
-        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
-        \t \text{ OR } \\
-        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
-        \t \text{ OR } \\
-        \t \t \CTX[\cred^*] \neq \ctx^* \quad \pclinecomment{Wrong Context} \\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \HU[i] = i, \pcreturn i \\
-        }
-        \procedure[]{$\OCU(i)$}{%
-            \pccomment{Can only corrupt Honest User} \\
-            \pcif i \in \HU, \CU[i] = i \\
-            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
-        }
-        \procedure[]{$\OOBTISS(i, \ctx, aux)$}{%
-            \pcif i \notin \HU \vee i \in \CU, \bot \\
-            \pcif \ctx = "master": \\
-            \t \text{Require } \exists \; \credm \text{ where } \\
-            \t \PARENT[\credm] = \bot \text{ AND } \\
-            \t \OWNR[\credm] = i \text{ AND } \\
-            \t \ID[\credm] = \ID[]
-            \t \CTX[\credm] = "master" \text{ AND } \OWNR[\credm] = i \\
-            \cred \gets (\Obtain(\usk[i], \ctx, aux), \Issue(\osk, \ctx, aux)) \\
-            \text{Add } (\cred, i, \ctx) to (\CRED, \OWNR, \CTX) \\
-            \pcreturn \cred \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-  \caption{V8 Note that $i$ indexes oracle calls, $j$ indexes issuer }
-  \label{fig:prf}
-\end{figure}
-
-
-\newpage
-\subsection{Unforgeability Base Case Single Issuer}
-\begin{enumerate}
-    \item \textbf{Setup:}
-    \begin{itemize}
-        \item $\HU, \CU$ are modelled as sets e.g. $\HU \gets \HU \cup \{i\}$ as sets prevent deuplicates
-        \item $\CRED$: each entry in $\CRED$ is a tuple $(\cred, \cm, m, i)$ where $\cred = (\sigma, \cm, \opk)$ includes the signature $\sigma$ and commitment $\cm$, $m$ and $i$ track the message and user. 
-        \item $\OWNR$: is a map supporting query $\OWNR[\cred] = i$
-    \end{itemize}
-    \item \textbf{Oracles}
-    \begin{itemize}
-        \item $\OHU$ creates an honest user $i$ with secret key $\usk[i]$ modelling legitimate users
-        \item $\OCU$ corrupts an honest user $i$, giving adversary $\usk[i]$ and all credentials issued to $i$
-        \item $\OOBTISS$ issues a credential $\cred$ to an honest user $i$. Receives $m$ as input, computes commitment $\cm \gets \CMCom([m]; \usk[i])$ and $\cred \gets (\Obtain(\usk[i],))$
-    \end{itemize}
-    \item \textbf{Adversary Goal: } 
-    \item \textbf{Win Condition: } The adversary output must be valid, and can't have come from a corrupt user. That is,
-    $\adv$ must produce a valid, new output, not a trivial forgery, such as stealing someone's credentials, modeled by $\OCU$, which we reject in our win condition as well as $\adv$ using a rerandomized version of the corrupt user credential. 
-\end{enumerate}
-
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\mathsf{Experiment}$ $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$}{%
-        \pccomment{Challenger Setup} \\
-        \ppar \gets \Setup(\secparam) \\
-        \ck \gets \CMSetup(\secparam) \\
-        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-        \{\HU, \CU, \CRED\} \gets \emptyset,  \OWNR \gets \{\} \\
-        \pccomment{Adversary Interaction} \\
-        \AdvA^{\OHU, \OCU, \OOBTISS, \OSHOW}(\opk, \ck) \\
-        \AdvA \text{ outputs } (\cred'^*, \cm'^*, \pi^*) \\
-        \pccomment{Winning Condition} \\
-        \Verify(\cred'^*, \cm'^*, \opk, \pi^*) = 1 \\
-        \land \forall \cred \text{ where } \OWNR[\cred] \in \CU, \\
-        \cred'^* \text{ is not a rerandomization of } \cred \\
-    }
-    \begin{pcvstack}
-        \procedure[]{$\OHU(i)$}{%
-            \pcif i \notin \HU \\ 
-            \t \HU \gets \HU \cup \{i\} \\
-            \t \usk[i] \sample \UserKeyGen(\secparam) \\
-            \pcreturn i \\
-        }
-        \procedure[]{$\OCU(i)$}{%
-            \pcif i \in \HU \land i \notin \CU \\
-            \t \CU \gets \CU \cup \{i\} \\
-            \pcreturn \usk[i], \\
-            \{(\cred, \cm, m, i) \in \CRED \mid \OWNR[\cred] = i\} \\
-        }
-        \procedure[]{$\OOBTISS(i, m)$}{%
-            \pcif i \notin \HU, \pcreturn \bot \\
-            \t \cm \gets \CMCom([m]; \usk[i]) \\
-            \t \cred \gets (\Obtain(\usk[i], \cm), \Issue(\osk, \cm)) \\
-            \t \CRED \gets \CRED \cup \{(\cred, \cm, m, i)\} \\
-            \t \OWNR[\cred] \gets i \\
-            \pcreturn \cred \\
-        }
-        \procedure[]{$\OSHOW(i)$}{%
-            \pcif i \notin \HU, \pcreturn \bot \\
-            \t \text{Select } (\cred, \cm, m, i) \in \CRED \\
-            \t (\cred', \cm', \pi) \gets \Show(\cred) \\
-            \pcreturn (\cred', \cm', \pi) \\
-        }
-    \end{pcvstack}
-\end{pchstack}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Unforgeability Single Issuer Reduction}
-An adversary attempts to forge the signature, the commitment, or the credential. 
-We want to show our system is secure by linking our primitives - signature, commitment, and zero-knowledge proofs, to underlying primitives.
-
-We will assume A can break the security and forge a credential; then we construct a simulator B that uses A to break the security. 
-
-
-
-\begin{theorem}[Single Issuer Unforgeability]
-    The single-issuer anonymous credential system is unforgeable, that is, it is secure against any adversary producing a credential that is not a rerandomized credential that has been legitimately issued and rerandomized by an honest, uncorrupt user, under the following assumptions
-    \begin{enumerate}
-        \item The underlying rerandomizable signature scheme is existentially unforgeable under chosen message attack $(\EUFCMA)$
-        \item the commitment scheme is computationally binding
-        \item the zero-knowledge proof system is computationally sound
-    \end{enumerate}
-\end{theorem}
-
-\begin{proof}
-    Assume there exists an adversary $\adv$ that can break the unforgeability of the single-issuer anonymous credential system with non-negligible probability $\epsilon$. That is, $\adv$ can produce a forged credential $\cred'^* = (\sigma'^*, \cm'^*, \opk)$ and proof $\pi^*$ such that:
-    \begin{itemize}
-        \item $\Verify(\cred'^*, \cm'^*, \opk, \pi^*) = 1$ and
-        \item $\cred'^*$ is not a rerandomization of a credential issued to a corrupt user 
-    \end{itemize}
-    Then we construct simulators $\AdvB_1, \AdvB_2, \AdvB_3$ to reduce $\adv's$ advantage to breaking one of the underlying assumptions
-\end{proof}
-
-\subsubsection{Simulator $\advbone$, Reduction for $\EUFCMA$}
-If $\adv$ can forge a credential, we can use $\adv$ to break the $\EUFCMA$ of the rerandomizable signature scheme.
-We construct Simulator $\AdvB_1$ as follows:
-\begin{itemize}
-    \item $\AdvC$ sets up the reduction with $\sk, \pk \sample \RSKeyGen()$ and oracle $\OSIGN(\sk, \cdot)$
-    \item $\AdvB_1$ receives $\pk$ from $\AdvC$, sets $\opk = \pk$
-    \item $\AdvB_1$ simulates the credential system for $\adv$
-    \begin{itemize}
-        \item $\advbone$ simulates $\OOBTISS$. $\adv$ provides $m$. $\advbone$ computes $\cm = \CMCom([m];r)$, queries oracle for $\sigma \gets \OSIGN(\cm)$. Returns $\cred = (\sigma, \cm, \opk)$
-        \item for corruption queries, $\advbone$ reveals the internal state of corrupt users including $m, r, \sigma, etc$
-    \end{itemize}
-    \item $\adv$ outputs a forgery $\cred'^* = (\sigma'^*, \cm'^*, \opk )$ and proof $\pi^*$ such that $\Verify(\cred'^*, \pi^*) = 1$ where $\cred'^*$ is not a rerandomized credential from a corrupt user, $\cm'^*$ was not signed by the oracle
-    \item $\advbone$ outputs $\sigma'^*, \cm'^*$ as a forgery for the signature scheme
-\end{itemize}
-If $\adv$ succeeds with probability $\epsilon$, then $\advbone$ breaks $\EUFCMA$ with probability $\epsilon$, contradicting $\EUFCMA$ security.
-
-
-\subsubsection{Simulator $\advbtwo$}
-
-Our goal is to show that if $\adv$ can produce a proof that verifies but hasn't been created from a valid credential, we can use $\adv$ to break the soundness of the zero-knowledge proof system.
-
-As for $\advbone$, $\advbtwo$ simulates the credential system, and when $\adv$ outputs the forgery $(\cred'^*, \pi^*)$, $\advbtwo$ checks if $\pi^*$ verifies but the underlying statement is false:
-\begin{itemize}
-    \item The statement $\exists \; m, r | \cm'^* = \CMCom([m];r)$ and $\sigma'^*$ is a valid signature on $\cm'^*$
-    \item If  $\pi^*$ verifies but the statement is false e.g. $\sigma'^*$ is invalid or $\cm'^*$ doesn't correspond to a valid $m'$, then $\pi^*$ is a false proof
-    \item $\advbtwo$ outputs $\pi^*$ as a sound-breaking proof
-\end{itemize}
-If $\adv$ succeeds with probability $\epsilon$, then $\advbtwo$ breaks proof soundness with probability $\epsilon$ contradicting the soundness of the proof system.
-
-\subsubsection{Simulator $\advbthree$}
-The goal is to show that if $\adv$ can open $\cm'^*$ to different messages or attributes, we can use $\adv$ to break the binding property of the commitment scheme.
-Simulator $\advbthree$ works as follows:
-\begin{itemize}
-    \item $\advbthree$ simulates the credential system as before
-    \item Suppose $\adv$'s proof $\pi^*$ implies a message $m'$, different from $m$ within the commitment $\CMCom([m];r)$. 
-    \item We show that by using the soundness extractor $\mathcal{E}$, $\advbthree$ obtains $(m,r), (m',r')$ for $\cm'^*$ where $m \neq m'$j
-    \item $\advbthree$ outputs $(m,r,m',r')$ that violates the commitment binding 
-\end{itemize}
-If $\adv$ succeeds with probability $\epsilon$ then $\advbthree$ breaks commitment binding with probability $\epsilon$ contradicting the binding security of the commitment scheme.
-
-
-
-
-
-
-
 
 \newpage
 \subsection{Unforgeability Base Case Single Issuer V2}
@@ -2418,13 +1827,16 @@ A forgery fails if the $\adv$ relies on credentials they don't control (e.g. fro
 
 
 
-\subsection{Unforgeability Single Issuer Reduction V2}
-A successful forgery is defined as an Adversary $\adv$ who can produce a valid rerandomized credential and proof 
-Unforgeability in the single-issuer context is the infeasibiltiy of $\adv$ producing a valid credential show from
-1. a credential they don't control e.g. from another Honest User, or
-2. a new proof $\pi^*$ that satisfies a predicate $\phi^*$ 
 
-Forgery Goal: 
+
+
+
+
+
+
+
+\subsection{Unforgeability Single Issuer Reduction V2}
+\noindent Forgery Goal: 
 \begin{enumerate}
     \item Verification Success $(\MIMCVerify(\cred^*, \cm^*, \pi^*, \phi^*)=1$
     \\item $\nexists(m,i) \in \CRED$ such that $i \in \CU$ and $m$ satisfies $\phi$
@@ -2432,13 +1844,13 @@ Forgery Goal:
     \item New credential, not previously issued. There shouldn't exist $(m,i) \in \CRED$ where $i \in \HU$ and $m$ satisfies $\phi^*$
 \end{enumerate}
 
-A forgery fails if
+\noindent A forgery fails if
 \begin{enumerate}
     \item Verify outputs 0 $(\MIMCVerify(\cred^*, \cm^*, \pi^*, \phi^*)=0$
     \item The forgery is from a corrupt user $i \in \CU$ but with a new $m^*$ that satisfies $\phi^*$
 \end{enumerate}
 
-Sets and terms
+\noindent Sets and terms
 \begin{itemize}
     \item $\HU$ set of honest users, $\adv$ can't access.
     \item $\CU$ corrupt users, $\adv$ has secret keys and credentials
@@ -2446,76 +1858,6 @@ Sets and terms
     \item Predicate $\phi^*$ is a condition or policy that $m$ satisfies for the showing to be valid
     \item $\MIMCShow$ takes in a tuple $(\cred'^*, \cm'^*, \pi^*, \phi^*)$
 \end{itemize}
-
-
-
-
-
-\begin{theorem}[Single Issuer Unforgeability V2]
-The single-issuer anonymous credential system is unforgeable against $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$ if the signature scheme is $\EUFCMA$, the commitment scheme is computationally binding, and the zero-knowledge proof system is computationally sound. 
-\end{theorem}
-
-
-\begin{proof}
-    Assume there exists an adversary $\adv$ that can break the unforgeability of the single-issuer anonymous credential system with non-negligible probability $\epsilon$. That is, $\adv$ can produce a forged credential $\cred'^* = (\sigma'^*, \cm'^*, \pi^*, \phi^*)$ such that:
-    \begin{itemize}
-        \item $\MIMCVerify(\sigma'^*, \cm'^*, \pi^*, \phi^*) = 1$ and
-        \item $\nexists (m,i) \in \CRED)$ such that $i \in \CU$ and $m$ satisfies $\phi^*$ (no signature message and user index $i$ in the list of issued creds $\CRED$ such that the user index $i$ is found in the corrupt users and the message $m$ is used to prove a new predicate $\phi^*$.
-    \end{itemize}
-    Then we construct simulators $\AdvB_1, \AdvB_2, \AdvB_3$ to reduce $\adv's$ advantage to breaking one of the underlying assumptions    
-\end{proof}
-
-
-\subsubsection{Simulator $\advbone$, Reduction for $\EUFCMA$}
-If $\adv$ can forge a credential, we can use $\adv$ to break the $\EUFCMA$ of the rerandomizable signature scheme.
-We construct Simulator $\AdvB_1$ as follows:
-\begin{itemize}
-    \item $\AdvC$ sets up the reduction with $\sk, \pk \sample \RSKeyGen()$ and oracle $\OSIGN(\sk, \cdot)$
-    \item $\AdvB_1$ receives $\pk$ from $\AdvC$, sets $\opk = \pk$
-    \item $\AdvB_1$ simulates the credential system for $\adv$
-    \begin{itemize}
-        \item $\advbone$ simulates $\OOBTISS$. $\adv$ provides $m$. $\advbone$ computes $\cm = \CMCom([m];r)$, queries oracle for $\sigma \gets \OSIGN(\cm)$. Returns $\cred = (\sigma, \cm, \opk)$
-        \item for corruption queries, $\advbone$ reveals the internal state of corrupt users including $m, r, \sigma, etc$
-    \end{itemize}
-    \item $\adv$ outputs a forgery $\cred'^* = (\sigma'^*, \cm'^*, \opk )$ and proof $\pi^*$ such that $\Verify(\cred'^*, \pi^*) = 1$ where $\cred'^*$ is not a rerandomized credential from a corrupt user, $\cm'^*$ was not signed by the oracle
-    \item $\advbone$ outputs $\sigma'^*, \cm'^*$ as a forgery for the signature scheme
-\end{itemize}
-If $\adv$ succeeds with probability $\epsilon$, then $\advbone$ breaks $\EUFCMA$ with probability $\epsilon$, contradicting $\EUFCMA$ security.
-
-
-\subsubsection{Simulator $\advbtwo$}
-
-Our goal is to show that if $\adv$ can produce a proof that verifies but hasn't been created from a valid credential, we can use $\adv$ to break the soundness of the zero-knowledge proof system.
-
-As for $\advbone$, $\advbtwo$ simulates the credential system, and when $\adv$ outputs the forgery $(\cred'^*, \pi^*)$, $\advbtwo$ checks if $\pi^*$ verifies but the underlying statement is false:
-\begin{itemize}
-    \item The statement $\exists \; m, r | \cm'^* = \CMCom([m];r)$ and $\sigma'^*$ is a valid signature on $\cm'^*$
-    \item If  $\pi^*$ verifies but the statement is false e.g. $\sigma'^*$ is invalid or $\cm'^*$ doesn't correspond to a valid $m'$, then $\pi^*$ is a false proof
-    \item $\advbtwo$ outputs $\pi^*$ as a sound-breaking proof
-\end{itemize}
-If $\adv$ succeeds with probability $\epsilon$, then $\advbtwo$ breaks proof soundness with probability $\epsilon$ contradicting the soundness of the proof system.
-
-\subsubsection{Simulator $\advbthree$}
-The goal is to show that if $\adv$ can open $\cm'^*$ to different messages or attributes, we can use $\adv$ to break the binding property of the commitment scheme.
-Simulator $\advbthree$ works as follows:
-\begin{itemize}
-    \item $\advbthree$ simulates the credential system as before
-    \item Suppose $\adv$'s proof $\pi^*$ implies a message $m'$, different from $m$ within the commitment $\CMCom([m];r)$. 
-    \item We show that by using the soundness extractor $\mathcal{E}$, $\advbthree$ obtains $(m,r), (m',r')$ for $\cm'^*$ where $m \neq m'$j
-    \item $\advbthree$ outputs $(m,r,m',r')$ that violates the commitment binding 
-\end{itemize}
-If $\adv$ succeeds with probability $\epsilon$ then $\advbthree$ breaks commitment binding with probability $\epsilon$ contradicting the binding security of the commitment scheme.
-
-
-
-
-
-
-
-
-
-
-
 
 
 \begin{theorem}[Single Issuer Unforgeability V2]
@@ -2557,6 +1899,427 @@ $\advb$ simulates the following oracles
     \item $\adv$ doesn't know $\usk_i$ for honest users by the commitment hiding property, $\adv$ can't guess $r^*$ for $\HU$ credentials
     \item Thus $\cm^*$ was not queried to $\OSIGN$ making $\cm'^*, \sigma'^*$ a valid break against $\EUFCMA$
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Sybil Resistance via VRF with Committed Attributes}
+Anonymous Credential systems have the paradoxical problem of requiring user privacy but preventing sybil attacks where users create multiple credentials. Traditional Sybil resistance mechanisms often compromise user anonymity by revealing identifying information or relationships between credentials. Verifiable Random Functions (VRFs) offer a promising solution by enabling the generation of verifiably pseudorandom and deterministic nullifiers from user-specific information, suitable for presentation to an issuer or for revocation lists. Existing VRF-based schemes often rely on computationally intensive bilinear pairings or reveal user attributes, introducing overhead or privacy risks.
+
+
+Sybil Resistance
+- Single-credential: UnlinkOne identity per context
+- Multi-credential: Cross-context consistency
+- - Cannot obtain multiple credentials for same (identity, context) pair
+- - Master credential properly controls derivation of context credentials
+
+
+\noindent We improve the state of the art by creating a lightweight VRF construction tailored for Anonymous Credential systems with 3 contributions:
+\begin{enumerate}
+        \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure to function efficiently in standard prime-order groups, achieving provable pseudorandomness under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption.
+
+        \item \textbf{Zero-Knowledge Proof of Multiplicative Inverse:} We introduce a novel $\Sigma$-protocol that proves the multiplicative inverse relation between committed values $m_1 = k + \textsf{ctx}$ and $m_2 = 1/m_1$, we use it in our scheme to verify the correctness of the VRF nullifier without revealing user secrets. We show it generalizes naturally for similar requirements in $\Sigma$-protocols, especially those needing to prove the q-DHI.
+
+         \item \textbf{Formal Security Guarantees:} We demonstrate sybil resistance reduces to the security of our construction, the unique provability of the vrf and the soundness of our $\Sigma$-protocol.
+\end{enumerate}
+We first present the preliminaries and foundations of our VRF for committed inputs, the design of our $\Sigma$-protocol, and demonstrate how the integration achieves sybil resistance in anonymous credential systems.
+
+
+\subsection{Problem}
+To understand how we use the VRF within our application, we introduce the application:
+Within our anonymous credential system, a user has a Master Credential with a VRF key $k$ and Context Credential with $\textsf{ctx}$, where $\textsf{ctx}$ is the context, such as $\mathcal{H}(\textit{"DriversLicense"})$ where $\mathcal{H}$ is hashes a string to $\Z_p$
+\[
+\cm_{\textsf{m}} = \mathsf{CM.Com}([k, \ldots]; r) = g_1^{k}\ldots h^r \quad \wedge \quad \cm_{\textsf{c}} = \mathsf{CM.Com}([\textsf{ctx}, \ldots]; r_2) = g_1^{\textsf{ctx}} \ldots h^{r_2}
+\]
+During Context Credential issuance, a user must prove to the issuer that their context credential hasn't been issued before, that is, the Context Credential issuance must be \emph{Sybil Resistant}. Our goal is to generate a unique, unlinkable nullifier for a specific context containing something in both the Master Credential and the Context Credential to protect the system from Sybil attacks while also retaining user privacy.
+
+We leverage the structure and properties of the Dodis Yampolisky Verifiable Random Function (VRF)
+\[
+\text{Nullifier } \textsf{N} = g^{1/k + \textsf{ctx}}
+\]
+
+The Nullifier takes on the properties of correctness, pseudorandomness, and provable uniqueness from the VRF which we exploit in our protocol.
+
+
+\subsection{Preliminaries}
+
+\begin{definition}[q-DHI Assumption]
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption \cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\Pr\left[ x \sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x} \right] \leq \negl 
+\]
+where the probability is taken over the random choice of $x$ and the random coins of $\mathcal{A}$. Informally, no $\PPT$ adversary can distinguish between $g^{1/\alpha}$ from a random group element.
+\end{definition}
+
+\begin{remark}
+The $q$-DHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption (GDH) as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This equivalence provides a solid theoretical foundation for our VRF construction's security.
+\end{remark}
+
+
+
+
+\begin{definition}[Verifiable Random Function in Prime-Order Group]
+A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a tuple of PPT algorithms $(\mathsf{VRF.Gen}, \mathsf{VRF.Eval}, \mathsf{VRF.Vfy})$ with associated message space $\setX$, output space $\setN$, and proof space $\Pi$, defined as:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk):$ Samples secret key $\alpha \sample \Zp^*$, computes public key $pk \gets g^\alpha$, returns $(sk = \alpha, pk)$
+    
+    \item $\mathsf{VRF.Eval}(sk, x) \to \textsf{N}, \pi:$ Returns output $\textsf{N} \gets g^{1/(x+sk)}$ and $\pi$ verifies the output $\textsf{N}$
+    
+    \item $\mathsf{VRF.Vfy}(pk, x, \textsf{N}, \pi) \to \bit:$ validates proof $\pi$ that $\textsf{N} = g^{1/(x+sk)}$, outputs 1 for success, 0 for failure
+\end{itemize}
+\end{definition}
+
+\begin{itemize}
+    \item \textbf{Correctness:} For all $(sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda)$ and all $x \in \setX$:
+    \[
+    \Pr\left[\begin{aligned}
+        (y, \pi) &\gets \mathsf{VRF.Eval}(sk, x) \\
+        1 &\gets \mathsf{VRF.Vfy}(pk, x, \textsf{N}, \pi)
+    \end{aligned}\right] = 1
+    \]
+
+    \item \textbf{Unique Provability:} For any $pk$ (possibly malicious) and $x \in \setX$, no $\PPT$ adversary $\AdvA$ can find two distinct pairs of outputs $(\textsf{N}_0, \pi_0) \neq (\textsf{N}_1, \pi_1)$ such that:
+    \[
+    \mathsf{VRF.Vfy}(pk, x, \textsf{N}_0, \pi_0) = \mathsf{VRF.Vfy}(pk, x, \textsf{N}_1, \pi_1) = 1
+    \]
+
+    \item \textbf{Pseudorandomness:} For every PPT adversary $\advA$, there exists negligible function $\negl$ such that:
+    \[
+    \left|\Pr\left[\mathsf{Exp}_{\mathsf{VRF}}^{\mathsf{PR}}(\AdvA, \lambda) = 1\right] - \frac{1}{2}\right| \leq \negl
+    \]
+    where the pseudorandomness experiment $\mathsf{Exp}_{\mathsf{VRF}}^{\mathsf{PR}}$ is defined in the standard framework for VRFs.
+\end{itemize}
+
+
+\subsection{Algebraic Analysis of Dodis Yampolskiy VRF}
+We first recall the classical Dodis Yampolskiy VRF construction with bilinear pairings, we demonstrate with Type-3 pairings as they are generally used in practice. Let $\G_1, \G_2, \G_T$ be groups of a bilinear map with prime order $p$ where $g_1, g_2$ are generators for $\G_1, \G_2$ respectively and $e$ is an efficient map from $\G_1 \times \G_2 \to \G_T$:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(\secparam)$: Samples $k \sample \Z_p$, set $pk = g^k$ 
+    
+    \item $\mathsf{VRF.Eval}(k, \textsf{ctx}) \to $(\mathsf{N}, \pi)$: $\pi = e(g_1, g_2)^{1/(k + \textsf{ctx})}$, $\mathsf{N} = g_2^{1/(k + \textsf{ctx})}$ 
+    
+    \item $\mathsf{VRF.Vfy}(pk, \textsf{ctx}, \mathsf{N}, \pi) \to \bit$: assert $\quad$ $e(g^{\textsf{ctx}} \cdot pk, \mathsf{N})  \stackrel{?}{=} e(g_1, g_2) \quad \wedge \quad \pi  \stackrel{?}{=} e(g_1, \mathsf{N})$
+\end{itemize}
+
+$\mathsf{Eval}$ computes the nullifier $\textsf{N}$ and generates a proof $\pi$ to prove that anyone in possession of $pk$ and the input $\textsf{ctx}$ can verify $\textsf{N}$ was computed correctly. $\mathsf{Vfy}$ resembles a signature verification as it binds  the public key $pk$, input $\textsf{ctx}$, and nullifier output together. 
+
+The first pairing binds the public input $pk, \mathsf{ctx}$ with $\mathsf{N}$
+\begin{align*}
+    e(g_1^\mathsf{ctx} \cdot pk, \mathsf{N})  \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1^\mathsf{ctx}, g_2^{1/(k + \mathsf{ctx})}) \cdot  e(pk, g_2^{1/(k + \mathsf{ctx})}) \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1^\mathsf{ctx}, g_2)^{1/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{1/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1, g_2)^{\mathsf{ctx}/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{k/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1, g_2)^{\mathsf{ctx} + k/(k + \mathsf{ctx})}  \quad =& \quad e(g_1, g_2) \\
+\end{align*}
+
+\begin{align*}
+     \pi  \quad  \stackrel{?}{=}& \quad e(g_1, \mathsf{N}) \\
+     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2^{1/(k + \mathsf{ctx})}) \\
+     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2)^{1/(k + \textsf{ctx})} \\
+\end{align*}
+
+And the second pairing binds the proof $\pi$ to \mathsf{N}$
+
+\subsubsection{Informal Security analysis of Bilinear Pairing VRF}
+\begin{itemize}
+    \item \textbf{Correctness:} Follows directly from pairing properties. The algebraic structure ensures verification equations hold when computed honestly.
+    
+    \item \textbf{Unique Provability:} Each nullifier $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ is uniquely determined by the pairing equation $e(g_1^{k + \textsf{ctx}}, \mathsf{N}) = e(g_1, g_2)$. A forgery requires solving DLOG to create  $g_2^{1/(k+\textsf{ctx}')} = \mathsf{N}$.
+    
+    \item \textbf{Pseudorandomness:} Relies on the $q$-DHI assumption in bilinear groups. Given $g_1, g_1^k, g_1^{k^2}, \ldots$, distinguishing $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ from random reduces to computing $g_2^{1/k}$ (a $q$-DHI instance).
+\end{itemize}
+
+
+
+\subsection{VRF with Committed Inputs}
+As demonstrated above, the classical Dodis-Yampolskiy VRF uses pairings to verify the relationship between inputs and outputs through the equation: $e(g_1^{\textsf{ctx}} \cdot pk, \mathsf{N}) = e(g_1, g_2)$. Our key insight is that this pairing equation fundamentally verifies a multiplicative relationship. When we expand the left side: $e(g_1^{\textsf{ctx}} \cdot g_1^k, g_2^{1/(k + \textsf{ctx})}) = e(g_1, g_2)$ we are effectively proving that $(k + \textsf{ctx}) \cdot \frac{1}{k + \textsf{ctx}} = 1$. 
+
+This observation suggests an alternative approach: instead of using pairings to verify this relationship, we can prove it directly through a carefully constructed $\Sigma$-protocol. Let:
+\begin{itemize}
+    \item $m_1 = k + \textsf{ctx}$ (committed in $\cm_1$)
+    \item $m_2 = \frac{1}{k + \textsf{ctx}}$ (committed in $\cm_2$)
+\end{itemize}
+
+The VRF nullifier is then simply $\mathsf{N} = g^{m_2}$, and verification reduces to proving:
+\begin{enumerate}
+    \item $m_1$ is correctly formed from committed values $k$ and $\textsf{ctx}$
+    \item $m_1 \cdot m_2 = 1$ (multiplicative inverse relation)
+    \item $\mathsf{N} = g^{m_2}$ (nullifier structure)
+\end{enumerate}
+
+This reformulation eliminates the need for pairings while maintaining the security properties of the original VRF. The challenge now becomes constructing an efficient $\Sigma$-protocol that proves these relationships without revealing the underlying values.
+
+
+
+\subsection{Commitment Structure for VRF Verification}
+To privately prove the VRF relationship, we commit to both the input relationship and multiplicative inverse:
+
+\begin{itemize}
+    \item Primary commitments to inputs:
+        \[\cm_k = g^k h^{r_1}, \quad \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}\]
+    
+    \item Derived commitment to their sum:
+        \[\cm_3 = \cm_k^{\textsf{ctx}} h^{r_3}
+    
+    \item Commitment to the inverse:
+        \[\cm_4 = \cm^{m_2} h^{r_4} \text{ where } m_2 = \frac{1}{m_1}\]
+\end{itemize}
+
+The algebraic structure of these commitments enables our $\Sigma$-protocol to efficiently prove the multiplicative inverse relationship while maintaining zero-knowledge.
+
+
+\subsection{$\Sigma$-Protocol Construction}
+Given these commitments, we construct a $\Sigma$-protocol that proves the VRF relationship in zero-knowledge. The protocol leverages auxiliary commitments $\cm_3, \cm_4$
+to enforce the multiplicative inverse relationship: $\Pi^{\mathcal{R}_{\textsf{VRF}}}$ from 
+
+    \[
+        \mathcal{R}_{\mathsf{vrf}} = \left\{ (\cm_k, \cm_{\textsf{ctx}}, \mathsf{N}), (k, \textsf{ctx}, r_1, r_2) \; \Big| \;  \cm_k = g^k h^{r_1} \; \land \;
+                \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2} \land \textsf{N} = g^{1/(k + \textsf{ctx})} \right\}
+    \]
+
+
+
+\newpage
+\begin{protocol}{VRF Output Verification}{vrf-verify}\label{pok-vrf}
+\textbf{Common Input:} Commitments $\cm_1, \cm_2$, group generator $g$, and public parameters $h \in \G$\\
+\textbf{Prover Input:} Witness $(m_1, m_2, r_1, r_2, r_3, r_4)$ such that:
+\begin{itemize}
+    \item $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$
+    \item $\cm_3 = \cm_1^{m_2}h^{r_3}$ and $\cm_4 = h^{r_4}$
+    \item $m_1 \cdot m_2 = 1$ (multiplicative inverse relation)
+\end{itemize}
+
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples randomness:
+    \[
+        \alpha_1, \alpha_2, \rho_1, \rho_2, \rho_3, \rho_4 \sample \Z_q
+    \]
+    Computes:
+    \begin{itemize}
+        \item $T_1 \gets g^{\alpha_1}h^{\rho_1}$
+        \item $T_2 \gets g^{\alpha_2}h^{\rho_2}$
+        \item $T_3 \gets \cm_1^{\alpha_2}h^{\rho_3}$
+        \item $T_4 \gets h^{\rho_4}$
+    \end{itemize}
+    Sends $(T_1, T_2, T_3, T_4)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \Z_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \begin{align*}
+        s_1 &\gets \alpha_1 + c \cdot m_1 &u_1 &\gets \rho_1 + c \cdot r_1\\
+        s_2 &\gets \alpha_2 + c \cdot m_2 &u_2 &\gets \rho_2 + c \cdot r_2\\
+        u_3 &\gets \rho_3 + c \cdot r_3 &u_4 &\gets \rho_4 + c \cdot r_4
+    \end{align*}
+    Sends $(s_1, s_2, u_1, u_2, u_3, u_4)$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{enumerate}[label=(\roman*)]
+        \item $g^{s_1}h^{u_1} \stackrel{?}{=} T_1 \cdot \cm_1^c$
+        \item $g^{s_2}h^{u_2} \stackrel{?}{=} T_2 \cdot \cm_2^c$
+        \item $\cm_1^{s_2}h^{u_3} \stackrel{?}{=} T_3 \cdot \cm_3^c$
+        \item $h^{u_4} \stackrel{?}{=} T_4 \cdot \cm_4^c$
+        \item $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g$
+    \end{enumerate}
+\end{enumerate}
+\end{protocol}
+
+\paragraph{Security Analysis:}
+The protocol satisfies the following security properties:
+
+\begin{itemize}
+    \item \textbf{Completeness:} For honest prover and verifier, all verification equations hold algebraically:
+    \begin{align*}
+        g^{s_1}h^{u_1} &= g^{\alpha_1 + cm_1}h^{\rho_1 + cr_1} = T_1 \cdot \cm_1^c\\
+        g^{s_2}h^{u_2} &= g^{\alpha_2 + cm_2}h^{\rho_2 + cr_2} = T_2 \cdot \cm_2^c\\
+        \cm_1^{s_2}h^{u_3} &= \cm_1^{\alpha_2 + cm_2}h^{\rho_3 + cr_3} = T_3 \cdot \cm_3^c\\
+        h^{u_4} &= h^{\rho_4 + cr_4} = T_4 \cdot \cm_4^c
+    \end{align*}
+    
+    \item \textbf{Special Soundness:} Given two accepting transcripts $(T_1, T_2, T_3, T_4, c, s_1, s_2, u_1, u_2, u_3, u_4)$ and $(T_1, T_2, T_3, T_4, c', s_1', s_2', u_1', u_2', u_3', u_4')$ with $c \neq c'$, the extractor $\mathcal{E}$ works as follows:
+    \begin{align*}
+        m_1 &= \frac{s_1 - s_1'}{c - c'} &r_1 &= \frac{u_1 - u_1'}{c - c'}\\
+        m_2 &= \frac{s_2 - s_2'}{c - c'} &r_2 &= \frac{u_2 - u_2'}{c - c'}\\
+        r_3 &= \frac{u_3 - u_3'}{c - c'} &r_4 &= \frac{u_4 - u_4'}{c - c'}
+    \end{align*}
+    The extracted witness satisfies all verification equations and the multiplicative inverse relation by the binding property of Pedersen commitments.
+    
+    \item \textbf{Honest-Verifier Zero-Knowledge:} The simulator $\mathcal{S}$ operates as follows:
+    \begin{enumerate}
+        \item Sample $s_1, s_2, u_1, u_2, u_3, u_4 \sample \Z_q$ uniformly
+        \item Compute simulated commitments:
+        \begin{align*}
+            T_1 &\gets g^{s_1}h^{u_1} \cdot \cm_1^{-c}\\
+            T_2 &\gets g^{s_2}h^{u_2} \cdot \cm_2^{-c}\\
+            T_3 &\gets \cm_1^{s_2}h^{u_3} \cdot \cm_3^{-c}\\
+            T_4 &\gets h^{u_4} \cdot \cm_4^{-c}
+        \end{align*}
+        \item Output $(T_1, T_2, T_3, T_4, c, s_1, s_2, u_1, u_2, u_3, u_4)$
+    \end{enumerate}
+    The simulated transcript is perfectly indistinguishable from a real transcript as the distribution of responses $(s_1, s_2, u_1, u_2, u_3, u_4)$ is uniform in both cases, and the commitments are uniquely determined by the verification equations.
+\end{itemize}
+
+\paragraph{Connection to VRF Security}  
+The protocol’s soundness guarantees that $\textsf{N} = g^{m_2}$ is valid only if $m_2 = 1/m_1$ for $m_1 = k + \textsf{ctx}$. This is critical because:
+\begin{itemize}
+    \item \textbf{Pseudorandomness:} Under $q$-DHI, $g^{1/m_1}$ is indistinguishable from random without knowledge of $m_1$.
+    \item \textbf{Uniqueness:} The equation $m_1 \cdot m_2 = 1$ has a unique solution in $\Zp^*$, preventing adversarial equivocation.
+\end{itemize}
+Thus, the security of the VRF directly reduces to the hardness of computing discrete logarithms and the soundness of the inverse proof.
+
+
+
+
+\begin{theorem}[VRF Correctness via Multiplicative Inverses]
+Under the discrete logarithm assumption, proving the equality $m_1 \cdot m_2 = 1$ for commitments $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$ is equivalent to verifying the correctness of the VRF output $\textsf{Nullifier} = g^{m_2}$. Specifically:
+\begin{itemize}
+    \item Completeness: A valid VRF output always satisfies $m_1 \cdot m_2 = 1$.
+    \item Soundness: Any adversary forging a nullifier must break either the binding of the commitments or the $q$-DHI assumption.
+\end{itemize}
+\end{theorem}
+
+\begin{proof}[Sybil Resistance Sketch]
+\begin{itemize}
+    \item \textbf{Uniqueness:} Direct consequence of the VRF’s unique provability. If two nullifiers $\textsf{N}_0, \textsf{N}_1$ exist for the same $(k, \textsf{ctx})$, then $m_1 \cdot m_2^{(0)} = m_1 \cdot m_2^{(1)} = 1$, violating the uniqueness of inverses in $\Zp^*$.
+    
+    \item \textbf{Unlinkability:} Follows from the zero-knowledge property of the $\Sigma$-protocol. The proof reveals only the validity of $m_1 \cdot m_2 = 1$, not $m_1$ or $m_2$.
+    
+    \item \textbf{Soundness:} By the extractability of the $\Sigma$-protocol, any valid nullifier must satisfy $\textsf{N} = g^{1/(k + \textsf{ctx})}$. Binding of Pedersen commitments ensures $m_1 = k + \textsf{ctx}$, thus $\textsf{N}$ is uniquely tied to the credentials.
+\end{itemize}
+\end{proof}
+
+
+\subsection{Performance Evaluation}
+
+Dodis Yampolskiy
+\begin{itemize}
+    \item Gen = 1 exponentiation 
+    \item GT exponentiation, g2 exponentiation 
+    \item 1 g1 mul + 2 pairing + 2 GT equality check
+\end{itemize}
+
+
+
+
+
+
+
+
+\section{Identity System}
+
+
+\subsection{Construction}
+
+\subsection{Master Credential Protocol}
+\begin{figure}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{\mathsf{UserKeyGen}(1^{\lambda})}: \usk, k_1 \sample \Z_p^2, \text{ Return } \usk, k$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
+    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\cm_1, \usk, k_1)| \cm_1 = g_1^0g_2^{k_1}g_2^0g^{\usk}\}$}\\[1em]
+    $\underline{\mathsf{Obtain}(\uskm, \opkm)}$ && $\underline{\mathsf{Issue(\cmm, \vec{m}, \oskm)}}$ \\[1em]
+    $\cm_1 = \CMCom([0,k,0];\usk)$ & $\xrightarrow{\pirzero(\cm_1)}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
+    \multicolumn{3}{r}{$k_2 \sample \Z_p, \cm_2 = \CMCom([\id, k_2, \ctx]; 0), \; \cmm = \cm_1 \cdot \cm_2 $} \\[1em]
+    If $\cmm \neq \CMCom([\id, k_1 + k_2 \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, k_2, \ctx, \sigmam}$ & $u \sample \Z_p$, $\sigmam \sample \RSSign(\cmm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$, return $\bot$} \\[1em]
+    \multicolumn{3}{l}{Else, return $\credm \gets (\sigmam, \cmm, \opkm)$} \\[1em]
+    \end{tabular}
+    \end{center}
+    \caption{Private Identity System}
+    \label{fig:master-cred-protocol}
+\end{figure}
+
+
+
+
+
+\newpage
+\subsection{Context Credential Protocol}
+The context credential issuance protocol enables a user to obtain a context credential linked to their root credential. The Context Credential $\credc$ contains a signature $\sigmac$ over commitment $\cmc = \mathsf{CM.Com}([\id, \ctx]; \uskc)$ issued by $\mathcal{I}_{\mathsf{c}}$
+
+
+\begin{figure}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{(\mathsf{OrgKeyGen}, \mathsf{UserKeyGen}):}$ proceed analogously to Master Credential} \\[1em] %, outputs are $\ckc, \skc, \vkc, \oskc, \opkc, \uskc$
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
+    \multicolumn{3}{l}{$\pirverkey$ proceed analogously to Master Credential}\\[1em]
+    \multicolumn{3}{l}{$\pirdisclose(\cmc, \phi) = \zkpok\{(\id, \ctx, \usk)| \cmc = g_1^{\id}g_2^{\ctx}g^{\uskc} \wedge \ctx = "context"\}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\usk')| \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
+    \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
+    $\underline{\mathsf{Obtain}(\uskc, \opkc, \vec{m})}$ && $\underline{\mathsf{Issue(\cmc, \oskc)}}$ \\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirdisclose(\cmc), \pireq(\cmm', \cmc') }$} \\[1em]
+    \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirdisclose(\cmc)$, or $\pireq(\cmm', \cmc)$ fails, return $\bot$.} \\[1em]
+    If $\cmc \neq \CMCom([\id, \ctx];\uskc) \; $ or  & $\xleftarrow{\cmc, \id, \ctx, \sigmac}$ & Else, $u \sample \Z_p$, $\sigmac \sample \RSSign(\cmc, \oskc, u)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmac, \cmc, \opkc) = 0$, return $\bot$} \\[1em]
+    \multicolumn{3}{l}{Else, return $\credc \gets (\sigmac, \cmc, \opkc)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\uskm')| \cmm' = \CMCom([\id, \ctx]; \uskm') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credc') = \zkpok\{(\id, \ctx,\uskc')| \cmc' = \CMCom([\id, \ctx]; \uskc') \wedge \RSVer(\sigmac', \opkc) = 1 \wedge \ctx = "context"\}$}\\[1em]
+    \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
+    $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
+    \multicolumn{3}{l}{Compute $\credm', \credc'$ analogously to Master Credential}\\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirsok(\credc'), \pireq(\cmm', \cmc')}$} \\[1em]
+    \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirsok(\credc')$, or $\pireq(\cmm', \cmc')$ fails, return 0, Else 1}\\[1em]
+    \end{tabular}
+    \end{center}
+    \caption{Context Credential Protocol}
+    \label{fig:context-cred-protocol}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3755,309 +3518,36 @@ This $\Sigma$-protocol satisfies:
 
 
 
-\section{Sybil Resistance via VRF with Committed Attributes}
-Anonymous Credential systems have the paradoxical problem of requiring user privacy but preventing sybil attacks where users create multiple credentials. Traditional Sybil resistance mechanisms often compromise user anonymity by revealing identifying information or relationships between credentials. Verifiable Random Functions (VRFs) offer a promising solution by enabling the generation of verifiably pseudorandom and deterministic nullifiers from user-specific information, suitable for presentation to an issuer or for revocation lists. Existing VRF-based schemes often rely on computationally intensive bilinear pairings or reveal user attributes, introducing overhead or privacy risks.
 
 
-Sybil Resistance
-- Single-credential: UnlinkOne identity per context
-- Multi-credential: Cross-context consistency
-- - Cannot obtain multiple credentials for same (identity, context) pair
-- - Master credential properly controls derivation of context credentials
-
-
-\noindent We improve the state of the art by creating a lightweight VRF construction tailored for Anonymous Credential systems with 3 contributions:
-\begin{enumerate}
-        \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure to function efficiently in standard prime-order groups, achieving provable pseudorandomness under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption.
-
-        \item \textbf{Zero-Knowledge Proof of Multiplicative Inverse:} We introduce a novel $\Sigma$-protocol that proves the multiplicative inverse relation between committed values $m_1 = k + \textsf{ctx}$ and $m_2 = 1/m_1$, we use it in our scheme to verify the correctness of the VRF nullifier without revealing user secrets. We show it generalizes naturally for similar requirements in $\Sigma$-protocols, especially those needing to prove the q-DHI.
-
-         \item \textbf{Formal Security Guarantees:} We demonstrate sybil resistance reduces to the security of our construction, the unique provability of the vrf and the soundness of our $\Sigma$-protocol.
-\end{enumerate}
-We first present the preliminaries and foundations of our VRF for committed inputs, the design of our $\Sigma$-protocol, and demonstrate how the integration achieves sybil resistance in anonymous credential systems.
 
-
-\subsection{Problem}
-To understand how we use the VRF within our application, we introduce the application:
-Within our anonymous credential system, a user has a Master Credential with a VRF key $k$ and Context Credential with $\textsf{ctx}$, where $\textsf{ctx}$ is the context, such as $\mathcal{H}(\textit{"DriversLicense"})$ where $\mathcal{H}$ is hashes a string to $\Z_p$
-\[
-\cm_{\textsf{m}} = \mathsf{CM.Com}([k, \ldots]; r) = g_1^{k}\ldots h^r \quad \wedge \quad \cm_{\textsf{c}} = \mathsf{CM.Com}([\textsf{ctx}, \ldots]; r_2) = g_1^{\textsf{ctx}} \ldots h^{r_2}
-\]
-During Context Credential issuance, a user must prove to the issuer that their context credential hasn't been issued before, that is, the Context Credential issuance must be \emph{Sybil Resistant}. Our goal is to generate a unique, unlinkable nullifier for a specific context containing something in both the Master Credential and the Context Credential to protect the system from Sybil attacks while also retaining user privacy.
-
-We leverage the structure and properties of the Dodis Yampolisky Verifiable Random Function (VRF)
-\[
-\text{Nullifier } \textsf{N} = g^{1/k + \textsf{ctx}}
-\]
 
-The Nullifier takes on the properties of correctness, pseudorandomness, and provable uniqueness from the VRF which we exploit in our protocol.
 
-
-\subsection{Preliminaries}
 
-\begin{definition}[q-DHI Assumption]
-Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption \cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-\[
-\Pr\left[ x \sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x} \right] \leq \negl 
-\]
-where the probability is taken over the random choice of $x$ and the random coins of $\mathcal{A}$. Informally, no $\PPT$ adversary can distinguish between $g^{1/\alpha}$ from a random group element.
-\end{definition}
-
-\begin{remark}
-The $q$-DHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption (GDH) as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This equivalence provides a solid theoretical foundation for our VRF construction's security.
-\end{remark}
 
 
 
 
-\begin{definition}[Verifiable Random Function in Prime-Order Group]
-A Verifiable Random Function (VRF) in prime-order group $\G$ of order $q$ is a tuple of PPT algorithms $(\mathsf{VRF.Gen}, \mathsf{VRF.Eval}, \mathsf{VRF.Vfy})$ with associated message space $\setX$, output space $\setN$, and proof space $\Pi$, defined as:
 
-\begin{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk):$ Samples secret key $\alpha \sample \Zp^*$, computes public key $pk \gets g^\alpha$, returns $(sk = \alpha, pk)$
-    
-    \item $\mathsf{VRF.Eval}(sk, x) \to \textsf{N}, \pi:$ Returns output $\textsf{N} \gets g^{1/(x+sk)}$ and $\pi$ verifies the output $\textsf{N}$
-    
-    \item $\mathsf{VRF.Vfy}(pk, x, \textsf{N}, \pi) \to \bit:$ validates proof $\pi$ that $\textsf{N} = g^{1/(x+sk)}$, outputs 1 for success, 0 for failure
-\end{itemize}
-\end{definition}
 
-\begin{itemize}
-    \item \textbf{Correctness:} For all $(sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda)$ and all $x \in \setX$:
-    \[
-    \Pr\left[\begin{aligned}
-        (y, \pi) &\gets \mathsf{VRF.Eval}(sk, x) \\
-        1 &\gets \mathsf{VRF.Vfy}(pk, x, \textsf{N}, \pi)
-    \end{aligned}\right] = 1
-    \]
 
-    \item \textbf{Unique Provability:} For any $pk$ (possibly malicious) and $x \in \setX$, no $\PPT$ adversary $\AdvA$ can find two distinct pairs of outputs $(\textsf{N}_0, \pi_0) \neq (\textsf{N}_1, \pi_1)$ such that:
-    \[
-    \mathsf{VRF.Vfy}(pk, x, \textsf{N}_0, \pi_0) = \mathsf{VRF.Vfy}(pk, x, \textsf{N}_1, \pi_1) = 1
-    \]
 
-    \item \textbf{Pseudorandomness:} For every PPT adversary $\advA$, there exists negligible function $\negl$ such that:
-    \[
-    \left|\Pr\left[\mathsf{Exp}_{\mathsf{VRF}}^{\mathsf{PR}}(\AdvA, \lambda) = 1\right] - \frac{1}{2}\right| \leq \negl
-    \]
-    where the pseudorandomness experiment $\mathsf{Exp}_{\mathsf{VRF}}^{\mathsf{PR}}$ is defined in the standard framework for VRFs.
-\end{itemize}
 
 
-\subsection{Algebraic Analysis of Dodis Yampolskiy VRF}
-We first recall the classical Dodis Yampolskiy VRF construction with bilinear pairings, we demonstrate with Type-3 pairings as they are generally used in practice. Let $\G_1, \G_2, \G_T$ be groups of a bilinear map with prime order $p$ where $g_1, g_2$ are generators for $\G_1, \G_2$ respectively and $e$ is an efficient map from $\G_1 \times \G_2 \to \G_T$:
 
-\begin{itemize}
-    \item $\mathsf{VRF.Gen}(\secparam)$: Samples $k \sample \Z_p$, set $pk = g^k$ 
-    
-    \item $\mathsf{VRF.Eval}(k, \textsf{ctx}) \to $(\mathsf{N}, \pi)$: $\pi = e(g_1, g_2)^{1/(k + \textsf{ctx})}$, $\mathsf{N} = g_2^{1/(k + \textsf{ctx})}$ 
-    
-    \item $\mathsf{VRF.Vfy}(pk, \textsf{ctx}, \mathsf{N}, \pi) \to \bit$: assert $\quad$ $e(g^{\textsf{ctx}} \cdot pk, \mathsf{N})  \stackrel{?}{=} e(g_1, g_2) \quad \wedge \quad \pi  \stackrel{?}{=} e(g_1, \mathsf{N})$
-\end{itemize}
-
-$\mathsf{Eval}$ computes the nullifier $\textsf{N}$ and generates a proof $\pi$ to prove that anyone in possession of $pk$ and the input $\textsf{ctx}$ can verify $\textsf{N}$ was computed correctly. $\mathsf{Vfy}$ resembles a signature verification as it binds  the public key $pk$, input $\textsf{ctx}$, and nullifier output together. 
-
-The first pairing binds the public input $pk, \mathsf{ctx}$ with $\mathsf{N}$
-\begin{align*}
-    e(g_1^\mathsf{ctx} \cdot pk, \mathsf{N})  \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
-    e(g_1^\mathsf{ctx}, g_2^{1/(k + \mathsf{ctx})}) \cdot  e(pk, g_2^{1/(k + \mathsf{ctx})}) \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
-    e(g_1^\mathsf{ctx}, g_2)^{1/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{1/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
-    e(g_1, g_2)^{\mathsf{ctx}/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{k/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
-    e(g_1, g_2)^{\mathsf{ctx} + k/(k + \mathsf{ctx})}  \quad =& \quad e(g_1, g_2) \\
-\end{align*}
-
-\begin{align*}
-     \pi  \quad  \stackrel{?}{=}& \quad e(g_1, \mathsf{N}) \\
-     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2^{1/(k + \mathsf{ctx})}) \\
-     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2)^{1/(k + \textsf{ctx})} \\
-\end{align*}
-
-And the second pairing binds the proof $\pi$ to \mathsf{N}$
-
-\subsubsection{Informal Security analysis of Bilinear Pairing VRF}
-\begin{itemize}
-    \item \textbf{Correctness:} Follows directly from pairing properties. The algebraic structure ensures verification equations hold when computed honestly.
-    
-    \item \textbf{Unique Provability:} Each nullifier $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ is uniquely determined by the pairing equation $e(g_1^{k + \textsf{ctx}}, \mathsf{N}) = e(g_1, g_2)$. A forgery requires solving DLOG to create  $g_2^{1/(k+\textsf{ctx}')} = \mathsf{N}$.
-    
-    \item \textbf{Pseudorandomness:} Relies on the $q$-DHI assumption in bilinear groups. Given $g_1, g_1^k, g_1^{k^2}, \ldots$, distinguishing $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ from random reduces to computing $g_2^{1/k}$ (a $q$-DHI instance).
-\end{itemize}
-
-
-
-\subsection{VRF with Committed Inputs}
-As demonstrated above, the classical Dodis-Yampolskiy VRF uses pairings to verify the relationship between inputs and outputs through the equation: $e(g_1^{\textsf{ctx}} \cdot pk, \mathsf{N}) = e(g_1, g_2)$. Our key insight is that this pairing equation fundamentally verifies a multiplicative relationship. When we expand the left side: $e(g_1^{\textsf{ctx}} \cdot g_1^k, g_2^{1/(k + \textsf{ctx})}) = e(g_1, g_2)$ we are effectively proving that $(k + \textsf{ctx}) \cdot \frac{1}{k + \textsf{ctx}} = 1$. 
-
-This observation suggests an alternative approach: instead of using pairings to verify this relationship, we can prove it directly through a carefully constructed $\Sigma$-protocol. Let:
-\begin{itemize}
-    \item $m_1 = k + \textsf{ctx}$ (committed in $\cm_1$)
-    \item $m_2 = \frac{1}{k + \textsf{ctx}}$ (committed in $\cm_2$)
-\end{itemize}
-
-The VRF nullifier is then simply $\mathsf{N} = g^{m_2}$, and verification reduces to proving:
-\begin{enumerate}
-    \item $m_1$ is correctly formed from committed values $k$ and $\textsf{ctx}$
-    \item $m_1 \cdot m_2 = 1$ (multiplicative inverse relation)
-    \item $\mathsf{N} = g^{m_2}$ (nullifier structure)
-\end{enumerate}
-
-This reformulation eliminates the need for pairings while maintaining the security properties of the original VRF. The challenge now becomes constructing an efficient $\Sigma$-protocol that proves these relationships without revealing the underlying values.
-
-
-
-\subsection{Commitment Structure for VRF Verification}
-To privately prove the VRF relationship, we commit to both the input relationship and multiplicative inverse:
-
-\begin{itemize}
-    \item Primary commitments to inputs:
-        \[\cm_k = g^k h^{r_1}, \quad \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2}\]
-    
-    \item Derived commitment to their sum:
-        \[\cm_3 = \cm_k^{\textsf{ctx}} h^{r_3}
-    
-    \item Commitment to the inverse:
-        \[\cm_4 = \cm^{m_2} h^{r_4} \text{ where } m_2 = \frac{1}{m_1}\]
-\end{itemize}
-
-The algebraic structure of these commitments enables our $\Sigma$-protocol to efficiently prove the multiplicative inverse relationship while maintaining zero-knowledge.
-
-
-\subsection{$\Sigma$-Protocol Construction}
-Given these commitments, we construct a $\Sigma$-protocol that proves the VRF relationship in zero-knowledge. The protocol leverages auxiliary commitments $\cm_3, \cm_4$
-to enforce the multiplicative inverse relationship: $\Pi^{\mathcal{R}_{\textsf{VRF}}}$ from 
-
-    \[
-        \mathcal{R}_{\mathsf{vrf}} = \left\{ (\cm_k, \cm_{\textsf{ctx}}, \mathsf{N}), (k, \textsf{ctx}, r_1, r_2) \; \Big| \;  \cm_k = g^k h^{r_1} \; \land \;
-                \cm_{\textsf{ctx}} = g^{\textsf{ctx}} h^{r_2} \land \textsf{N} = g^{1/(k + \textsf{ctx})} \right\}
-    \]
-
-
-
-\newpage
-\begin{protocol}{VRF Output Verification}{vrf-verify}\label{pok-vrf}
-\textbf{Common Input:} Commitments $\cm_1, \cm_2$, group generator $g$, and public parameters $h \in \G$\\
-\textbf{Prover Input:} Witness $(m_1, m_2, r_1, r_2, r_3, r_4)$ such that:
-\begin{itemize}
-    \item $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$
-    \item $\cm_3 = \cm_1^{m_2}h^{r_3}$ and $\cm_4 = h^{r_4}$
-    \item $m_1 \cdot m_2 = 1$ (multiplicative inverse relation)
-\end{itemize}
-
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples randomness:
-    \[
-        \alpha_1, \alpha_2, \rho_1, \rho_2, \rho_3, \rho_4 \sample \Z_q
-    \]
-    Computes:
-    \begin{itemize}
-        \item $T_1 \gets g^{\alpha_1}h^{\rho_1}$
-        \item $T_2 \gets g^{\alpha_2}h^{\rho_2}$
-        \item $T_3 \gets \cm_1^{\alpha_2}h^{\rho_3}$
-        \item $T_4 \gets h^{\rho_4}$
-    \end{itemize}
-    Sends $(T_1, T_2, T_3, T_4)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \Z_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \begin{align*}
-        s_1 &\gets \alpha_1 + c \cdot m_1 &u_1 &\gets \rho_1 + c \cdot r_1\\
-        s_2 &\gets \alpha_2 + c \cdot m_2 &u_2 &\gets \rho_2 + c \cdot r_2\\
-        u_3 &\gets \rho_3 + c \cdot r_3 &u_4 &\gets \rho_4 + c \cdot r_4
-    \end{align*}
-    Sends $(s_1, s_2, u_1, u_2, u_3, u_4)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{enumerate}[label=(\roman*)]
-        \item $g^{s_1}h^{u_1} \stackrel{?}{=} T_1 \cdot \cm_1^c$
-        \item $g^{s_2}h^{u_2} \stackrel{?}{=} T_2 \cdot \cm_2^c$
-        \item $\cm_1^{s_2}h^{u_3} \stackrel{?}{=} T_3 \cdot \cm_3^c$
-        \item $h^{u_4} \stackrel{?}{=} T_4 \cdot \cm_4^c$
-        \item $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g$
-    \end{enumerate}
-\end{enumerate}
-\end{protocol}
-
-\paragraph{Security Analysis:}
-The protocol satisfies the following security properties:
 
-\begin{itemize}
-    \item \textbf{Completeness:} For honest prover and verifier, all verification equations hold algebraically:
-    \begin{align*}
-        g^{s_1}h^{u_1} &= g^{\alpha_1 + cm_1}h^{\rho_1 + cr_1} = T_1 \cdot \cm_1^c\\
-        g^{s_2}h^{u_2} &= g^{\alpha_2 + cm_2}h^{\rho_2 + cr_2} = T_2 \cdot \cm_2^c\\
-        \cm_1^{s_2}h^{u_3} &= \cm_1^{\alpha_2 + cm_2}h^{\rho_3 + cr_3} = T_3 \cdot \cm_3^c\\
-        h^{u_4} &= h^{\rho_4 + cr_4} = T_4 \cdot \cm_4^c
-    \end{align*}
-    
-    \item \textbf{Special Soundness:} Given two accepting transcripts $(T_1, T_2, T_3, T_4, c, s_1, s_2, u_1, u_2, u_3, u_4)$ and $(T_1, T_2, T_3, T_4, c', s_1', s_2', u_1', u_2', u_3', u_4')$ with $c \neq c'$, the extractor $\mathcal{E}$ works as follows:
-    \begin{align*}
-        m_1 &= \frac{s_1 - s_1'}{c - c'} &r_1 &= \frac{u_1 - u_1'}{c - c'}\\
-        m_2 &= \frac{s_2 - s_2'}{c - c'} &r_2 &= \frac{u_2 - u_2'}{c - c'}\\
-        r_3 &= \frac{u_3 - u_3'}{c - c'} &r_4 &= \frac{u_4 - u_4'}{c - c'}
-    \end{align*}
-    The extracted witness satisfies all verification equations and the multiplicative inverse relation by the binding property of Pedersen commitments.
-    
-    \item \textbf{Honest-Verifier Zero-Knowledge:} The simulator $\mathcal{S}$ operates as follows:
-    \begin{enumerate}
-        \item Sample $s_1, s_2, u_1, u_2, u_3, u_4 \sample \Z_q$ uniformly
-        \item Compute simulated commitments:
-        \begin{align*}
-            T_1 &\gets g^{s_1}h^{u_1} \cdot \cm_1^{-c}\\
-            T_2 &\gets g^{s_2}h^{u_2} \cdot \cm_2^{-c}\\
-            T_3 &\gets \cm_1^{s_2}h^{u_3} \cdot \cm_3^{-c}\\
-            T_4 &\gets h^{u_4} \cdot \cm_4^{-c}
-        \end{align*}
-        \item Output $(T_1, T_2, T_3, T_4, c, s_1, s_2, u_1, u_2, u_3, u_4)$
-    \end{enumerate}
-    The simulated transcript is perfectly indistinguishable from a real transcript as the distribution of responses $(s_1, s_2, u_1, u_2, u_3, u_4)$ is uniform in both cases, and the commitments are uniquely determined by the verification equations.
-\end{itemize}
 
-\paragraph{Connection to VRF Security}  
-The protocol’s soundness guarantees that $\textsf{N} = g^{m_2}$ is valid only if $m_2 = 1/m_1$ for $m_1 = k + \textsf{ctx}$. This is critical because:
-\begin{itemize}
-    \item \textbf{Pseudorandomness:} Under $q$-DHI, $g^{1/m_1}$ is indistinguishable from random without knowledge of $m_1$.
-    \item \textbf{Uniqueness:} The equation $m_1 \cdot m_2 = 1$ has a unique solution in $\Zp^*$, preventing adversarial equivocation.
-\end{itemize}
-Thus, the security of the VRF directly reduces to the hardness of computing discrete logarithms and the soundness of the inverse proof.
 
 
 
 
-\begin{theorem}[VRF Correctness via Multiplicative Inverses]
-Under the discrete logarithm assumption, proving the equality $m_1 \cdot m_2 = 1$ for commitments $\cm_1 = g^{m_1}h^{r_1}$ and $\cm_2 = g^{m_2}h^{r_2}$ is equivalent to verifying the correctness of the VRF output $\textsf{Nullifier} = g^{m_2}$. Specifically:
-\begin{itemize}
-    \item Completeness: A valid VRF output always satisfies $m_1 \cdot m_2 = 1$.
-    \item Soundness: Any adversary forging a nullifier must break either the binding of the commitments or the $q$-DHI assumption.
-\end{itemize}
-\end{theorem}
 
-\begin{proof}[Sybil Resistance Sketch]
-\begin{itemize}
-    \item \textbf{Uniqueness:} Direct consequence of the VRF’s unique provability. If two nullifiers $\textsf{N}_0, \textsf{N}_1$ exist for the same $(k, \textsf{ctx})$, then $m_1 \cdot m_2^{(0)} = m_1 \cdot m_2^{(1)} = 1$, violating the uniqueness of inverses in $\Zp^*$.
-    
-    \item \textbf{Unlinkability:} Follows from the zero-knowledge property of the $\Sigma$-protocol. The proof reveals only the validity of $m_1 \cdot m_2 = 1$, not $m_1$ or $m_2$.
-    
-    \item \textbf{Soundness:} By the extractability of the $\Sigma$-protocol, any valid nullifier must satisfy $\textsf{N} = g^{1/(k + \textsf{ctx})}$. Binding of Pedersen commitments ensures $m_1 = k + \textsf{ctx}$, thus $\textsf{N}$ is uniquely tied to the credentials.
-\end{itemize}
-\end{proof}
 
 
-\subsection{Performance Evaluation}
 
-Dodis Yampolskiy
-\begin{itemize}
-    \item Gen = 1 exponentiation 
-    \item GT exponentiation, g2 exponentiation 
-    \item 1 g1 mul + 2 pairing + 2 GT equality check
-\end{itemize}
 
-UTT
 
 
-Us
-cm3 = g^m1h^r3
-cm4 = 
 
 
 
@@ -4070,70 +3560,6 @@ cm4 =
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% Let $\G$ be a prime-order group with Pedersen commitments $\cm_1 = g^{m_1}h^{r_1}$, $\cm_2 = g^{m_2}h^{r_2}$. We construct a Σ-protocol to prove $m_1 \cdot m_2 = 1 \mod p$ without revealing $m_1, m_2, r_1, r_2$.
-
-% % protocol here
-
-% \subsubsection{Security Intuition}
-% \begin{itemize}
-%     \item \textbf{Completeness:} Honest executions satisfy all verification equations by algebraic design.
-%     \item \textbf{Soundness:} Extracting $m_1, m_2$ from two transcripts forces $m_1 \cdot m_2 = 1$ (via binding of Pedersen commitments).
-%     \item \textbf{Zero-Knowledge:} Simulated transcripts are indistinguishable due to masked randomness.
-% \end{itemize}
-
-
-
-
-
-
-% \subsubsection{VRF Verification via sigma-Protocol}
-% The sigma-protocol replaces pairing-based checks in two ways:
-% \begin{itemize}
-%     \item \textbf{Nullifier Binding:} Instead of pairing equations, the protocol enforces $\textsf{N} = g^{m_2}$ where $m_2 = 1/m_1$ and $m_1 = k + \textsf{ctx}$.
-%     \item \textbf{Uniqueness:} The extractor ensures only one valid $\textsf{N}$ per $(k, \textsf{ctx})$, analogous to pairing-derived uniqueness.
-% \end{itemize}
-
-% \subsubsection{Pseudorandomness Under q-DHI}
-% Pseudorandomness of $\textsf{N} = g^{1/(k+\textsf{ctx})}$ now reduces directly to the $q$-DHI assumption in prime-order groups, mirroring the bilinear case but without pairings. Adversaries cannot distinguish $\textsf{N}$ from random unless they solve $g^{1/\alpha}$ for $\alpha = k + \textsf{ctx}$.
 
 
 
@@ -5758,3 +5184,617 @@ PSUTT+LVS
     \item PoK changes from $1E_{\G_1} + 1P + MSM(\ell + 1)\G_1$ $\quad \Rightarrow \quad$ $ 1E_{G_1} +MSM(\ell + 1)_{\G_1}$ --- We remove the pairing!
     \item Verify cred changes from $1E_{\G_T} + 4M\text{Loop}\G_T + 1FinalExp_{\G_T}$ $\quad \Rightarrow \quad$ $2M\text{Loop}\G_T + 1FinalExp_{\G_T}$ --- reduce 2 miller loop and 1 GT exponentiation
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Old Reductions}
+\subsection{Unforgeability}
+\begin{itemize}
+    \item Challenger Setup
+    \item Adversary Query Oracle
+    \item Simulation / Forgery
+    \item Win Condition
+\end{itemize}
+The game tracks $\CRED, \COM, \OWNR$, $\AdvA$ has access to oracles $(\OHU, \OCU, \OOBTISS, \OSHOW)$ modelling the adversaries real-world actions. 
+
+Lists $\CRED, \OWNR, \COM$ let us define a forgery, by EUF-CMA definition, if $verify(\credm, \cmm, \opkm) = 1$ and $\credm \times \cmm \notin \CRED \times \COM$ then it's a forgery!. Also used for reductions to primitives.
+
+The Unforgeability Adversary has access to 
+\begin{itemize}
+    \item $\OHU:$ $\AdvA$ creates honest users => Create honest users that $\AdvA$ can interact with but not control
+    \item $\OCU:$ allows an adversary to corrupt a user, like hacking a user account and revealing their secrets => models insider threats, users whose secrets are known to $\AdvA$
+    \item $\OOBTISS:$ models $\AdvA$ observing legitimate credential issuance for message $m$. => $\AdvA$ controls inputs, execution must follow protocol
+    \item $\OSHOW:$ shows legitimate credential usage satisfying a predicate $\phi$ => $\AdvA$ learns what's revealed in showing protocol
+\end{itemize}
+
+
+\subsection{Basic Unforgeability Version 1}
+Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
+        \pccomment{Challenger Setup} \\
+        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
+        \ppar \gets \Setup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \pccomment{$\AdvA$ queries oracles} \\
+        \AdvA^{\OHU, \OOBTISS}(\opk) \\
+        \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
+        \pccomment{$\AdvA$ wins if } \\
+        \Verify(\cred^*, m^*, \opk) = 1 \; \wedge\\
+        m^* \notin \MSG \; \wedge \; 
+        \cred^* \notin \CRED[i] \text{ for all } i\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i \\
+            \pcreturn \text{Honest User } i \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \bot \\
+            \MSG[i] = m \\
+            \CRED[i] = (\cred, m) \\
+            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The $\EUFCMA$ game, single credential, step 1}
+  \label{fig:prf}
+\end{figure}
+
+
+
+\subsection{Basic Unforgeability Version 2}
+We change to sets because we use a multi-credential multi-issuer environment. $\HU$ is a set of honest user indices $\{i_1, \ldots\}$
+
+Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}(\adv)$}{%
+        \pccomment{Challenger Setup} \\
+        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
+        \text{ where } \CRED \subseteq \{(\cred,m)\}, \MSG \subseteq \{m\} \\
+        \ppar \gets \Setup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \pccomment{$\AdvA$ queries oracles} \\
+        \AdvA^{\OHU, \OOBTISS}(\opk) \\
+        \AdvA \text{ outputs forgery } (\cred^*, m^*) \\
+        \pccomment{$\AdvA$ wins if } \\
+        \Verify(\cred^*, m^*, \opk) = 1 \; \wedge\\
+        m^* \notin \MSG \; \wedge \; 
+        \cred^* \notin \CRED\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i \\
+            \pcreturn \text{Honest User } i \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \bot \\
+            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
+            \CRED = \CRED \cup  \{(\cred, m)\} \\
+            \MSG = \MSG \cup \{m\} \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The $\EUFCMA$ game, single credential, step 2}
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+
+
+\subsection{Basic Unforgeability Version 3 - Adding Commitments and ZKP}
+
+
+Win Condition: Adversary outputs $\cred^*, m^*$ where $\Verify(\cred^*, m^*, \opk) = 1$ and $m^* \notin \MSG$ the signed messages
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \text{Initialize } \HU, \CRED, \MSG = \emptyset \\
+        \CRED \subseteq \{(\cred,m)\}, \MSG \subseteq \{m\} \\
+        \ppar \gets \Setup(\secparam), \ck \gets \CMCom(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \pccomment{$\AdvA$ queries oracles} \\
+        \AdvA^{\OHU, \OOBTISS}(\opk) \\
+        \AdvA \text{ outputs forgery } (\cred^*, \cm^*, \m^*, \usk^*, \pi^*)  \\
+        \pccomment{$\AdvA$ wins if } \\
+        \pirsok(\cred^*, \cm^*, \m^*, \usk^*) = 1 \text{ such that}\\
+        \cm^* = \CMCom([m^*]; \usk^*) \; \wedge\\
+        \RSVer(\cred^*, \cm^*, \opk) = 1 \; \wedge \\
+        (\cred^*, \cm^*, \m^*) \notin \CRED\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i \\
+            \pcreturn \text{Honest User } i \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \bot \\
+            \usk \in \Z_p \sample \UserKeyGen(\secparam) \\
+            \cm \gets \CMCom([m]; \usk) \\
+            \pirdisclose = \zkpok\{(m, \usk) | \cm = \CMCom([m];\usk)\} \\
+            \cred = (\Obtain(\usk[i], m), \Issue(\osk, m)) \\
+            \pcif \ZKVerify(\pirdisclose, \cm) = 0, return \bot \\
+            \CRED := \CRED \cup  \{(\cred, \cm, m)\} \\
+            \MSG = \MSG \cup \{m\} \\
+            \pcreturn (\cred, \cm) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The $\UNFONE$ game, single credential, step 3}
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+\subsection{Type 1 Unforgeability V4}
+Changes
+\begin{itemize}
+    \item Changing $m$ to $aux$ to include proofs later
+    \item adding Corrupt User list $\CU$
+    \item changing game to $\UNFONE$
+\end{itemize}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam)\\
+        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
+        \text{Initialize } \HU, \CU \CRED, \OWNR = \emptyset \\
+        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
+        \pccomment{Winning Condition } \\
+        \AdvA \text{ outputs } (\cred^*, j) \text{ where}: \\
+        \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
+        \t \text{Either } \\
+        \t \t \cred^* \notin \CRED \pclinecomment{Fresh Forgery} \\
+        \t \text{ OR } \\
+        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \pclinecomment{Stolen Credential} \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i, \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pccomment{Can only corrupt Honest User} \\
+            \pcif i \in \HU, \CU[i] = i \\
+            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
+        }
+        \procedure[]{$\OOBTISS(i, aux)$}{%
+            \pcif i \notin \HU \vee i \in \CU, \bot \\
+            \cred \gets (\Obtain(\usk[i], aux), \Issue(\osk, aux)) \\
+            \text{Add } (\cred, i) to (\CRED, \OWNR) \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The }
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+
+
+
+\subsection{Type 1 Unforgeability V5}
+Changes
+\begin{itemize}
+    \item Adding $\ISSUER$ issuer state tracking for multi credential multi issuer environment
+    \item Adding $\PARENT$ mapping context credentials to master credentials
+\end{itemize}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam)\\
+        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
+        \text{Initialize } \HU, \CU, \CRED, \OWNR = \emptyset \\
+        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
+        \pccomment{Winning Condition } \\
+        \AdvA \text{ outputs } (\cred^*, j) \text{ where}: \\
+        \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
+        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
+        \t \text{ OR } \\
+        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
+        \t \text{ OR } \\
+        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i, \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pccomment{Can only corrupt Honest User} \\
+            \pcif i \in \HU, \CU[i] = i \\
+            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
+        }
+        \procedure[]{$\OOBTISS(i, aux)$}{%
+            \pcif i \notin \HU \vee i \in \CU, \bot \\
+            \cred \gets (\Obtain(\usk[i], aux), \Issue(\osk, aux)) \\
+            \text{Add } (\cred, i) to (\CRED, \OWNR) \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{The }
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Type 1 Unforgeability V6}
+Changes
+\begin{itemize}
+    \item Adding $\CTX$ mapping credentials to their context
+    \item adding connection between master and context credential in ObtIss
+\end{itemize}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam)\\
+        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
+        \text{Initialize } \HU, \CU, \CRED, \OWNR, \ISSUER, \CTX = \emptyset \\
+        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
+        \pccomment{Winning Condition } \\
+        \AdvA \text{ outputs } (\cred^*, i^*, j) \text{ where}: \\
+        \t \Verify(\cred^*, \opk_j, \ctx^*) = 1 \; \text{AND} \\
+        % \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
+        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
+        \t \text{ OR } \\
+        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
+        \t \text{ OR } \\
+        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
+        \t \text{ OR } \\
+        \t \t \CTX[\cred^*] \neq \ctx^* \quad \pclinecomment{Wrong Context} \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i, \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pccomment{Can only corrupt Honest User} \\
+            \pcif i \in \HU, \CU[i] = i \\
+            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
+        }
+        \procedure[]{$\OOBTISS(i, \ctx, aux)$}{%
+            \pcif i \notin \HU \vee i \in \CU, \bot \\
+            \pcif \ctx \neq "master": \\
+            \t \text{Require } \exists \; \credm \text{ where } \\
+            \t \CTX[\credm] = "master" \text{ AND } \OWNR[\credm] = i \\
+            \cred \gets (\Obtain(\usk[i], \ctx, aux), \Issue(\osk, \ctx, aux)) \\
+            \text{Add } (\cred, i, \ctx) to (\CRED, \OWNR, \CTX) \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{V6 }
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+\newpage
+\subsection{Type 1 Unforgeability V7}
+Changes
+\begin{itemize}
+    \item Adding $\CTX$ mapping credentials to their context
+    \item adding connection between master and context credential in ObtIss
+\end{itemize}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam)\\
+        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
+        \text{Initialize } \HU, \CU, \CRED, \OWNR, \ISSUER, \CTX, \PARENT = \emptyset \\
+        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
+        \pccomment{Winning Condition } \\
+        \AdvA \text{ outputs } (\cred^*, i^*, j, \ctx) \text{ where}: \\
+        \t \Verify(\cred^*, \opk_j, \ctx^*) = 1 \; \text{AND} \\
+        % \t \exists \; i \text{ such that } \Verify(\cred^*, \opk_i) = 1 \; \text{AND} \\
+        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
+        \t \text{ OR } \\
+        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
+        \t \text{ OR } \\
+        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
+        \t \text{ OR } \\
+        \t \t \CTX[\cred^*] \neq \ctx^* \quad \pclinecomment{Wrong Context} \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i, \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pccomment{Can only corrupt Honest User} \\
+            \pcif i \in \HU, \CU[i] = i \\
+            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
+        }
+        \procedure[]{$\OOBTISS(i, \ctx, aux)$}{%
+            \pcif i \notin \HU \vee i \in \CU, \bot \\
+            \pcif \ctx \neq "master": \\
+            \t \text{Require } \exists \; \credm \text{ where } \\
+            \t \CTX[\credm] = "master" \text{ AND } \OWNR[\credm] = i \\
+            \cred \gets (\Obtain(\usk[i], \ctx, aux), \Issue(\osk, \ctx, aux)) \\
+            \text{Add } (\cred, i, \ctx) to (\CRED, \OWNR, \CTX) \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{V7 }
+  \label{fig:prf}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+\newpage
+\subsection{Type 1 Unforgeability V8}
+Changes
+\begin{itemize}
+    \item Adding $\ID$ mapping credentials to user identifier
+    \item adding connection between master and context credential in ObtIss
+\end{itemize}
+
+\begin{figure}
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\UNFONE}_{\MIMCABC, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam)\\
+        \text{For each issuer } i \in [n]: (\osk_i, \opk_i) \gets \OrgKeyGen(\ppar)\\
+        \text{Initialize } \HU, \CU, \CRED, \OWNR, \ISSUER, \CTX, \PARENT = \emptyset \\
+        \AdvA \text{ has oracle access } \AdvA^{\OHU, \OCU, \OOBTISS}(\{\opk_i\}_{i \in [n]}) \\
+        \pccomment{Winning Condition } \\
+        \AdvA \text{ outputs } (\cred^*, i^*, j, \ctx) \text{ where}: \\
+        \t \Verify(\cred^*, \opk_j, \ctx^*) = 1 \; \text{AND} \\
+        \t \t \cred^* \notin \CRED \quad \pclinecomment{Fresh Forgery} \\
+        \t \text{ OR } \\
+        \t \t \OWNR[\cred^*] \in \HU \setminus \CU \quad \pclinecomment{Stolen Credential} \\
+        \t \text{ OR } \\
+        \t \t \ISSUER[\cred^*] \neq j \quad \pclinecomment{Wrong Issuer} \\
+        \t \text{ OR } \\
+        \t \t \CTX[\cred^*] \neq \ctx^* \quad \pclinecomment{Wrong Context} \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \HU[i] = i, \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pccomment{Can only corrupt Honest User} \\
+            \pcif i \in \HU, \CU[i] = i \\
+            \pcreturn \text{ all }\cred_i \text{ owned by }i\\
+        }
+        \procedure[]{$\OOBTISS(i, \ctx, aux)$}{%
+            \pcif i \notin \HU \vee i \in \CU, \bot \\
+            \pcif \ctx = "master": \\
+            \t \text{Require } \exists \; \credm \text{ where } \\
+            \t \PARENT[\credm] = \bot \text{ AND } \\
+            \t \OWNR[\credm] = i \text{ AND } \\
+            \t \ID[\credm] = \ID[]
+            \t \CTX[\credm] = "master" \text{ AND } \OWNR[\credm] = i \\
+            \cred \gets (\Obtain(\usk[i], \ctx, aux), \Issue(\osk, \ctx, aux)) \\
+            \text{Add } (\cred, i, \ctx) to (\CRED, \OWNR, \CTX) \\
+            \pcreturn \cred \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+  \caption{V8 Note that $i$ indexes oracle calls, $j$ indexes issuer }
+  \label{fig:prf}
+\end{figure}
+
+
+\newpage
+\subsection{Unforgeability Base Case Single Issuer V1}
+\begin{enumerate}
+    \item \textbf{Setup:}
+    \begin{itemize}
+        \item $\HU, \CU$ are modelled as sets e.g. $\HU \gets \HU \cup \{i\}$ as sets prevent deuplicates
+        \item $\CRED$: each entry in $\CRED$ is a tuple $(\cred, \cm, m, i)$ where $\cred = (\sigma, \cm, \opk)$ includes the signature $\sigma$ and commitment $\cm$, $m$ and $i$ track the message and user. 
+        \item $\OWNR$: is a map supporting query $\OWNR[\cred] = i$
+    \end{itemize}
+    \item \textbf{Oracles}
+    \begin{itemize}
+        \item $\OHU$ creates an honest user $i$ with secret key $\usk[i]$ modelling legitimate users
+        \item $\OCU$ corrupts an honest user $i$, giving adversary $\usk[i]$ and all credentials issued to $i$
+        \item $\OOBTISS$ issues a credential $\cred$ to an honest user $i$. Receives $m$ as input, computes commitment $\cm \gets \CMCom([m]; \usk[i])$ and $\cred \gets (\Obtain(\usk[i],))$
+    \end{itemize}
+    \item \textbf{Adversary Goal: } 
+    \item \textbf{Win Condition: } The adversary output must be valid, and can't have come from a corrupt user. That is,
+    $\adv$ must produce a valid, new output, not a trivial forgery, such as stealing someone's credentials, modeled by $\OCU$, which we reject in our win condition as well as $\adv$ using a rerandomized version of the corrupt user credential. 
+\end{enumerate}
+
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathsf{Experiment}$ $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam) \\
+        \ck \gets \CMSetup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \{\HU, \CU, \CRED\} \gets \emptyset,  \OWNR \gets \{\} \\
+        \pccomment{Adversary Interaction} \\
+        \AdvA^{\OHU, \OCU, \OOBTISS, \OSHOW}(\opk, \ck) \\
+        \AdvA \text{ outputs } (\cred'^*, \cm'^*, \pi^*) \\
+        \pccomment{Winning Condition} \\
+        \Verify(\cred'^*, \cm'^*, \opk, \pi^*) = 1 \\
+        \land \forall \cred \text{ where } \OWNR[\cred] \in \CU, \\
+        \cred'^* \text{ is not a rerandomization of } \cred \\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \pcif i \notin \HU \\ 
+            \t \HU \gets \HU \cup \{i\} \\
+            \t \usk[i] \sample \UserKeyGen(\secparam) \\
+            \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pcif i \in \HU \land i \notin \CU \\
+            \t \CU \gets \CU \cup \{i\} \\
+            \pcreturn \usk[i], \\
+            \{(\cred, \cm, m, i) \in \CRED \mid \OWNR[\cred] = i\} \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \cm \gets \CMCom([m]; \usk[i]) \\
+            \t \cred \gets (\Obtain(\usk[i], \cm), \Issue(\osk, \cm)) \\
+            \t \CRED \gets \CRED \cup \{(\cred, \cm, m, i)\} \\
+            \t \OWNR[\cred] \gets i \\
+            \pcreturn \cred \\
+        }
+        \procedure[]{$\OSHOW(i)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \text{Select } (\cred, \cm, m, i) \in \CRED \\
+            \t (\cred', \cm', \pi) \gets \Show(\cred) \\
+            \pcreturn (\cred', \cm', \pi) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Unforgeability Single Issuer Reduction}
+An adversary attempts to forge the signature, the commitment, or the credential. 
+We want to show our system is secure by linking our primitives - signature, commitment, and zero-knowledge proofs, to underlying primitives.
+
+We will assume A can break the security and forge a credential; then we construct a simulator B that uses A to break the security. 
+
+
+
+\begin{theorem}[Single Issuer Unforgeability]
+    The single-issuer anonymous credential system is unforgeable, that is, it is secure against any adversary producing a credential that is not a rerandomized credential that has been legitimately issued and rerandomized by an honest, uncorrupt user, under the following assumptions
+    \begin{enumerate}
+        \item The underlying rerandomizable signature scheme is existentially unforgeable under chosen message attack $(\EUFCMA)$
+        \item the commitment scheme is computationally binding
+        \item the zero-knowledge proof system is computationally sound
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+    Assume there exists an adversary $\adv$ that can break the unforgeability of the single-issuer anonymous credential system with non-negligible probability $\epsilon$. That is, $\adv$ can produce a forged credential $\cred'^* = (\sigma'^*, \cm'^*, \opk)$ and proof $\pi^*$ such that:
+    \begin{itemize}
+        \item $\Verify(\cred'^*, \cm'^*, \opk, \pi^*) = 1$ and
+        \item $\cred'^*$ is not a rerandomization of a credential issued to a corrupt user 
+    \end{itemize}
+    Then we construct simulators $\AdvB_1, \AdvB_2, \AdvB_3$ to reduce $\adv's$ advantage to breaking one of the underlying assumptions
+\end{proof}
+
+\subsubsection{Simulator $\advbone$, Reduction for $\EUFCMA$}
+If $\adv$ can forge a credential, we can use $\adv$ to break the $\EUFCMA$ of the rerandomizable signature scheme.
+We construct Simulator $\AdvB_1$ as follows:
+\begin{itemize}
+    \item $\AdvC$ sets up the reduction with $\sk, \pk \sample \RSKeyGen()$ and oracle $\OSIGN(\sk, \cdot)$
+    \item $\AdvB_1$ receives $\pk$ from $\AdvC$, sets $\opk = \pk$
+    \item $\AdvB_1$ simulates the credential system for $\adv$
+    \begin{itemize}
+        \item $\advbone$ simulates $\OOBTISS$. $\adv$ provides $m$. $\advbone$ computes $\cm = \CMCom([m];r)$, queries oracle for $\sigma \gets \OSIGN(\cm)$. Returns $\cred = (\sigma, \cm, \opk)$
+        \item for corruption queries, $\advbone$ reveals the internal state of corrupt users including $m, r, \sigma, etc$
+    \end{itemize}
+    \item $\adv$ outputs a forgery $\cred'^* = (\sigma'^*, \cm'^*, \opk )$ and proof $\pi^*$ such that $\Verify(\cred'^*, \pi^*) = 1$ where $\cred'^*$ is not a rerandomized credential from a corrupt user, $\cm'^*$ was not signed by the oracle
+    \item $\advbone$ outputs $\sigma'^*, \cm'^*$ as a forgery for the signature scheme
+\end{itemize}
+If $\adv$ succeeds with probability $\epsilon$, then $\advbone$ breaks $\EUFCMA$ with probability $\epsilon$, contradicting $\EUFCMA$ security.
+
+
+\subsubsection{Simulator $\advbtwo$}
+
+Our goal is to show that if $\adv$ can produce a proof that verifies but hasn't been created from a valid credential, we can use $\adv$ to break the soundness of the zero-knowledge proof system.
+
+As for $\advbone$, $\advbtwo$ simulates the credential system, and when $\adv$ outputs the forgery $(\cred'^*, \pi^*)$, $\advbtwo$ checks if $\pi^*$ verifies but the underlying statement is false:
+\begin{itemize}
+    \item The statement $\exists \; m, r | \cm'^* = \CMCom([m];r)$ and $\sigma'^*$ is a valid signature on $\cm'^*$
+    \item If  $\pi^*$ verifies but the statement is false e.g. $\sigma'^*$ is invalid or $\cm'^*$ doesn't correspond to a valid $m'$, then $\pi^*$ is a false proof
+    \item $\advbtwo$ outputs $\pi^*$ as a sound-breaking proof
+\end{itemize}
+If $\adv$ succeeds with probability $\epsilon$, then $\advbtwo$ breaks proof soundness with probability $\epsilon$ contradicting the soundness of the proof system.
+
+\subsubsection{Simulator $\advbthree$}
+The goal is to show that if $\adv$ can open $\cm'^*$ to different messages or attributes, we can use $\adv$ to break the binding property of the commitment scheme.
+Simulator $\advbthree$ works as follows:
+\begin{itemize}
+    \item $\advbthree$ simulates the credential system as before
+    \item Suppose $\adv$'s proof $\pi^*$ implies a message $m'$, different from $m$ within the commitment $\CMCom([m];r)$. 
+    \item We show that by using the soundness extractor $\mathcal{E}$, $\advbthree$ obtains $(m,r), (m',r')$ for $\cm'^*$ where $m \neq m'$j
+    \item $\advbthree$ outputs $(m,r,m',r')$ that violates the commitment binding 
+\end{itemize}
+If $\adv$ succeeds with probability $\epsilon$ then $\advbthree$ breaks commitment binding with probability $\epsilon$ contradicting the binding security of the commitment scheme.
+
+
+
+
+
