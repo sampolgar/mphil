@@ -2254,6 +2254,27 @@ Changes
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \subsection{Unforgeability Single Issuer Reduction}
 An adversary attempts to forge the signature, the commitment, or the credential. 
 We want to show our system is secure by linking our primitives - signature, commitment, zero knowledge proofs, to underlying primitives.
@@ -2261,39 +2282,128 @@ We want to show our system is secure by linking our primitives - signature, comm
 We will assume A can break the security and forge a credential; then we construct a simulator B that uses A to break the security. 
 
 
-\begin{definition}[EUF-CMA]
-A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen message (commitment) attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-    \begin{align*}
-        &\Pr\left[
-            \begin{array}{l}
-                \mathsf{BG} \gets \mathsf{BGGen}(1^{\secparam}), \\
-                \mathsf{ck} \gets \mathsf{CM.KeyGen}(\mathsf{BG}), \\
-                (\sk, \pk) \gets \mathsf{KeyGen}(\mathsf{BG}), \\
-                (m^*, \cm^*, \sigma^*) \gets \mathcal{A}^{\mathsf{Sign}(\sk, \cdot)}(\pk) \\
-                \end{array}
-                \quad : \quad
-                \begin{array}{l}
-                \cm^* = \mathsf{CM.Com}(\mathsf{ck}, m^*, r^*) \land \\
-                \mathsf{RS.Ver}(\pk, \sigma^*, m^*) = 1 \land \\
-                \cm^* \notin Q_{\cm}
-            \end{array}
-        \right] \leq \negl
-    \end{align*}
-where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
-\end{definition}
 
-Step 1. Define the Game, the Unforgeability Experiment
-Step 2. Understand the primitives and their definitions. 
-We have
+
+
+\begin{theorem}[Single Issuer Unforgeability]
+    The single-issuer anonymous credential system is unforgeable, that is, it is secure against any adversary producing a credential that is not a rerandomized credential that has been legitimately issued and rerandomized by an honest, uncorrupt user, under the following assumptions
+    \begin{enumerate}
+        \item The underlying rerandomizable signature scheme is existentially unforgeable under chosen message attack $(\EUFCMA)$
+        \item the commitment scheme is computationally binding
+        \item the zero-knowledge proof system is computationally sound
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+    Assume there exists an adversary $\adv$ that can break the unforgeability of the single-issuer anonymous credential system with non-negligible probability $\epsilon$. That is, $\adv$ can produce a forged credential $\cred'^* = (\sigma'^*, \cm'^*, \opk)$ and proof $\pi^*$ such that:
+    \begin{itemize}
+        \item $\Verify(\cred'^*, \cm'^*, \opk, \pi^*) = 1$ and
+        \item $\cred'^*$ is not a rerandomization of a credential issued to a corrupt user 
+    \end{itemize}
+    Then we construct simulators $\AdvB_1, \AdvB_2, \AdvB_3$ to reduce $\adv's$ advantage to breaking one of the underlying assumptions
+\end{proof}
+
+\subsubsection{Simulator $\advbone$, Reduction for $\EUFCMA$}
+If $\adv$ can forge a credential, we can use $\adv$ to break the $\EUFCMA$ of the rerandomizable signature scheme.
+We construct Simulator $\AdvB_1$ as follows:
+\begin{itemize}
+    \item $\AdvC$ sets up the reduction with $\sk, \pk \sample \RSKeyGen()$ and oracle $\OSIGN(\sk, \cdot)$
+    \item $\AdvB_1$ receives $\pk$ from $\AdvC$, sets $\opk = \pk$
+    \item $\AdvB_1$ simulates the credential system for $\adv$
+    \begin{itemize}
+        \item $\advbone$ simulates $\OOBTISS$. $\adv$ provides $m$. $\advbone$ computes $\cm = \CMCom([m];r)$, queries oracle for $\sigma \gets \OSIGN(\cm)$. Returns $\cred = (\sigma, \cm, \opk)$
+        \item for corruption queries, $\advbone$ reveals the internal state of corrupt users including $m, r, \sigma, etc$
+    \end{itemize}
+    \item $\adv$ outputs a forgery $\cred'^* = (\sigma'^*, \cm'^*, \opk )$ and proof $\pi^*$ such that $\Verify(\cred'^*, \pi^*) = 1$ where $\cred'^*$ is not a rerandomized credential from a corrupt user, $\cm'^*$ was not signed by the oracle
+    \item $\advbone$ outputs $\sigma'^*, \cm'^*$ as a forgery for the signature scheme
+\end{itemize}
+If $\adv$ succeeds with probability $\epsilon$, then $\advbone$ breaks $\EUFCMA$ with probability $\epsilon$, contradicting $\EUFCMA$ security.
+
+
+\subsubsection{Simulator $\advbtwo$}
+
+Our goal is to show that if $\adv$ can produce a proof that verifies but hasn't been created from a valid credential, we can use $\adv$ to break the soundness of the zero-knowledge proof system.
+
+As for $\advbone$, $\advbtwo$ simulates the credential system, and when $\adv$ outputs the forgery $(\cred'^*, \pi^*)$, $\advbtwo$ checks if $\pi^*$ verifies but the underlying statement is false:
+\begin{itemize}
+    \item The statement $\exists \; m, r | \cm'^* = \CMCom([m];r)$ and $\sigma'^*$ is a valid signature on $\cm'^*$
+    \item If  $\pi^*$ verifies but the statement is false e.g. $\sigma'^*$ is invalid or $\cm'^*$ doesn't correspond to a valid $m'$, then $\pi^*$ is a false proof
+    \item $\advbtwo$ outputs $\pi^*$ as a sound-breaking proof
+\end{itemize}
+If $\adv$ succeeds with probability $\epsilon$, then $\advbtwo$ breaks proof soundness with probability $\epsilon$ contradicting the soundness of the proof system.
+
+\subsubsection{Simulator $\advbthree$}
+The goal is to show that if $\adv$ can open $\cm'^*$ to different messages or attributes, we can use $\adv$ to break the binding property of the commitment scheme.
+Simulator $\advbthree$ works as follows:
+\begin{itemize}
+    \item $\advbthree$ simulates the credential system as before
+    \item Suppose $\adv$'s proof $\pi^*$ implies a message $m'$, different from $m$ within the commitment $\CMCom([m];r)$. 
+    \item We show that by using the soundness extractor $\mathcal{E}$, $\advbthree$ obtains $(m,r), (m',r')$ for $\cm'^*$ where $m \neq m'$j
+    \item $\advbthree$ outputs $(m,r,m',r')$ that violates the commitment binding 
+\end{itemize}
+If $\adv$ succeeds with probability $\epsilon$ then $\advbthree$ breaks commitment binding with probability $\epsilon$ contradicting the binding security of the commitment scheme.
+
+
+
+
+
+
+
+
+
+\subsection{Unforgeability Base Case Single Issuer V2}
+Adding $\phi$ satisfaction to it, satisfying zero-knowledge proof verification.
+
+For a single-issuer, single-credential system, unforgeability means any adversary cannot produce a valid showing, consisting of a rerandomized credential and ZKP for a predicate $\phi$ unless they have corrupted a user whose issued credential satisfies $\phi$. 
 \begin{enumerate}
-    \item Rerandomizable signature scheme $\RS$, with $\EUFCMA$ security and the oracle $\OSIGN$ 
-    \item Commitment Scheme $\CM$, with perfect hiding and binding 
-    \item Zero Knowledge Proofs $\ZKP$ with soundness and zero knowledge
+    \item Type-1 Forgery: producing a showing for $\phi$ when no issued credential satisfies $\phi$
+    \item Type-2 Forgery: producing a showing for $\phi$ using a credential whose attributes don't satisfy $\phi$
 \end{enumerate}
-But I also have $\RS$ and $\CM$ proved unforgeable in its own reduction. But I'll just work through these reductions to get an idea of why I got there again.
 
-
-
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathsf{Experiment}$ $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam) \\
+        \ck \gets \CMSetup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \HU \gets \emptyset, \; \CU \gets \emptyset, \; \CRED \gets \emptyset, \; \OWNR \gets \{\} \\
+        \pccomment{Adversary Interaction} \\
+        \AdvA^{\OHU, \OCU, \OOBTISS, \OSHOW}(\opk, \ck) \\
+        \AdvA \text{ outputs } (\cred'^*, \cm'^*, \pi^*, \phi^*) \\
+        \pccomment{Winning Condition} \\
+        \pcif \Verify(\cred'^*, \cm'^*, \pi^*, \phi^*) = 1 \; \wedge\\
+        \t \nexists (\sigma, \cm, m, i) \in \CRED \text{ such that } \\
+        \t \OWNR[\sigma] \in \CU \; \wedge \; m \text{ satisfies } \phi^*\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \pcif i \notin \HU \\ 
+            \t \HU \gets \HU \cup \{i\} \\
+            \t \usk[i] \sample \UserKeyGen(\secparam) \\
+            \pcreturn i \\
+        }
+        \procedure[]{$\OCU(i)$}{%
+            \pcif i \in \HU \land i \notin \CU \\
+            \t \CU \gets \CU \cup \{i\} \\
+            \t \pcreturn \usk[i], \\
+            \t \{(\cred, \cm, m, i) \in \CRED \mid \OWNR[\cred] = i\} \\
+        }
+        \procedure[]{$\OOBTISS(i, m)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \cm \gets \CMCom([m]; \usk[i]) \\
+            \t \cred \gets (\Obtain(\usk[i], \cm), \Issue(\osk, \cm)) \\
+            \t \CRED \gets \CRED \cup \{(\cred, \cm, m, i)\} \\
+            \t \OWNR[\cred] \gets i \\
+            \pcreturn \cred \\
+        }
+        \procedure[]{$\OSHOW(i, \phi)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \text{Select } (\cred, \cm, m, i) \in \CRED \\
+            \t (\cred', \cm', \pi) \gets \Show(\cred) \\
+            \pcreturn (\cred', \cm', \pi) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
 
 
 
@@ -2361,7 +2471,7 @@ But I also have $\RS$ and $\CM$ proved unforgeable in its own reduction. But I'l
 
 
 % % % % % % % % % % 
-% 
+%  
 % Sigma Protocols
 % 
 % 
