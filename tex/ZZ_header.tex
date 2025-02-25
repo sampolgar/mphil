@@ -17,6 +17,7 @@
 \usepackage{booktabs}
 \usepackage{bookmark}
 % \usepackage[bookmarks=true]{hyperref} 
+% \usepackage{float} %to force my protocol environment to stay where it is
 
 \usepackage{array}
 \usepackage[capitalise,noabbrev]{cleveref}
@@ -260,6 +261,8 @@ keys
 \newcommand{\badidea}[1]{\textcolor{red}{#1}}
 \newcommand{\betteridea}[1]{\textcolor{green}{#1}}
 
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+
 
 %--------------------------------------------------------
 % General notations
@@ -367,7 +370,7 @@ keys
 \newcommand{\Eval}{\ensuremath{\mathsf{Eval}}\xspace}
 \newcommand{\PRG}{\ensuremath{\mathsf{PRG}}\xspace}
 \newcommand{\Hash}{\ensuremath{\mathsf{H}}\xspace}
-\newcommand{\Setup}{\ensuremath{\mathsf{Setup}}\xspace}
+% \newcommand{\Setup}{\ensuremath{\mathsf{Setup}}\xspace}
 \newcommand{\GroupGen}{\textsf{BilinearGen}\xspace}
 \newcommand{\DDHGen}{\textsf{DHGen}\xspace}
 \newcommand{\PGen}{\textsf{PGen}\xspace}
@@ -505,6 +508,7 @@ keys
 \newcommand{\sigmam}{\sigma_{\mathsf{m}}}
 \newcommand{\sigmamone}{\sigma_{\mathsf{m1}}}
 \newcommand{\sigmamtwo}{\sigma_{\mathsf{m2}}}
+\newcommand{\attrsm}{\mathsf{attrs_m}}
 
 % Context Credential 
 \newcommand{\oskc}{\mathsf{osk_c}}
@@ -521,6 +525,7 @@ keys
 \newcommand{\sigmac}{\sigma_{\mathsf{c}}}
 \newcommand{\sigmacone}{\sigma_{\mathsf{c1}}}
 \newcommand{\sigmactwo}{\sigma_{\mathsf{c2}}}
+\newcommand{\attrsc}{\mathsf{attrs_c}}
 
 
 % secproofs
@@ -547,6 +552,8 @@ keys
 
 \newcommand{\OSIGN}{\mathcal{O}_{\mathsf{sign}}}
 
+\newcommand{\OOBTMASTER}{\mathcal{O}_{\mathsf{ObtainM}}}
+\newcommand{\OOBTCONTEXT}{\mathcal{O}_{\mathsf{ObtainC}}}
 
 
 
