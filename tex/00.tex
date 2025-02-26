@@ -1776,25 +1776,23 @@ In the context of our unforgeability definition, we use predicate satisfaction t
 \begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
     \begin{itemize}
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
-
-    \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisations keypair $(\osk, \opk)$
-
-    \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: is a probabilistic algorithm that takes public parameters $\ppar$, outputs users secret key $\usk$
-
-    % do I need to add phi here?
-    \item $(\mathsf{ObtainMaster}(\vec{m}, \usk, \opk, aux), \mathsf{IssueMaster}(\osk, \cm, aux)) \rightarrow (\credm, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m}$ and secret key $\usk$. The issuer inputs their secret key $\osk$. The protocol outputs a master credential $\credm$ to the user and $\bot$ to the issuer.
-
-    % do I need to add phi here?
-    \item $(\mathsf{ObtainContext}(\vec{m}, \usk, \opk, \credm, aux), \mathsf{IssueContext}(\osk, \cm, \opk_m, aux)) \rightarrow (\credc, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m}$, secret key $\usk$, and master credential $\credm$. The issuer inputs their secret key $\osk$ and the verification key of the master credential $\opk_m$. The protocol outputs a context credential $\credc$ to the user and $\bot$ to the issuer.
-
-    % do I need to add phi here?
-    \item $(\mathsf{Show}(\{\cm_i, r_i, \mathsf{cred}_i\}_{i=1}^n, \phi), \mathsf{Verify}(\{\mathsf{cred}'_i, \opk_i\}_{i=1}^n, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with $n$ commitment-opening pairs $(\cm_i, r_i)$, their corresponding credentials $\mathsf{cred}_i$, and a predicate $\phi$. The verifier runs $\mathsf{Verify}$ with $n$ rerandomized credentials $\mathsf{cred}'_i$, their associated organization public keys $\opk_i$, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
-\end{itemize}
+    
+    \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
+    
+    \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$
+    
+    \item $(\mathsf{ObtainMaster}(\vec{m}, \uskm, \opkm, \aux), \mathsf{IssueMaster}(\oskm, \cmm, \aux)) \rightarrow (\credm, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \ldots]$ containing a unique identifier $\id$ and context $\ctx = \text{"master"}$, along with secret key $\uskm$. The issuer inputs their secret key $\oskm$. The protocol outputs a master credential $\credm$ to the user and $\bot$ to the issuer.
+    
+    \item $(\mathsf{ObtainContext}(\vec{m}, \uskc, \opkm, \credm, \aux), \mathsf{IssueContext}(\oskc, \cmc, \opk, \aux)) \rightarrow (\credc, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \ldots]$ with the same identifier $\id$ as in their master credential and context $\ctx = \text{"context"}$, along with secret key $\usk$ and master credential $\credm$. The issuer inputs their secret key $\osk$ and the verification key of the master credential issuer $\opk_m$. During the protocol, the user proves possession of a valid master credential with the same $\id$. The protocol outputs a context credential $\credc$ to the user and $\bot$ to the issuer.
+    
+    \item $(\mathsf{Show}(\{\credm, \credc\}, \{\cmm, \cmc\}, \{\uskm, \uskc\}, \phi), \mathsf{Verify}(\{\credm', \credc'\}, \{\cmm', \cmc'\}, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their master and context credentials, corresponding commitments, openings, and a predicate $\phi$. The user generates a proof $\pi$ demonstrating: (1) both credentials are valid signatures over their respective commitments, (2) both commitments share the same identifier $\id$, and (3) the attributes satisfy predicate $\phi$. The verifier runs $\mathsf{Verify}$ with the rerandomized credentials, commitments, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
+    \end{itemize}
 \end{definition}
 
 \subsection{Construction}
 \subsection{Master Credential Protocol}
 The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is a signature $\sigmam$ over commitment $\cmm = \mathsf{CM.Com}([\id, \ctx]; \uskm)$
+
 
 \begin{figure}
     \begin{center}
@@ -1828,7 +1826,6 @@ The master credential issuance protocol enables a user to obtain their root cred
 
 
 \paragraph{Informal Security Analysis}
-
 The two-party process between the user and master credential oracle ensures sybil resistance of unique identifier $\id$; the oracle has access to the user information and checks duplicate issuance within their own identity system. $\User$'s $\usk$ remains hidden via the hiding property of the commitment $\cm_1$ malicious use prevented by $\pirzero$
 
 
@@ -1874,7 +1871,7 @@ The context credential issuance protocol enables a user to obtain a context cred
 \newpage
 \section{Unforgeability: Single Issuer, Single Credential}
 
-Traditional unforgeability definitions are insufficient for anonymous credential systems because rerandomizable credentials and zero-knowledge proofs enable legitimate reuse and selective disclosure that would be classified as forgeries under EUF-CMA security. Our definition addresses two critical attack vectors:
+Traditional unforgeability definitions are insufficient for anonymous credential systems because rerandomizable credentials and zero-knowledge proofs enable legitimate reuse that would be classified as forgeries under EUF-CMA security. Our definition addresses two critical attack vectors:
 \begin{enumerate}
 \item Creating new valid credentials not issued by legitimate authorities
 \item Using legitimately obtained credentials to satisfy predicates their attributes do not support
@@ -2029,7 +2026,7 @@ We formalize multi-credential unforgeability through an experiment where an adve
 
 \begin{align}
     &\MIMCVerify(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) = 1 \quad \wedge\\
-    &\nexists\, i \in \CU \text{ such that } \\
+    & \nexists\, i \in \CU \text{ such that } \\
     &(id_i, \attrsm, i, \cdot, \cdot) \in \CRED_M \quad \wedge \\
     &(id_i, \attrsc, i, \cdot, \cdot) \in \CRED_C \quad \wedge \\
     &\phi^*((id_i, \attrsm), (id_i, \attrsc)) = 1 \\
@@ -2119,41 +2116,130 @@ We now extend our unforgeability definition to address the case where a single i
 
 
 
-\begin{proof}
-We construct a reduction from the unforgeability of the multi-credential system to the $\EUFCMA$ security of the underlying signature scheme. Given an adversary $\adv$ that breaks credential unforgeability with non-negligible probability $\epsilon$, we build an adversary $\advb$ that breaks $\EUFCMA$ with related probability.
 
-\textbf{Simulator Setup:} $\advb$ receives verification key $\vk$ from the $\EUFCMA$ challenger and access to a signing oracle $\OSIGN(\cdot)$. It sets $\opk = \vk$ and simulates the credential system experiment.
+
+
+
+
+\newpage
+\subsection{Completing the Single-Issuer, Multi-Credential Unforgeability Reduction}
+
+\subsubsection{1. Formalized Oracle Specifications}
+
+First, let's precisely define your oracles with explicit tracking of credential relationships:
+
+\begin{pcvstack}[boxed, center, space=1em]
+    \procedure[]{$\mathsf{Setup}$ and $\mathsf{KeyGeneration}$}{%
+        \ppar \gets \Setup(\secparam) \\
+        \ck \gets \CMSetup(\secparam) \\
+        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+        \HU \gets \emptyset, \; \CU \gets \emptyset \\
+        \CRED_M, \CRED_C \gets \emptyset, \emptyset \\
+        \OWNR \gets \emptyset \pccomment{Maps credential indices to user identities} \\
+    }
+    
+    \procedure[]{$\OHU(i)$}{%
+        \pcif i \in \HU \cup \CU, \pcreturn \bot \\
+        \usk[i] \sample \UserKeyGen(\secparam) \\
+        \HU \gets \HU \cup \{i\} \\
+        \pcreturn \opk \\
+    }
+    
+    \procedure[]{$\OCU(i)$}{%
+        \pcif i \notin \HU, \pcreturn \bot \\
+        \HU \gets \HU \setminus \{i\} \\
+        \CU \gets \CU \cup \{i\} \\
+        \pcreturn \usk[i] \text{ and all } \text{CRED}_j \text{ where } \OWNR[j] = i \\
+    }
+    
+    \procedure[]{$\OOBTMASTER(i, \attrsm)$}{%
+        \pcif i \notin \HU, \pcreturn \bot \\
+        \id_i \sample \{0,1\}^\lambda \pccomment{Generate unique identifier} \\
+        \cmm \gets \CMCom([\id_i, \attrsm]; \usk[i]) \\
+        \sigmam \gets \Issue(\osk, \cmm) \\
+        \credm \gets (\sigmam, \cmm) \\
+        j \gets |\CRED_M| + 1 \pccomment{New credential index} \\
+        \CRED_M \gets \CRED_M \cup \{j\} \\
+        \OWNR[j] \gets i \\
+        \ATTR_M[j] \gets (\id_i, \attrsm) \\
+        \pcreturn \credm \\
+    }
+    
+    \procedure[]{$\OOBTCONTEXT(i, \attrsc, j_m)$}{%
+        \pcif i \notin \HU, \pcreturn \bot \\
+        \pcif j_m \notin \CRED_M \lor \OWNR[j_m] \neq i, \pcreturn \bot \pccomment{Verify master credential ownership} \\
+        (\id_i, \attrsm) \gets \ATTR_M[j_m] \pccomment{Extract identity from master credential} \\
+        \cmc \gets \CMCom([\id_i, \attrsc]; \usk[i]) \\
+        \pccomment{Formalized binding proof verification} \\
+        \pi_{eq} \gets \ProveEq(\cmm_{j_m}, \cmc, \id_i, \usk[i]) \\
+        \pcif \VerifyEq(\pi_{eq}, \cmm_{j_m}, \cmc) = 0, \pcreturn \bot \\
+        \sigmac \gets \Issue(\osk, \cmc) \\
+        \credc \gets (\sigmac, \cmc) \\
+        j_c \gets |\CRED_C| + 1 \\
+        \CRED_C \gets \CRED_C \cup \{j_c\} \\
+        \OWNR[j_c] \gets i \\
+        \ATTR_C[j_c] \gets (\id_i, \attrsc) \\
+        \LINK[j_c] \gets j_m \pccomment{Track which master credential authorized this context credential} \\
+        \pcreturn \credc \\
+    }
+\end{pcvstack}
+
+\subsubsection{2. Verification Algorithm Formalization}
+
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\MIMCVerify(\credm', \credc', \cmm', \cmc', \pi, \phi)$}{%
+        \pccomment{Signature verification on both credentials} \\
+        \pcif \RSVer(\credm', \cmm', \opk) = 0, \pcreturn 0 \\
+        \pcif \RSVer(\credc', \cmc', \opk) = 0, \pcreturn 0 \\
+        \pccomment{Verify ZK proof demonstrating:} \\
+        \pccomment{1. Both commitments are well-formed} \\
+        \pccomment{2. Both commitments share the same identity} \\
+        \pccomment{3. Committed attributes satisfy predicate} \\
+        \pcif \ZKVer(\pi, \cmm', \cmc', \phi) = 0, \pcreturn 0 \\
+        \pcreturn 1 \\
+    }
+    
+    \procedure[]{$\ZKVer(\pi, \cmm', \cmc', \phi)$}{%
+        \pccomment{Verify that $\pi$ proves the following statement:} \\
+        \exists \id, \attrsm, \attrsc, r_m, r_c \text{ such that:} \\
+        \cmm' = \CMCom([\id, \attrsm]; r_m) \land \\
+        \cmc' = \CMCom([\id, \attrsc]; r_c) \land \\
+        \phi((\id, \attrsm), (\id, \attrsc)) = 1 \\
+    }
+\end{pchstack}
+
+\subsubsection{3. Complete Reduction Framework}
+
+\begin{proof}
+We construct a reduction from the unforgeability of our multi-credential system to the $\EUFCMA$ security of the underlying signature scheme. Given an adversary $\adv$ breaking our definition with probability $\epsilon$, we build an adversary $\advb$ breaking $\EUFCMA$.
+
+\textbf{Setup:} $\advb$ receives $\vk$ and oracle access to $\OSIGN(\cdot)$ from the $\EUFCMA$ challenger. It sets $\opk = \vk$ and simulates our experiment.
 
 \textbf{Oracle Simulation:}
+$\advb$ implements $\OHU$, $\OCU$ as described. For $\OOBTMASTER$ and $\OOBTCONTEXT$, $\advb$ uses $\OSIGN(\cdot)$ to obtain signatures, carefully tracking all credential data in $\CREDM$, $\CREDC$, $\OWNR$, $\ATTRM$, $\ATTRC$, and $\LINK$.
+
+\textbf{Forgery Extraction:} When $\adv$ outputs $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$ satisfying our winning condition, $\advb$ proceeds with case analysis:
+
+\textbf{Case 1:} If either $\cmm'^*$ or $\cmc'^*$ is not a rerandomization of any commitment in our records, $\advb$ returns the corresponding signature as an $\EUFCMA$ forgery.
+
+\textbf{Case 2:} If both credentials are rerandomizations of existing commitments but from different users:
 \begin{itemize}
-    \item $\OHU$ and $\OCU$: Implemented as in the experiment definition.
-    
-    \item $\OOBTMASTER(i, \attrsm)$: Compute $\cmm = \CMCom([id_i, \attrsm]; \usk[i])$, obtain $\sigmam \gets \OSIGN(\cmm)$, record in $\CRED_M$, return $(\sigmam, \cmm)$.
-    
-    \item $\OOBTCONTEXT(i, \attrsc, \credm)$: Verify $\credm$ exists in $\CRED_M$ for user $i$, compute $\cmc = \CMCom([id_i, \attrsc]; \usk[i])$, verify binding proof, obtain $\sigmac \gets \OSIGN(\cmc)$, record in $\CRED_C$, return $(\sigmac, \cmc)$.
-    
-    \item $\OSHOW$: Implemented as specified, generating presentations for valid credential pairs.
+    \item By the binding property of commitments and soundness of the ZK system, the proof $\pi^*$ must demonstrate that both commitments share the same identity $\id^*$.
+    \item However, the original commitments contained different identities, creating a contradiction.
+    \item Therefore, the adversary must have broken either commitment binding or ZK soundness to produce $\pi^*$.
 \end{itemize}
 
-\textbf{Forgery Classification and Analysis:} When $\adv$ outputs $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$ satisfying the winning condition, we must establish which type of forgery has occurred and extract a valid $\EUFCMA$ forgery.
-
-\textbf{Case Analysis:} We consider three exhaustive cases:
-
-\textbf{Case 1:} At least one of $\cmm'^*$ or $\cmc'^*$ is not a rerandomization of any commitment in $\CRED_M$ or $\CRED_C$ respectively.
-
-\textbf{Case 2:} Both $\cmm'^*$ and $\cmc'^*$ are rerandomizations of commitments in $\CRED_M$ and $\CRED_C$, but they come from different users.
-
-\textbf{Case 3:} Both $\cmm'^*$ and $\cmc'^*$ are rerandomizations of commitments belonging to the same corrupt user, but the attributes don't satisfy $\phi^*$.
+\textbf{Case 3:} If both credentials are rerandomizations from the same corrupt user but don't satisfy $\phi^*$:
+\begin{itemize}
+    \item The ZK proof incorrectly claims that attributes satisfy $\phi^*$, contradicting soundness.
 \end{itemize}
 
-\textbf{Extraction of $\EUFCMA$ Forgery:} 
-For Case 1, we directly obtain a signature forgery. 
-For Cases 2 and 3, we rely on the soundness of the zero-knowledge proof system to establish a contradiction with our winning condition.
+In all cases, we either extract a direct $\EUFCMA$ forgery or establish a contradiction with a fundamental security property, completing our reduction.
 \end{proof}
 
 
 
-
+\subsection{Progression to Multi-Issuer, Multi-Credential Unforgeability}
 
 
 
@@ -2226,6 +2312,9 @@ Sybil Resistance
 \end{enumerate}
 We first present the preliminaries and foundations of our VRF for committed inputs, the design of our $\Sigma$-protocol, and demonstrate how the integration achieves sybil resistance in anonymous credential systems.
 
+\begin{definition}[Sybil-Resistant Issuance]
+For any context $\ctx$, a Context Credential issuer must be able to detect if a user with master credential containing identifier $\id$ has previously obtained a context credential for $\ctx$, without learning $\id$ itself or linking this issuance request to other credential presentations.
+\end{definition}
 
 \subsection{Problem}
 To understand how we use the VRF within our application, we introduce the application:
