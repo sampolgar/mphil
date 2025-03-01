@@ -1983,49 +1983,6 @@ The adversary wins if they forge a credential or misuse attributes in a way not 
 \subsection{Security Reduction}
 
 
-\begin{theorem}[Single Issuer Unforgeability]
-If the rerandomizable signature scheme is $\EUFCMA$-secure, the commitment scheme is binding, and the zero-knowledge proof system is sound, then the single-issuer anonymous credential system satisfies unforgeability according to $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$.
-\end{theorem}
-
-\begin{proof}
-We reduce security of the credential system to the $\EUFCMA$ security of the underlying signature scheme. Given an adversary $\adv$ that breaks credential unforgeability with non-negligible probability $\epsilon$, we build an adversary $\advb$ that breaks $\EUFCMA$ with related probability. 
-
-\noindent \textbf{Reduction Setup:} $\advb$ receives verification key $\vk$ and signing oracle access $\OSIGN(\cdot)$ from the $\EUFCMA$ challenger. It sets $\opk = \vk$ and simulates the credential system experiment.
-
-\noindent  \textbf{Oracle Simulation:}
-\begin{itemize}
-    \item $\OHU$ and $\OCU$: Implemented per experiment definition, maintaining sets $\HU$ and $\CU$.
-    
-    \item $\OOBTISS(\id, m)$: For user $\id$ and message $\vec{m}$, $\advb$ computes $\cm = \CMCom(m; \usk_i)$, obtains $\sigma \gets \OSIGN(\cm)$, records $(\vec{m}, \id, \cm, \sigma)$ in $\CRED$, and returns $(\sigma, \cm)$.
-    
-    \item $\OSHOW(\id, \phi)$: For honest user $\id$ and predicate $\phi$, $\advb$ finds credentials in $\CRED$ whose attributes satisfy $\phi$, generates a valid showing, and returns it.
-\end{itemize}
-
-
-\noindent \textbf{Forgery:} When $\adv$ outputs forgery $(\cred'^*, \cm'^*, \pi^*, \phi^*)$ satisfying:
-\begin{align*}
-\MIMCVerify(\cred'^*, \cm'^*, \pi^*, \phi^*) = 1 \quad \wedge \quad \forall \; \id \in \CU \;  \nexists (\vec{m}, \id, \cm, \sigma) \in \CRED \text{ such that } \phi^*(\vec{m}) = 1
-\end{align*}
-
-\noindent By ZKP soundness, $\pi^*$ proves that:
-\[
-\exists m^*, r^* \text{ such that } \cm'^* = \CMCom(m^*; r^*) \quad \wedge \quad \RSVer(\cred'^*, \cm'^*, \vk) = 1 \quad \wedge \quad \phi^*(m^*) = 1
-\]
-
-\noindent We claim $(\cm'^*, \cred'^*)$ is a valid $\EUFCMA$ forgery:
-\begin{enumerate}
-    \item \textbf{Case 1:} If $\cm'^*$ is not a rerandomization of any commitment in $\CRED$, then $\cm'^*$ was never queried to $\OSIGN$, making it a valid $\EUFCMA$ forgery.
-    \item \textbf{Case 2:} If $\cm'^*$ is a rerandomization of some $\cm_j \in \CRED$, then by commitment binding property, $m^* = m_j$. Two subcases arise:
-        \begin{itemize}
-            \item If user $j \in \HU$, then $\adv$ cannot know $\usk_j$ to generate a valid rerandomization.
-            \item If user $j \in \CU$, then by our winning condition, $\phi^*(m_j) = 0$, contradicting the proof assertion that $\phi^*(m^*) = 1$ given $m^* = m_j$.
-        \end{itemize}
-\end{enumerate}
-Therefore, $\advb$ outputs $(\cm'^*, \cred'^*)$ as its $\EUFCMA$ forgery with success probability at least $\epsilon$.
-\end{proof}
-
-
-
 
 
 
@@ -2158,47 +2115,126 @@ We now extend our unforgeability definition to address the case where a single i
 \newpage
 \subsubsection{Reduction}
 
-\begin{theorem}[Single-Issuer Multi-Credential Unforgeability]
-If the rerandomizable signature scheme RS is EUF-CMA secure, the commitment scheme RVC is binding, and the zero-knowledge proof system is sound, then the single-issuer multi-credential anonymous credential system satisfies unforgeability according to $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}, \adv}(\lambda)$.
-\end{theorem}
-
-\begin{proof}
-We construct a reduction from the unforgeability of our multi-credential system to the soundness of the equality zero-knowledge proof system. Recall that a $\ZKP$ system is sound if, for any $\PPT$ adversary, there's a negligible probability of producing a proof $\pi$ for a false statement, e.g., claiming commitments $\cmm'^*, \cmc'^*$ contain the same $\id$ when they do not.  Given an adversary $\adv$ that breaks credential unforgeability with non-negligible probability $\epsilon$, we build an adversary $\advb$ that breaks the ZKP soundness with related probability.
 
 
-\noindent \textbf{Reduction Setup:} $\advb$ receives a verification key $\ck$ from the soundness challenger and expects to output a false statement with a verifying proof. $\advb$ generates the signature key pair $(\osk, \opk)$ honestly, since we're targeting the ZKP soundness rather than signature unforgeability, and simulates the credential system experiment for $\adv$.
 
-\noindent \textbf{Oracle Simulation:}
-\begin{itemize}
-    \item $\OHU$ and $\OCU$: Implemented per experiment definition, maintaining sets $\HU$ and $\CU$.
-    
-    \item $\OOBTMASTER(i, \attrsm)$: For user $i$ and attributes $\attrsm$, $\advb$ computes commitment $\cmm = \CMCom([\id_i, \attrsm]; \usk[i])$, signs it using $\osk$, and records $(\id_i, \attrsm, i, \cmm, \sigmam)$ in $\CRED_M$.
-    
-    \item $\OOBTCONTEXT(i, \attrsc, \credm)$: Verifies $\credm$ is valid in $\CRED_M$, computes $\cmc = \CMCom([\id_i, \attrsc]; \usk[i])$, generates a zero-knowledge proof $\pi_{\mathsf{eq}}$ proving $\cmm$ and $\cmc$ commit to the same $\id_i$, signs $\cmc$, and records $(\id_i, \attrsc, i, \cmc, \sigmac)$ in $\CRED_C$.
-    
-    \item $\OSHOW(i, \phi)$: Finds master and context credentials in $\CRED_M$ and $\CRED_C$ for user $i$ satisfying predicate $\phi$, rerandomizes them, and generates a valid showing.
-\end{itemize}
 
-\noindent \textbf{Forgery Analysis:} When $\adv$ outputs a forgery $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$ satisfying:
-\begin{align*}
-\MIMCVerify(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) = 1 \quad \wedge \\
-\nexists\, i \in \CU \text{ such that: } (\id_i, \attrsm, i, \cdot, \cdot) \in \CRED_M \quad \wedge \\
-(\id_i, \attrsc, i, \cdot, \cdot) \in \CRED_C \quad \wedge \quad
-\phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1
-\end{align*}
 
-By the soundness of the $\ZKP$, if $\pi^*$ verifies that $\cmm'^*$ and $ \cmc'^*$ commit to the same $\id^*$, with $\phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1$. Since $\advb$ controls credential issuance and the commitment scheme is binding, $\cmm'^*$ and $\cmc'^*$ must be rerandomizations of commitments from $\CREDM, \CREDC$. The forgery must be one of:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section{Unforgeability}
+
+\subsection{Step 1. Unforgeability: Single Issuer, Single Credential}
+
+Traditional unforgeability definitions for signature schemes are insufficient for anonymous credentials due to their rerandomizable nature. We address two critical attack vectors:
 \begin{enumerate}
-    
-    \item \textbf{Case 1 (EQ Proof Forgery):} If $\advb$ can extract or deduce that $\cmm'^*$ commits to $\id_m$ and $\cmc'^*$ commits to $\id_c$ where $\id_m \neq \id_c$, but $\pi^*$ passes verification, then $\pi^*$ is a false proof for the statement "the id values are equal."
-    
-    \item \textbf{Case 2 (Signature Forgery):} If $\cmm'^*$ or $\cmc'^*$ was not signed by $\advb$, we could have constructed a different reduction breaking $\EUFCMA$.
-    
-    \item \textbf{Case 3 (Binding Forgery):} If $\cmm'^*$ matches a prior commitment but opens to a different identity, we could have constructed a reduction breaking the binding property.
+\item Creating new valid credentials not issued by legitimate authorities
+\item Using legitimately obtained credentials to satisfy predicates their attributes do not support
 \end{enumerate}
 
-In Case 1, $\advb$ outputs the statement "commitments $\cmm'^*$ and $\cmc'^*$ contain the same identity" along with proof $\pi^*$ to the soundness challenger, breaking soundness with probability related to $\epsilon$.
-\end{proof}
+\begin{definition}[Single-Issuer Single-Credential Unforgeability]
+A single-issuer single-credential system is unforgeable if for all $\PPT$ adversaries $\adv$:
+\[
+\Pr[\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda) = 1] \leq \negl(\lambda)
+\]
+\end{definition}
+
+\noindent The experiment $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$ proceeds as follows:
+
+\begin{enumerate}
+    \item \textbf{Setup:} Initialize $\ppar \gets \Setup(\secparam)$, $\ck \gets \CMSetup(\secparam)$, issuer key pair $(\osk, \opk) \gets \OrgKeyGen(\ppar)$, and empty sets $\HU, \CU, \CRED$.
+    
+    \item \textbf{Oracle Access:} $\adv^{\OHU, \OCU, \OOBTISS, \OSHOW}(\opk, \ck)$ interacts with the system.
+    
+    \item \textbf{Forgery:} $\adv$ outputs $(\cred'^*, \cm'^*, \pi^*, \phi^*)$.
+    
+    \item \textbf{Success:} The experiment returns 1 if:
+    \begin{itemize}
+        \item $\MIMCVerify(\cred'^*, \cm'^*, \pi^*, \phi^*) = 1$, and
+        \item $\forall \id \in \CU$, $\nexists (\vec{m}, \id, \cm, \sigma) \in \CRED$ such that $\phi^*(\vec{m}) = 1$
+    \end{itemize}
+\end{enumerate}
+
+\paragraph{Attack Scenarios}
+\begin{itemize}
+    \item \textbf{Type-1 Forgery (Credential Forgery):} An adversary produces a credential $\cred = (\sigma, \cm)$ that verifies without being legitimately issued, breaking the signature scheme's $\EUFCMA$ security.
+    
+    \item \textbf{Type-2 Forgery (Predicate Misuse):} A corrupt user with a valid credential for $\text{age} = 17$ attempts to satisfy $\phi=(\text{age} \geq 18)$ by creating a false proof, breaking $\ZKP$ soundness.
+\end{itemize}
+
+\noindent \textbf{Oracles:} The adversary interacts with the following oracles:
+
+\begin{itemize}
+    \item $\OHU(\id)$: Creates an honest user with identity $\id$ by adding $\id$ to $\HU$ and generating $\usk[\id] \sample \UserKeyGen(\secparam)$.
+    
+    \item $\OCU(\id)$: Corrupts user $\id$ by adding $\id$ to $\CU$. If $\id \in \HU$, removes $\id$ from $\HU$ and returns $\usk[\id]$ and all credentials in $\CRED$ for user $\id$.
+    
+    \item $\OOBTISS(\id, \vec{m})$: If $\id \in \HU$, computes $\cm \gets \CMCom([\vec{m}]; \usk[\id])$, $\sigma \gets \Issue(\osk, \cm)$, adds $(\vec{m}, \id, \cm, \sigma)$ to $\CRED$, and returns $\cred = (\sigma, \cm)$.
+    
+    \item $\OSHOW(\id, \phi)$: If $\id \in \HU$, finds a credential $(\vec{m}, \id, \cm, \sigma) \in \CRED$ where $\phi(\vec{m}) = 1$, and returns $(\cred', \cm', \pi) \gets \Show(\sigma, \cm, \usk[\id], \phi)$.
+\end{itemize}
+
+\noindent \textbf{Key Concepts:}
+\begin{itemize}
+    \item $\HU$: Set of honest users whose secret keys are unknown to $\adv$
+    \item $\CU$: Set of corrupt users whose secret keys are known to $\adv$
+    \item $\CRED$: Set of tuples $(\vec{m}, \id, \cm, \sigma)$ of issued credentials
+    \item $\phi$: Predicate function $\phi: \mathcal{M} \rightarrow \{0,1\}$ defining policy conditions
+    \item $\MIMCVerify$: Verifies both signature validity and predicate satisfaction
+\end{itemize}
 
 
 
@@ -2206,8 +2242,11 @@ In Case 1, $\advb$ outputs the statement "commitments $\cmm'^*$ and $\cmc'^*$ co
 
 
 
-\subsubsection{Single-Issuer Multi-Credential Unforgeability}
-We define the unforgeability experiment for a single issuer that provides multiple credential types (master and context) that must be used together in presentations.
+
+\newpage
+\subsection{Step 2. Unforgeability: Single Issuer, Multi-Credential Unforgeability}
+
+We now extend our unforgeability definition to address the case where a single issuer provides multiple credential types that must be used together in credential presentations.
 
 \begin{definition}
 A single-issuer multi-credential system is unforgeable if for all $\PPT$ adversaries $\adv$:
@@ -2232,8 +2271,19 @@ A single-issuer multi-credential system is unforgeable if for all $\PPT$ adversa
     \end{itemize}
 \end{enumerate}
 
-\noindent \textbf{Oracle Functionality:}
+\paragraph{Attack Scenarios}
+The multi-credential setting introduces new attack vectors:
+\begin{itemize}
+    \item \textbf{Credential Binding Attacks:} Breaking the binding between credentials that should share the same identity
+    \item \textbf{Mix-and-Match Attacks:} Combining credentials from different identities to create unauthorized credential combinations
+    \item \textbf{Cross-Credential Attribute Manipulation:} Falsely claiming relationships between attributes across different credentials
+\end{itemize}
 
+\paragraph{Example 3 (Credential Binding Attack)} A corrupt user possesses legitimate credentials $\credm_A$ with $\id=123$ and $\credc_B$ with $\id=456$. They attempt to present these together with a forged zero-knowledge proof $\pi^*$ falsely claiming that both credentials share the same identity.
+
+\paragraph{Example 4 (Mixed Predicate Misuse)} A corrupt user with a master credential claiming $\text{age}=25$ and a context credential claiming $\text{drivingClass}=\text{"motorcycle"}$ attempts to satisfy the predicate $\phi=(\text{age} \geq 21 \land \text{drivingClass} = \text{"car"})$ by forging an incorrect zero-knowledge proof.
+
+\noindent \textbf{Oracle Functionality:}
 \begin{itemize}
     \item $\OHU(i)$: Creates honest user $i$ with secret key $\usk[i]$ and identifier $\id_i$.
     
@@ -2253,32 +2303,9 @@ A single-issuer multi-credential system is unforgeable if for all $\PPT$ adversa
 
 
 
+\subsection{Step 3. Multi-Issuer Multi-Credential Unforgeability}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Multi-Issuer Multi-Credential Unforgeability}
+A multi-issuer multi-credential system introduces new attack vectors beyond those in single-issuer scenarios. In this setting, users obtain credentials from multiple issuers and must prove these credentials share the same identity during verification.
 
 \begin{definition}[Unforgeability]
 A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
@@ -2286,6 +2313,14 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
 \Pr[\mathsf{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}, \mathcal{A}}(\lambda) = 1] \leq \negl(\lambda)
 \]
 \end{definition}
+
+\paragraph{Attack Vectors}
+\begin{itemize}
+        
+    \item \textbf{Issuer Collusion:} Corrupt issuers collaborate with malicious users to create credentials that circumvent the identity binding mechanisms.
+\end{itemize}
+
+\paragraph{Example (Identity Binding Attack)} A corrupt user possesses a master credential from issuer $j_1$ with $\id=123$ and another master credential from issuer $j_2$ with $\id=456$. The adversary attempts to prove these credentials share the same identity, a false claim that would break the equality proof soundness.
 
 \noindent The experiment $\mathsf{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}, \mathcal{A}}(\lambda)$ proceeds as follows:
 
@@ -2337,11 +2372,107 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
     \item $\mathcal{O}_{\mathsf{Show}}(i, \phi, \{j_k\}_{k \in K})$: Finds credentials of user $i$ from issuers $\{j_k\}$ that satisfy $\phi$, rerandomizes them to $\{\mathsf{cred}_k', \mathsf{cm}_k'\}$, and returns these with a proof $\pi$ that they share the same identity and satisfy $\phi$.
 \end{itemize}
 
+\noindent Intuitively, the adversary's goal is to produce a forged cross-credential presentation that passes verification but cannot be traced to any single corrupt user's legitimate credentials. This captures the fundamental threat model of unauthorized credential creation or combination.
+
+
+
+\section{Reduction}
+
+\subsection{Step 1.}
+
+
+\begin{theorem}[Single Issuer Unforgeability]
+If the rerandomizable signature scheme is $\EUFCMA$-secure, the commitment scheme is binding, and the zero-knowledge proof system is sound, then the single-issuer anonymous credential system satisfies unforgeability according to $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$.
+\end{theorem}
+
+\begin{proof}
+We reduce security of the credential system to the $\EUFCMA$ security of the underlying signature scheme. Given an adversary $\adv$ that breaks credential unforgeability with non-negligible probability $\epsilon$, we build an adversary $\advb$ that breaks $\EUFCMA$ with related probability. 
+
+\noindent \textbf{Reduction Setup:} $\advb$ receives verification key $\vk$ and signing oracle access $\OSIGN(\cdot)$ from the $\EUFCMA$ challenger. It sets $\opk = \vk$ and simulates the credential system experiment.
+
+\noindent  \textbf{Oracle Simulation:}
+\begin{itemize}
+    \item $\OHU$ and $\OCU$: Implemented per experiment definition, maintaining sets $\HU$ and $\CU$.
+    
+    \item $\OOBTISS(\id, m)$: For user $\id$ and message $\vec{m}$, $\advb$ computes $\cm = \CMCom(m; \usk_i)$, obtains $\sigma \gets \OSIGN(\cm)$, records $(\vec{m}, \id, \cm, \sigma)$ in $\CRED$, and returns $(\sigma, \cm)$.
+    
+    \item $\OSHOW(\id, \phi)$: For honest user $\id$ and predicate $\phi$, $\advb$ finds credentials in $\CRED$ whose attributes satisfy $\phi$, generates a valid showing, and returns it.
+\end{itemize}
+
+
+\noindent \textbf{Forgery:} When $\adv$ outputs forgery $(\cred'^*, \cm'^*, \pi^*, \phi^*)$ satisfying:
+\begin{align*}
+\MIMCVerify(\cred'^*, \cm'^*, \pi^*, \phi^*) = 1 \quad \wedge \quad \forall \; \id \in \CU \;  \nexists (\vec{m}, \id, \cm, \sigma) \in \CRED \text{ such that } \phi^*(\vec{m}) = 1
+\end{align*}
+
+\noindent By ZKP soundness, $\pi^*$ proves that:
+\[
+\exists m^*, r^* \text{ such that } \cm'^* = \CMCom(m^*; r^*) \quad \wedge \quad \RSVer(\cred'^*, \cm'^*, \vk) = 1 \quad \wedge \quad \phi^*(m^*) = 1
+\]
+
+\noindent We claim $(\cm'^*, \cred'^*)$ is a valid $\EUFCMA$ forgery:
+\begin{enumerate}
+    \item \textbf{Case 1:} If $\cm'^*$ is not a rerandomization of any commitment in $\CRED$, then $\cm'^*$ was never queried to $\OSIGN$, making it a valid $\EUFCMA$ forgery.
+    \item \textbf{Case 2:} If $\cm'^*$ is a rerandomization of some $\cm_j \in \CRED$, then by commitment binding property, $m^* = m_j$. Two subcases arise:
+        \begin{itemize}
+            \item If user $j \in \HU$, then $\adv$ cannot know $\usk_j$ to generate a valid rerandomization.
+            \item If user $j \in \CU$, then by our winning condition, $\phi^*(m_j) = 0$, contradicting the proof assertion that $\phi^*(m^*) = 1$ given $m^* = m_j$.
+        \end{itemize}
+\end{enumerate}
+Therefore, $\advb$ outputs $(\cm'^*, \cred'^*)$ as its $\EUFCMA$ forgery with success probability at least $\epsilon$.
+\end{proof}
 
 
 
 
 
+
+\subsection{Step 2.}
+
+\begin{theorem}[Single-Issuer Multi-Credential Unforgeability]
+If the rerandomizable signature scheme RS is EUF-CMA secure, the commitment scheme RVC is binding, and the zero-knowledge proof system is sound, then the single-issuer multi-credential anonymous credential system satisfies unforgeability according to $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}, \adv}(\lambda)$.
+\end{theorem}
+
+\begin{proof}
+We construct a reduction from the unforgeability of our multi-credential system to the soundness of the equality zero-knowledge proof system. Recall that a $\ZKP$ system is sound if, for any $\PPT$ adversary, there's a negligible probability of producing a proof $\pi$ for a false statement, e.g., claiming commitments $\cmm'^*, \cmc'^*$ contain the same $\id$ when they do not.  Given an adversary $\adv$ that breaks credential unforgeability with non-negligible probability $\epsilon$, we build an adversary $\advb$ that breaks the ZKP soundness with related probability.
+
+
+\noindent \textbf{Reduction Setup:} $\advb$ receives a verification key $\ck$ from the soundness challenger and expects to output a false statement with a verifying proof. $\advb$ generates the signature key pair $(\osk, \opk)$ honestly, since we're targeting the ZKP soundness rather than signature unforgeability, and simulates the credential system experiment for $\adv$.
+
+\noindent \textbf{Oracle Simulation:}
+\begin{itemize}
+    \item $\OHU$ and $\OCU$: Implemented per experiment definition, maintaining sets $\HU$ and $\CU$.
+    
+    \item $\OOBTMASTER(i, \attrsm)$: For user $i$ and attributes $\attrsm$, $\advb$ computes commitment $\cmm = \CMCom([\id_i, \attrsm]; \usk[i])$, signs it using $\osk$, and records $(\id_i, \attrsm, i, \cmm, \sigmam)$ in $\CRED_M$.
+    
+    \item $\OOBTCONTEXT(i, \attrsc, \credm)$: Verifies $\credm$ is valid in $\CRED_M$, computes $\cmc = \CMCom([\id_i, \attrsc]; \usk[i])$, generates a zero-knowledge proof $\pi_{\mathsf{eq}}$ proving $\cmm$ and $\cmc$ commit to the same $\id_i$, signs $\cmc$, and records $(\id_i, \attrsc, i, \cmc, \sigmac)$ in $\CRED_C$.
+    
+    \item $\OSHOW(i, \phi)$: Finds master and context credentials in $\CRED_M$ and $\CRED_C$ for user $i$ satisfying predicate $\phi$, rerandomizes them, and generates a valid showing.
+\end{itemize}
+
+\noindent \textbf{Forgery Analysis:} When $\adv$ outputs a forgery $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$ satisfying:
+\begin{align*}
+\MIMCVerify(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) = 1 \quad \wedge \\
+\nexists\, i \in \CU \text{ such that: } (\id_i, \attrsm, i, \cdot, \cdot) \in \CRED_M \quad \wedge \\
+(\id_i, \attrsc, i, \cdot, \cdot) \in \CRED_C \quad \wedge \quad
+\phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1
+\end{align*}
+
+By the soundness of the $\ZKP$, if $\pi^*$ verifies that $\cmm'^*$ and $ \cmc'^*$ commit to the same $\id^*$, with $\phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1$. Since $\advb$ controls credential issuance and the commitment scheme is binding, $\cmm'^*$ and $\cmc'^*$ must be rerandomizations of commitments from $\CREDM, \CREDC$. The forgery must be one of:
+\begin{enumerate}
+    
+    \item \textbf{Case 1 (EQ Proof Forgery):} If $\advb$ can extract or deduce that $\cmm'^*$ commits to $\id_m$ and $\cmc'^*$ commits to $\id_c$ where $\id_m \neq \id_c$, but $\pi^*$ passes verification, then $\pi^*$ is a false proof for the statement "the id values are equal."
+    
+    \item \textbf{Case 2 (Signature Forgery):} If $\cmm'^*$ or $\cmc'^*$ was not signed by $\advb$, we could have constructed a different reduction breaking $\EUFCMA$.
+    
+    \item \textbf{Case 3 (Binding Forgery):} If $\cmm'^*$ matches a prior commitment but opens to a different identity, we could have constructed a reduction breaking the binding property.
+\end{enumerate}
+
+In Case 1, $\advb$ outputs the statement "commitments $\cmm'^*$ and $\cmc'^*$ contain the same identity" along with proof $\pi^*$ to the soundness challenger, breaking soundness with probability related to $\epsilon$.
+\end{proof}
+
+
+\subsection{Step 3.}
 
 
 
@@ -2395,26 +2526,6 @@ We construct a reduction from the unforgeability of our multi-issuer system to t
 \vspace{1em}
 Since any successful forgery must fall into one of these categories, at least one of our reductions succeeds with probability related to $\epsilon$, contradicting our security assumptions.
 \end{proof}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
