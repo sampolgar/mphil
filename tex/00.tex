@@ -2083,7 +2083,7 @@ This definition captures our security goal: preventing adversaries from creating
 
 
 \clearpage
-\subsection{Unforgeability: Single-Issuer, Multi-Credential}
+\subsubsection{Definition}
 
 We now extend our unforgeability definition to address the case where a single issuer provides multiple credential types that must be used together in credential presentations.
 
@@ -2132,223 +2132,76 @@ We now extend our unforgeability definition to address the case where a single i
     \procedure[]{$\OOBTCONTEXT(i, \attrsc, \credm)$}{%
         \pcif i \notin \HU, \pcreturn \bot \\
         \pccomment{Verify $\credm$} \\
-        \pcif \nexists(\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M \\
-        \t \textsf{with } \credm = (\sigmam, \cmm), \pcreturn \bot \\
-        \t \pccomment{Create $\credc$ bound to $\id$} \\
+        \pcif \credm \notin \{(\sigmam, \cmm) \mid (\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M\}, \\
+        \t \pcreturn \bot \\
+        \t \text{Extract } \id_i \text{ from } \credm \\
         \t \cmc \gets \CMCom([\id_i, \attrsc]; \usk[i]) \\
-        \t \pccomment{Simulate $\pireq(\cmm, \cmc)$} \\
-        \t \pireq \gets \ZKProve(\cmm, \cmc, \id_i, \phi_\mathsf{eq})\\
-        \t \sigmac \gets \Issue(\osk, \cmc, \cmm, \pi_{eq}) \\
-        \t \credc \gets (\sigmac, \cmc) \\
-        \t \CRED_C \gets \CRED_C \cup (id_i, \attrsc, i, \cmc, \sigmac)  \\
-        \pcreturn \credc \\
+        \t \pi_{eq} \gets \ZKProve(\cmm, \cmc, \id_i, \phi_\mathsf{eq}) \; \pccomment{Prove same $id_i$} \\
+        \t \sigmac \gets \Issue(\osk, \cmc) \; \pccomment{Assume issuer checks } \pi_{eq} \\
+        \t \CREDC \gets \CREDC \cup \{(\id_i, \attrsc, i, \cmc, \sigmac)\} \\
+        \pcreturn (\sigmac, \cmc) \\
     }
-    
-    
     \procedure[]{$\OSHOW(i, \phi)$}{%
         \pcif i \notin \HU, \pcreturn \bot \\
-        \t \text{Find } (id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M \text{ and } \\
-        \t (id_i, \attrsc, i, \cmc, \sigmac) \in \CRED_C \text{ such that } \\
-        \t \phi((id_i, \attrsm), (id_i, \attrsc)) = 1 \\
-        \t \pcif \text{no such credential pair exists}, \pcreturn \bot \\
-        \t \t (\credm', \credc', \cmm', \cmc', \pi) \gets \\
-        \Show(\sigmam, \cmm, \sigmac, \cmc, \usk[i], \phi) \\
+        \t \text{Find pair } (\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M, \\
+        \t (\id_i, \attrsc, i, \cmc, \sigmac) \in \CRED_C \text{ s.t. } \\
+        \t \phi((\id_i, \attrsm), (\id_i, \attrsc)) = 1 \\
+        \t \pcif \text{no pair exists}, \pcreturn \bot \\
+        \t \gets \Show(\sigmam, \cmm, \sigmac, \cmc, \usk[i], \phi) \\
+        (\credm', \credc', \cmm', \cmc', \pi) \\
         \pcreturn (\credm', \credc', \cmm', \cmc', \pi) \\
     }
 \end{pcvstack}
 \end{pchstack}
 
 
-% \newpage
-% \begin{pchstack}[boxed, center, space=1em]
-%     \procedure[]{$\mathsf{Experiment}$ $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}, \adv}(\lambda)$}{%
-%         \pccomment{Challenger Setup} \\
-%         \ppar \gets \Setup(\secparam) \\
-%         \ck \gets \CMSetup(\secparam) \\
-%         (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-%         \HU \gets \emptyset, \; \CU \gets \emptyset, \; \CRED_M \gets \emptyset, \; \CRED_C \gets \emptyset \\
-%         \pccomment{CRED_M, CRED_C store tuples (id_i, attrs, i, cm, σ)} \\
-%         \\
-%         \pccomment{Adversary Interaction} \\
-%         \AdvA^{\OHU, \OCU, \OOBTMASTER, \OOBTCONTEXT, \OSHOW}(\opk, \ck) \\
-%         \AdvA \text{ outputs } (\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) \\
-%         \\
-%         \pccomment{Winning Condition} \\
-%         \MIMCVerify(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) = 1 \; \wedge \\
-%         \t \nexists\, i \in \CU \text{ such that there exist:} \\
-%         \t\t (\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M \; \wedge \\
-%         \t\t (\id_i, \attrsc, i, \cmc, \sigmac) \in \CRED_C \; \wedge \\
-%         \t\t \phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1 \\
-%     }
-%     \begin{pcvstack}
-%         \procedure[]{$\OHU(i)$}{%
-%             \pcif i \in \HU, \pcreturn \bot \\
-%             \t \HU \gets \HU \cup \{i\} \\
-%             \t \usk[i] \gets \UserKeyGen(\ppar) \\
-%             \t \id_i \gets \text{random unique identifier} \; \pccomment{e.g., sample or hash i} \\
-%         }
-%         \procedure[]{$\OCU(i)$}{%
-%             \pcif i \notin \HU, \t \CU \gets \CU \cup \{i\} \\
-%             \pcelse, \t \HU \gets \HU \setminus \{i\}, \; \CU \gets \CU \cup \{i\} \\
-%             \t \pcreturn (\usk[i], \{(id_i, attrs, i, cm, σ) \in \CRED_M \cup \CRED_C\}) \\
-%         }
-%         \procedure[]{$\OOBTMASTER(i, \attrsm)$}{%
-%             \pcif i \notin \HU, \pcreturn \bot \\
-%             \t \cmm \gets \CMCom([\id_i, \attrsm]; \usk[i]) \\
-%             \t \sigmam \gets \Issue(\osk, \cmm) \\
-%             \t \CRED_M \gets \CRED_M \cup \{(\id_i, \attrsm, i, \cmm, \sigmam)\} \\
-%             \pcreturn (\sigmam, \cmm) \\
-%         }
-%         \procedure[]{$\OOBTCONTEXT(i, \attrsc, \credm)$}{%
-%             \pcif i \notin \HU, \pcreturn \bot \\
-%             \pcif \credm \notin \{(\sigmam, \cmm) \mid (\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M\}, \pcreturn \bot \\
-%             \t \text{Extract } \id_i \text{ from } \credm \\
-%             \t \cmc \gets \CMCom([\id_i, \attrsc]; \usk[i]) \\
-%             \t \pi_{eq} \gets \ZKProve(\cmm, \cmc, \id_i, \phi_\mathsf{eq}) \; \pccomment{Prove same id_i} \\
-%             \t \sigmac \gets \Issue(\osk, \cmc) \; \pccomment{Assume issuer checks } \pi_{eq} \\
-%             \t \CRED_C \gets \CRED_C \cup \{(\id_i, \attrsc, i, \cmc, \sigmac)\} \\
-%             \pcreturn (\sigmac, \cmc) \\
-%         }
-%         \procedure[]{$\OSHOW(i, \phi)$}{%
-%             \pcif i \notin \HU, \pcreturn \bot \\
-%             \t \text{Find pair } (\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_M, \\
-%             \t (\id_i, \attrsc, i, \cmc, \sigmac) \in \CRED_C \text{ s.t. } \phi((\id_i, \attrsm), (\id_i, \attrsc)) = 1 \\
-%             \t \pcif \text{no pair exists}, \pcreturn \bot \\
-%             \t (\credm', \credc', \cmm', \cmc', \pi) \gets \Show(\sigmam, \cmm, \sigmac, \cmc, \usk[i], \phi) \\
-%             \pcreturn (\credm', \credc', \cmm', \cmc', \pi) \\
-%         }
-%     \end{pcvstack}
-% \end{pchstack}
-
-
-
-
-
-
-
-
-
-
-
 \newpage
-\subsection{Completing the Single-Issuer, Multi-Credential Unforgeability Reduction}
+\subsubsection{Reduction}
 
-\subsubsection{1. Formalized Oracle Specifications}
-
-First, let's precisely define your oracles with explicit tracking of credential relationships:
-
-\begin{pcvstack}[boxed, center, space=1em]
-    \procedure[]{$\mathsf{Setup}$ and $\mathsf{KeyGeneration}$}{%
-        \ppar \gets \Setup(\secparam) \\
-        \ck \gets \CMSetup(\secparam) \\
-        (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-        \HU \gets \emptyset, \; \CU \gets \emptyset \\
-        \CRED_M, \CRED_C \gets \emptyset, \emptyset \\
-        \OWNR \gets \emptyset \pccomment{Maps credential indices to user identities} \\
-    }
-    
-    \procedure[]{$\OHU(i)$}{%
-        \pcif i \in \HU \cup \CU, \pcreturn \bot \\
-        \usk[i] \sample \UserKeyGen(\secparam) \\
-        \HU \gets \HU \cup \{i\} \\
-        \pcreturn \opk \\
-    }
-    
-    \procedure[]{$\OCU(i)$}{%
-        \pcif i \notin \HU, \pcreturn \bot \\
-        \HU \gets \HU \setminus \{i\} \\
-        \CU \gets \CU \cup \{i\} \\
-        \pcreturn \usk[i] \text{ and all } \text{CRED}_j \text{ where } \OWNR[j] = i \\
-    }
-    
-    \procedure[]{$\OOBTMASTER(i, \attrsm)$}{%
-        \pcif i \notin \HU, \pcreturn \bot \\
-        \id_i \sample \{0,1\}^\lambda \pccomment{Generate unique identifier} \\
-        \cmm \gets \CMCom([\id_i, \attrsm]; \usk[i]) \\
-        \sigmam \gets \Issue(\osk, \cmm) \\
-        \credm \gets (\sigmam, \cmm) \\
-        j \gets |\CRED_M| + 1 \pccomment{New credential index} \\
-        \CRED_M \gets \CRED_M \cup \{j\} \\
-        \OWNR[j] \gets i \\
-        \ATTR_M[j] \gets (\id_i, \attrsm) \\
-        \pcreturn \credm \\
-    }
-    
-    \procedure[]{$\OOBTCONTEXT(i, \attrsc, j_m)$}{%
-        \pcif i \notin \HU, \pcreturn \bot \\
-        \pcif j_m \notin \CRED_M \lor \OWNR[j_m] \neq i, \pcreturn \bot \pccomment{Verify master credential ownership} \\
-        (\id_i, \attrsm) \gets \ATTR_M[j_m] \pccomment{Extract identity from master credential} \\
-        \cmc \gets \CMCom([\id_i, \attrsc]; \usk[i]) \\
-        \pccomment{Formalized binding proof verification} \\
-        \pi_{eq} \gets \ProveEq(\cmm_{j_m}, \cmc, \id_i, \usk[i]) \\
-        \pcif \VerifyEq(\pi_{eq}, \cmm_{j_m}, \cmc) = 0, \pcreturn \bot \\
-        \sigmac \gets \Issue(\osk, \cmc) \\
-        \credc \gets (\sigmac, \cmc) \\
-        j_c \gets |\CRED_C| + 1 \\
-        \CRED_C \gets \CRED_C \cup \{j_c\} \\
-        \OWNR[j_c] \gets i \\
-        \ATTR_C[j_c] \gets (\id_i, \attrsc) \\
-        \LINK[j_c] \gets j_m \pccomment{Track which master credential authorized this context credential} \\
-        \pcreturn \credc \\
-    }
-\end{pcvstack}
-
-\subsubsection{2. Verification Algorithm Formalization}
-
-\begin{pchstack}[boxed, center, space=1em]
-    \procedure[]{$\MIMCVerify(\credm', \credc', \cmm', \cmc', \pi, \phi)$}{%
-        \pccomment{Signature verification on both credentials} \\
-        \pcif \RSVer(\credm', \cmm', \opk) = 0, \pcreturn 0 \\
-        \pcif \RSVer(\credc', \cmc', \opk) = 0, \pcreturn 0 \\
-        \pccomment{Verify ZK proof demonstrating:} \\
-        \pccomment{1. Both commitments are well-formed} \\
-        \pccomment{2. Both commitments share the same identity} \\
-        \pccomment{3. Committed attributes satisfy predicate} \\
-        \pcif \ZKVer(\pi, \cmm', \cmc', \phi) = 0, \pcreturn 0 \\
-        \pcreturn 1 \\
-    }
-    
-    \procedure[]{$\ZKVer(\pi, \cmm', \cmc', \phi)$}{%
-        \pccomment{Verify that $\pi$ proves the following statement:} \\
-        \exists \id, \attrsm, \attrsc, r_m, r_c \text{ such that:} \\
-        \cmm' = \CMCom([\id, \attrsm]; r_m) \land \\
-        \cmc' = \CMCom([\id, \attrsc]; r_c) \land \\
-        \phi((\id, \attrsm), (\id, \attrsc)) = 1 \\
-    }
-\end{pchstack}
-
-\subsubsection{3. Complete Reduction Framework}
+\begin{theorem}[Single-Issuer Multi-Credential Unforgeability]
+If the rerandomizable signature scheme RS is EUF-CMA secure, the commitment scheme RVC is binding, and the zero-knowledge proof system is sound, then the single-issuer multi-credential anonymous credential system satisfies unforgeability according to $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}, \adv}(\lambda)$.
+\end{theorem}
 
 \begin{proof}
-We construct a reduction from the unforgeability of our multi-credential system to the $\EUFCMA$ security of the underlying signature scheme. Given an adversary $\adv$ breaking our definition with probability $\epsilon$, we build an adversary $\advb$ breaking $\EUFCMA$.
+We construct a reduction from the unforgeability of our multi-credential system to the soundness of the equality zero-knowledge proof system. Recall that a $\ZKP$ system is sound if, for any $\PPT$ adversary, there's a negligible probability of producing a proof $\pi$ for a false statement, e.g., claiming commitments $\cmm'^*, \cmc'^*$ contain the same $\id$ when they do not.  Given an adversary $\adv$ that breaks credential unforgeability with non-negligible probability $\epsilon$, we build an adversary $\advb$ that breaks the ZKP soundness with related probability.
 
-\textbf{Setup:} $\advb$ receives $\vk$ and oracle access to $\OSIGN(\cdot)$ from the $\EUFCMA$ challenger. It sets $\opk = \vk$ and simulates our experiment.
 
-\textbf{Oracle Simulation:}
-$\advb$ implements $\OHU$, $\OCU$ as described. For $\OOBTMASTER$ and $\OOBTCONTEXT$, $\advb$ uses $\OSIGN(\cdot)$ to obtain signatures, carefully tracking all credential data in $\CREDM$, $\CREDC$, $\OWNR$, $\ATTRM$, $\ATTRC$, and $\LINK$.
+\noindent \textbf{Reduction Setup:} $\advb$ receives a verification key $\ck$ from the soundness challenger and expects to output a false statement with a verifying proof. $\advb$ generates the signature key pair $(\osk, \opk)$ honestly, since we're targeting the ZKP soundness rather than signature unforgeability, and simulates the credential system experiment for $\adv$.
 
-\textbf{Forgery Extraction:} When $\adv$ outputs $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$ satisfying our winning condition, $\advb$ proceeds with case analysis:
-
-\textbf{Case 1:} If either $\cmm'^*$ or $\cmc'^*$ is not a rerandomization of any commitment in our records, $\advb$ returns the corresponding signature as an $\EUFCMA$ forgery.
-
-\textbf{Case 2:} If both credentials are rerandomizations of existing commitments but from different users:
+\noindent \textbf{Oracle Simulation:}
 \begin{itemize}
-    \item By the binding property of commitments and soundness of the ZK system, the proof $\pi^*$ must demonstrate that both commitments share the same identity $\id^*$.
-    \item However, the original commitments contained different identities, creating a contradiction.
-    \item Therefore, the adversary must have broken either commitment binding or ZK soundness to produce $\pi^*$.
+    \item $\OHU$ and $\OCU$: Implemented per experiment definition, maintaining sets $\HU$ and $\CU$.
+    
+    \item $\OOBTMASTER(i, \attrsm)$: For user $i$ and attributes $\attrsm$, $\advb$ computes commitment $\cmm = \CMCom([\id_i, \attrsm]; \usk[i])$, signs it using $\osk$, and records $(\id_i, \attrsm, i, \cmm, \sigmam)$ in $\CRED_M$.
+    
+    \item $\OOBTCONTEXT(i, \attrsc, \credm)$: Verifies $\credm$ is valid in $\CRED_M$, computes $\cmc = \CMCom([\id_i, \attrsc]; \usk[i])$, generates a zero-knowledge proof $\pi_{\mathsf{eq}}$ proving $\cmm$ and $\cmc$ commit to the same $\id_i$, signs $\cmc$, and records $(\id_i, \attrsc, i, \cmc, \sigmac)$ in $\CRED_C$.
+    
+    \item $\OSHOW(i, \phi)$: Finds master and context credentials in $\CRED_M$ and $\CRED_C$ for user $i$ satisfying predicate $\phi$, rerandomizes them, and generates a valid showing.
 \end{itemize}
 
-\textbf{Case 3:} If both credentials are rerandomizations from the same corrupt user but don't satisfy $\phi^*$:
-\begin{itemize}
-    \item The ZK proof incorrectly claims that attributes satisfy $\phi^*$, contradicting soundness.
-\end{itemize}
+\noindent \textbf{Forgery Analysis:} When $\adv$ outputs a forgery $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$ satisfying:
+\begin{align*}
+\MIMCVerify(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) = 1 \quad \wedge \\
+\nexists\, i \in \CU \text{ such that: } (\id_i, \attrsm, i, \cdot, \cdot) \in \CRED_M \quad \wedge \\
+(\id_i, \attrsc, i, \cdot, \cdot) \in \CRED_C \quad \wedge \quad
+\phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1
+\end{align*}
 
-In all cases, we either extract a direct $\EUFCMA$ forgery or establish a contradiction with a fundamental security property, completing our reduction.
+By the soundness of the $\ZKP$, if $\pi^*$ verifies that $\cmm'^*$ and $ \cmc'^*$ commit to the same $\id^*$, with $\phi^*((\id_i, \attrsm), (\id_i, \attrsc)) = 1$. Since $\advb$ controls credential issuance and the commitment scheme is binding, $\cmm'^*$ and $\cmc'^*$ must be rerandomizations of commitments from $\CREDM, \CREDC$. The forgery must be one of:
+\begin{enumerate}
+    
+    \item \textbf{Case 1 (EQ Proof Forgery):} If $\advb$ can extract or deduce that $\cmm'^*$ commits to $\id_m$ and $\cmc'^*$ commits to $\id_c$ where $\id_m \neq \id_c$, but $\pi^*$ passes verification, then $\pi^*$ is a false proof for the statement "the id values are equal."
+    
+    \item \textbf{Case 2 (Signature Forgery):} If $\cmm'^*$ or $\cmc'^*$ was not signed by $\advb$, we could have constructed a different reduction breaking $\EUFCMA$.
+    
+    \item \textbf{Case 3 (Binding Forgery):} If $\cmm'^*$ matches a prior commitment but opens to a different identity, we could have constructed a reduction breaking the binding property.
+\end{enumerate}
+
+In Case 1, $\advb$ outputs the statement "commitments $\cmm'^*$ and $\cmc'^*$ contain the same identity" along with proof $\pi^*$ to the soundness challenger, breaking soundness with probability related to $\epsilon$.
 \end{proof}
 
 
 
-\subsection{Progression to Multi-Issuer, Multi-Credential Unforgeability}
 
 
 
@@ -2357,8 +2210,149 @@ In all cases, we either extract a direct $\EUFCMA$ forgery or establish a contra
 
 
 
+\begin{pchstack}[boxed, center, space=1em]
+    \procedure[]{$\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{MultiIssuer\text{-}MultiCred}, \adv}(\lambda)$}{%
+        \pccomment{Challenger Setup} \\
+        \ppar \gets \Setup(\secparam) \\
+        \ck \gets \CMSetup(\secparam) \\
+        \text{For each issuer } j \in [n]: (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
+        \text{Initialize } \HU \gets \emptyset, \; \CU \gets \emptyset \\
+        \text{For each issuer } j \in [n]: \CRED_j \gets \emptyset, \; \OWNR_j \gets \{\} \\
+        \\
+        \pccomment{Adversary Interaction} \\
+        \AdvA^{\OHU, \OCU, \OOBTMASTER, \OOBTCONTEXT, \OSHOW}(\{\opk_j\}_{j \in [n]}, \ck) \\
+        \\
+        \pccomment{Adversary outputs forgery} \\
+        \AdvA \text{ outputs } (\{\cred_k'^*\}_{k \in K}, \{\cm_k'^*\}_{k \in K}, \pi^*, \phi^*) \\
+        \\
+        \pccomment{Winning Condition} \\
+        \MIMCVerify(\{\cred_k'^*\}_{k \in K}, \{\cm_k'^*\}_{k \in K}, \pi^*, \phi^*) = 1 \; \wedge\\
+        \nexists\, i \in \CU \text{ such that } \forall k \in K: \\
+        \t (\id_i, \attrs_k, i, \cdot, \cdot) \in \CRED_{j_k} \; \wedge \; \phi^*(\{(\id_i, \attrs_k)\}_{k \in K}) = 1\\
+    }
+    \begin{pcvstack}
+        \procedure[]{$\OHU(i)$}{%
+            \pcif i \notin \HU \cup \CU \\ 
+            \t \HU \gets \HU \cup \{i\} \\
+            \t \usk[i] \sample \UserKeyGen(\secparam) \\
+            \t \id_i \sample \{0,1\}^\lambda \pccomment{Unique identifier} \\
+            \pcreturn i \\
+        }
+        
+        \procedure[]{$\OCU(i)$}{%
+            \pcif i \in \HU \land i \notin \CU \\
+            \t \CU \gets \CU \cup \{i\} \\
+            \t \HU \gets \HU \setminus \{i\} \\
+            \pcreturn \usk[i], \id_i, \\
+            \t \bigcup_{j \in [n]} \{(\cred, \cm, \attrs) \in \CRED_j \mid \OWNR_j[\cred] = i\} \\
+        }
+        
+        \procedure[]{$\OOBTMASTER(i, \attrsm, j)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \cmm \gets \CMCom([\id_i, \attrsm]; \usk[i]) \\
+            \t \sigmam \gets \Issue_j(\osk_j, \cmm) \\
+            \t \credm \gets (\sigmam, \cmm, \opk_j) \\
+            \t \CRED_j \gets \CRED_j \cup \{(\id_i, \attrsm, i, \cmm, \sigmam)\} \\
+            \t \OWNR_j[\credm] \gets i \\
+            \pcreturn \credm \\
+        }
+        
+        \procedure[]{$\OOBTCONTEXT(i, \attrsc, \credm, j)$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \pccomment{Verify master credential} \\
+            \t \text{Parse } \credm \text{ as } (\sigmam, \cmm, \opk_{j'}) \\
+            \t \text{Find } j' \text{ such that } (\id_i, \attrsm, i, \cmm, \sigmam) \in \CRED_{j'} \\
+            \t \pcif \text{no such credential exists}, \pcreturn \bot \\
+            \t \pccomment{Create context credential} \\
+            \t \cmc \gets \CMCom([\id_i, \attrsc]; \usk[i]) \\
+            \t \pccomment{Generate equality proof for identities} \\
+            \t \pi_{\text{eq}} \gets \ZKProve(\cmm, \cmc, \id_i, \usk[i]) \\
+            \t \sigmac \gets \Issue_j(\osk_j, \cmc, \pi_{\text{eq}}) \\
+            \t \credc \gets (\sigmac, \cmc, \opk_j) \\
+            \t \CRED_j \gets \CRED_j \cup \{(\id_i, \attrsc, i, \cmc, \sigmac)\} \\
+            \t \OWNR_j[\credc] \gets i \\
+            \pcreturn \credc \\
+        }
+        
+        \procedure[]{$\OSHOW(i, \phi, \{j_k\}_{k \in K})$}{%
+            \pcif i \notin \HU, \pcreturn \bot \\
+            \t \pccomment{Find credentials from issuers in $\{j_k\}$ that satisfy $\phi$} \\
+            \t \text{For each } k \in K, \text{ find } (\id_i, \attrs_k, i, \cm_k, \sigma_k) \in \CRED_{j_k} \\
+            \t \pcif \text{missing any required credential}, \pcreturn \bot \\
+            \t \pcif \phi(\{(\id_i, \attrs_k)\}_{k \in K}) = 0, \pcreturn \bot \\
+            \t \pccomment{Rerandomize credentials} \\
+            \t \text{For each } k \in K: \\
+            \t \t (\cred_k', \cm_k', \pi_k) \gets \Show(\sigma_k, \cm_k, \usk[i]) \\
+            \t \pccomment{Generate cross-credential proof} \\
+            \t \pi \gets \ZKProve(\{\cm_k'\}_{k \in K}, \id_i, \{\attrs_k\}_{k \in K}, \phi) \\
+            \pcreturn (\{\cred_k'\}_{k \in K}, \{\cm_k'\}_{k \in K}, \pi) \\
+        }
+    \end{pcvstack}
+\end{pchstack}
 
 
+
+
+
+
+\subsection{Multi-Issuer Multi-Credential Unforgeability}
+
+\begin{definition}[Unforgeability]
+A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\Pr[\mathsf{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}, \mathcal{A}}(\lambda) = 1] \leq \negl(\lambda)
+\]
+\end{definition}
+
+\noindent The experiment $\mathsf{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}, \mathcal{A}}(\lambda)$ proceeds as follows:
+
+\begin{enumerate}
+    \item \textbf{Setup:} Initialize parameters and empty sets:
+    \begin{itemize}
+        \item $\mathsf{pp} \gets \Setup(1^\lambda)$, $\mathsf{ck} \gets \CMSetup(1^\lambda)$
+        \item For each issuer $j \in [n]$: $(\mathsf{osk}_j, \mathsf{opk}_j) \gets \OrgKeyGen(\mathsf{pp})$
+        \item Initialize $\mathsf{HU} = \emptyset$, $\mathsf{CU} = \emptyset$, and for each $j \in [n]$: $\CRED_j = \emptyset$, $\OWNR_j = \emptyset$
+        \item Give $\{\mathsf{opk}_j\}_{j \in [n]}$ and $\mathsf{ck}$ to $\mathcal{A}$
+    \end{itemize}
+    
+    \item \textbf{Oracle Access:} $\mathcal{A}$ is given access to the following oracles:
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}(i)$: Creates an honest user with ID $i$ if $i \notin \mathsf{HU} \cup \mathsf{CU}$
+        \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupts a user $i \in \mathsf{HU}$, returning their secrets and credentials
+        \item $\mathcal{O}_{\mathsf{ObtMaster}}(i, \mathsf{attrs}_m, j)$: Issues a master credential to honest user $i$ from issuer $j$
+        \item $\mathcal{O}_{\mathsf{ObtContext}}(i, \mathsf{attrs}_c, \mathsf{cred}_m, j)$: Issues a context credential linked to $\mathsf{cred}_m$
+        \item $\mathcal{O}_{\mathsf{Show}}(i, \phi, \{j_k\}_{k \in K})$: Shows credentials of user $i$ from issuers $\{j_k\}$ satisfying $\phi$
+    \end{itemize}
+    
+    \item \textbf{Forgery:} $\mathcal{A}$ outputs $(\{\mathsf{cred}_k'^*\}_{k \in K}, \{\mathsf{cm}_k'^*\}_{k \in K}, \pi^*, \phi^*)$
+    
+    \item \textbf{Success Condition:} The experiment returns 1 if:
+    \begin{itemize}
+        \item $\MIMCVerify(\{\mathsf{cred}_k'^*\}_{k \in K}, \{\mathsf{cm}_k'^*\}_{k \in K}, \pi^*, \phi^*) = 1$, and
+        \item $\nexists i \in \mathsf{CU}$ such that $\forall k \in K$: $(\mathsf{id}_i, \mathsf{attrs}_k, i, \cdot, \cdot) \in \CRED_{j_k}$ and $\phi^*(\{(\mathsf{id}_i, \mathsf{attrs}_k)\}_{k \in K}) = 1$
+    \end{itemize}
+\end{enumerate}
+
+\noindent The oracles operate as follows:
+
+\noindent \textbf{User Management:}
+\begin{itemize}
+    \item $\mathcal{O}_{\mathsf{HU}}(i)$: If $i \notin \mathsf{HU} \cup \mathsf{CU}$, adds $i$ to $\mathsf{HU}$, generates $\mathsf{usk}[i] \sample \UserKeyGen(1^\lambda)$ and a unique $\mathsf{id}_i \sample \{0,1\}^\lambda$, then returns $i$.
+    
+    \item $\mathcal{O}_{\mathsf{CU}}(i)$: If $i \in \mathsf{HU}$, moves $i$ from $\mathsf{HU}$ to $\mathsf{CU}$ and returns $\mathsf{usk}[i]$, $\mathsf{id}_i$, and all credentials from all issuers owned by $i$.
+\end{itemize}
+
+\noindent \textbf{Credential Issuance:}
+\begin{itemize}
+    \item $\mathcal{O}_{\mathsf{ObtMaster}}(i, \mathsf{attrs}_m, j)$: For honest user $i$, computes $\mathsf{cm}_m \gets \CMCom([\mathsf{id}_i, \mathsf{attrs}_m]; \mathsf{usk}[i])$, obtains signature $\sigma_m \gets \Issue_j(\mathsf{osk}_j, \mathsf{cm}_m)$, and returns credential $\mathsf{cred}_m = (\sigma_m, \mathsf{cm}_m, \mathsf{opk}_j)$ after updating $\CRED_j$ and $\OWNR_j$.
+    
+    \item $\mathcal{O}_{\mathsf{ObtContext}}(i, \mathsf{attrs}_c, \mathsf{cred}_m, j)$: Verifies $\mathsf{cred}_m$ belongs to user $i$, computes $\mathsf{cm}_c \gets \CMCom([\mathsf{id}_i, \mathsf{attrs}_c]; \mathsf{usk}[i])$ and equality proof $\pi_{\mathsf{eq}}$, then obtains $\sigma_c \gets \Issue_j(\mathsf{osk}_j, \mathsf{cm}_c, \pi_{\mathsf{eq}})$ and returns $\mathsf{cred}_c = (\sigma_c, \mathsf{cm}_c, \mathsf{opk}_j)$.
+\end{itemize}
+
+\noindent \textbf{Credential Showing:}
+\begin{itemize}
+    \item $\mathcal{O}_{\mathsf{Show}}(i, \phi, \{j_k\}_{k \in K})$: Finds credentials of user $i$ from issuers $\{j_k\}$ that satisfy $\phi$, rerandomizes them to $\{\mathsf{cred}_k', \mathsf{cm}_k'\}$, and returns these with a proof $\pi$ that they share the same identity and satisfy $\phi$.
+\end{itemize}
 
 
 
