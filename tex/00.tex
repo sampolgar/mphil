@@ -2206,16 +2206,168 @@ Since any successful credential forgery must violate at least one of the underly
 
 
 
+\section{Anonymity}
 
 
+\begin{definition}[MIMC-ABC Anonymity]
+A MIMC-ABC system provides anonymity if for all PPT adversaries $\mathcal{A}$,
+\[
+\adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) := \left|\Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}1}_{\mathcal{A}}(\lambda)=1] - \Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}0}_{\mathcal{A}}(\lambda)=1]\right| \leq \negl
+\]
+where the experiment $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$ proceeds as follows:
+\end{definition}
 
+\begin{enumerate}
+    \item \textbf{Setup Phase:}
+    \begin{itemize}
+        \item $\ppar \sample \mathsf{Setup}(1^\lambda)$
+        \item $(st, \{\mathsf{opk}_j\}_{j \in [n]}) \sample \mathcal{A}(\ppar)$ \quad \emph{// Adversary generates (potentially malicious) issuer keys}
+        \item Initialize $\mathsf{HU}, \mathsf{CU} \gets \emptyset$ \quad \emph{// Honest and corrupt users}
+        \item For each issuer $j \in [n]$: Initialize $\mathsf{CRED}_j, \mathsf{COM}_j, \mathsf{OWNR}_j \gets \emptyset$
+        \item $\mathcal{J}_{\mathsf{LoR}} \gets \emptyset$ \quad \emph{// Tracks challenge credential tuples}
+        \item Sample challenge bit $b \sample \{0,1\}$
+    \end{itemize}
 
+    \item \textbf{Query Phase:} $\mathcal{A}(st)$ adaptively accesses:
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}(i)$: Create honest user $i$ with secret key $\mathsf{usk}[i]$, add to $\mathsf{HU}$
+        
+        \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupt user $i \in \mathsf{HU}$, move to $\mathsf{CU}$, return $\mathsf{usk}[i]$ and all credentials 
+        
+        \item $\mathcal{O}_{\mathsf{Obtain}}(i, j, \vec{m})$: Honest user $i$ obtains credential from issuer $j$ for attributes $\vec{m}$
+        
+        \item $\mathcal{O}_{\mathsf{Show}}(i, \{\mathsf{cred}_{j_k}\}_{k \in K}, \phi)$: Honest user $i$ shows credentials $\{\mathsf{cred}_{j_k}\}$ satisfying predicate $\phi$
+        
+        \item $\mathcal{O}_{\mathsf{LoR}}(\{\mathsf{cred}_{0,j_k}\}_{k \in K}, \{\mathsf{cred}_{1,j_k}\}_{k \in K}, \phi) \rightarrow \pi_b$: Challenge oracle, detailed below
+    \end{itemize}
 
+    \item \textbf{Challenge Oracle $\mathcal{O}_{\mathsf{LoR}}$:}
+    \begin{itemize}
+        \item Input: Two credential sets $\mathsf{Creds}_0 = \{\mathsf{cred}_{0,j_k}\}_{k \in K}$ and $\mathsf{Creds}_1 = \{\mathsf{cred}_{1,j_k}\}_{k \in K}$ from issuers $\{j_k\}_{k \in K}$, and predicate $\phi$
+        
+        \item For $\beta \in \{0,1\}$: 
+        \begin{enumerate}
+            \item Determine $i_\beta \gets \mathsf{OWNR}_{j_1}[\mathsf{cred}_{\beta,j_1}]$ \quad \emph{// Owner of first credential}
+            \item Verify $\forall k \in K: \mathsf{OWNR}_{j_k}[\mathsf{cred}_{\beta,j_k}] = i_\beta$ \quad \emph{// Same owner across all credentials}
+            \item Require $i_\beta \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// Honest, uncorrupted user}
+        \end{enumerate}
+        
+        \item Verify $\phi(\{\mathsf{cred}_{0,j_k}\}_{k \in K}) = \phi(\{\mathsf{cred}_{1,j_k}\}_{k \in K}) = 1$ \quad \emph{// Both satisfy the predicate}
+        
+        \item Consistency check: If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $(\mathsf{Creds}_0, \mathsf{Creds}_1) \notin \mathcal{J}_{\mathsf{LoR}}$, return $\bot$
+        
+        \item Compute showing proof: $\pi_b \gets \mathsf{Show}(\mathsf{Creds}_b, \phi)$ using bit $b$
+        
+        \item Update $\mathcal{J}_{\mathsf{LoR}} \gets \mathcal{J}_{\mathsf{LoR}} \cup \{(\mathsf{Creds}_0,\mathsf{Creds}_1)\}$
+        
+        \item Return $\pi_b$
+    \end{itemize}
 
+    \item \textbf{Win Condition:} $\mathcal{A}$ outputs guess $b' \in \{0,1\}$. 
+    Experiment returns 1 if and only if:
+    \begin{enumerate}
+        \item $b' = b$ \quad \emph{// Correct guess}
+        \item $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ \quad \emph{// Challenge was used}
+        \item $\forall (\mathsf{Creds}_0,\mathsf{Creds}_1) \in \mathcal{J}_{\mathsf{LoR}}$ with $i_0 = \mathsf{OWNR}[\mathsf{Creds}_0]$ and $i_1 = \mathsf{OWNR}[\mathsf{Creds}_1]$: $i_0, i_1 \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// No credential leakage}
+    \end{enumerate}
+\end{enumerate}
 
+\begin{theorem}[MIMC-ABC Anonymity]
+If the underlying rerandomizable signature scheme provides unlinkability after rerandomization, the commitment scheme is perfectly hiding, and the zero-knowledge proof system satisfies the zero-knowledge property, then the MIMC-ABC system provides anonymity as defined in $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$.
 
+Formally, for any PPT adversary $\mathcal{A}$ with non-negligible advantage $\epsilon(\lambda)$ in the anonymity experiment, there exists a PPT adversary $\mathcal{B}$ that breaks at least one of the underlying security properties with non-negligible advantage.
+\end{theorem}
 
+\begin{proof}
+We proceed via a hybrid argument. Let $\mathcal{A}$ be a PPT adversary against the anonymity of MIMC-ABC with advantage $\adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) = \epsilon(\lambda)$, which is non-negligible. We construct a simulator $\mathcal{B}$ that breaks the unlinkability of the rerandomizable signature scheme.
 
+Let $\mathcal{C}$ be the challenger for the signature scheme's unlinkability property. We construct the simulator:
+
+\begin{enumerate}
+    \item \textbf{Setup:}
+    \begin{itemize}
+        \item $\mathcal{B}$ receives public parameters from $\mathcal{C}$ and forwards them to $\mathcal{A}$
+        \item $\mathcal{A}$ generates $\{\mathsf{opk}_j\}_{j \in [n]}$ and sends to $\mathcal{B}$
+        \item $\mathcal{B}$ initializes $\mathsf{HU}, \mathsf{CU} \gets \emptyset$ and $\mathsf{CRED}_j, \mathsf{COM}_j, \mathsf{OWNR}_j \gets \emptyset$ for each issuer $j \in [n]$
+    \end{itemize}
+
+    \item \textbf{Oracle Simulation:}
+    \begin{itemize}
+        \item $\mathcal{O}_{\mathsf{HU}}(i)$: $\mathcal{B}$ generates $\mathsf{usk}[i]$ for honest user $i$ and adds $i$ to $\mathsf{HU}$
+        
+        \item $\mathcal{O}_{\mathsf{CU}}(i)$: If $i \in \mathsf{HU}$, $\mathcal{B}$ moves $i$ from $\mathsf{HU}$ to $\mathsf{CU}$ and returns $\mathsf{usk}[i]$ and all credentials
+        
+        \item $\mathcal{O}_{\mathsf{Obtain}}(i, j, \vec{m})$: $\mathcal{B}$ computes commitment $\cm_{i,j} \gets \mathsf{CM.Com}(\vec{m}; r_{i,j})$ and obtains signature $\sigma_{i,j}$ from $\mathcal{C}$ for honest user $i$
+        
+        \item $\mathcal{O}_{\mathsf{Show}}(i, \{\mathsf{cred}_{j_k}\}_{k \in K}, \phi)$: $\mathcal{B}$ rerandomizes credentials, constructs proof $\pi$, and returns $(\{\mathsf{cred}'_{j_k}\}_{k \in K}, \pi)$
+    \end{itemize}
+
+    \item \textbf{Challenge Oracle $\mathcal{O}_{\mathsf{LoR}}$:}
+    
+    When $\mathcal{A}$ queries $\mathcal{O}_{\mathsf{LoR}}(\{\mathsf{cred}_{0,j_k}\}_{k \in K}, \{\mathsf{cred}_{1,j_k}\}_{k \in K}, \phi)$:
+    \begin{itemize}
+        \item $\mathcal{B}$ verifies all requirements (credential consistency, predicate satisfaction, etc.)
+        
+        \item $\mathcal{B}$ extracts signatures $\{\sigma_{0,j_k}\}_{k \in K}$ and $\{\sigma_{1,j_k}\}_{k \in K}$ from credential sets
+        
+        \item $\mathcal{B}$ forwards these signatures to the unlinkability challenger $\mathcal{C}$
+        
+        \item $\mathcal{C}$ selects bit $d$ (which $\mathcal{B}$ doesn't know), rerandomizes signatures $\{\sigma_{d,j_k}\}_{k \in K}$ to $\{\sigma'_{j_k}\}_{k \in K}$, and returns them to $\mathcal{B}$
+        
+        \item $\mathcal{B}$ rerandomizes corresponding commitments consistently, and constructs ZK proof $\pi$ for predicate $\phi$
+        
+        \item $\mathcal{B}$ returns $(\{\mathsf{cred}'_{j_k}\}_{k \in K}, \pi)$ to $\mathcal{A}$
+    \end{itemize}
+
+    \item \textbf{Output:} When $\mathcal{A}$ outputs guess $b'$, $\mathcal{B}$ forwards $b'$ to $\mathcal{C}$ as its own guess
+\end{enumerate}
+
+\noindent We now analyze the security through a hybrid argument:
+
+\begin{itemize}
+    \item $H_0$: Original experiment with $b=0$ (showing credentials from set 0)
+    
+    \item $H_1$: Replace rerandomized signatures with simulated ones
+    
+    \item $H_2$: Replace zero-knowledge proofs with simulated ones
+    
+    \item $H_3$: Use commitments from credential set 1 instead of set 0
+    
+    \item $H_4$: Use real zero-knowledge proofs for credential set 1
+    
+    \item $H_5$: Use real rerandomized signatures for credential set 1 (equivalent to $b=1$ case)
+\end{itemize}
+
+\noindent For each consecutive pair of hybrids:
+
+\begin{itemize}
+    \item $H_0 \approx_c H_1$: Indistinguishable by the rerandomization property of the signature scheme
+    
+    \item $H_1 \approx_c H_2$: Indistinguishable by the zero-knowledge property of the proof system
+    
+    \item $H_2 \approx_c H_3$: Indistinguishable by the perfect hiding property of the commitment scheme
+    
+    \item $H_3 \approx_c H_4$: Indistinguishable by the zero-knowledge property of the proof system
+    
+    \item $H_4 \approx_c H_5$: Indistinguishable by the rerandomization property of the signature scheme
+\end{itemize}
+
+\noindent By the hybrid argument, $\mathcal{A}$'s advantage satisfies:
+\[
+\epsilon \leq \sum_{i=0}^{4} |\Pr[\mathcal{A}(H_i) = 1] - \Pr[\mathcal{A}(H_{i+1}) = 1]|
+\]
+
+\noindent If $\epsilon$ is non-negligible, then at least one term in this sum must be non-negligible, allowing $\mathcal{B}$ to break the corresponding security property with non-negligible advantage.
+
+\noindent For the multi-issuer case, we extend this argument by:
+\begin{enumerate}
+    \item Considering a sequence of hybrids where credentials from each issuer are progressively replaced
+    
+    \item Showing that distinguishing between these hybrids implies breaking the unlinkability of at least one issuer's signature scheme
+\end{enumerate}
+
+\noindent Therefore, if the underlying primitives are secure, no PPT adversary can have non-negligible advantage in the anonymity experiment.
+\end{proof}
 
 
 
