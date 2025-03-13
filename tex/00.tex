@@ -86,6 +86,22 @@ Compatibility for a decentralized architecture requires decentralized cryptograp
 
 \subsection{Contributions}
 
+\begin{enumerate}
+
+    \item the first anonymous credential system to analyze security and privacy in the multi-credential, multi-issuer environment, showing 
+
+    \item improved implementation of the state-of-the-art PS Signature scheme with a 30percent reduction in show and verify algorithms
+
+    \item A novel zero-knowledge building block to compute verifiable nullifiers from committed attributes with applications to private identity and anonymous payments which is 40 percent more efficient than previous constructions
+
+    \item Implementation of a multi-credential, multi-issuer anonymous credential system with unique context credentials. We show that adding privacy adds little overhead with our constructions.
+
+    \item The first opensource toolkit to fairly benchmark anonymous credential schemes. We show that fair and correct analysis comes from implementation in the same or as close to programming language and libraries. Furthermore, practical enhancements like MSM and ... can reduce the impact of theoretical improvements
+    
+\end{enumerate}
+
+\subsection{Contributions}
+
 We present a privacy-preserving decentralized identity system for multi-issuer environments. Our system combines anonymous credential primitives with decentralized identity architecture, achieving security and privacy properties that are challenging to realize when naively combining these building blocks. Our main contributions are:
 
 \begin{enumerate}
@@ -176,7 +192,7 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 
 
 
-
+ 
 
 
 
@@ -190,6 +206,10 @@ $\footnotemark[5]$ Multi-issuer means supporting credentials from different auth
 % PRELIMINARIES
 % 
 % % % % % % % % % % 
+
+\section{Privacy}\label{sec:privacy}
+What privacy means. Not leaking anything. Half-privacy can always be malicious. 
+In our system we show a credential issued in a half-private manner where the authority knows the userid but does not know it's secret. Then we show a credential be issued in a secure and private manner between an authority
 
 
 
@@ -780,7 +800,7 @@ Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $
 \end{definition}
 
 
-\begin{definition}[$\mathsf{RS}$ Correctness] 
+\begin{definition}[Correctness] 
 A rerandomizable signature scheme over commitments is correct if for all security parameters $\secparam$, for all $\ell > 1$, all bilinear groups $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \in [\mathsf{BGGen}(\secparam)]$, all key pairs $(\sk, \pk) \in [\mathsf{KeyGen}(\mathsf{BG, 1^{\ell}})]$, all messages $m \in \mathcal{M}$, all commitments $\cm \in \mathcal{C}$, all commitment keys $\mathsf{ck} \in [\mathsf{CM.KeyGen}(\secparam)]$, and all randomness $r, u, r_\Delta, u_\Delta \in \Z_p$ we have:
     \begin{align*}
         &\mathsf{RS.VerKey}(\sk, \pk) = 1 \qquad \wedge \\
@@ -814,7 +834,6 @@ where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 \end{definition}
 
 
-\sam{need to do this for the anonymous credential section}
 \begin{definition}[$\mathsf{RS}$ Signature Adaptation Under Malicious Keys]
 A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
 \begin{itemize}
@@ -853,7 +872,7 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
     \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
         Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
     \[
-        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, u + u_\Delta, r + r_\Delta): 
+        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): 
     \]
     \[
          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
@@ -1556,6 +1575,10 @@ The context credential issuance protocol enables a user to obtain a context cred
 
 \newpage
 \section{Security Model}
+
+\todonote{Summarize / Introduce the step changes. Introduce all oracles. Introduce the step change in attacks. Summarise reductions after each step}
+
+
 - Explain why a MIMC model extends SOTA
 - Explain why we start at the base case, single issuer, single credential, and build up from there noting the differences
 - Build the intuition for a forgery winning condition and explain why the adversary has more opportunities to win as we add issuers and add credentials
@@ -2385,8 +2408,12 @@ Let $\mathcal{C}$ be the challenger for the signature scheme's unlinkability pro
 
 
 \newpage
-\section{Sybil Resistance via VRF with Committed Attributes}
-Anonymous Credential systems have the paradoxical problem of requiring user privacy but preventing sybil attacks where users create multiple credentials. Traditional Sybil resistance mechanisms often compromise user anonymity by revealing identifying information or relationships between credentials. Verifiable Random Functions (VRFs) offer a promising solution by enabling the generation of verifiably pseudorandom and deterministic nullifiers from user-specific information, suitable for presentation to an issuer or for revocation lists. Existing VRF-based schemes often rely on computationally intensive bilinear pairings or reveal user attributes, introducing overhead or privacy risks.
+\section{Sybil Resistant Anonymous Credentials}
+Anonymous Credentials are employed in Identity Systems and Private Payment systems where the credential owner requires privacy, but the system requires resistance against Sybil Attacks. Privacy and Sybil Resistance are paradoxical in nature as privacy demands the system know as little about the credential as possible, and protecting against Sybil Resistance requires the system to be accountable for the credentials, for example, to prevent multiple credentials for the same attributes be issued, preventing system misuse. 
+
+In non-private systems, a user with a credential would have a credential identifier representing the unique issuance of the credential to the user. Similarly, a cheque or bank transfer has an identifier associated with it to prevent fraudulent multi-time use. In privacy-based systems, nullifiers are used in the same context. Nullifiers are deterministic functions based on the credential or credential attributes that are used to improve privacy. For example, a nullifier generated from a credential can be used 
+
+ Verifiable Random Functions (VRFs) offer a promising solution by enabling the generation of verifiably pseudorandom and deterministic nullifiers from user-specific information, suitable for presentation to an issuer or for revocation lists. Existing VRF-based schemes often rely on computationally intensive bilinear pairings or reveal user attributes, introducing overhead or privacy risks.
 
 
 Sybil Resistance
@@ -2675,8 +2702,8 @@ Under the discrete logarithm assumption, proving the equality $m_1 \cdot m_2 = 1
 \end{itemize}
 \end{proof}
 
-
 \subsection{Performance Evaluation}
+
 
 Dodis Yampolskiy
 \begin{itemize}
@@ -5514,6 +5541,98 @@ PSUTT+LVS
     \item PoK changes from $1E_{\G_1} + 1P + MSM(\ell + 1)\G_1$ $\quad \Rightarrow \quad$ $ 1E_{G_1} +MSM(\ell + 1)_{\G_1}$ --- We remove the pairing!
     \item Verify cred changes from $1E_{\G_T} + 4M\text{Loop}\G_T + 1FinalExp_{\G_T}$ $\quad \Rightarrow \quad$ $2M\text{Loop}\G_T + 1FinalExp_{\G_T}$ --- reduce 2 miller loop and 1 GT exponentiation
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section{Threshold Secret Share DKG}
+\subsubsection{Threshold PS Signature Scheme}
+\noindent The following algorithms describe a threshold variant of PS signatures with $t+1$ threshold and $n$ participants.
+
+\begin{itemize}
+    \item $\mathsf{RS.DistKeyGen}(1^\lambda, t+1, n, \ell) \to (\ck, \vk, (\sk_i, \vk_i)_{i \in [n]}):$ Run by the dealer setting up the distributed key generation protocol:
+    \begin{enumerate}
+        \item Let $\chi \gets\$ \mathbb{Z}_p[X], \psi_k \gets\$ \mathbb{Z}_p[X] \text{ be degree $t$ polynomials}$
+        \[
+        x \gets \chi(0) \quad y_k \gets \psi_k(0) \quad \forall k \in [\ell] 
+        \]
+        \[
+        [x]_i \gets \chi(i) \quad [y_k]_i \gets \psi_k(i), \quad \forall k \in [\ell], \forall i \in [n]
+        \]
+        \item Generate $\vk \gets \tilde{g}^x \quad \ck \gets \CMSetup(\secparam, \ell, \mathbf{y})$, parse $\ck = (g, \mathbf{g}, \tilde{g},\mathbf{\tilde{g}} )$
+        \item Compute secret and verification key shares $\mathsf{sk}_i \gets ([x]_i, ([y_k]_i)_{k\in[\ell]})$ and $ \vk_i \gets (\tilde{g}^{[x]_i}, (\tilde{g}^{[y_k]_i})_{k\in[\ell]}), \forall i \in [n]$
+    \end{enumerate}
+
+    \item $\mathsf{RS.ShareSign_{ck}}(\mathsf{sk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k\in[\ell]}; h) \to [\sigma^*]_i:$ interactive protocol between user requesting signatures to each signer
+    \begin{enumerate}
+        \item assumes $h$ is uniform in $\G_1$, parses $\ck$ as $(g,\cdot,\cdot,\cdot)$, $\mathsf{assert~ZK.Ver_{PedOpen}}((h, g), \mathsf{cm}_k, \pi_k^{\mathsf{zkpok}}) = 1$. 
+        \item Each node signs with share ($[x]_i, ([y_k]_i)_{k\in[\ell]})$, such that $[\sigma^*]_i \gets (h, h^{[x]_i} \prod_{k\in[\ell]}\cm_k^{[y_k]_i})$, equivalent to $(h, h^{[x]_i+\sum_{k\in[\ell]} m_k[y_k]_i} \cdot g^{\sum_{k\in[\ell]} r_k[y_k]_i})$
+    \end{enumerate}
+
+    \item $\mathsf{RS.ShareVer_{ck}}(\mathsf{vk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k\in[\ell]}, [\sigma^*]_i; h) \to \{0, 1\}:$ run by the user to verify each share before aggregating.
+    \begin{enumerate}
+        \item $\mathsf{Parse~} [\sigma^*]_i \text{ as } ([\sigma^*]_{i,1}, [\sigma^*]_{i,2}) \text{ and assert } h = [\sigma^*]_{i,1}$ and $\ck as (g, \cdot, \tilde{g}, \cdot)$
+        \item Reverify commitments and proofs, $\mathsf{assert~ZK.Ver_{PedOpen}}((h, g), \mathsf{cm}_k, \pi_k^{\mathsf{zkpok}}) = 1$.
+        \item $\mathsf{Parse~vk}_i \text{ as } (\tilde{g}^{[x]_i}, (\tilde{g}^{[y_k]_i})_{k\in[\ell]})$ and $\mathsf{assert~} e([\sigma^*]_{i,2}, \tilde{g}) = e(h, \tilde{g}^{[x]_i}) \cdot \prod_{k\in[\ell]} e(\mathsf{cm}_k, \tilde{g}^{[y_k]_i})$
+    \end{enumerate}
+
+      \item $\mathsf{RS.Aggregate_{\ck}}(([\sigma^*]_i)_{i\in S}, (r_k)_{k\in[\ell]}) \to \sigma:$ run by the user after successful $\mathsf{RS.ShareVer}$ run. 
+      \begin{enumerate}
+          \item $\mathsf{Parse~ck~as~} (\cdot, \mathbf{g}, \cdot, \cdot) \text{ and}, \forall i \in S, \text{ parse } [\sigma^*]_i \text{ as } (h, [\sigma^*]_{i,2})$
+          \item Lagrange interpolate the signature from $|S| = t+1$ signatures $\mathcal{L}_i \gets \prod_{j\in S, j\neq i} \frac{j}{j-i}, \forall i \in S$
+          \item $\sigma_2 \gets \prod_{i\in S} ([\sigma^*]_{i,2})^{\mathcal{L}_i}$ equivalent to $(h, h^{x+\sum_{k\in[\ell]} m_k y_k} \cdot g^{\sum_{k\in[\ell]} r_k y_k})$ and $g_k = g^{y_k}$
+          \item $\sigma \gets (h, \sigma_2/\prod_{k\in[\ell]} g_k^{r_k}) \quad \text{// i.e., } (h, h^{x+\sum_{k\in[\ell]} m_k y_k})$ 
+      \end{enumerate}
+      % We show that given a signature $\sigma = (h, h^{x+\sum_{k\in[\ell]} m_k y_k})$, we transform it into a rerandomizable signature in the non-threshold variant. Take $h_k = h^{y_k}$ and $h^{x+\sum_{k\in[\ell]}m_k} = h^x + h_k^{m_k}$ we produce $\ck' = $
+
+      The paper mentions the signature verifies as $\RSVer(\vk, (\cm, \widetilde{\cm}), \sigma)$ where $\cm, \widetilde{\cm} = \CMCom_\ck([\textbf{m}];0)$ with randomness set to 0 and $\CMRand$ works.
+      $\sigma = (h, h^{x+\sum_{k\in[\ell]} m_k y_k})$ \\
+      $\vk = \tilde{g}^x$ \\
+      $\widetilde{\cm} = \tilde{g_1}^{m_1}...g^0$ \\
+
+      \item $\mathsf{RS.Ver}(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ 
+           \[
+           e(\sigma_2', \tilde{g}) = e(h, \vk \cdot \widetilde{\cm'}) \qquad \wedge \qquad  e(\cm', \tilde{g}) = e(g, \widetilde{\cm'}) 
+           \]
+           \[
+            \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+            \]
+
+      \item $e(\sigma_2', \tilde{g}) = e(h, \vk \cdot \widetilde{\cm}')$ \\
+      = $e((h^{x+\sum_{k\in[\ell]} m_k y_k}), \tilde{g}) = e(h, \tilde{g^x} \cdot \tilde{g_1}^{m_1}...g^0)$
+      
+      
+
+      \item $\mathsf{RS.Rerand}(\sigma, r_{\Delta}, u_{\Delta}) \to \sigma':$  run by the user to rerandomize their signature, this is equivalent to non-threshold variant. $\mathsf{RS.Rerand}$ runs $\CMRand_{\ck}((\cm, \widetilde{\cm}); r_\Delta) \to (\cm', \widetilde{\cm}'): $ 
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
