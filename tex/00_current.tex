@@ -181,10 +181,18 @@ In the context of our unforgeability definition, we use predicate satisfaction t
 \subsubsection{Security Properties}
 
 \begin{itemize}
-    \item Correctness
+    \item Correctness: ensures that all honestly generated master and context credentials, linked by a shared identifier, satisfy two conditions: (1) each credential verifies against its respective issuer’s public key and the committed attributes, and (2) the combination of attributes from these linked credentials satisfies the verifier’s predicate
+    
+    
     \item Unforgeability
     \item Anonymity
 \end{itemize}
+
+
+
+
+
+
 
 
 
