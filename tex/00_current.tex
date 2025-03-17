@@ -1,11 +1,14 @@
 \section{Intro}
 \subsection{Problem}
-Summary:
-Our research addresses the secure and private verification of complex identity assertions using multiple digital credentials from different issuers. The system ensures all credentials are bound to the same identity while preserving privacy through anonymous authentication. 
+Our research addresses the secure and private verification of complex identity assertions using multiple digital credentials from different issuers. The system ensures all credentials are bound to the same identity and, additionally, supports credential relationship binding to prove structured relationships between credentials while preserving privacy through anonymous authentication.
 
-\subsubsection{The Problem}
+\subsubsection{Problem}
 
-As identity documents transition to digital formats, users must combine credentials from various issuers to satisfy complex identity requirements. 
+Non-digital identity interactions 
+
+The privacy of non-digital identity interactions is often overlooked. Although users may need to present multiple physical identity documents to satisfy a verification requirement, oftentimes, our identity documents will be verified in plain sight and not digitally recorded. During the interaction, the verifier will check identity binding (that both identity documents are for the same person) and that the user provided different types of identity documents. This interaction is anonymous in many ways and unlinkable. 
+
+Traditional identity systems fail to preserve the privacy of the user but retain accountability of the user 
 Traditional systems fail to balance privacy, security, and accountability in these multi-issuer scenarios.
 
 \subsubsection{Key dimensions of the problem}
@@ -14,9 +17,9 @@ Traditional systems fail to balance privacy, security, and accountability in the
 
     \item \textbf{Identity binding} Ensuring all credentials in a presentation belong to the same identity without compromising privacy or requiring issuer coordination. Without Identity Binding, an attacker could mix credentials from different individuals to falsely satisfy a verification requirement. Especially important in a multi-issuer setting where different users may have equivalent attributes 
 
-    \item \textbf{Anonymity} Users need to present credentials anonymously, ensuring that different presentations (e.g., to different service providers) cannot be linked to the same individual unless intended and that the underlying credential values not used openly. This protects against tracking and profiling, a growing concern in digital systems.
+    \item \textbf{Credential Relationship Binding}: Beyond linking credentials to a single identity, users often need to prove structured relationships between credentials (e.g., one credential derived from another or a dependency between them). This property supports advanced use cases, such as nullifiers for Sybil-resistant systems or hierarchical credential verification.
 
-    \item \textbf{Unlinkability} preventing different presentations from being linked to the same individual while maintaining essential security properties
+    \item \textbf{Anonymity} Users need to present credentials anonymously, ensuring that different presentations (e.g., to different service providers) cannot be linked to the same individual unless intended and that the underlying credential values not used openly. This protects against tracking and profiling, a growing concern in digital systems. preventing different presentations from being linked to the same individual while maintaining essential security properties
 
 
 \end{itemize}
@@ -28,11 +31,11 @@ Traditional centralized identity systems expose users to privacy risks (e.g., da
 \subsection{Contributions}
 
 \begin{enumerate}
-    \item We formalize Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC), introducing game-based security definitions that address the unique challenges of multi-issuer settings, such as cross-credential unlinkability and identity binding. We construct a MIMC-ABC system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM).
+    \item We formalize Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC), introducing game-based security definitions tailored to multi-issuer challenges. These include cross-credential unlinkability, identity binding, and credential relationship binding. We construct a MIMC-ABC system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM)
 
-    \item We propose an optimized variant of the Pointcheval-Sanders (PS) signature scheme, with overall prove and verify reduction of 10 percent. 
+    \item We propose an optimized variant of the Pointcheval-Sanders (PS) signature scheme, achieving a 10\% reduction in overall prove and verify times. This enhancement improves efficiency, making the system suitable for high-throughput applications.
 
-    \item   We prove our MIMC-ABC system ensures anonymity against malicious issuers, preventing linkage of credential presentations or unauthorized data extraction.
+    \item   \textbf{Anonymity Against Malicious Issuers:} We prove our MIMC-ABC system ensures anonymity against malicious issuers
 \end{enumerate}
 
 
@@ -116,36 +119,6 @@ Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pa
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
 \section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
 
 
@@ -164,46 +137,179 @@ In the context of our unforgeability definition, we use predicate satisfaction t
     \begin{itemize}
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
     
-    \item $\mathsf{OrgKeygen}(\ppar, n) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $n$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
+    \item $\mathsf{OrgKeygen}(\ppar, \ell) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
     
-    \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$
+    \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$ unique to the credential
     
-    \item $(\mathsf{ObtainMaster}(\vec{m}, \uskm, \opkm, \aux), \mathsf{IssueMaster}(\oskm, \cmm, \aux)) \rightarrow (\credm, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \ldots]$ containing a unique identifier $\id$ and context $\ctx = \text{"master"}$, along with secret key $\uskm$. The issuer inputs their secret key $\oskm$. The protocol outputs a master credential $\credm$ to the user and $\bot$ to the issuer.
+    \item $(\mathsf{Obtain}(\vec{m}, \usk, \opk, \aux), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$, along with secret key $\usk$. The issuer inputs their secret key $\osk$. The protocol outputs a master credential $\cred$ to the user and $\bot$ to the issuer.    
     
-    \item $(\mathsf{ObtainContext}(\vec{m}, \uskc, \opkm, \credm, \aux), \mathsf{IssueContext}(\oskc, \cmc, \opk, \aux)) \rightarrow (\credc, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \ldots]$ with the same identifier $\id$ as in their master credential and context $\ctx = \text{"context"}$, along with secret key $\usk$ and master credential $\credm$. The issuer inputs their secret key $\osk$ and the verification key of the master credential issuer $\opk_m$. During the protocol, the user proves possession of a valid master credential with the same $\id$. The protocol outputs a context credential $\credc$ to the user and $\bot$ to the issuer.
-    
-    \item $(\mathsf{Show}(\{\credm, \credc\}, \{\cmm, \cmc\}, \{\uskm, \uskc\}, \phi), \mathsf{Verify}(\{\credm', \credc'\}, \{\cmm', \cmc'\}, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their master and context credentials, corresponding commitments, openings, and a predicate $\phi$. The user generates a proof $\pi$ demonstrating: (1) both credentials are valid signatures over their respective commitments, (2) both commitments share the same identifier $\id$, and (3) the attributes satisfy predicate $\phi$. The verifier runs $\mathsf{Verify}$ with the rerandomized credentials, commitments, the predicate $\phi$, and proof $\pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
+    \item $(\mathsf{Show}(\{\credi\}, \{\cmi\}, \{\uski\}, \phi), \mathsf{Verify}(\{\credi'\}, \{\cmi'\}, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials, corresponding commitments, secret keys, and a predicate $\phi$ that specifies what to prove, e.g., attribute conditions, identity binding, or credential relationships. The user rerandomizes their credentials, commitments, and computes a proof $\pi$ that satisfies $\phi$. 
+    $\Verify$ is run by the verifier, takes input the randomized credentials $\cred_i'$, randomized commitments $\cmi'$ and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
     \end{itemize}
 \end{definition}
 
 \newpage
 \subsection{Security}
+Intuition of our security. 
+
+Here i Can talk about the different attack vectors and how the security of our system changes between single issuer, single credential, to multi credential to multiple issuer.
+
 \subsubsection{Security Properties}
 
+\paragraph{Correctness:} A MIMC-ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credentials to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user’s attributes, the verification process accepts the proof with overwhelming probability. 
+
+    \begin{itemize}
+        \item \textbf{Setup:} Challenger $\AdvC$ runs $\Setup(\secparam) \to \ppar$
+        \item \textbf{Issuer Keys:} For each issuer $j$ in a set of issuers $\{j\}$, run $\OrgKeyGen(\ppar, \ell) \to (\osk_j, \opk_j)$.
+        \item \textbf{Credential Issuance: } For a set of message vectors $\{m_k\}$, each $m_k = [\id, \ctx, \attrs, \usk_k]$ with the same $\id$. User runs $\UserKeyGen(\ppar) \to \usk_k$ and $\Obtain(\ppar, \opk_j, m_k, \aux),\Issue(\osk_j, \cm_k, \aux) \to \{\cred_k\}$. 
+        \item \textbf{Proof Generation:} User runs $\Show(\{\cred_k'\}, \{\cm_k'\}, \phi, \pi)$ where $\{\cred_k'\}$ and $\{\cm_k'\}$ are rerandomized credentials and commitments.
+        \item \textbf{Winning Condition:} Correctness holds if $\Verify(\{\cred_k'\}, \{\cm_k'\}, \phi, \pi) = 1 $ with $\Pr = 1-\negl[\lambda]$
+    \end{itemize}
+More formally,
+\begin{definition}[Correctness]
+    \[
+        \Pr \left[ 
+            \Verify(\{\cred_k'\}, \{\cm_k'\}, \phi, \pi) = 1 \mid \text{all steps honest} \wedge \phi(\{m_k\}) = 1
+        \right] = 1 - \negl[\lambda]
+    \]
+\end{definition}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\paragraph{Unforgeability:} A MIMC-ABC system is unforgeable if no probabilistic polynomial-time (PPT) adversary can produce a valid proof for a predicate that they cannot legitimately satisfy, based on the credentials they have obtained or corrupted. This prevents \emph{forging credentials} or \emph{proving false statements} about them including faking identity binding and credential relationships when stated by $\phi$.
+
+\noindent\textbf{Lists}
 \begin{itemize}
-    \item Correctness: ensures that all honestly generated master and context credentials, linked by a shared identifier, satisfy two conditions: (1) each credential verifies against its respective issuer’s public key and the committed attributes, and (2) the combination of attributes from these linked credentials satisfies the verifier’s predicate
+    \item $\HU$: Set of honest users whose secret keys are unknown to $\adv$
+    \item $\CU$: Set of corrupt users whose secret keys are known to $\adv$
+    \item $\CRED_j$: Tracks credentials issued by issuer $j$
+    \item $\OWNR$: Maps credentials to their owning user $i$
+\end{itemize} 
+
+\noindent\textbf{Oracles}
+\begin{itemize}
+    \item $\OHU(i)$: Creates an honest user $i$
+    \item $\OCU(i)$: Corrupts user $i$, reveals their secret keys (commitment openings) $\usk_i$ and credentials $\cred_k$
+    \item $\OOBTAIN(i, j, \vec{m}): $ issues a credential $\cred$ from issuer $j$ to user $i$ for message $\vec{m}$
+\end{itemize} 
+
+\begin{definition}[Unforgeability]
+
+
+
+\begin{figure}
+\begin{pcvstack}[boxed, center, space=1em]
+    \begin{pchstack}[space=1em]
+        \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}_{\MIMCABC, \adv}(\secparam)$}{%
+            \pccomment{Challenger Setup} \\
+            \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \CRED_j \gets \emptyset \text{ for each $j$}, \OWNR \gets \{\} \\
+            \ppar \gets \Setup(\secparam), (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
+            \pccomment{$\AdvA$ queries oracles} \\
+            \AdvA^{\OHU, \OCU, \OOBTAIN}(\opk_j) \\
+            \pccomment{Forgery} \\
+            \AdvA \text{ outputs } (\{\cred_k'^*\}, \{\cm_k'^*\} ) \\
+            \pccomment{Winning Condition} \\
+            \Verify(\{\cred_k'^*\}, \{\cm_k'^*\}, \{\opk_j\}) = 1 \; \wedge \\
+            \t \{\cred_k'^*\} \notin   m^* \notin \MSG \; \wedge \; 
+            \cred^* \notin \CRED\\
+        }
+    \end{pchstack}
+    \begin{pchstack}[space=1em]
+        \begin{pcvstack}
+            \procedure[]{$\OHU(i)$}{%
+                \pcif i \notin \HU, \HU[i] \gets i \\
+                \pcreturn  i \\
+            }
+                \procedure[]{$\OCU(i)$}{%
+                \pcif i \in \HU, \text{ move to } \CU. \\
+                \pcreturn \usk_i \text{ and all } \cred, \\
+                \t \text{ where } \OWNR[\cred] = i \\
+            }
+            \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
+                \pcif i \in \HU, \text{ compute } \\
+                \t \cm \gets \CMCom([\vec{m}]; \usk_i) \\
+                \t \cred \gets \Issue(\osk_j, \cm) \\
+                \t \CRED_j \gets (\cred, \cm, \vec{m}, i), \\
+                \t \OWNR[\cred] = i \\
+                \pcreturn \cred \\
+            }
+        \end{pcvstack}
+    \end{pchstack}
+\end{pcvstack}
+  \caption{The $\EUFCMA$ game, single credential, step 2}
+  \label{fig:prf}
+\end{figure}
+
     
+\end{definition}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\paragraph{Anonymity: }A MIMC-ABC system provides anonymity if no PPT adversary can determine which user’s credentials were used in a proof, even if the adversary controls the issuers and chooses the messages and predicates. This ensures that presentations reveal only what the predicate explicitly requires, protecting user privacy
+
+\begin{definition}[Anonymity]
     
-    \item Unforgeability
-    \item Anonymity
-\end{itemize}
+\end{definition}
 
 
 
+% \[
+% \adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) := \left|\Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}1}_{\mathcal{A}}(\lambda)=1] - \Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}0}_{\mathcal{A}}(\lambda)=1]\right| \leq \negl
+% \]
 
 
 
-
-
-
-
-
+\section{Games}
 
 \subsection{Oracles}
+
+% \begin{itemize}
+%     \item $\OHU(\id)$: if $\id \in \HU$ abort, else it creates a new honest user with identity $\id$. Adds $\id$ to $\mathsf{HU}$, runs $\mathsf{usk}[\id] \leftarrow \mathsf{UserKeyGen(pp)}$, and initializes $\CRED[\id] = \{\}$
+    
+%     \item $\OCU(\id)$: Corrupts user with $\id$, If $\id \notin \HU$, creates a new corrupt user by adding $\id$ to $\CU$. Else, if $\id \in \mathsf{HU}$, moves $\id$ to $\mathsf{CU}$, returns their $\mathsf{usk}[\id]$ and lists $\mathsf{CRED}[\id]$ (all $(m, \id, \mathsf{cm}, \sigma)$ tuples for $\id$).
+    
+%     \item $\OOBTISS(\id, \vec{m})$: Is an honest issuer, issuing a credential to an honest user. If $\id \notin \mathsf{HU}$, returns $\bot$. Computes $\mathsf{cm} \leftarrow \mathsf{CMCom}(\vec{m})$, $\sigma \leftarrow \mathsf{Issue}(\mathsf{osk}, \mathsf{cm})$, adds $(\vec{m}, \id, \mathsf{cm}, \sigma)$ to $\mathsf{CRED}$, returns $\mathsf{cred} = (\sigma, \mathsf{cm})$.
+    
+%     \item $\Show(\id, \phi)$: If $\id \notin \mathsf{HU}$, returns $\bot$. For each $(m, \id, \mathsf{cm}, \sigma) \in \mathsf{CRED}$, if $\phi(m) = 1$, returns $(\mathsf{'cred'}, \mathsf{cm'}, \pi) \leftarrow \mathsf{Show}(\sigma, \mathsf{cm}, \mathsf{usk}[\id], \phi)$; else, returns $\bot$.
+% \end{itemize}
 
 \subsection{Formal Definitions}
 
 
+\newpage
 \section{Construction}
 
 
