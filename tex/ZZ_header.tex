@@ -72,6 +72,7 @@ keys
 \newcommand{\Obtain}{\mathsf{Obtain}}
 \newcommand{\Issue}{\mathsf{Issue}}
 \newcommand{\MIMCABC}{\ensuremath{\mathsf{MIMC\text{-}ABC}}\xspace}
+\newcommand{\UNF}{\ensuremath{\mathsf{UNF}}\xspace}
 \newcommand{\UNFONE}{\ensuremath{\mathsf{UNF\text{-}1}}\xspace}
 \newcommand{\UNFTWO}{\ensuremath{\mathsf{UNF\text{-}2}}\xspace}
 
@@ -113,6 +114,7 @@ keys
 % Custom - Syntax
 %--------------------------------------------------------
 
+\renewcommand{\st}{\mathsf{st}}
 \newcommand{\zkx}{\mathsf{x}}
 \newcommand{\zkw}{\mathsf{w}}
 \newcommand{\m}{\textbf{m}}
@@ -459,6 +461,8 @@ keys
 \newcommand{\idcom}{\mathsf{idcm}}
 \newcommand{\ccd}{\mathsf{ccd}}
 \newcommand{\cd}{\mathsf{cd}}
+\newcommand{\creds}{\mathsf{creds}}
+\newcommand{\ANON}{\mathsf{ANON}}
 
 
 
@@ -648,12 +652,14 @@ keys
 % \newcommand{\Gt}{\mathbb{G}_{\mathsf{T}}}
 % \newcommand{\bit}{\ensuremath{\{0,1\}}}
 
-\renewcommand{\negl}{{\mathsf{negl}(\lambda)}
+% \renewcommand{\negl}{{\mathsf{negl}(\lambda)}
 \renewcommand{\oracle}{\ensuremath{\mathcal{O}}}
 \newcommand{\challenger}{\ensuremath{\mathcal{C}}}
 \newcommand{\Extractor}{\ensuremath{\mathcal{E}}}
-\renewcommand{\Simulator}{\mathcal{S}}
+% \renewcommand{\Simulator}{\mathcal{S}}
 % 
+\renewcommand{\negl}{\mathsf{negl}}
+
 
 \newcommand{\getsrand}{\stackrel{\$}{\gets}}
 \newcommand{\torand}{\stackrel{\$}{\to}}

@@ -190,6 +190,70 @@ More formally,
 
 \paragraph{Unforgeability:} A MIMC-ABC system is unforgeable if no probabilistic polynomial-time (PPT) adversary can produce a valid proof for a predicate that they cannot legitimately satisfy, based on the credentials they have obtained or corrupted. This prevents \emph{forging credentials} or \emph{proving false statements} about them including faking identity binding and credential relationships when stated by $\phi$.
 
+
+\begin{definition}[Unforgeability]
+A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\mathsf{Adv}\left[\mathrm{Exp}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\lambda) = 1\right] \leq \negl[\secparam]
+\]
+\end{definition}
+
+\begin{figure}
+\begin{pcvstack}[boxed, center, space=1em]
+    \begin{pchstack}[space=1em]
+        \procedure[]{$\mathrm{Exp}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
+            \pccomment{Challenger Setup} \\
+            \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \CRED_j \gets \emptyset \text{ for each $j$}, \OWNR \gets \{\} \\
+            \ppar \gets \Setup(\secparam), (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
+            \pccomment{$\AdvA$ queries oracles} \\
+            \AdvA^{\OHU, \OCU, \OOBTAIN}(\opk_j) \\
+            \pccomment{Forgery} \\
+            \AdvA \text{ outputs } (\{\cred_k'^*\}, \{\cm_k'^*\} ) \\
+            \pccomment{Winning Condition} \\
+            \Verify(\{\cred_k'^*\}, \{\cm_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1 \; \wedge \\
+            \t \forall k, \OWNR[\{\cred_k'^*\}] \neq i \in \CU \quad \pclinecomment{Version 1}\\
+            \t \nexists i \in \CU : \phi^*(\vec{m}_{i,k}) = 1 \quad \pclinecomment{Version 2}\\
+            \pccomment{i.e. the set of all $\{\cred_k'^*\}$ cannot belong to the same corrupt user} \\
+        }
+    \end{pchstack}
+    \begin{pchstack}[space=1em]
+        \begin{pcvstack}
+            \procedure[]{$\OHU(i)$}{%
+                \pcif i \notin \HU, \HU[i] \gets i \\
+                \pcreturn  i \\
+            }
+                \procedure[]{$\OCU(i)$}{%
+                \pcif i \in \HU, \text{ move to } \CU. \\
+                \pcreturn \usk_i \text{ and all } \cred, \\
+                \t \text{ where } \OWNR[\cred] = i \\
+            }
+        \end{pcvstack}
+        \begin{pcvstack}
+            \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
+                \pcif i \in \HU, \text{ compute } \\
+                \t \cm \gets \CMCom([\vec{m}]; \usk_i) \\
+                \t \cred \gets \Issue(\osk_j, \cm) \\
+                \t \CRED_j \gets (\cred, \cm, \vec{m}, i), \\
+                \t \OWNR[\cred] = i \\
+                \pcreturn \cred \\
+            }
+        \end{pcvstack}
+    \end{pchstack}
+\end{pcvstack}
+  \caption{The $\UNF$ game}
+  \label{fig:prf}
+\end{figure}
+   
+
+
+\paragraph{The intuition for the forgery success condition}: The adversary's forgery is successful if their proof verifies correctly \emph{and} the credentials used in the forgery cannot be traced back to a single corrupted user. The trivial forgery is one where the adversary corrupts a user and verifies a statement with their legitimately issued credentials. The adversary can win by combining credentials from multiple corrupt users to create valid proofs, combining credentials from corrupt users with newly forged credentials, and lastly creating entirely forged credentials. This is where our security properties, Identity Binding, and Credential Relationship Binding stem from.
+
+\begin{remark}
+    For \emph{identity binding}, if $\phi^*$ requires all $\id$ to match, $\AdvA$ can't mix credentials from different $\id$'s. For \emph{credential relationship binding}, if $\phi^*$ requires a specific relationship, for example $\cred_1$ contains $\CMCom([\id, \ctx="passport", \attrs]) \wedge \cred_2$ contains $\CMCom([\id, \ctx="driversLicense", \attrs])$ then $\AdvA$ can't win with different $\ctx$ or use something in $\attrs$ to satisfy $\phi^*$
+    
+\end{remark}
+
+
 \noindent\textbf{Lists}
 \begin{itemize}
     \item $\HU$: Set of honest users whose secret keys are unknown to $\adv$
@@ -205,25 +269,37 @@ More formally,
     \item $\OOBTAIN(i, j, \vec{m}): $ issues a credential $\cred$ from issuer $j$ to user $i$ for message $\vec{m}$
 \end{itemize} 
 
-\begin{definition}[Unforgeability]
+
+
+
+\newpage
+\paragraph{Anonymity: }A MIMC-ABC system provides anonymity if no PPT adversary can determine which user’s credentials were used in a proof, even if the adversary controls the issuers and chooses the messages and predicates. This ensures that presentations reveal only what the predicate explicitly requires, protecting user privacy.
+
+\paragraph{Intuition for Anonymity}: stems from the left-or-right oracle $\OLOR$, the challenger sets up the game picking a random bit $b \sample \bit$ which decides whether it uses "Alice or Bob's" credential in the game. Based on the bit, the challenger generates a credential show proof and presents it to the adversary. The adversary's guess should be no better than flipping the coin themself, essentially 50/50 chance. 
+
+
+
+
 
 
 
 \begin{figure}
 \begin{pcvstack}[boxed, center, space=1em]
     \begin{pchstack}[space=1em]
-        \procedure[]{$\mathrm{Exp}^{\mathsf{\EUFCMA}}_{\MIMCABC, \adv}(\secparam)$}{%
+        \procedure[]{$\mathrm{Exp}^{\mathsf{\ANON}}_{\MIMCABC, \adv}(\lambda)$}{%
             \pccomment{Challenger Setup} \\
-            \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \CRED_j \gets \emptyset \text{ for each $j$}, \OWNR \gets \{\} \\
-            \ppar \gets \Setup(\secparam), (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
-            \pccomment{$\AdvA$ queries oracles} \\
-            \AdvA^{\OHU, \OCU, \OOBTAIN}(\opk_j) \\
-            \pccomment{Forgery} \\
-            \AdvA \text{ outputs } (\{\cred_k'^*\}, \{\cm_k'^*\} ) \\
+            \text{Initialize } \HU \gets \emptyset, \ppar \gets \Setup(\secparam), (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+            \pccomment{$\AdvC$ sets up two honest users } \\
+            \text{For $i$ in } \bit:\\
+            \t \usk[i] \gets \UserKeyGen(\ppar), \HU \gets \HU \cup \{i\} \\
+            \t \text{pick $\vec{m}$, let $\phi$ be a predicate checking attribute validity $\phi(\vec{m}) = 1$} \\
+            \t \text{compute } \cm[i] \gets \CMCom(\vec{m}[i]; \usk[i]), \cred[i] \gets \Issue(\osk, \cm[i]) \\
+            \pccomment{$\AdvA$ queries oracle} \\
+            \AdvA^{\OLOR}(\opk) \\
+            \pccomment{$\AdvA$ guess} \\
+            \AdvA \text{ outputs a guess } b' \gets \bit \\
             \pccomment{Winning Condition} \\
-            \Verify(\{\cred_k'^*\}, \{\cm_k'^*\}, \{\opk_j\}) = 1 \; \wedge \\
-            \t \{\cred_k'^*\} \notin   m^* \notin \MSG \; \wedge \; 
-            \cred^* \notin \CRED\\
+            b' = b \\
         }
     \end{pchstack}
     \begin{pchstack}[space=1em]
@@ -232,63 +308,193 @@ More formally,
                 \pcif i \notin \HU, \HU[i] \gets i \\
                 \pcreturn  i \\
             }
-                \procedure[]{$\OCU(i)$}{%
-                \pcif i \in \HU, \text{ move to } \CU. \\
-                \pcreturn \usk_i \text{ and all } \cred, \\
-                \t \text{ where } \OWNR[\cred] = i \\
-            }
-            \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
-                \pcif i \in \HU, \text{ compute } \\
-                \t \cm \gets \CMCom([\vec{m}]; \usk_i) \\
-                \t \cred \gets \Issue(\osk_j, \cm) \\
-                \t \CRED_j \gets (\cred, \cm, \vec{m}, i), \\
-                \t \OWNR[\cred] = i \\
-                \pcreturn \cred \\
+        \end{pcvstack}
+        \begin{pcvstack}
+            \procedure[]{$\OLOR()$}{%
+                b \sample \bit \\
+                (\cred', \cm', \pi) \gets \Show(\cred[b], \cm[b], \usk[b], \phi)\\
+                \pcreturn (\cred', \cm', \pi) \\
             }
         \end{pcvstack}
     \end{pchstack}
 \end{pcvstack}
-  \caption{The $\EUFCMA$ game, single credential, step 2}
+  \caption{The $\ANON$ game}
   \label{fig:prf}
 \end{figure}
+   
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \begin{definition}[Anonymity]
     
-\end{definition}
+% \end{definition}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\paragraph{Anonymity: }A MIMC-ABC system provides anonymity if no PPT adversary can determine which user’s credentials were used in a proof, even if the adversary controls the issuers and chooses the messages and predicates. This ensures that presentations reveal only what the predicate explicitly requires, protecting user privacy
-
-\begin{definition}[Anonymity]
+% \begin{definition}[MIMC-ABC Anonymity]
+% A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
+% \[
+% \mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Exp}^{\mathsf{anon-1}}_{\MIMCABC, \adv}(\secparam) = 1] - \Pr[\mathrm{Exp}^{\mathsf{anon-0}}_{\MIMCABC, \adv}(\secparam) = 1] \right| \leq \negl[\secparam]
+% \]
+% \end{definition}
+% \begin{figure}
+% \begin{pcvstack}[boxed, center, space=1em]
+%     \begin{pchstack}[space=1em]
+%         \procedure[]{$\mathrm{Exp}^{\mathsf{anon-b}}_{\MIMCABC, \adv}(\secparam)$}{%
+%             \pccomment{Setup} \\
+%             \ppar \gets \Setup(\secparam)  \\
+%             (\st, \{\opk_j\}_{j \in [n]}) \gets \AdvA(\ppar) \quad \pclinecomment{Adversary generates issuer public keys} \\
+%             \text{Initialize } \HU, \CU \gets \emptyset; \text{ for } j \in [n]: \CRED_j, \OWNR_j \gets \emptyset \quad \pclinecomment{Initialize user and credential sets} \\
+%             J_{\LoR} \gets \emptyset \quad \pclinecomment{Tracks challenge queries} \\
+%             b \gets \{0, 1\} \quad \pclinecomment{Challenge bit} \\
+%             \pccomment{Query Phase: $\AdvA(\st)$ accesses:} \\
+%             \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW, \OLOR}(\st) \\
+%             \pccomment{Output} \\
+%             \AdvA \text{ outputs } b' \in \{0, 1\} \\
+%             \text{Return 1 if:} \\
+%             \t b' = b \quad \pclinecomment{Correct guess} \; \wedge \\
+%             \t J_{\LoR} \neq \emptyset \quad \pclinecomment{Challenge used} \; \wedge \\
+%             \t \forall \langle \Creds_0, \Creds_1 \rangle \in J_{\LoR}: i_0, i_1 \in \HU \setminus \CU \quad \pclinecomment{Users uncorrupted} \\
+%         }
+%     \end{pchstack}
     
-\end{definition}
+%     \begin{pchstack}[space=1em]
+%         \begin{pcvstack}
+%             \procedure[]{$\OHU(i)$}{%
+%                 \text{Adds } i \text{ to } \HU \\
+%                 \usk[i] \gets \UserKeyGen(\ppar) \\
+%                 \text{Assigns unique } \id_i \\
+%                 \pcreturn \\
+%             }
+            
+%             \procedure[]{$\OCU(i)$}{%
+%                 \pcif i \in \HU, \text{ moves } i \text{ to } \CU \\
+%                 \pcreturn \usk[i] \text{ and } \{\cred_k \in \CRED_j | \OWNR_j[\cred_k] = i\} \\
+%             }
+%         \end{pcvstack}
+        
+%         \begin{pcvstack}
+%             \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
+%                 \pcif i \in \HU \setminus \CU \\
+%                 \t \cred \gets (\Obtain(\vec{m}, \usk[i], \opk_j), \Issue(\osk_j, \cm)) \\
+%                 \t \text{Updates } \CRED_j, \OWNR_j \\
+%                 \pcreturn \cred \\
+%             }
+            
+%             \procedure[]{$\OSHOW(i, \{\cred_{j_k}\}_{k \in K}, \phi)$}{%
+%                 \pcif i \in \HU \setminus \CU \text{ and } \{\cred_{j_k}\} \text{ owned by } i \text{ satisfy } \phi \\
+%                 \pcreturn \text{rerandomized } (\{\cred_{j_k}'\}, \{\cm_{j_k}'\}, \pi) \\
+%             }
+%         \end{pcvstack}
+%     \end{pchstack}
+    
+%     \begin{pchstack}[space=1em]
+%         \procedure[]{$\OLOR(\{\cred_{0,j_k}\}_{k \in K}, \{\cred_{1,j_k}\}_{k \in K}, \phi)$}{%
+%             \pccomment{For $\beta \in \{0, 1\}$:} \\
+%             i_\beta \gets \OWNR_{j_1}[\cred_{\beta,j_1}] \quad \pclinecomment{Owner of first credential} \\
+%             \text{Check } \forall k \in K: \OWNR_{j_k}[\cred_{\beta,j_k}] = i_\beta \wedge i_\beta \in \HU \setminus \CU \quad \pclinecomment{Same uncorrupted owner} \\
+%             \text{Check } \phi(\{\cred_{0,j_k}\}) = \phi(\{\cred_{1,j_k}\}) = 1 \quad \pclinecomment{Both sets satisfy $\phi$} \\
+%             \pcif J_{\LoR} \neq \emptyset \text{ and } \langle \creds_0, \creds_1 \rangle \notin J_{\LoR}, \pcreturn \bot \quad \pclinecomment{Optional consistency} \\
+%             \pi_b \gets \Show(\{\cred_{b,j_k}\}, \usk[i_b], \phi) \quad \pclinecomment{Showing for bit $b$} \\
+%             J_{\LoR} \gets J_{\LoR} \cup \{\langle \creds_0, \creds_1 \rangle\} \\
+%             \pcreturn \pi_b \\
+%         }
+%     \end{pchstack}
+% \end{pcvstack}
+% \caption{The Anonymity game}
+% \label{fig:anonymity}
+% \end{figure}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \begin{definition}[MIMC-ABC Anonymity]
+% A MIMC-ABC system provides anonymity if for all PPT adversaries $\mathcal{A}$,
 % \[
 % \adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) := \left|\Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}1}_{\mathcal{A}}(\lambda)=1] - \Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}0}_{\mathcal{A}}(\lambda)=1]\right| \leq \negl
 % \]
+% where the experiment $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$ proceeds as follows:
+% \end{definition}
+
+% \begin{enumerate}
+%     \item \textbf{Setup Phase:}
+%     \begin{itemize}
+%         \item $\ppar \sample \mathsf{Setup}(1^\lambda)$
+%         \item $(st, \{\mathsf{opk}_j\}_{j \in [n]}) \sample \mathcal{A}(\ppar)$ \quad \emph{// Adversary generates (potentially malicious) issuer keys}
+%         \item Initialize $\mathsf{HU}, \mathsf{CU} \gets \emptyset$ \quad \emph{// Honest and corrupt users}
+%         \item For each issuer $j \in [n]$: Initialize $\mathsf{CRED}_j, \mathsf{COM}_j, \mathsf{OWNR}_j \gets \emptyset$
+%         \item $\mathcal{J}_{\mathsf{LoR}} \gets \emptyset$ \quad \emph{// Tracks challenge credential tuples}
+%         \item Sample challenge bit $b \sample \{0,1\}$
+%     \end{itemize}
+
+%     \item \textbf{Query Phase:} $\mathcal{A}(st)$ adaptively accesses:
+%     \begin{itemize}
+%         \item $\mathcal{O}_{\mathsf{HU}}(i)$: Create honest user $i$ with secret key $\mathsf{usk}[i]$, add to $\mathsf{HU}$
+        
+%         \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupt user $i \in \mathsf{HU}$, move to $\mathsf{CU}$, return $\mathsf{usk}[i]$ and all credentials 
+        
+%         \item $\mathcal{O}_{\mathsf{Obtain}}(i, j, \vec{m})$: Honest user $i$ obtains credential from issuer $j$ for attributes $\vec{m}$
+        
+%         \item $\mathcal{O}_{\mathsf{Show}}(i, \{\mathsf{cred}_{j_k}\}_{k \in K}, \phi)$: Honest user $i$ shows credentials $\{\mathsf{cred}_{j_k}\}$ satisfying predicate $\phi$
+        
+%         \item $\mathcal{O}_{\mathsf{LoR}}(\{\mathsf{cred}_{0,j_k}\}_{k \in K}, \{\mathsf{cred}_{1,j_k}\}_{k \in K}, \phi) \rightarrow \pi_b$: Challenge oracle, detailed below
+%     \end{itemize}
+
+%     \item \textbf{Challenge Oracle $\mathcal{O}_{\mathsf{LoR}}$:}
+%     \begin{itemize}
+%         \item Input: Two credential sets $\mathsf{Creds}_0 = \{\mathsf{cred}_{0,j_k}\}_{k \in K}$ and $\mathsf{Creds}_1 = \{\mathsf{cred}_{1,j_k}\}_{k \in K}$ from issuers $\{j_k\}_{k \in K}$, and predicate $\phi$
+        
+%         \item For $\beta \in \{0,1\}$: 
+%         \begin{enumerate}
+%             \item Determine $i_\beta \gets \mathsf{OWNR}_{j_1}[\mathsf{cred}_{\beta,j_1}]$ \quad \emph{// Owner of first credential}
+%             \item Verify $\forall k \in K: \mathsf{OWNR}_{j_k}[\mathsf{cred}_{\beta,j_k}] = i_\beta$ \quad \emph{// Same owner across all credentials}
+%             \item Require $i_\beta \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// Honest, uncorrupted user}
+%         \end{enumerate}
+        
+%         \item Verify $\phi(\{\mathsf{cred}_{0,j_k}\}_{k \in K}) = \phi(\{\mathsf{cred}_{1,j_k}\}_{k \in K}) = 1$ \quad \emph{// Both satisfy the predicate}
+        
+%         \item Consistency check: If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $(\mathsf{Creds}_0, \mathsf{Creds}_1) \notin \mathcal{J}_{\mathsf{LoR}}$, return $\bot$
+        
+%         \item Compute showing proof: $\pi_b \gets \mathsf{Show}(\mathsf{Creds}_b, \phi)$ using bit $b$
+        
+%         \item Update $\mathcal{J}_{\mathsf{LoR}} \gets \mathcal{J}_{\mathsf{LoR}} \cup \{(\mathsf{Creds}_0,\mathsf{Creds}_1)\}$
+        
+%         \item Return $\pi_b$
+%     \end{itemize}
+
+%     \item \textbf{Win Condition:} $\mathcal{A}$ outputs guess $b' \in \{0,1\}$. 
+%     Experiment returns 1 if and only if:
+%     \begin{enumerate}
+%         \item $b' = b$ \quad \emph{// Correct guess}
+%         \item $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ \quad \emph{// Challenge was used}
+%         \item $\forall (\mathsf{Creds}_0,\mathsf{Creds}_1) \in \mathcal{J}_{\mathsf{LoR}}$ with $i_0 = \mathsf{OWNR}[\mathsf{Creds}_0]$ and $i_1 = \mathsf{OWNR}[\mathsf{Creds}_1]$: $i_0, i_1 \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// No credential leakage}
+%     \end{enumerate}
+% \end{enumerate}
+
 
 
 
