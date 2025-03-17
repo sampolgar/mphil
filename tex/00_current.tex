@@ -24,6 +24,12 @@ Traditional systems fail to balance privacy, security, and accountability in the
 
 \end{itemize}
 
+\subsection{Related Work}
+Compare with TACT, Coconut, Idemix, how we improve on them
+
+\subsection{Motivation}
+
+
 
 Traditional centralized identity systems expose users to privacy risks (e.g., data breaches) and lack flexibility for multi-issuer scenarios. Existing anonymous credential systems, while privacy-focused, often assume a single issuer or fail to efficiently integrate multiple credentials with features like Sybil resistance and revocation. As digital identity frameworks, such as the EU’s Mandatory Digital Identity Wallet, push for privacy-preserving solutions, there is an urgent need for a system that supports the complexity of real-world identity use cases—where users juggle multiple online credentials—while ensuring security, privacy, and accountability
 
@@ -126,11 +132,9 @@ Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pa
 We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous Credentials off the model in \cite{fuchsbauer_structure-preserving_2019} and extend it to support rerandomizable signatures over commitments and predicate-based zero-knowledge proof verification allowing users to prove statements about their committed and signed attributes without revealing any additional information.
 
 \subsection{Predicate Satisfaction}
-
-We define a predicate $\phi$ as a boolean function over a set of attributes $m$. Formally, $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the message space.
-For a credential with attributes $m = [\id, \ctx, \ldots]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
-\textbf{Example:} Consider a predicate $\phi_{\text{master}} = (\ctx = \text{"master"})$. An attribute set $m = [\id=123, \ctx=\text{"master"}]$ satisfies $\phi_{\text{master}}$ because the ctx attribute equals "master".
-In the context of our unforgeability definition, we use predicate satisfaction to determine whether an adversary has produced a valid forgery or merely reused existing credentials in a legitimate way.
+We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
+For a credential with attributes $m = [\id, \ctx, \attrs]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
+For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master", \attrs]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legimitate way.
 
 \subsection{Syntax}
 \begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
@@ -141,10 +145,10 @@ In the context of our unforgeability definition, we use predicate satisfaction t
     
     \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$ unique to the credential
     
-    \item $(\mathsf{Obtain}(\vec{m}, \usk, \opk, \aux), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$, along with secret key $\usk$. The issuer inputs their secret key $\osk$. The protocol outputs a master credential $\cred$ to the user and $\bot$ to the issuer.    
+    \item $(\mathsf{Obtain}(\vec{m}, \usk, \opk, \aux), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$, along with secret key $\usk$. The user commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$ The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
     
-    \item $(\mathsf{Show}(\{\credi\}, \{\cmi\}, \{\uski\}, \phi), \mathsf{Verify}(\{\credi'\}, \{\cmi'\}, \phi, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials, corresponding commitments, secret keys, and a predicate $\phi$ that specifies what to prove, e.g., attribute conditions, identity binding, or credential relationships. The user rerandomizes their credentials, commitments, and computes a proof $\pi$ that satisfies $\phi$. 
-    $\Verify$ is run by the verifier, takes input the randomized credentials $\cred_i'$, randomized commitments $\cmi'$ and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
+    \item $(\mathsf{Show}(\{\credi\}, \{\uski\}, \phi), \mathsf{Verify}(\{\credi'\}, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
+    $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
     \end{itemize}
 \end{definition}
 
@@ -155,6 +159,38 @@ Intuition of our security.
 Here i Can talk about the different attack vectors and how the security of our system changes between single issuer, single credential, to multi credential to multiple issuer.
 
 \subsubsection{Security Properties}
+
+\begin{itemize}
+    \item Correctness ensures an honest user with valid credentials can always generate a proof for any predicate their credentials satisfy which will verify with high probability
+
+    \item Unforgeability prevents a malicious user, or colluding users, from creating valid proof for new forged credentials, misuse of legitimately issued ones, or unauthorized combination of credentials they don't own.
+
+    \item Anonymity protects user privacy, ensuring proofs reveal only that the predicate is satisfied, even if adversaries control the issuers or define predicates. 
+\end{itemize}
+
+
+
+
+\subsubsection{Security Properties}
+In this section, we define the security properties of the MIMC-ABC system using game-based definitions. To model the adversary’s capabilities and the system’s state, we introduce the following lists and oracles:
+
+
+\noindent\textbf{Lists}
+\begin{itemize}
+    \item $\HU$: The set of honest users whose secret keys remain unknown to the adversary $\adv$
+    \item $\CU$: The set of corrupt users whose secret keys are known to the adversary $\adv$
+    \item $\CRED_j$: A list tracking all credentials issued by issuer $j$, where each credential is associated with a user and their attributes
+    \item $\OWNR$: A mapping from each credential to its owning user, i.e., $\OWNR[\cred] = i$ if credential $\cred$ belongs to user $i$
+\end{itemize} 
+
+\noindent\textbf{Oracles}
+\begin{itemize}
+    \item $\OHU()$: Creates a new honest user $i$, adds them to $\HU$, and returns $i$
+    \item $\OCU(i)$: Corrupts user $i$ by moving them from $\HU$ to $\CU$, revealing their secret keys (e.g., commitment openings) and all credentials ${\cred}$ owned by $i$
+    \item $\OOBTAIN(i, j, \vec{m})$: Issues a credential $\cred$ from issuer $j$ to user $i$ for the attribute vector $\vec{m}$, provided $i \in \HU$. The credential is added to $\CRED_j$, and $\OWNR[\cred]$ is set to $i$
+    \item $\OSHOW(i, \phi)$: Generates a proof $\pi$ that the credentials of user $i$ satisfy the predicate $\phi$, provided $i \in \HU$ and the credentials meet the condition $\phi$.
+\end{itemize} 
+
 
 \paragraph{Correctness:} A MIMC-ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credentials to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user’s attributes, the verification process accepts the proof with overwhelming probability. 
 
@@ -194,14 +230,14 @@ More formally,
 \begin{definition}[Unforgeability]
 A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
-\mathsf{Adv}\left[\mathrm{Exp}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\lambda) = 1\right] \leq \negl[\secparam]
+\mathsf{Adv}\left[\mathrm{Game}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\lambda) = 1\right] \leq \negl[\secparam]
 \]
 \end{definition}
 
 \begin{figure}
 \begin{pcvstack}[boxed, center, space=1em]
     \begin{pchstack}[space=1em]
-        \procedure[]{$\mathrm{Exp}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
+        \procedure[]{$\mathrm{Game}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
             \pccomment{Challenger Setup} \\
             \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \CRED_j \gets \emptyset \text{ for each $j$}, \OWNR \gets \{\} \\
             \ppar \gets \Setup(\secparam), (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
@@ -219,7 +255,8 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
     \begin{pchstack}[space=1em]
         \begin{pcvstack}
             \procedure[]{$\OHU(i)$}{%
-                \pcif i \notin \HU, \HU[i] \gets i \\
+                \pcif i \notin \HU \cup \CU
+                \t \HU \gets \HU \cup \{i\} \\
                 \pcreturn  i \\
             }
                 \procedure[]{$\OCU(i)$}{%
@@ -253,67 +290,109 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
     
 \end{remark}
 
-
-\noindent\textbf{Lists}
-\begin{itemize}
-    \item $\HU$: Set of honest users whose secret keys are unknown to $\adv$
-    \item $\CU$: Set of corrupt users whose secret keys are known to $\adv$
-    \item $\CRED_j$: Tracks credentials issued by issuer $j$
-    \item $\OWNR$: Maps credentials to their owning user $i$
-\end{itemize} 
-
-\noindent\textbf{Oracles}
-\begin{itemize}
-    \item $\OHU(i)$: Creates an honest user $i$
-    \item $\OCU(i)$: Corrupts user $i$, reveals their secret keys (commitment openings) $\usk_i$ and credentials $\cred_k$
-    \item $\OOBTAIN(i, j, \vec{m}): $ issues a credential $\cred$ from issuer $j$ to user $i$ for message $\vec{m}$
-\end{itemize} 
-
-
-
-
 \newpage
 \paragraph{Anonymity: }A MIMC-ABC system provides anonymity if no PPT adversary can determine which user’s credentials were used in a proof, even if the adversary controls the issuers and chooses the messages and predicates. This ensures that presentations reveal only what the predicate explicitly requires, protecting user privacy.
 
-\paragraph{Intuition for Anonymity}: stems from the left-or-right oracle $\OLOR$, the challenger sets up the game picking a random bit $b \sample \bit$ which decides whether it uses "Alice or Bob's" credential in the game. Based on the bit, the challenger generates a credential show proof and presents it to the adversary. The adversary's guess should be no better than flipping the coin themself, essentially 50/50 chance. 
+\paragraph{Intuition}: the challenger sets up the game by picking a random bit $b \sample \bit$, which decides whether it uses "Alice or Bob's" credential in the game. Based on the bit, the challenger generates a credential "show" proof and presents it to the adversary. The adversary's guess should be no better than guessing.
 
 
+\begin{definition}[MIMC-ABC Anonymity]
+A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
+\[
+\mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Game}^{\mathsf{anon-1}}_{\MIMCABC, \adv}(\secparam) = 1] - \Pr[\mathrm{Game}^{\mathsf{anon-0}}_{\MIMCABC, \adv}(\secparam) = 1] \right| \leq \negl(\lambda)
+\]
+\end{definition}
 
-
-
+\begin{pchstack}
+         \begin{pcvstack}[boxed, space=1em]
+         \procedure[]{$\mathrm{Game}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
+            \pccomment{Challenger Setup} \\
+            \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \\
+            \CRED_j \gets \emptyset \text{ for each $j$}, \OWNR \gets \{\} \\
+            \ppar \gets \Setup(\secparam), (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
+            \pccomment{$\AdvA$ queries oracles} \\
+            \AdvA^{\OHU, \OCU, \OOBTAIN}(\opk_j) \\
+            \pccomment{Forgery} \\
+            \AdvA \text{ outputs } (\{\cred_k'^*\}, \{\cm_k'^*\} ) \\
+            \pccomment{Winning Condition} \\
+            \Verify(\{\cred_k'^*\}, \{\cm_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1 \; \wedge \\
+            \t \forall k, \OWNR[\{\cred_k'^*\}] \neq i \in \CU \quad \pclinecomment{Version 1}\\
+            \t \nexists i \in \CU : \phi^*(\vec{m}_{i,k}) = 1 \quad \pclinecomment{Version 2}\\
+            \pccomment{i.e. the set of all $\{\cred_k'^*\}$} \\
+            \pccomment{cannot belong to the same corrupt user} \\
+        }
+    \end{pcvstack}
+     \begin{pcvstack}[boxed, space=1em]
+     \procedure[]{$\mathrm{Game}^{\mathsf{\ANON}}_{\MIMCABC, \adv}(\lambda)$}{%
+            \ppar \gets \Setup(\secparam), \HU, \gets \emptyset, \CU \gets \emptyset \quad \pclinecomment{Challenger $\AdvC$ Setup} \\
+            \{\osk_j, \opk_j\} \gets \AdvA(\OrgKeyGen(\ppar)) \text{ for each issuer $j$}. \\
+            \text{For $i$ in } \bit: \qquad \pclinecomment{$\AdvC$ initializes two honest users }\\
+            \t \usk_i \gets \UserKeyGen(\ppar), \HU \gets \HU \cup \{i\}, \\
+            \t \quad i \text{ has } \vec{m} \text{ such that } \phi(\vec{m}) = 1 \\
+            \t \cm_i \gets \CMCom(\vec{m}_i; \usk_i),  \cred_i \gets \Issue(\osk, \cm_i) \\
+            \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW}(\{\osk_j, \opk_j\} ) \qquad \pclinecomment{Learning Phase} \\
+            (i_0, i_1, \phi) \gets \AdvA() \qquad \pclinecomment{Challenge Phase}\\
+            \text{Assert } i_0, i_1 \in \HU \setminus \CU, \quad \wedge \quad \phi(\vec{m}_{i_0}) = 1, \phi(\vec{m}_{i_1}) = 1 \\
+            b \sample \bit \quad \pclinecomment{$\AdvC$ samples random bit}\\
+            (\cred', \cm', \pi) \gets \Show(\creds_{i_b}, \cm_{i_b}, \usk_{i_b}, \phi)\\
+            b' \gets \AdvA(\cred', \cm', \pi) \qquad \pclinecomment{$\AdvA$ guesses who's $\cred$ it is } \\
+            \text{Return } (b' = b) \qquad \pclinecomment{Wins with the correct guess} \\
+        }
+    \end{pcvstack}
+\end{pchstack}
 
 
 \begin{figure}
 \begin{pcvstack}[boxed, center, space=1em]
-    \begin{pchstack}[space=1em]
-        \procedure[]{$\mathrm{Exp}^{\mathsf{\ANON}}_{\MIMCABC, \adv}(\lambda)$}{%
-            \pccomment{Challenger Setup} \\
-            \text{Initialize } \HU \gets \emptyset, \ppar \gets \Setup(\secparam), (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
-            \pccomment{$\AdvC$ sets up two honest users } \\
-            \text{For $i$ in } \bit:\\
-            \t \usk[i] \gets \UserKeyGen(\ppar), \HU \gets \HU \cup \{i\} \\
-            \t \text{pick $\vec{m}$, let $\phi$ be a predicate checking attribute validity $\phi(\vec{m}) = 1$} \\
-            \t \text{compute } \cm[i] \gets \CMCom(\vec{m}[i]; \usk[i]), \cred[i] \gets \Issue(\osk, \cm[i]) \\
-            \pccomment{$\AdvA$ queries oracle} \\
-            \AdvA^{\OLOR}(\opk) \\
-            \pccomment{$\AdvA$ guess} \\
-            \AdvA \text{ outputs a guess } b' \gets \bit \\
-            \pccomment{Winning Condition} \\
-            b' = b \\
-        }
+     \begin{pchstack}[space=1em]
+         \procedure[]{$\mathrm{Game}^{\mathsf{\ANON}}_{\MIMCABC, \adv}(\lambda)$}{%
+                \ppar \gets \Setup(\secparam), \HU, \gets \emptyset, \CU \gets \emptyset \quad \pclinecomment{Challenger $\AdvC$ Setup} \\
+                \{\osk_j, \opk_j\} \gets \AdvA(\OrgKeyGen(\ppar)) \text{ for each issuer $j$}. \\
+                \text{For $i$ in } \bit: \qquad \pclinecomment{$\AdvC$ initializes two honest users }\\
+                \t \usk_i \gets \UserKeyGen(\ppar), \HU \gets \HU \cup \{i\}, \quad i \text{ has } \vec{m} \text{ such that } \phi(\vec{m}) = 1 \\
+                \t \cm_i \gets \CMCom(\vec{m}_i; \usk_i),  \cred_i \gets \Issue(\osk, \cm_i) \\
+                \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW}(\{\osk_j, \opk_j\} ) \qquad \pclinecomment{Learning Phase} \\
+                (i_0, i_1, \phi) \gets \AdvA() \qquad \pclinecomment{Challenge Phase}\\
+                \text{Assert } i_0, i_1 \in \HU \setminus \CU, \quad \wedge \quad \phi(\vec{m}_{i_0}) = 1, \phi(\vec{m}_{i_1}) = 1 \\
+                b \sample \bit \quad \pclinecomment{$\AdvC$ samples random bit}\\
+                (\cred', \cm', \pi) \gets \Show(\creds_{i_b}, \cm_{i_b}, \usk_{i_b}, \phi)\\
+                b' \gets \AdvA(\cred', \cm', \pi) \qquad \pclinecomment{$\AdvA$ guesses who's $\cred$ it is } \\
+                \text{Return } (b' = b) \qquad \pclinecomment{Wins with the correct guess} \\
+            }
     \end{pchstack}
     \begin{pchstack}[space=1em]
         \begin{pcvstack}
-            \procedure[]{$\OHU(i)$}{%
-                \pcif i \notin \HU, \HU[i] \gets i \\
+            \procedure[]{$\OHU()$}{%
+                \pcif i \notin \HU \cup \CU \\
+                \t \HU \gets \HU \cup \{i\} \\
                 \pcreturn  i \\
+            }
+            \procedure[]{$\OCU(i)$}{%
+                \pcif i \in \HU:\\
+                \t \HU \gets \HU \setminus \{i\} \\
+                \t \CU \gets \CU \cup \{i\} \\
+                \t \creds_i \gets \{\cred | \OWNR[\cred] = i\} \\
+                \t \pcreturn \{(\cred, \usk) | (\cred, \cm, \vec{m}, \usk, i, j) \in \CRED\}\\
+                \pcreturn \bot \\
             }
         \end{pcvstack}
         \begin{pcvstack}
-            \procedure[]{$\OLOR()$}{%
-                b \sample \bit \\
-                (\cred', \cm', \pi) \gets \Show(\cred[b], \cm[b], \usk[b], \phi)\\
-                \pcreturn (\cred', \cm', \pi) \\
+            \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
+                \pcif i \in \HU: \\
+                % \t \usk \gets \UserKeyGen(\ppar) \\
+                \t \usk \sample \Z_p \\
+                \t \cm \gets \CMCom([\vec{m}]; \usk) \\
+                \t \cred \gets \Issue(\osk_j, \cm) \\
+                \t \CRED \gets (\cred, \cm, \vec{m}, \usk, i, j), \\
+                \t \OWNR[\cred] = i \\
+                \pcreturn \cred \\
+            }
+            \procedure[]{$\OSHOW(i, \creds_i, \phi)$}{%
+                \pcif i \in \HU \; \wedge \; \phi(\creds_i) = 1: \\
+                \t \text{Parse } \creds = \{\sigma, \cm, \vec{m}, \usk \} \\
+                \t \pi \gets \Show(\creds_i, \phi) \\
+                \t \pcreturn \pi \\
+                \pcreturn \bot \\
             }
         \end{pcvstack}
     \end{pchstack}
@@ -428,91 +507,6 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
 
 
 
-
-
-
-
-% \begin{definition}[MIMC-ABC Anonymity]
-% A MIMC-ABC system provides anonymity if for all PPT adversaries $\mathcal{A}$,
-% \[
-% \adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) := \left|\Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}1}_{\mathcal{A}}(\lambda)=1] - \Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}0}_{\mathcal{A}}(\lambda)=1]\right| \leq \negl
-% \]
-% where the experiment $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$ proceeds as follows:
-% \end{definition}
-
-% \begin{enumerate}
-%     \item \textbf{Setup Phase:}
-%     \begin{itemize}
-%         \item $\ppar \sample \mathsf{Setup}(1^\lambda)$
-%         \item $(st, \{\mathsf{opk}_j\}_{j \in [n]}) \sample \mathcal{A}(\ppar)$ \quad \emph{// Adversary generates (potentially malicious) issuer keys}
-%         \item Initialize $\mathsf{HU}, \mathsf{CU} \gets \emptyset$ \quad \emph{// Honest and corrupt users}
-%         \item For each issuer $j \in [n]$: Initialize $\mathsf{CRED}_j, \mathsf{COM}_j, \mathsf{OWNR}_j \gets \emptyset$
-%         \item $\mathcal{J}_{\mathsf{LoR}} \gets \emptyset$ \quad \emph{// Tracks challenge credential tuples}
-%         \item Sample challenge bit $b \sample \{0,1\}$
-%     \end{itemize}
-
-%     \item \textbf{Query Phase:} $\mathcal{A}(st)$ adaptively accesses:
-%     \begin{itemize}
-%         \item $\mathcal{O}_{\mathsf{HU}}(i)$: Create honest user $i$ with secret key $\mathsf{usk}[i]$, add to $\mathsf{HU}$
-        
-%         \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupt user $i \in \mathsf{HU}$, move to $\mathsf{CU}$, return $\mathsf{usk}[i]$ and all credentials 
-        
-%         \item $\mathcal{O}_{\mathsf{Obtain}}(i, j, \vec{m})$: Honest user $i$ obtains credential from issuer $j$ for attributes $\vec{m}$
-        
-%         \item $\mathcal{O}_{\mathsf{Show}}(i, \{\mathsf{cred}_{j_k}\}_{k \in K}, \phi)$: Honest user $i$ shows credentials $\{\mathsf{cred}_{j_k}\}$ satisfying predicate $\phi$
-        
-%         \item $\mathcal{O}_{\mathsf{LoR}}(\{\mathsf{cred}_{0,j_k}\}_{k \in K}, \{\mathsf{cred}_{1,j_k}\}_{k \in K}, \phi) \rightarrow \pi_b$: Challenge oracle, detailed below
-%     \end{itemize}
-
-%     \item \textbf{Challenge Oracle $\mathcal{O}_{\mathsf{LoR}}$:}
-%     \begin{itemize}
-%         \item Input: Two credential sets $\mathsf{Creds}_0 = \{\mathsf{cred}_{0,j_k}\}_{k \in K}$ and $\mathsf{Creds}_1 = \{\mathsf{cred}_{1,j_k}\}_{k \in K}$ from issuers $\{j_k\}_{k \in K}$, and predicate $\phi$
-        
-%         \item For $\beta \in \{0,1\}$: 
-%         \begin{enumerate}
-%             \item Determine $i_\beta \gets \mathsf{OWNR}_{j_1}[\mathsf{cred}_{\beta,j_1}]$ \quad \emph{// Owner of first credential}
-%             \item Verify $\forall k \in K: \mathsf{OWNR}_{j_k}[\mathsf{cred}_{\beta,j_k}] = i_\beta$ \quad \emph{// Same owner across all credentials}
-%             \item Require $i_\beta \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// Honest, uncorrupted user}
-%         \end{enumerate}
-        
-%         \item Verify $\phi(\{\mathsf{cred}_{0,j_k}\}_{k \in K}) = \phi(\{\mathsf{cred}_{1,j_k}\}_{k \in K}) = 1$ \quad \emph{// Both satisfy the predicate}
-        
-%         \item Consistency check: If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $(\mathsf{Creds}_0, \mathsf{Creds}_1) \notin \mathcal{J}_{\mathsf{LoR}}$, return $\bot$
-        
-%         \item Compute showing proof: $\pi_b \gets \mathsf{Show}(\mathsf{Creds}_b, \phi)$ using bit $b$
-        
-%         \item Update $\mathcal{J}_{\mathsf{LoR}} \gets \mathcal{J}_{\mathsf{LoR}} \cup \{(\mathsf{Creds}_0,\mathsf{Creds}_1)\}$
-        
-%         \item Return $\pi_b$
-%     \end{itemize}
-
-%     \item \textbf{Win Condition:} $\mathcal{A}$ outputs guess $b' \in \{0,1\}$. 
-%     Experiment returns 1 if and only if:
-%     \begin{enumerate}
-%         \item $b' = b$ \quad \emph{// Correct guess}
-%         \item $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ \quad \emph{// Challenge was used}
-%         \item $\forall (\mathsf{Creds}_0,\mathsf{Creds}_1) \in \mathcal{J}_{\mathsf{LoR}}$ with $i_0 = \mathsf{OWNR}[\mathsf{Creds}_0]$ and $i_1 = \mathsf{OWNR}[\mathsf{Creds}_1]$: $i_0, i_1 \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// No credential leakage}
-%     \end{enumerate}
-% \end{enumerate}
-
-
-
-
-\section{Games}
-
-\subsection{Oracles}
-
-% \begin{itemize}
-%     \item $\OHU(\id)$: if $\id \in \HU$ abort, else it creates a new honest user with identity $\id$. Adds $\id$ to $\mathsf{HU}$, runs $\mathsf{usk}[\id] \leftarrow \mathsf{UserKeyGen(pp)}$, and initializes $\CRED[\id] = \{\}$
-    
-%     \item $\OCU(\id)$: Corrupts user with $\id$, If $\id \notin \HU$, creates a new corrupt user by adding $\id$ to $\CU$. Else, if $\id \in \mathsf{HU}$, moves $\id$ to $\mathsf{CU}$, returns their $\mathsf{usk}[\id]$ and lists $\mathsf{CRED}[\id]$ (all $(m, \id, \mathsf{cm}, \sigma)$ tuples for $\id$).
-    
-%     \item $\OOBTISS(\id, \vec{m})$: Is an honest issuer, issuing a credential to an honest user. If $\id \notin \mathsf{HU}$, returns $\bot$. Computes $\mathsf{cm} \leftarrow \mathsf{CMCom}(\vec{m})$, $\sigma \leftarrow \mathsf{Issue}(\mathsf{osk}, \mathsf{cm})$, adds $(\vec{m}, \id, \mathsf{cm}, \sigma)$ to $\mathsf{CRED}$, returns $\mathsf{cred} = (\sigma, \mathsf{cm})$.
-    
-%     \item $\Show(\id, \phi)$: If $\id \notin \mathsf{HU}$, returns $\bot$. For each $(m, \id, \mathsf{cm}, \sigma) \in \mathsf{CRED}$, if $\phi(m) = 1$, returns $(\mathsf{'cred'}, \mathsf{cm'}, \pi) \leftarrow \mathsf{Show}(\sigma, \mathsf{cm}, \mathsf{usk}[\id], \phi)$; else, returns $\bot$.
-% \end{itemize}
-
-\subsection{Formal Definitions}
 
 
 \newpage
