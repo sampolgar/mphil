@@ -143,9 +143,9 @@ For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\v
     
     \item $\mathsf{OrgKeygen}(\ppar, \ell) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
     
-    \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$ unique to the credential
+    % \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$ unique to the credential
     
-    \item $(\mathsf{Obtain}(\vec{m}, \usk, \opk, \aux), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$, along with secret key $\usk$. The user commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$ The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
+    \item $(\mathsf{Obtain}(\vec{m}, \opk, \aux), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$. User generates $\usk \sample Z_p$, commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$. The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
     
     \item $(\mathsf{Show}(\{\credi\}, \{\uski\}, \phi), \mathsf{Verify}(\{\credi'\}, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
     $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
@@ -181,6 +181,7 @@ In this section, we define the security properties of the MIMC-ABC system using 
     \item $\CU$: The set of corrupt users whose secret keys are known to the adversary $\adv$
     \item $\CRED_j$: A list tracking all credentials issued by issuer $j$, where each credential is associated with a user and their attributes
     \item $\OWNR$: A mapping from each credential to its owning user, i.e., $\OWNR[\cred] = i$ if credential $\cred$ belongs to user $i$
+    \item $\SHOW$: A list tracking all credential show outputs (\{\})
 \end{itemize} 
 
 \noindent\textbf{Oracles}
@@ -234,52 +235,6 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
 \]
 \end{definition}
 
-\begin{figure}
-\begin{pcvstack}[boxed, center, space=1em]
-    \begin{pchstack}[space=1em]
-        \procedure[]{$\mathrm{Game}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
-            \pccomment{Challenger Setup} \\
-            \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \CRED_j \gets \emptyset \text{ for each $j$}, \OWNR \gets \{\} \\
-            \ppar \gets \Setup(\secparam), (\osk_j, \opk_j) \gets \OrgKeyGen(\ppar) \\
-            \pccomment{$\AdvA$ queries oracles} \\
-            \AdvA^{\OHU, \OCU, \OOBTAIN}(\opk_j) \\
-            \pccomment{Forgery} \\
-            \AdvA \text{ outputs } (\{\cred_k'^*\}, \{\cm_k'^*\} ) \\
-            \pccomment{Winning Condition} \\
-            \Verify(\{\cred_k'^*\}, \{\cm_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1 \; \wedge \\
-            \t \forall k, \OWNR[\{\cred_k'^*\}] \neq i \in \CU \quad \pclinecomment{Version 1}\\
-            \t \nexists i \in \CU : \phi^*(\vec{m}_{i,k}) = 1 \quad \pclinecomment{Version 2}\\
-            \pccomment{i.e. the set of all $\{\cred_k'^*\}$ cannot belong to the same corrupt user} \\
-        }
-    \end{pchstack}
-    \begin{pchstack}[space=1em]
-        \begin{pcvstack}
-            \procedure[]{$\OHU(i)$}{%
-                \pcif i \notin \HU \cup \CU
-                \t \HU \gets \HU \cup \{i\} \\
-                \pcreturn  i \\
-            }
-                \procedure[]{$\OCU(i)$}{%
-                \pcif i \in \HU, \text{ move to } \CU. \\
-                \pcreturn \usk_i \text{ and all } \cred, \\
-                \t \text{ where } \OWNR[\cred] = i \\
-            }
-        \end{pcvstack}
-        \begin{pcvstack}
-            \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
-                \pcif i \in \HU, \text{ compute } \\
-                \t \cm \gets \CMCom([\vec{m}]; \usk_i) \\
-                \t \cred \gets \Issue(\osk_j, \cm) \\
-                \t \CRED_j \gets (\cred, \cm, \vec{m}, i), \\
-                \t \OWNR[\cred] = i \\
-                \pcreturn \cred \\
-            }
-        \end{pcvstack}
-    \end{pchstack}
-\end{pcvstack}
-  \caption{The $\UNF$ game}
-  \label{fig:prf}
-\end{figure}
    
 
 
@@ -302,9 +257,9 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 \mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Game}^{\mathsf{anon-1}}_{\MIMCABC, \adv}(\secparam) = 1] - \Pr[\mathrm{Game}^{\mathsf{anon-0}}_{\MIMCABC, \adv}(\secparam) = 1] \right| \leq \negl(\lambda)
 \]
 \end{definition}
-
+\begin{pcvstack}[boxed]
 \begin{pchstack}
-         \begin{pcvstack}[boxed, space=1em]
+         \begin{pcvstack}[boxed]
          \procedure[]{$\mathrm{Game}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
             \pccomment{Challenger Setup} \\
             \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \\
@@ -322,7 +277,7 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
             \pccomment{cannot belong to the same corrupt user} \\
         }
     \end{pcvstack}
-     \begin{pcvstack}[boxed, space=1em]
+     \begin{pcvstack}[boxed]
      \procedure[]{$\mathrm{Game}^{\mathsf{\ANON}}_{\MIMCABC, \adv}(\lambda)$}{%
             \ppar \gets \Setup(\secparam), \HU, \gets \emptyset, \CU \gets \emptyset \quad \pclinecomment{Challenger $\AdvC$ Setup} \\
             \{\osk_j, \opk_j\} \gets \AdvA(\OrgKeyGen(\ppar)) \text{ for each issuer $j$}. \\
@@ -336,31 +291,12 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
             b \sample \bit \quad \pclinecomment{$\AdvC$ samples random bit}\\
             (\cred', \cm', \pi) \gets \Show(\creds_{i_b}, \cm_{i_b}, \usk_{i_b}, \phi)\\
             b' \gets \AdvA(\cred', \cm', \pi) \qquad \pclinecomment{$\AdvA$ guesses who's $\cred$ it is } \\
-            \text{Return } (b' = b) \qquad \pclinecomment{Wins with the correct guess} \\
+            \text{Return } (b' = b) \\
+            \pclinecomment{Wins with the correct guess} \\
         }
     \end{pcvstack}
 \end{pchstack}
-
-
-\begin{figure}
-\begin{pcvstack}[boxed, center, space=1em]
-     \begin{pchstack}[space=1em]
-         \procedure[]{$\mathrm{Game}^{\mathsf{\ANON}}_{\MIMCABC, \adv}(\lambda)$}{%
-                \ppar \gets \Setup(\secparam), \HU, \gets \emptyset, \CU \gets \emptyset \quad \pclinecomment{Challenger $\AdvC$ Setup} \\
-                \{\osk_j, \opk_j\} \gets \AdvA(\OrgKeyGen(\ppar)) \text{ for each issuer $j$}. \\
-                \text{For $i$ in } \bit: \qquad \pclinecomment{$\AdvC$ initializes two honest users }\\
-                \t \usk_i \gets \UserKeyGen(\ppar), \HU \gets \HU \cup \{i\}, \quad i \text{ has } \vec{m} \text{ such that } \phi(\vec{m}) = 1 \\
-                \t \cm_i \gets \CMCom(\vec{m}_i; \usk_i),  \cred_i \gets \Issue(\osk, \cm_i) \\
-                \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW}(\{\osk_j, \opk_j\} ) \qquad \pclinecomment{Learning Phase} \\
-                (i_0, i_1, \phi) \gets \AdvA() \qquad \pclinecomment{Challenge Phase}\\
-                \text{Assert } i_0, i_1 \in \HU \setminus \CU, \quad \wedge \quad \phi(\vec{m}_{i_0}) = 1, \phi(\vec{m}_{i_1}) = 1 \\
-                b \sample \bit \quad \pclinecomment{$\AdvC$ samples random bit}\\
-                (\cred', \cm', \pi) \gets \Show(\creds_{i_b}, \cm_{i_b}, \usk_{i_b}, \phi)\\
-                b' \gets \AdvA(\cred', \cm', \pi) \qquad \pclinecomment{$\AdvA$ guesses who's $\cred$ it is } \\
-                \text{Return } (b' = b) \qquad \pclinecomment{Wins with the correct guess} \\
-            }
-    \end{pchstack}
-    \begin{pchstack}[space=1em]
+    \begin{pchstack}
         \begin{pcvstack}
             \procedure[]{$\OHU()$}{%
                 \pcif i \notin \HU \cup \CU \\
@@ -379,7 +315,6 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
         \begin{pcvstack}
             \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
                 \pcif i \in \HU: \\
-                % \t \usk \gets \UserKeyGen(\ppar) \\
                 \t \usk \sample \Z_p \\
                 \t \cm \gets \CMCom([\vec{m}]; \usk) \\
                 \t \cred \gets \Issue(\osk_j, \cm) \\
@@ -397,10 +332,6 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
         \end{pcvstack}
     \end{pchstack}
 \end{pcvstack}
-  \caption{The $\ANON$ game}
-  \label{fig:prf}
-\end{figure}
-   
 
 
 
@@ -414,84 +345,6 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 
 
 
-
-% \begin{definition}[Anonymity]
-    
-% \end{definition}
-
-% \begin{definition}[MIMC-ABC Anonymity]
-% A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
-% \[
-% \mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Exp}^{\mathsf{anon-1}}_{\MIMCABC, \adv}(\secparam) = 1] - \Pr[\mathrm{Exp}^{\mathsf{anon-0}}_{\MIMCABC, \adv}(\secparam) = 1] \right| \leq \negl[\secparam]
-% \]
-% \end{definition}
-% \begin{figure}
-% \begin{pcvstack}[boxed, center, space=1em]
-%     \begin{pchstack}[space=1em]
-%         \procedure[]{$\mathrm{Exp}^{\mathsf{anon-b}}_{\MIMCABC, \adv}(\secparam)$}{%
-%             \pccomment{Setup} \\
-%             \ppar \gets \Setup(\secparam)  \\
-%             (\st, \{\opk_j\}_{j \in [n]}) \gets \AdvA(\ppar) \quad \pclinecomment{Adversary generates issuer public keys} \\
-%             \text{Initialize } \HU, \CU \gets \emptyset; \text{ for } j \in [n]: \CRED_j, \OWNR_j \gets \emptyset \quad \pclinecomment{Initialize user and credential sets} \\
-%             J_{\LoR} \gets \emptyset \quad \pclinecomment{Tracks challenge queries} \\
-%             b \gets \{0, 1\} \quad \pclinecomment{Challenge bit} \\
-%             \pccomment{Query Phase: $\AdvA(\st)$ accesses:} \\
-%             \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW, \OLOR}(\st) \\
-%             \pccomment{Output} \\
-%             \AdvA \text{ outputs } b' \in \{0, 1\} \\
-%             \text{Return 1 if:} \\
-%             \t b' = b \quad \pclinecomment{Correct guess} \; \wedge \\
-%             \t J_{\LoR} \neq \emptyset \quad \pclinecomment{Challenge used} \; \wedge \\
-%             \t \forall \langle \Creds_0, \Creds_1 \rangle \in J_{\LoR}: i_0, i_1 \in \HU \setminus \CU \quad \pclinecomment{Users uncorrupted} \\
-%         }
-%     \end{pchstack}
-    
-%     \begin{pchstack}[space=1em]
-%         \begin{pcvstack}
-%             \procedure[]{$\OHU(i)$}{%
-%                 \text{Adds } i \text{ to } \HU \\
-%                 \usk[i] \gets \UserKeyGen(\ppar) \\
-%                 \text{Assigns unique } \id_i \\
-%                 \pcreturn \\
-%             }
-            
-%             \procedure[]{$\OCU(i)$}{%
-%                 \pcif i \in \HU, \text{ moves } i \text{ to } \CU \\
-%                 \pcreturn \usk[i] \text{ and } \{\cred_k \in \CRED_j | \OWNR_j[\cred_k] = i\} \\
-%             }
-%         \end{pcvstack}
-        
-%         \begin{pcvstack}
-%             \procedure[]{$\OOBTAIN(i, j, \vec{m})$}{%
-%                 \pcif i \in \HU \setminus \CU \\
-%                 \t \cred \gets (\Obtain(\vec{m}, \usk[i], \opk_j), \Issue(\osk_j, \cm)) \\
-%                 \t \text{Updates } \CRED_j, \OWNR_j \\
-%                 \pcreturn \cred \\
-%             }
-            
-%             \procedure[]{$\OSHOW(i, \{\cred_{j_k}\}_{k \in K}, \phi)$}{%
-%                 \pcif i \in \HU \setminus \CU \text{ and } \{\cred_{j_k}\} \text{ owned by } i \text{ satisfy } \phi \\
-%                 \pcreturn \text{rerandomized } (\{\cred_{j_k}'\}, \{\cm_{j_k}'\}, \pi) \\
-%             }
-%         \end{pcvstack}
-%     \end{pchstack}
-    
-%     \begin{pchstack}[space=1em]
-%         \procedure[]{$\OLOR(\{\cred_{0,j_k}\}_{k \in K}, \{\cred_{1,j_k}\}_{k \in K}, \phi)$}{%
-%             \pccomment{For $\beta \in \{0, 1\}$:} \\
-%             i_\beta \gets \OWNR_{j_1}[\cred_{\beta,j_1}] \quad \pclinecomment{Owner of first credential} \\
-%             \text{Check } \forall k \in K: \OWNR_{j_k}[\cred_{\beta,j_k}] = i_\beta \wedge i_\beta \in \HU \setminus \CU \quad \pclinecomment{Same uncorrupted owner} \\
-%             \text{Check } \phi(\{\cred_{0,j_k}\}) = \phi(\{\cred_{1,j_k}\}) = 1 \quad \pclinecomment{Both sets satisfy $\phi$} \\
-%             \pcif J_{\LoR} \neq \emptyset \text{ and } \langle \creds_0, \creds_1 \rangle \notin J_{\LoR}, \pcreturn \bot \quad \pclinecomment{Optional consistency} \\
-%             \pi_b \gets \Show(\{\cred_{b,j_k}\}, \usk[i_b], \phi) \quad \pclinecomment{Showing for bit $b$} \\
-%             J_{\LoR} \gets J_{\LoR} \cup \{\langle \creds_0, \creds_1 \rangle\} \\
-%             \pcreturn \pi_b \\
-%         }
-%     \end{pchstack}
-% \end{pcvstack}
-% \caption{The Anonymity game}
-% \label{fig:anonymity}
-% \end{figure}
 
 
 
@@ -514,37 +367,41 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 
 
 
-\subsection{Master Credential Protocol}
-The master credential issuance protocol enables a user to obtain their root credential, a rerandomizable signature over commitments from the Master Credential Issuer $\mathcal{I}_{\mathsf{m}}.$ The Master Credential is a signature $\sigmam$ over commitment $\cmm = \mathsf{CM.Com}([\id, \ctx]; \uskm)$
+\subsection{\MIMCABC Construction}
+The Credential is a signature $\sigma$ over commitment $\cm = \mathsf{CM.Com}([\id, \ctx, \attrs]; \usk)$ where $\attrs$ represents ancillary committed messages which we do not focus on in our protocol. 
+
+Notes
+\begin{itemize}
+    \item $j$ is the index for issuers
+    \item $i$ is the index for user's credentials
+\end{itemize}
+
 
 
 \begin{figure}
     \begin{center}
     \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
-    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$} \\[0.5em]
-    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg,p) \sample \BGGen(\secparam), \; \mathsf{ck_m} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$}\\[1em]
-    \multicolumn{3}{l}{$(\skm, \vkm) \sample \mathsf{RS.KeyGen}(\mathsf{ck_m}), \; \text{ Return } (\oskm, \opkm) = ((\skm),(\vkm, \ckm))$}\\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{UserKeyGen}(1^{\lambda})}: \usk \sample \Z_p, \text{ Return } \usk$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell, j)}$ for issuer $j$ and $\vec{m}$ length = $\ell$} \\[1em]
+    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg,p) \sample \BGGen(\secparam), \; \mathsf{ck_j} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$}\\[1em]
+    \multicolumn{3}{l}{$(\sk_j, \vk_j) \sample \mathsf{RS.KeyGen}(\mathsf{ck}_j), \; \text{ Return } (\osk_j, \opk_j) = ((\sk_j),(\vk_j, \ck_j))$}\\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
-    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\cm_1, \usk)| \cm_1 = g_1^0g_2^0g^{\usk}\}$}\\[1em]
+    \multicolumn{3}{l}{$\pircom(\cm) = \zkpok\{(\id, \ctx, \attrs, \usk)| \cm = g_1^{\id}g_2^{\ctx},\ldots, g^{\usk} \}$}\\[1em]
     \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) | \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$}\\[1em]
-    $\underline{\mathsf{Obtain}(\uskm, \opkm)}$ && $\underline{\mathsf{Issue(\cmm, \vec{m}, \oskm)}}$ \\[1em]
+    $\underline{\mathsf{Obtain}(\vec{m}, \opk)}$ && $\underline{\Issue(\pircom, \cm, \osk)}$ \\[1em]
     If  $\pirverkey(\sk, \vk, \ck)$ fails, return $\bot$ & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & \\[1em]
-    $\cm_1 = \CMCom([0,0];\usk)$ & $\xrightarrow{\pirzero(\cm_1)}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
-    \multicolumn{3}{r}{$\cm_2 = \CMCom([\id, \ctx]; 0), \; \cmm = \cm_1 \cdot \cm_2 $} \\[1em]
-    If $\cmm \neq \CMCom([\id, \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, \ctx, \sigmam}$ & $u \sample \Z_p$, $\sigmam \sample \RSSign(\cmm, \osk, u)$ \\[1em]
-    \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$, return $\bot$} \\[1em]
-    \multicolumn{3}{l}{Else, return $\credm \gets (\sigmam, \cmm, \opkm)$} \\[1em]
+    $\usk \sample \Z_p, \cm = \CMCom([\id,\ctx, \attrs];\usk)$ & $\xrightarrow{\;\; \pircom(\cm) \;\;}$ & \;\; If $ \pircom(\cm)$ fails, return $\bot$ \\[1em]
+    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$  & $\xleftarrow{\qquad \sigma \qquad}$ & $u \sample \Z_p$, $\sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{\; Else, return $\cred_{j,i} \gets (\sigma, \cm, \usk, \opk_j)$} \\[1em]
     \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
-    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\usk') \; | \; \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1 \; \wedge \; \ctx = "master"\}$}\\[1em]
-    $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
-    \multicolumn{3}{l}{Let $\credm = (\sigmam, \cmm, \uskm, \opkm)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
-    \multicolumn{3}{l}{$\sigmam' = (\sigmamone^{u_\Delta}, (\sigmamtwo \cdot \sigmamone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigmam, \usk_\Delta, u_\Delta)$}\\[1em]
-    \multicolumn{3}{l}{$\cmm' = (\cmm \cdot g^{\usk_\Delta}) \gets \CMRand(\cmm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
-    $\credm' = (\sigmam', \cmm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\credm')}$ & If $\pirsok(\credm')$ fails, return 0, else 1\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\cred') = \zkpok\{(\id, \ctx,\usk') \; | \; \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigma', \opk) = 1 \; \wedge \}$}\\[1em]
+    $\underline{\mathsf{Show}(\cred, \phi)}$ && $\underline{\mathsf{Verify(\sigma', \cm', \pi, \opk)}}$ \\[1em]
+    \multicolumn{3}{l}{Let $\cred = (\sigma, \cm, \usk, \opk)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
+    \multicolumn{3}{l}{$\sigma' = (\sigmaone^{u_\Delta}, (\sigmatwo \cdot \sigmaone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigma, \usk_\Delta, u_\Delta)$}\\[1em]
+    \multicolumn{3}{l}{$\cm' = (\cm \cdot g^{\usk_\Delta}) \gets \CMRand(\cm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
+    $\cred' = (\sigmam', \cm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\cred')}$ & If $\pirsok(\cred')$ fails, return 0, else 1\\[1em]
     \end{tabular}
     \end{center}
-    \caption{Master Credential Protocol}
+    \caption{\MIMCABC system}
     \label{fig:master-cred-protocol}
 \end{figure}
 
@@ -2052,3 +1909,79 @@ If $\adv$ succeeds with probability $\epsilon$ then $\advbthree$ breaks commitme
 
 
 
+
+\begin{figure}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$} \\[0.5em]
+    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg,p) \sample \BGGen(\secparam), \; \mathsf{ck_m} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$}\\[1em]
+    \multicolumn{3}{l}{$(\skm, \vkm) \sample \mathsf{RS.KeyGen}(\mathsf{ck_m}), \; \text{ Return } (\oskm, \opkm) = ((\skm),(\vkm, \ckm))$}\\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{UserKeyGen}(1^{\lambda})}: \usk \sample \Z_p, \text{ Return } \usk$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
+    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\cm_1, \usk)| \cm_1 = g_1^0g_2^0g^{\usk}\}$}\\[1em]
+    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) | \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$}\\[1em]
+    $\underline{\mathsf{Obtain}(\uskm, \opkm)}$ && $\underline{\mathsf{Issue(\cmm, \vec{m}, \oskm)}}$ \\[1em]
+    If  $\pirverkey(\sk, \vk, \ck)$ fails, return $\bot$ & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & \\[1em]
+    $\cm_1 = \CMCom([0,0];\usk)$ & $\xrightarrow{\pirzero(\cm_1)}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
+    \multicolumn{3}{r}{$\cm_2 = \CMCom([\id, \ctx]; 0), \; \cmm = \cm_1 \cdot \cm_2 $} \\[1em]
+    If $\cmm \neq \CMCom([\id, \ctx];\usk) \; $ or  & $\xleftarrow{\cmm, \id, \ctx, \sigmam}$ & $u \sample \Z_p$, $\sigmam \sample \RSSign(\cmm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmam, \cmm, \opk) = 0$, return $\bot$} \\[1em]
+    \multicolumn{3}{l}{Else, return $\credm \gets (\sigmam, \cmm, \opkm)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\usk') \; | \; \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1 \; \wedge \; \ctx = "master"\}$}\\[1em]
+    $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
+    \multicolumn{3}{l}{Let $\credm = (\sigmam, \cmm, \uskm, \opkm)$, sample $\usk_\Delta, u_\Delta \sample \Z_p^2$}\\[1em]
+    \multicolumn{3}{l}{$\sigmam' = (\sigmamone^{u_\Delta}, (\sigmamtwo \cdot \sigmamone^{\usk_\Delta})^{u_\Delta}) \gets \RSRand(\sigmam, \usk_\Delta, u_\Delta)$}\\[1em]
+    \multicolumn{3}{l}{$\cmm' = (\cmm \cdot g^{\usk_\Delta}) \gets \CMRand(\cmm, \usk_\Delta)$, $\usk' = \usk + \usk_\Delta$}\\[1em]
+    $\credm' = (\sigmam', \cmm', \usk', u_\Delta)$ & $\xrightarrow{\pirsok(\credm')}$ & If $\pirsok(\credm')$ fails, return 0, else 1\\[1em]
+    \end{tabular}
+    \end{center}
+    \caption{Master Credential Protocol}
+    \label{fig:master-cred-protocol}
+\end{figure}
+
+
+\paragraph{Informal Security Analysis}
+The two-party process between the user and master credential oracle ensures sybil resistance of unique identifier $\id$; the oracle has access to the user information and checks duplicate issuance within their own identity system. $\User$'s $\usk$ remains hidden via the hiding property of the commitment $\cm_1$ malicious use prevented by $\pirzero$
+
+
+
+
+
+
+\newpage
+\subsection{Context Credential Protocol}
+The context credential issuance protocol enables a user to obtain a context credential linked to their root credential. The Context Credential $\credc$ contains a signature $\sigmac$ over commitment $\cmc = \mathsf{CM.Com}([\id, \ctx]; \uskc)$ issued by $\mathcal{I}_{\mathsf{c}}$
+
+
+\begin{figure}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{(\mathsf{OrgKeyGen}, \mathsf{UserKeyGen}):}$ proceed analogously to Master Credential} \\[1em] %, outputs are $\ckc, \skc, \vkc, \oskc, \opkc, \uskc$
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:}\\[1em]
+    \multicolumn{3}{l}{$\pirverkey$ proceed analogously to Master Credential}\\[1em]
+    \multicolumn{3}{l}{$\pirdisclose(\cmc, \phi) = \zkpok\{(\id, \ctx, \usk)| \cmc = g_1^{\id}g_2^{\ctx}g^{\uskc} \wedge \ctx = "context"\}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\usk')| \cmm' = \CMCom([\id, \ctx]; \usk') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
+    \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
+    $\underline{\mathsf{Obtain}(\uskc, \opkc, \vec{m})}$ && $\underline{\mathsf{Issue(\cmc, \oskc)}}$ \\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirdisclose(\cmc), \pireq(\cmm', \cmc') }$} \\[1em]
+    \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirdisclose(\cmc)$, or $\pireq(\cmm', \cmc)$ fails, return $\bot$.} \\[1em]
+    If $\cmc \neq \CMCom([\id, \ctx];\uskc) \; $ or  & $\xleftarrow{\cmc, \id, \ctx, \sigmac}$ & Else, $u \sample \Z_p$, $\sigmac \sample \RSSign(\cmc, \oskc, u)$ \\[1em]
+    \multicolumn{3}{l}{If $\RSVer(\sigmac, \cmc, \opkc) = 0$, return $\bot$} \\[1em]
+    \multicolumn{3}{l}{Else, return $\credc \gets (\sigmac, \cmc, \opkc)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{(\mathsf{Show}, \mathsf{Verify}):}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credm') = \zkpok\{(\id, \ctx,\uskm')| \cmm' = \CMCom([\id, \ctx]; \uskm') \wedge \RSVer(\sigmam', \opkm) = 1 \wedge \ctx = "master" \}$}\\[1em]
+    \multicolumn{3}{l}{$\pirsok(\credc') = \zkpok\{(\id, \ctx,\uskc')| \cmc' = \CMCom([\id, \ctx]; \uskc') \wedge \RSVer(\sigmac', \opkc) = 1 \wedge \ctx = "context"\}$}\\[1em]
+    \multicolumn{3}{l}{$\pireq(\cmm', \cmc) = \zkpok\{(\id, \ctxm, \ctxc, \uskm, \uskc) | \cmm = \CMCom([\id, \ctxm]; \uskm) \wedge \cmc = \CMCom([\id, \ctxc]; \uskc) \}$}\\[1em]
+    $\underline{\mathsf{Show}(\credm)}$ && $\underline{\mathsf{Verify(\sigmam', \cmm', \opkm)}}$ \\[1em]
+    \multicolumn{3}{l}{Compute $\credm', \credc'$ analogously to Master Credential}\\[1em]
+    \multicolumn{3}{c}{$\xrightarrow{\pirsok(\credm'), \pirsok(\credc'), \pireq(\cmm', \cmc')}$} \\[1em]
+    \multicolumn{3}{r}{If $\pirsok(\credm')$, or $\pirsok(\credc')$, or $\pireq(\cmm', \cmc')$ fails, return 0, Else 1}\\[1em]
+    \end{tabular}
+    \end{center}
+    \caption{Context Credential Protocol}
+    \label{fig:context-cred-protocol}
+\end{figure}
+
+
+\subsection{Intuition of Construction}
