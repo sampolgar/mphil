@@ -1087,3 +1087,49 @@ Notes 20/2 trying to understand basics of proofs w/o the oracles
 % Commitment binding ensures the id can't change after commitment
 % ZK soundness ensures π^Req actually proves knowledge of same id
 
+
+
+
+% \begin{definition}[Symmetric Group Correctness]
+% A rerandomizable commitment scheme $\mathsf{CM}$ satisfies symmetric group correctness if for all $n \in \mathbb{N}$ and all $\vec{m} \in \mathcal{M}^n$:
+%   \[
+%         \Pr\left[
+%         \begin{array}{l}
+%             \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
+%             (\cm, \widehat{\cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m})
+%         \end{array}
+%         : e(\cm, \widehat{g}) = e(g, \widehat{cm})
+%         \right] = 1
+%     \]
+%     \[
+%         \Pr\left[
+%         \begin{array}{l}
+%             (\cm', \widehat{\cm'}, r') \sample \mathsf{Rerand}(\mathsf{ck}, \cm, \widehat{\cm}, r)
+%         \end{array}
+%         : e(\cm', \widehat{g}) = e(g, \widehat{\cm'})
+%         \right] = 1
+%     \]
+% \noindent where $g, \widehat{g}$ are the generators specified in $\mathsf{ck}$ for $\G_1, \G_2$ respectively.
+% \end{definition}
+
+
+
+
+% \begin{definition}[Additive Homomorphism]
+% A rerandomizable commitment scheme $\mathsf{CM}$ is additively homomorphic if for all $\vec{m}_1, \vec{m}_2 \in \mathcal{M}^n$ and randomness $r_1, r_2 \in \Z_p$:
+% \[
+%     \Pr\left[
+%     \begin{array}{l}
+%         \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
+%         (\cm_1, r_1) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m}_1) \\
+%         (\cm_2, r_2) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m}_2)
+%     \end{array}
+%     : \cm_1 \cdot \cm_2 = \mathsf{Commit}(\mathsf{ck}, \vec{m}_1 + \vec{m}_2, r_1 + r_2)
+%     \right] = 1
+% \]
+
+% \noindent Furthermore, for symmetric group correctness, the homomorphism must hold across groups:
+% \[
+%     e(\cm_1 \cdot \cm_2, \widehat{g}) = e(g, \widehat{\cm_1} \cdot \widehat{\cm_2})
+% \]
+% \end{definition}

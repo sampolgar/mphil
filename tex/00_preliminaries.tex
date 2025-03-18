@@ -2,7 +2,83 @@
 % Literature Review https://arxiv.org/pdf/2501.07209
 % 
 
+\newpage
+\section{Preliminaries}
 
+\begin{definition}[Signature Scheme]
+A signature scheme $\mathsf{Sig}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ where:
+
+\begin{itemize}
+    \item $\mathsf{KeyGen}(1^\lambda) \rightarrow (\mathsf{sk}, \mathsf{pk})$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a secret signing key $\mathsf{sk}$ and a public verification key $\mathsf{pk}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{pk}$.
+    
+    \item $\mathsf{Sign}(\mathsf{sk}, m; r) \rightarrow \sigma$: is a probabilistic algorithm that takes as input the secret key $\mathsf{sk}$, a message $m \in \mathcal{M}$, and random coins $r$ sampled from the randomness space $\mathcal{R}$. It outputs a signature $\sigma$.
+    
+    \item $\mathsf{Verify}(\mathsf{pk}, m, \sigma) \rightarrow b$: is a deterministic algorithm that takes as input the public key $\mathsf{pk}$, a message $m \in \mathcal{M}$, and a signature $\sigma$. It outputs a bit $b \in \{0,1\}$, where 1 indicates acceptance and 0 indicates rejection.
+\end{itemize}
+
+\end{definition}
+
+\begin{definition}[Correctness]
+A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is correct if for all $k \in \mathbb{N}$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^k)]$ and all $m \in \mathcal{M}$ we have:
+
+$$\Pr[\mathsf{Verify}(m, \mathsf{Sign}(m, \mathsf{sk}), \mathsf{pk}) = 1] = 1.$$
+\end{definition}
+
+\begin{definition}[EUF-CMA Security]
+A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    (\mathsf{sk}, \mathsf{pk}) \sample \mathsf{KeyGen}(1^\lambda) \\
+    (m^*, \sigma^*) \sample \mathcal{A}^{\mathcal{O}_{\mathsf{sk}}}(\mathsf{pk})
+\end{array} : \begin{array}{l}
+    m^* \notin Q \land \\
+    \mathsf{Verify}(m^*, \sigma^*, \mathsf{pk}) = 1
+\end{array}\right] \leq \negl$$
+where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access to $\mathsf{sk}$ is defined by:
+\[
+\text{Oracle }\mathcal{O}_{\mathsf{sk}}(m): \text{ Returns } \sigma \gets \mathsf{Sign}(m, \mathsf{sk})
+\]
+\end{definition}
+
+\begin{definition}[Commitment Scheme]\label{def:commitmentscheme}
+A commitment scheme $\mathsf{Com}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ where:
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda) \rightarrow \mathsf{ck}$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a commitment key $\mathsf{ck}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{ck}$.
+    
+    \item $\mathsf{Commit}(\mathsf{ck}, m) \rightarrow (\mathsf{cm}, r)$: is a probabilistic algorithm that takes as input the commitment key $\mathsf{ck}$ and a message $m \in \mathcal{M}$. It outputs a commitment $\mathsf{cm}$ and an opening value $r$.
+    
+    \item $\mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m, r) \rightarrow b$: is a deterministic algorithm that takes as input the commitment key $\mathsf{ck}$, a commitment $\mathsf{cm}$, a message $m$, and an opening value $r$. It outputs a bit $b \in \{0,1\}$, where 1 indicates a valid opening and 0 indicates an invalid opening.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Correctness]
+A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is correct if for all $\lambda \in \mathbb{N}$, all commitment keys $\mathsf{ck} \in [\mathsf{Setup}(1^\lambda)]$, and all messages $m \in \mathcal{M}$:
+$$\Pr[(\mathsf{cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, m) : \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m, r) = 1] = 1.$$
+\end{definition}
+
+\begin{definition}[Hiding]
+A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is hiding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\left|\Pr\left[\begin{array}{l}
+    \mathsf{ck} \sample \mathsf{Setup}(1^\lambda) \\
+    (m_0, m_1) \sample \mathcal{A}(\mathsf{ck}) \\
+    b \sample \{0,1\} \\
+    (\mathsf{cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, m_b) \\
+    b' \sample \mathcal{A}(\mathsf{ck}, \mathsf{cm})
+\end{array} : b' = b\right] - \frac{1}{2}\right| \leq \negl(\lambda)$$
+\end{definition}
+
+\begin{definition}[Binding]
+A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \mathsf{ck} \sample \mathsf{Setup}(1^\lambda) \\
+    (\mathsf{cm}, m_0, m_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck})
+\end{array} : \begin{array}{l}
+    m_0 \neq m_1 \land \\
+    \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m_0, r_0) = 1 \land \\
+    \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m_1, r_1) = 1
+\end{array}\right] \leq \negl(\lambda)$$
+\end{definition}
+
+\subsection{Assumptions}
 \begin{definition}[LRSW Assumption in Bilinear Groups]
 For any PPT adversary $\mathcal{A}$, we say the LRSW assumption holds if there exists a negligible function $\negl$ such that:
 $$\Pr\left[\begin{array}{l}
@@ -89,52 +165,12 @@ where validity of input can be verified by checking $e(g, \tilde{g}^x) = e(g^x, 
 
 
 
-Assumptions from here - as discussed by UTT paper commitment instantiation
-The binding property holds under the SDL assumption of \cite{hutchison_get_2010}
-which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.) 
+% Assumptions from here - as discussed by UTT paper commitment instantiation
+% The binding property holds under the SDL assumption of \cite{hutchison_get_2010}
+% which follows from 1-SDH of \cite{boneh_short_2008}. (See Section I for details.) 
 
 
 
-\subsection{Digital Signatures}
-
-\begin{definition}[Signature Scheme]
-A signature scheme $\mathsf{Sig}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ where:
-
-\begin{itemize}
-    \item $\mathsf{KeyGen}(1^\lambda) \rightarrow (\mathsf{sk}, \mathsf{pk})$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a secret signing key $\mathsf{sk}$ and a public verification key $\mathsf{pk}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{pk}$.
-    
-    \item $\mathsf{Sign}(\mathsf{sk}, m; r) \rightarrow \sigma$: is a probabilistic algorithm that takes as input the secret key $\mathsf{sk}$, a message $m \in \mathcal{M}$, and random coins $r$ sampled from the randomness space $\mathcal{R}$. It outputs a signature $\sigma$.
-    
-    \item $\mathsf{Verify}(\mathsf{pk}, m, \sigma) \rightarrow b$: is a deterministic algorithm that takes as input the public key $\mathsf{pk}$, a message $m \in \mathcal{M}$, and a signature $\sigma$. It outputs a bit $b \in \{0,1\}$, where 1 indicates acceptance and 0 indicates rejection.
-\end{itemize}
-
-The scheme must satisfy the following correctness property:
-For all $\lambda \in \mathbb{N}$, all $(\mathsf{sk}, \mathsf{pk}) \leftarrow \mathsf{KeyGen}(1^\lambda)$, all messages $m \in \mathcal{M}$, and all random coins $r \in \mathcal{R}$:
-
-$$\Pr[\mathsf{Verify}(\mathsf{pk}, m, \mathsf{Sign}(\mathsf{sk}, m; r)) = 1] = 1$$
-
-\end{definition}
-
-\begin{definition}[Correctness]
-A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is correct if for all $k \in \mathbb{N}$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^k)]$ and all $m \in \mathcal{M}$ we have:
-
-$$\Pr[\mathsf{Verify}(m, \mathsf{Sign}(m, \mathsf{sk}), \mathsf{pk}) = 1] = 1.$$
-\end{definition}
-
-\begin{definition}[EUF-CMA Security]
-A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-$$\Pr\left[\begin{array}{l}
-    (\mathsf{sk}, \mathsf{pk}) \sample \mathsf{KeyGen}(1^\lambda) \\
-    (m^*, \sigma^*) \sample \mathcal{A}^{\mathcal{O}_{\mathsf{sk}}}(\mathsf{pk})
-\end{array} : \begin{array}{l}
-    m^* \notin Q \land \\
-    \mathsf{Verify}(m^*, \sigma^*, \mathsf{pk}) = 1
-\end{array}\right] \leq \negl$$
-where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access to $\mathsf{sk}$ is defined by:
-\[
-\text{Oracle }\mathcal{O}_{\mathsf{sk}}(m): \text{ Returns } \sigma \gets \mathsf{Sign}(m, \mathsf{sk})
-\]
-\end{definition}
 
 
 
@@ -179,307 +215,111 @@ where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access 
 
 
 \newpage
-\section{Symmetric Rerandomizable Vector Commitments}\label{sec:commitment}
-We now introduce a specialized Pedersen commitment scheme from \cite{tomescu2022utt} and prove tight security as the building block for our anonymous credential system. Our construction extends the classical Pedersen Commitment scheme with three properties that are required for our multi-issuer, multi-credential setting construction:
-\begin{enumerate}
-    \item \textbf{Position Binding: } we need to commit to a vector of attributes $\{m_1, \ldots, m_n\}$ while ensuring the individual positions within the commitment remain binding. Position binding is useful when proving relations about specific committed attributes across multiple credentials. 
-    
-    \item \textbf{Symmetric across bilinear groups: } in order to support our pairing-based signatures and efficient zero-knowledge proofs, we require commitments to be represented and verified in both $\G_1, \G_2$ curve groups. 
-    
-    \item \textbf{Rerandomization: } we need the ability to rerandomize commitments while preserving their structure which supports unlinkability in credential presentations
-\end{enumerate}
+\section{Pedersen Commitment Scheme for a vector of messages}\label{sec:commitment}
+In this section, we introduce a specialized extension of Pedersen commitments that supports vector messages, rerandomizability, and position binding. Our main contribution is a security proof in the Algebraic Group Model (AGM) that establishes position binding based on the Symmetric Discrete Logarithm Problem (SDLP).
 
-\noindent Furthermore, our scheme often leverages Pedersen Commitments homomorphic properties, allowing us to combine multiple commitments with group operations. This enables us to bind credential attributes and hide secrets while maintaining privacy. 
+\subsection{Extended Properties}
 
-\subsubsection{Definition}
+Building on the standard commitment scheme defined in Section \ref{def:commitmentscheme}, we extend it with the following properties:
 
-\begin{definition}[Rerandomizable Vector Commitment scheme] 
-    A rerandomizable vector commitment scheme $\mathsf{RVC}$ is a tuple $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open}, \mathsf{Rerand})$ of PPT algorithms where:
-    
-    \begin{itemize}
-        \item $\mathsf{Setup}(1^\lambda, 1^n) \to \mathsf{ck}$ probabilistic algorithm that takes as input the security parameter $\lambda$ and vector length $n$ both in unary. It outputs the commitment key $\mathsf{ck}$ of length $n$
-        
-        \item $\mathsf{Commit}(\mathsf{ck}, \vect{m}) \to (\cm, r)$: probabilistic algorithm takes as input the commitment key $\mathsf{ck}$ and message vector $\vect{m} \in \mathcal{M}^n$ . Outputs the commitment $\cm$ and opening key $r$
+\begin{definition}[Rerandomizability]
+A commitment scheme $\mathsf{Com} = (\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is rerandomizable if it includes an additional algorithm $\mathsf{Rerand}$ such that:
 
-        \item $\mathsf{Open}(\mathsf{ck, cm}, \vec{m}, r) \to \bit$: deterministic algorithm, takes as input the commitment key $\mathsf{ck}$, commitment $\mathsf{cm}$, messages $\vec{m}$ and randomness $r$, outputs 1 if success, 0 for failure
+\begin{itemize}
+\item $\mathsf{Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta) \rightarrow (\mathsf{cm}', r')$: is a probabilistic algorithm that takes as input the commitment key $\mathsf{ck}$, a commitment $\mathsf{cm}$, and additional randomness $r_\Delta$. It outputs a new commitment $\mathsf{cm}'$ and updated opening value $r'$.
+\end{itemize}
 
-        \item $\mathsf{Rerand}(\mathsf{ck, cm}) \to (cm', r')$: probabilistic algorithm, takes as input the commitment key $\mathsf{ck}$, commitment $\mathsf{cm}$ outputs randomized commitment $\cm'$ and new randomness $r'$. 
-        
-    \end{itemize}
-\end{definition}
+For all $\lambda \in \mathbb{N}$, all $\mathsf{ck} \in [\mathsf{Setup}(1^\lambda)]$, all $m \in \mathcal{M}$, all $(\mathsf{cm}, r) \in [\mathsf{Commit}(\mathsf{ck}, m)]$, and all $r_\Delta$:
+$$\Pr[(\mathsf{cm}', r') \sample \mathsf{Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta) : \mathsf{Open}(\mathsf{ck}, \mathsf{cm}', m, r') = 1] = 1.$$
 
-\noindent A rerandomizable vector commitment scheme is secure if it's correct, hiding, binding, position binding, rerandomizable, and symmetric group correct. We use standard definitions for correctness, hiding, and binding.
-
-
-\begin{definition}[Correctness] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is correct if for all $n \in \N$ and all $\vec{m} \in \mathcal{M}^n$:
-        \[
-        \Pr
-            \left [
-                \begin{array}{l}
-                    \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
-                    (\cm, r) \gets \mathsf{Commit}(\mathsf{ck}, \vec{m}) \\
-                \end{array}
-                : 1 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}, r)
-            \right ] = 1
-    \]
-\end{definition}
-
-
-\begin{definition}[Perfect Hiding] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is perfectly hiding if for all (unbounded) adversaries $\AdvA$ and all message vectors $\vec{m}_0, \vec{m}_1$ of equal length:
-\[
-    \Pr
-        \left [
-            \begin{array}{l}
-                \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
-                (\vec{m}_0, \vec{m}_1) \gets \mathcal{A}(\mathsf{ck}) \\
-                b \sample \bit \\
-                (\cm_b, r_b) \gets \mathsf{Commit}(\mathsf{ck}, \vec{m}_b) \\
-                b' \gets \AdvA(\mathsf{ck}, \cm_b) \\
-            \end{array}
-            : b' = b
-        \right ]
-        = \frac{1}{2}
-\]
-\end{definition}
-
-
-\begin{definition}[Binding] A rerandomizable vector commitment scheme $\mathsf{RVC}$ is binding if for all $\PPT$ adversaries $\AdvA$ and all message vectors $\vec{m}_0, \vec{m}_1$ of equal length, there is a negligible function $\negl$ such that:
-    \[
-        \Pr
-        \left [
-            \begin{array}{l}
-            \mathsf{ck} \gets \mathsf{Setup}(1^\lambda, 1^n) \\
-            (\vec{m}_0, \vec{m}_1, r_0, r_1) \gets \AdvA(\mathsf{ck}) \\
-            \cm_0 \gets \mathcal{A}(\mathsf{CM.Com}(\ck, \vec{m}_0, r_0)) \\
-            b_0 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}_0, r_0) \\
-            b_1 \gets \mathsf{Open}(\mathsf{ck}, \cm, \vec{m}_1, r_1) \\
-            \end{array}
-            \quad : \quad  b_0 = b_1 = 1 \quad \land \quad  \vec{m}_0 \neq  \vec{m}_1
-        \right ] \leq \negl
-    \]
-Informally, No adversary $\AdvA$ should be able to open a commitment to two different messages, even when allowed to use different randomness values. This captures the "unforgeability" aspect of commitments. 
+Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indistinguishable from a fresh commitment to the same message.
 \end{definition}
 
 
 \begin{definition}[Position Binding]
-A rerandomizable vector commitment scheme $\mathsf{RVC}$ is position binding if for all $\PPT$ adversaries $\AdvA$ and where $\vec{m}_0, \vec{m}_1$ are vectors that differ only at position $i$, there is a negligible function $\negl$ such that:
+A commitment scheme with message vectors in $\mathcal{M}^n$ is position binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
     \Pr
     \left[
         \begin{array}{l}
         \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
-        (\cm, i, \vec{m}_0, \vec{m}_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck}) \\
-        \mathsf{Open}(\ck, \cm, \vec{m}_0, r_0, i) = 1 \\
-        \mathsf{Open}(\ck, \cm, \vec{m}_1, r_1, i) = 1 \\
+        (\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck}) 
         \end{array}
         : \begin{array}{l}
-            \vec{m}_0 \neq \vec{m}_1 \quad \wedge\\
-            \vec{m}_0[j] = \vec{m}_1[j] \; \forall \; j \neq i \\
+            \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, \vec{m}_0, r_0) = 1 \land \\
+            \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, \vec{m}_1, r_1) = 1 \land \\
+            \vec{m}_0[i] \neq \vec{m}_1[i] \land \\
+            \vec{m}_0[j] = \vec{m}_1[j] \; \forall j \neq i
           \end{array}
-    \right] \leq \negl
+    \right] \leq \negl(\lambda)
 \]
-Informally, this states that an adversary $\AdvA$ should not be able to open a commitment $\cm$ to index $i$ unless both commitments use the same message, even when the commitments only differ by position $i$
+This ensures that an adversary cannot open a commitment to two different values at any single position while keeping other positions constant.
 \end{definition}
 
+\subsection{Dual-Group Construction}
 
-
-
-
-\begin{definition}[Symmetric Group Correctness]
-A rerandomizable vector commitment scheme $\mathsf{RVC}$ satisfies symmetric group correctness if for all $n \in \mathbb{N}$ and all $\vec{m} \in \mathcal{M}^n$:
-  \[
-        \Pr\left[
-        \begin{array}{l}
-            \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
-            (\cm, \widehat{\cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m})
-        \end{array}
-        : e(\cm, \widehat{g}) = e(g, \widehat{cm})
-        \right] = 1
-    \]
-    \[
-        \Pr\left[
-        \begin{array}{l}
-            (\cm', \widehat{\cm'}, r') \sample \mathsf{Rerand}(\mathsf{ck}, \cm, \widehat{\cm}, r)
-        \end{array}
-        : e(\cm', \widehat{g}) = e(g, \widehat{\cm'})
-        \right] = 1
-    \]
-\noindent where $g, \widehat{g}$ are the generators specified in $\mathsf{ck}$ for $\G_1, \G_2$ respectively.
-\end{definition}
-
-
-
-
-\begin{definition}[Additive Homomorphism]
-A rerandomizable vector commitment scheme $\mathsf{RVC}$ is additively homomorphic if for all $\vec{m}_1, \vec{m}_2 \in \mathcal{M}^n$ and randomness $r_1, r_2 \in \Z_p$:
-\[
-    \Pr\left[
-    \begin{array}{l}
-        \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
-        (\cm_1, r_1) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m}_1) \\
-        (\cm_2, r_2) \sample \mathsf{Commit}(\mathsf{ck}, \vec{m}_2)
-    \end{array}
-    : \cm_1 \cdot \cm_2 = \mathsf{Commit}(\mathsf{ck}, \vec{m}_1 + \vec{m}_2, r_1 + r_2)
-    \right] = 1
-\]
-
-\noindent Furthermore, for symmetric group correctness, the homomorphism must hold across groups:
-\[
-    e(\cm_1 \cdot \cm_2, \widehat{g}) = e(g, \widehat{\cm_1} \cdot \widehat{\cm_2})
-\]
-\end{definition}
-
-% The homomorphic operation is the standard component-wise addition over Zp, and therefore one can add a value to a single entry without changing the other entries (by adding zeroes in all other locations). From UTT
-
-
-\subsection{Construction}
-We instantiate a dual-group Pedersen Vector Commitment scheme with groups $\G_1, \G_2$ to enable efficient verification within our signature construction. For commitments $\cm \in \G_1, \widetilde{\cm} \in \G_2$, we verify consistency via the pairing relation $e(\cm, \tilde{g}) = e(g, \widetilde{\cm})$.
-
-Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$. For message vector $\vec{m} = (m_1, \ldots, m_\ell) \in \Z_p^\ell$, our rerandomizable commitment scheme consists of the following algorithms:
+We instantiate a rerandomizable vector commitment scheme in the bilinear group setting as per the construction in \cite{tomescu2022utt} to enable efficient integration with our signature scheme. Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$.
 
 \begin{itemize}
-    \item $\mathsf{CM.Setup}(\secparam, \ell) \to \ck$:
-    Sample generators $(g, \tilde{g}) \sample \G_1 \times \G_2$
-    For $i \in [1,\ell]$: Sample $y_i \sample \Z_p$, compute $(g_i, \tilde{g}_i) \gets (g^{y_i}, \tilde{g}^{y_i})$
-    Return $\ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
+    \item $\mathsf{Setup}(1^\lambda, 1^n) \to \mathsf{ck}$:
+    Sample generators $(g, \tilde{g}) \sample \G_1 \times \G_2$.
+    For $i \in [1,n]$: Sample $y_i \sample \Z_p$, compute $(g_i, \tilde{g}_i) \gets (g^{y_i}, \tilde{g}^{y_i})$.
+    Return $\mathsf{ck} \gets (g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
     
-    \item $\mathsf{CM.Com}(\ck, \vec{m}) \to (\cm, \widetilde{\cm}, r)$:
-    Parse $\ck$ as $(g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
-    Sample $r \sample \Z_p$
-    Compute $\cm \gets g^r \prod_{i=1}^\ell g_i^{m_i}$ and $\widetilde{\cm} \gets \tilde{g}^r \prod_{i=1}^\ell \tilde{g}_i^{m_i}$
-    Return $(\cm, \widetilde{\cm}, r)$
+    \item $\mathsf{Commit}(\mathsf{ck}, \vec{m}) \to (\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$:
+    Parse $\mathsf{ck}$ as $(g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
+    Sample $r \sample \Z_p$.
+    Compute $\mathsf{cm} \gets g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} \gets \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
+    Return $(\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$.
     
-    \item $\mathsf{CM.Rerand}(\ck, \cm, \widetilde{\cm}, r_\Delta) \to (\cm', \widetilde{\cm'})$:
-    Parse $\ck$ as $(g, \cdot, \tilde{g}, \cdot)$
-    Compute $\cm' \gets \cm \cdot g^{r_\Delta}$ and $\widetilde{\cm'} \gets \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}$
-    Return $(\cm', \widetilde{\cm'})$
-
-    \item $\mathsf{CM.Open}$
+    \item $\mathsf{Open}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \vec{m}, r) \to \{0,1\}$:
+    Check if $\mathsf{cm} = g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} = \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
+    Additionally, verify $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$.
+    Return 1 if all checks pass, 0 otherwise.
+    
+    \item $\mathsf{Rerand}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \Delta_r) \to ({\mathsf{cm}}', \widetilde{\mathsf{cm}}', r')$:
+    Compute ${\mathsf{cm}}' \gets \mathsf{cm} \cdot g^{\Delta_r}$ and $\widetilde{\mathsf{cm}}' \gets \widetilde{\mathsf{cm}} \cdot \tilde{g}^{\Delta_r}$.
+    Set $r' \gets r + \Delta_r$.
+    Return $({\mathsf{cm}}', \widetilde{\mathsf{cm}}', r')$.
 \end{itemize}
 
-\paragraph{Homomorphic Properties}
-The scheme inherits the additive homomorphic properties of Pedersen commitments:
-
-\begin{itemize}
-    \item \textbf{Rerandomization:} For commitment $\cm = g^r\prod_{i=1}^\ell g_i^{m_i}$ and fresh randomness $r_\Delta \sample \Z_p$, the rerandomized commitment $\cm' = \cm \cdot g^{r_\Delta} = g^{r+r_\Delta}\prod_{i=1}^\ell g_i^{m_i}$ preserves the message vector while updating the randomness from $r$ to $r + r_\Delta$. By the DDH assumption in $\G_1$, $\cm'$ is computationally indistinguishable from $\cm$.
-    
-    \item \textbf{Two-Party Protocol:} For joint randomness generation:
-    \begin{enumerate}
-        \item User samples $s_1, r \sample \Z_p$ and commits: $\cm_1 \gets g^r g_1^{s_1}$
-        \item Authority samples $s_2 \sample \Z_p$ and computes: $\cm_2 \gets \cm_1 \cdot g_1^{s_2} = g^r g_1^{s_1 + s_2}$
-        \item Authority returns $(\cm_2, s_2)$, establishing shared secret $s_1 + s_2$
-    \end{enumerate}
-    
-    Security holds bidirectionally:
-    \begin{itemize}
-        \item \textbf{Unforgeability:} Computational binding under DL prevents malicious users from changing $s_1$ post-commitment
-        \item \textbf{Anonymity:} Perfect hiding of $\cm_1$ ensures zero knowledge of $s_1$ against malicious issuers
-    \end{itemize}
-\end{itemize}
-
-\subsection{Security of our Construction}
+This construction preserves the message vector while updating the randomness, making rerandomized commitments computationally indistinguishable from fresh commitments to the same message.
 
 
+\subsection{Security Analysis}
 
-% 
-% 
-% 
-% 
-% Proof in the AGM
-% 
-% 
+We now prove that our construction satisfies position binding in the Algebraic Group Model (AGM).
 
-\sam{Why are we using AGM}
+\begin{proof}[Sketch]
+We construct a reduction algorithm $\mathcal{B}$ that uses an adversary $\mathcal{A}$ against position binding to solve the SDLP problem \ref{sdlp}. $\mathcal{B}$ receives an SDLP instance $(g^x, \tilde{g}^x)$ and embeds it at a random position $i^* \in [1,n]$ in the commitment key:
 
-\begin{theorem}
-    In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG$, then our RVC scheme satisfies position binding. Specifically, for any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
-    \[
-        \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda) \leq \ell \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\mathbb{G}}(\lambda)
-    \]
-    where $\ell$ is the vector length.
-\end{theorem}
-
-\begin{proof}
-We prove via reduction in the AGM. Given an algebraic PPT adversary $\mathcal{A}$ that breaks position binding with non-negligible probability $\epsilon$, we construct a PPT algorithm $\mathcal{B}$ that solves SDLP with probability $\epsilon/\ell$. For clarity, we illustrate with $\ell = 3$; the proof generalizes naturally.
-
-Algorithm $\mathcal{B}$ works as follows:
 \begin{enumerate}
-    \item \textbf{Setup}: On input SDLP instance $(g^x, \tilde{g}^x) \in \mathbb{G}_1 \times \mathbb{G}_2$, $\mathcal{B}$ proceeds to:
-    \begin{enumerate}
-        \item Sample $i^* \sample [1,\ell]$ uniformly at random
-        \item For position $i^*$: set $(g_{i^*}, \tilde{g}_{i^*}) \gets (g^x, \tilde{g}^x)$
-        \item For positions $j \neq i^*$: sample $y_j \sample \mathbb{Z}_p$, set $(g_j, \tilde{g}_j) \gets (g^{y_j}, \tilde{g}^{y_j})$
-        \item Give $\mathsf{ck} = ((g_1, g_2, g_3), (\tilde{g}_1, \tilde{g}_2, \tilde{g}_3))$ to $\mathcal{A}$
-    \end{enumerate}
-    
-    \item \textbf{Position Binding Break}: Since $\mathcal{A}$ is algebraic, when it outputs $(\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1)$, it also provides the representation of $\mathsf{cm}$ in terms of the generators:
-    \begin{itemize}
-        \item $\mathsf{cm} \in \mathbb{G}_1$ with its algebraic representation
-        \item $i \in [1,\ell]$ is the position where binding breaks
-        \item $\vec{m}_0, \vec{m}_1 \in \mathbb{Z}_p^\ell$ differ only at position $i$
-        \item $r_0, r_1 \in \mathbb{Z}_p$ are opening randomness values
-    \end{itemize}
-    
-    \item \textbf{Extracting SDLP}: If $i \neq i^*$, abort. Otherwise:
-    \begin{enumerate}
-        \item By the algebraic property of $\mathcal{A}$, we have explicit representations of the commitment openings:
-        \[
-            g^{r_0}g_1^{m_{0,1}}g_2^{x \cdot m_{0,2}}g_3^{m_{0,3}} = g^{r_1}g_1^{m_{1,1}}g_2^{x \cdot m_{1,2}}g_3^{m_{1,3}}
-        \]
-        
-        \item Since these representations are explicit in the AGM, we can directly compare exponents:
-        \[
-            r_0 + y_1m_{0,1} + xm_{0,2} + y_3m_{0,3} = r_1 + y_1m_{1,1} + xm_{1,2} + y_3m_{1,3}
-        \]
-        
-        \item Since $\vec{m}_0$ and $\vec{m}_1$ differ only at position $i^*=2$, we have $m_{0,1}=m_{1,1}$ and $m_{0,3}=m_{1,3}$. Terms cancel:
-        \[
-            r_0 + xm_{0,2} = r_1 + xm_{1,2}
-        \]
-        
-        \item Solve for $x$:
-        \[
-            x \equiv \frac{r_1-r_0}{m_{0,2}-m_{1,2}} \pmod{p}
-        \]
-        Note: Division is well-defined as $m_{0,2} \neq m_{1,2}$ by assumption.
-    \end{enumerate}
+    \item $\mathcal{B}$ sets $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$
+    \item For all $j \neq i^*$, $\mathcal{B}$ generates $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ with $y_j \sample \Z_p$
+    \item When $\mathcal{A}$ outputs a position binding break $(\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1)$, if $i = i^*$, then $\mathcal{B}$ can solve for $x$
 \end{enumerate}
 
-The reduction succeeds whenever $i = i^*$ and $\mathcal{A}$ succeeds, which occurs with probability $\epsilon/\ell$. This is non-negligible when $\epsilon$ is non-negligible, contradicting the SDLP assumption.
+Since $\mathcal{A}$ is algebraic, $\mathcal{B}$ knows the representation of $\mathsf{cm}$ in terms of the group generators. When $i = i^*$ and $\mathcal{A}$ successfully breaks position binding, we have:
+\[
+    g^{r_0}g_1^{m_{0,1}}\cdots g_{i^*}^{m_{0,i^*}}\cdots g_n^{m_{0,n}} = g^{r_1}g_1^{m_{1,1}}\cdots g_{i^*}^{m_{1,i^*}}\cdots g_n^{m_{1,n}}
+\]
+
+Since $m_{0,j} = m_{1,j}$ for all $j \neq i^*$ and $m_{0,i^*} \neq m_{1,i^*}$, after simplification we get:
+\[
+    g^{r_0} (g^x)^{m_{0,i^*}} = g^{r_1} (g^x)^{m_{1,i^*}}
+\]
+
+Solving for $x$ yields:
+\[
+    x = \frac{r_1 - r_0}{m_{0,i^*} - m_{1,i^*}} \mod p
+\]
+
+The reduction succeeds whenever $i = i^*$ (probability $1/n$) and $\mathcal{A}$ breaks position binding, giving the stated bound.
 \end{proof}
 
+The hiding property follows directly from the perfect hiding of Pedersen commitments, while binding follows from the discrete logarithm assumption. For completeness, this construction also satisfies the standard homomorphic properties of Pedersen commitments, enabling efficient aggregation and zero-knowledge proofs in our credential system.
 
-\paragraph{Analysis:}
-We analyze the reduction's properties in detail:
-\begin{itemize}
-    \item \textbf{Perfect Simulation:} The commitment key distribution is identical to the real scheme:
-        \begin{itemize}
-            \item At position $i^*$: $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$ is uniformly distributed in $\G_1 \times \G_2$ by the SDLP instance properties
-            \item At positions $j \neq i^*$: $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ is uniform due to $y_j \sample \Z_p$
-            \item Therefore, from $\mathcal{A}$'s view, $\mathsf{ck}$ is distributed identically to the real scheme
-        \end{itemize}
-    
-    \item \textbf{Extraction Success:} $\mathcal{B}$ successfully extracts the SDLP solution when:
-        \begin{itemize}
-            \item $\mathcal{A}$ outputs a valid position binding break (occurs with probability $\epsilon$)
-            \item The guessed position matches: $i = i^*$ (occurs with probability $1/\ell$)
-            \item The extraction equation is solvable: $m_{0,i^*} \neq m_{1,i^*}$ (guaranteed by definition of position binding break)
-        \end{itemize}
-    
-    \item \textbf{Advantage Analysis:} Combining these probabilities:
-        \begin{itemize}
-            \item Events are independent as $i^*$ is chosen before $\mathcal{A}$'s execution
-            \item $\mathsf{Pr}[\mathcal{B} \text{ succeeds}] = \epsilon \cdot \frac{1}{\ell}$
-            \item Therefore: $\mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\G}(\lambda) \geq \frac{1}{\ell} \cdot \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda)$
-        \end{itemize}
-\end{itemize}
-
-Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $\epsilon$, then $\mathcal{B}$ solves SDLP with non-negligible probability $\epsilon/\ell$, contradicting the SDLP hardness assumption in $\G$.
-
-
-
-
-
+A full proof can be found in the appendix \ref{appendix:commitmentreduction}
 % % % % % % % % % % 
 % 
 % END Randomizable Vector Commitments
@@ -515,7 +355,7 @@ Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $
 
             \item $\mathsf{RS.Sign}(\mathsf{sk, cm};u ) \to \sigma$: probabilistic algorithm takes the signing key $\sk$, commitment $\cm$ from the commitment space $\mathcal{C}$ and random coins $u$ sampled from random space of the signature scheme. Output $\sigma$
 
-            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new signature $\sigma'$. 
+            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{pp,ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new rerandomized signature $\sigma'$. 
 
             \item $\mathsf{RS.Ver}(\mathsf{pk = (pp, vk, ck), cm}, \sigma) \rightarrow \bit$: is a deterministic algorithm, takes as input the public key $\mathsf{pk}$, $\cm \in \mathcal{C}$ and signature $\sigma$, outputs 1 for successful verification, otherwise 0. 
 
@@ -558,15 +398,15 @@ where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 \end{definition}
 
 
-\begin{definition}[$\mathsf{RS}$ Signature Adaptation Under Malicious Keys]
-A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
-\begin{itemize}
-    \item $\cm \in \mathcal{C}$ is a valid commitment,
-    \item $\sigma$ is a valid signature under $\pk$ (i.e., $\mathsf{RS.Ver}(\pk, \cm, \sigma) = 1$),
-    \item $r \in \Z_p^*$,
-\end{itemize}
-the distribution of $\mathsf{RS.Rerand}(\pk, \sigma, \mu)$ is identical to $\mathsf{RS.Sign}(\sk, \mathsf{CM.Rerand}(\ck, \cm, r))$, even when $\pk$ is adversarially generated.
-\end{definition}
+% \begin{definition}[Signature Adaptation Under Malicious Keys]
+% A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
+% \begin{itemize}
+%     \item $\cm \in \mathcal{C}$ is a valid commitment,
+%     \item $\sigma$ is a valid signature under $\pk$ (i.e., $\mathsf{RS.Ver}(\pk, \cm, \sigma) = 1$),
+%     \item $r \in \Z_p^*$,
+% \end{itemize}
+% the distribution of $\mathsf{RS.Rerand}(\pk, \sigma, \mu)$ is identical to $\mathsf{RS.Sign}(\sk, \mathsf{CM.Rerand}(\ck, \cm, r))$, even when $\pk$ is adversarially generated.
+% \end{definition}
 
 
 
@@ -599,7 +439,7 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
         \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): 
     \]
     \[
-         e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
+         e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widetilde{\cm}') \quad \wedge \quad
         e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
         \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
         \}
@@ -735,17 +575,94 @@ If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
     \]
 \end{itemize}
 
-% \noindent \paragraph{4. Analysis}
-
-% \begin{itemize}
-%     \item Total advantage partitions as $\epsilon \leq \epsilon_0 + \epsilon_1 + \frac{q_v + q_s + 1}{p}$
-%     \item The $\frac{1}{p}$ term accounts for coefficient collisions in setup
-%     \item Verification queries add $\frac{q_v}{p}$ error probability and
-% \end{itemize}
-% \[
-% \Adv^{\mathsf{euf\mbox{-}cca}}_{\mathcal{A}} \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0} + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1} + \frac{q_v + q_s}{p}
-% \]
 \end{proof}
 
 
 
+\section{Appendix}
+
+\subsection{Pedersen Commitment Reduction}\label{appendix:commitmentreduction}
+\begin{theorem}
+    In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG$, then our Commitment scheme satisfies position binding. Specifically, for any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
+    \[
+        \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda) \leq \ell \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\mathbb{G}}(\lambda)
+    \]
+    where $\ell$ is the vector length.
+\end{theorem}
+
+\begin{proof}
+We prove via reduction in the AGM. Given an algebraic PPT adversary $\mathcal{A}$ that breaks position binding with non-negligible probability $\epsilon$, we construct a PPT algorithm $\mathcal{B}$ that solves SDLP with probability $\epsilon/\ell$. For clarity, we illustrate with $\ell = 3$; the proof generalizes naturally.
+
+Algorithm $\mathcal{B}$ works as follows:
+\begin{enumerate}
+    \item \textbf{Setup}: On input SDLP instance $(g^x, \tilde{g}^x) \in \mathbb{G}_1 \times \mathbb{G}_2$, $\mathcal{B}$ proceeds to:
+    \begin{enumerate}
+        \item Sample $i^* \sample [1,\ell]$ uniformly at random
+        \item For position $i^*$: set $(g_{i^*}, \tilde{g}_{i^*}) \gets (g^x, \tilde{g}^x)$
+        \item For positions $j \neq i^*$: sample $y_j \sample \mathbb{Z}_p$, set $(g_j, \tilde{g}_j) \gets (g^{y_j}, \tilde{g}^{y_j})$
+        \item Give $\mathsf{ck} = ((g_1, g_2, g_3), (\tilde{g}_1, \tilde{g}_2, \tilde{g}_3))$ to $\mathcal{A}$
+    \end{enumerate}
+    
+    \item \textbf{Position Binding Break}: Since $\mathcal{A}$ is algebraic, when it outputs $(\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1)$, it also provides the representation of $\mathsf{cm}$ in terms of the generators:
+    \begin{itemize}
+        \item $\mathsf{cm} \in \mathbb{G}_1$ with its algebraic representation
+        \item $i \in [1,\ell]$ is the position where binding breaks
+        \item $\vec{m}_0, \vec{m}_1 \in \mathbb{Z}_p^\ell$ differ only at position $i$
+        \item $r_0, r_1 \in \mathbb{Z}_p$ are opening randomness values
+    \end{itemize}
+    
+    \item \textbf{Extracting SDLP}: If $i \neq i^*$, abort. Otherwise:
+    \begin{enumerate}
+        \item By the algebraic property of $\mathcal{A}$, we have explicit representations of the commitment openings:
+        \[
+            g^{r_0}g_1^{m_{0,1}}g_2^{x \cdot m_{0,2}}g_3^{m_{0,3}} = g^{r_1}g_1^{m_{1,1}}g_2^{x \cdot m_{1,2}}g_3^{m_{1,3}}
+        \]
+        
+        \item Since these representations are explicit in the AGM, we can directly compare exponents:
+        \[
+            r_0 + y_1m_{0,1} + xm_{0,2} + y_3m_{0,3} = r_1 + y_1m_{1,1} + xm_{1,2} + y_3m_{1,3}
+        \]
+        
+        \item Since $\vec{m}_0$ and $\vec{m}_1$ differ only at position $i^*=2$, we have $m_{0,1}=m_{1,1}$ and $m_{0,3}=m_{1,3}$. Terms cancel:
+        \[
+            r_0 + xm_{0,2} = r_1 + xm_{1,2}
+        \]
+        
+        \item Solve for $x$:
+        \[
+            x \equiv \frac{r_1-r_0}{m_{0,2}-m_{1,2}} \pmod{p}
+        \]
+        Note: Division is well-defined as $m_{0,2} \neq m_{1,2}$ by assumption.
+    \end{enumerate}
+\end{enumerate}
+
+The reduction succeeds whenever $i = i^*$ and $\mathcal{A}$ succeeds, which occurs with probability $\epsilon/\ell$. This is non-negligible when $\epsilon$ is non-negligible, contradicting the SDLP assumption.
+\end{proof}
+
+
+
+We analyze the reduction's properties in detail:
+\begin{itemize}
+    \item \textbf{Perfect Simulation:} The commitment key distribution is identical to the real scheme:
+        \begin{itemize}
+            \item At position $i^*$: $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$ is uniformly distributed in $\G_1 \times \G_2$ by the SDLP instance properties
+            \item At positions $j \neq i^*$: $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ is uniform due to $y_j \sample \Z_p$
+            \item Therefore, from $\mathcal{A}$'s view, $\mathsf{ck}$ is distributed identically to the real scheme
+        \end{itemize}
+    
+    \item \textbf{Extraction Success:} $\mathcal{B}$ successfully extracts the SDLP solution when:
+        \begin{itemize}
+            \item $\mathcal{A}$ outputs a valid position binding break (occurs with probability $\epsilon$)
+            \item The guessed position matches: $i = i^*$ (occurs with probability $1/\ell$)
+            \item The extraction equation is solvable: $m_{0,i^*} \neq m_{1,i^*}$ (guaranteed by definition of position binding break)
+        \end{itemize}
+    
+    \item \textbf{Advantage Analysis:} Combining these probabilities:
+        \begin{itemize}
+            \item Events are independent as $i^*$ is chosen before $\mathcal{A}$'s execution
+            \item $\mathsf{Pr}[\mathcal{B} \text{ succeeds}] = \epsilon \cdot \frac{1}{\ell}$
+            \item Therefore: $\mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\G}(\lambda) \geq \frac{1}{\ell} \cdot \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda)$
+        \end{itemize}
+\end{itemize}
+
+Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $\epsilon$, then $\mathcal{B}$ solves SDLP with non-negligible probability $\epsilon/\ell$, contradicting the SDLP hardness assumption in $\G$.

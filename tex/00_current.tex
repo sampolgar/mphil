@@ -39,11 +39,11 @@ Traditional centralized identity systems expose users to privacy risks (e.g., da
 \subsection{Contributions}
 
 \begin{enumerate}
-    \item We formalize Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC), introducing game-based security definitions tailored to multi-issuer challenges. These include cross-credential unlinkability, identity binding, and credential relationship binding. We construct a $\MIMCABC$ system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM)
+    \item Extend the rerandomizable signature from \cite{tomescu2022utt} 
+    We prove the commitment is position-binding and extend the signature scheme with an algorithm to verify the correctness of the issuer's secret key, verification key, and commitment key. We prove the construction is $\EUFCMA$ secure in the algebraic group model. We then show our optimized version achieves a 10\% reduction in overall prove and verify times to previous construction. 
+    
+    \item We formalize Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC), introducing game-based security definitions tailored to multi-issuer challenges. These include cross-credential unlinkability, identity binding, and credential relationship binding. We construct a $\MIMCABC$ system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM). In addition, our system ensures anonymity against malicious issuers
 
-    \item We propose an optimized variant of the Pointcheval-Sanders (PS) signature scheme, achieving a 10\% reduction in overall prove and verify times. This enhancement improves efficiency, making the system suitable for high-throughput applications.
-
-    \item  Anonymity Against Malicious Issuers: We prove our MIMC-ABC system ensures anonymity against malicious issuers
 \end{enumerate}
 
 
@@ -266,9 +266,9 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
             \pccomment{$\AdvA$ queries oracles} \\
             \AdvA^{\OHU, \OCU, \OOBTAIN}(\opk_j) \\
             \pccomment{Forgery} \\
-            \AdvA \text{ outputs } (\{\cred_k'^*\}, \{\cm_k'^*\} ) \\
+            \AdvA \text{ outputs } (\{\cred_k'^*\} = (\{\sigma_k'^*, \cm_k'^*\}) ) \\
             \pccomment{Winning Condition} \\
-            \Verify(\{\cred_k'^*\}, \{\cm_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1 \; \wedge \\
+            \Verify(\{\cred_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1 \; \wedge \\
             \t \forall k, \OWNR[\{\cred_k'^*\}] \neq i \in \CU \quad \pclinecomment{Version 1}\\
             \t \nexists i \in \CU : \phi^*(\vec{m}_{i,k}) = 1 \quad \pclinecomment{Version 2}\\
             \pccomment{i.e. the set of all $\{\cred_k'^*\}$} \\
@@ -496,21 +496,19 @@ The Credential is a signature $\sigma$ over commitment $\cm = \mathsf{CM.Com}([\
 
 \newpage
 \section{Security}
-We start the unforgeability proof by proving unforgeability in the single-issuer, multiple-credential model. We then extend it to include multiple credentials. 
 
-\subsection{Unforgeability, Single-Issuer}
-\begin{theorem}
-    If the rerandomizable signature scheme is $\EUFCMA$ secure, the commitment scheme is computationally binding, and the zero-knowledge proof system is simulation sound, then our $\MIMCABC$ scheme is unforgeable in the single-issuer, (multiple-credential) setting.
-\end{theorem}
-
-\begin{proof}[sketch]
-    We prove this by contradiction. Suppose there exists a $\PPT$ adversary $\AdvA$ that breaks the unforgeability of $\MIMCABC$ scheme with probability greater than negligible probability. Then we can construct three $\PPT$ adversaries $\advbone, \advbtwo, \advbthree$ that use $\AdvA's$ success to break either the $\EUFCMA$ of the signature scheme, the binding property of the commitment scheme, or the simulation soundness of the zero-knowledge proof system, respectively. Since all three schemes are assumed to be secure, $\AdvA's$ success probability must be negligible.
-\end{proof}
+\subsection{Unforgeability Reduction}
 
 
 
 
 
+
+
+
+
+In the unforgeability game, the adversary $\AdvA$ outputs a forgery, $\Verify(\{\cred_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1$. Using the $\Sigma$-protocol's extractor $\Extractor$, we obtain the attributes $\{\vec{m}_k^*\}$ and randomness $\{r^*_k\}$ such that each $\cred_k^*$ contains a valid signature $\sigma_k^*(\cm_k^*, \osk_j)$, and valid commitment commitment $\cm^*_k = g^{r_k^*} \prod_{i=1}^{\ell} g_i^{m_k, i}$ with $\{\vec{m_k^*}\}$ satisfying $\phi(\vec{m_k^*}) = 1$
+ 
 
 
 
@@ -521,6 +519,41 @@ We start the unforgeability proof by proving unforgeability in the single-issuer
 \newpage
 \section{Performance Evaluation}
 
+
+
+Describe the Variant: Explain what makes it efficient (e.g., fewer exponentiations, optimized pairing checks).
+Validate Security: Reference your security proofs or add a short discussion confirming it meets EUF-CMA and rerandomization requirements.
+Quantify Benefits: Report the 10\% reduction (or updated figures from your experiments) and compare it to the standard PS scheme.
+End to end implementation performance
+
+benchmark
+1. 1 issuer, 1 credential
+2. 1 issuer, multiple credentials
+3. multiple issuer, multiple credentials
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{ancilliary}
 \begin{table}[h]
     \centering
     \begin{tabular}{|c|c|c|c|c|}
@@ -541,746 +574,3 @@ We start the unforgeability proof by proving unforgeability in the single-issuer
 \todonote{Summarize / Introduce the step changes. Introduce all oracles. Introduce the step change in attacks. Summarise reductions after each step}
 
 
-
-
-
-\newpage
-\section{Unforgeability}
-
-\subsection{Step 1. Unforgeability: Single Issuer, Single Credential}
-
-Traditional unforgeability definitions for signature schemes are insufficient for anonymous credentials due to their rerandomizable nature. We address two critical attack vectors:
-\begin{enumerate}
-\item Creating new valid credentials not issued by legitimate authorities
-\item Using legitimately obtained credentials to satisfy predicates their attributes do not support
-\end{enumerate}
-
-\begin{definition}[Single-Issuer Single-Credential Unforgeability]
-A single-issuer single-credential system is unforgeable if for all $\PPT$ adversaries $\adv$:
-\[
-\Pr[\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda) = 1] \leq \negl(\lambda)
-\]
-\end{definition}
-
-\noindent The experiment $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}, \adv}(\lambda)$ proceeds as follows:
-
-\begin{enumerate}
-    \item \textbf{Setup:} Initialize $\ppar \gets \Setup(\secparam)$, $\ck \gets \CMSetup(\secparam)$, issuer key pair $(\osk, \opk) \gets \OrgKeyGen(\ppar)$, and empty sets $\HU, \CU, \CRED$.
-    
-    \item \textbf{Oracle Access:} $\adv^{\OHU, \OCU, \OOBTISS, \OSHOW}(\opk, \ck)$ interacts with the system.
-    
-    \item \textbf{Forgery:} $\adv$ outputs $(\cred'^*, \cm'^*, \pi^*, \phi^*)$.
-    
-    \item \textbf{Success:} The experiment returns 1 if:
-    \begin{itemize}
-        \item $\MIMCVerify(\cred'^*, \cm'^*, \pi^*, \phi^*) = 1$, and
-        \item $\forall \id \in \CU$, $\nexists (\vec{m}, \id, \cm, \sigma) \in \CRED$ such that $\phi^*(\vec{m}) = 1$
-    \end{itemize}
-\end{enumerate}
-
-\paragraph{Attack Scenarios}
-\begin{itemize}
-    \item \textbf{Type-1 Forgery (Credential Forgery):} An adversary produces a credential $\cred = (\sigma, \cm)$ that verifies without being legitimately issued, breaking the signature scheme's $\EUFCMA$ security.
-    
-    \item \textbf{Type-2 Forgery (Predicate Misuse):} A corrupt user with a valid credential for $\text{age} = 17$ attempts to satisfy $\phi=(\text{age} \geq 18)$ by creating a false proof, breaking $\ZKP$ soundness.
-\end{itemize}
-
-\noindent \textbf{Oracles:} The adversary interacts with the following oracles:
-
-\begin{itemize}
-    \item $\OHU(\id)$: Creates an honest user with identity $\id$ by adding $\id$ to $\HU$ and generating $\usk[\id] \sample \UserKeyGen(\secparam)$.
-    
-    \item $\OCU(\id)$: Corrupts user $\id$ by adding $\id$ to $\CU$. If $\id \in \HU$, removes $\id$ from $\HU$ and returns $\usk[\id]$ and all credentials in $\CRED$ for user $\id$.
-    
-    \item $\OOBTISS(\id, \vec{m})$: If $\id \in \HU$, computes $\cm \gets \CMCom([\vec{m}]; \usk[\id])$, $\sigma \gets \Issue(\osk, \cm)$, adds $(\vec{m}, \id, \cm, \sigma)$ to $\CRED$, and returns $\cred = (\sigma, \cm)$.
-    
-    \item $\OSHOW(\id, \phi)$: If $\id \in \HU$, finds a credential $(\vec{m}, \id, \cm, \sigma) \in \CRED$ where $\phi(\vec{m}) = 1$, and returns $(\cred', \cm', \pi) \gets \Show(\sigma, \cm, \usk[\id], \phi)$.
-\end{itemize}
-
-\noindent \textbf{Key Concepts:}
-\begin{itemize}
-    \item $\HU$: Set of honest users whose secret keys are unknown to $\adv$
-    \item $\CU$: Set of corrupt users whose secret keys are known to $\adv$
-    \item $\CRED$: Set of tuples $(\vec{m}, \id, \cm, \sigma)$ of issued credentials
-    \item $\phi$: Predicate function $\phi: \mathcal{M} \rightarrow \{0,1\}$ defining policy conditions
-    \item $\MIMCVerify$: Verifies both signature validity and predicate satisfaction
-\end{itemize}
-
-
-
-
-
-
-
-
-\newpage
-\subsection{Step 2. Unforgeability: Single Issuer, Multi-Credential Unforgeability}
-
-We now extend our unforgeability definition to address the case where a single issuer provides multiple credential types that must be used together in credential presentations.
-
-\begin{definition}
-A single-issuer multi-credential system is unforgeable if for all $\PPT$ adversaries $\adv$:
-\[
-\Pr[\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}, \adv}(\lambda) = 1] \leq \negl
-\]
-\end{definition}
-
-\noindent The experiment $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}, \adv}(\lambda)$ proceeds as follows:
-
-\begin{enumerate}
-    \item \textbf{Setup:} Initialize system parameters $\ppar \gets \Setup(\secparam)$, $\ck \gets \CMSetup(\secparam)$, a single issuer key pair $(\osk, \opk) \gets \OrgKeyGen(\ppar)$, and empty sets $\HU, \CU, \CRED_M, \CRED_C$.
-    
-    \item \textbf{Oracle Access:} $\adv$ interacts with oracles $\OHU, \OCU, \OOBTMASTER, \OOBTCONTEXT, \OSHOW$.
-    
-    \item \textbf{Forgery:} $\adv$ outputs $(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*)$.
-    
-    \item \textbf{Success:} The experiment returns 1 if:
-    \begin{itemize}
-        \item $\MIMCVerify(\credm'^*, \credc'^*, \cmm'^*, \cmc'^*, \pi^*, \phi^*) = 1$, and
-        \item $\nexists\, i \in \CU$ with $(\id_i, \attrsm, i, \cdot, \cdot) \in \CRED_M$ and $(\id_i, \attrsc, i, \cdot, \cdot) \in \CRED_C$ where $\phi^*((id_i, \attrsm), (id_i, \attrsc)) = 1$
-    \end{itemize}
-\end{enumerate}
-
-\paragraph{Attack Scenarios}
-The multi-credential setting introduces new attack vectors:
-\begin{itemize}
-    \item \textbf{Credential Binding Attacks:} Breaking the binding between credentials that should share the same identity
-    \item \textbf{Mix-and-Match Attacks:} Combining credentials from different identities to create unauthorized credential combinations
-    \item \textbf{Cross-Credential Attribute Manipulation:} Falsely claiming relationships between attributes across different credentials
-\end{itemize}
-
-\paragraph{Example 3 (Credential Binding Attack)} A corrupt user possesses legitimate credentials $\credm_A$ with $\id=123$ and $\credc_B$ with $\id=456$. They attempt to present these together with a forged zero-knowledge proof $\pi^*$ falsely claiming that both credentials share the same identity.
-
-\paragraph{Example 4 (Mixed Predicate Misuse)} A corrupt user with a master credential claiming $\text{age}=25$ and a context credential claiming $\text{drivingClass}=\text{"motorcycle"}$ attempts to satisfy the predicate $\phi=(\text{age} \geq 21 \land \text{drivingClass} = \text{"car"})$ by forging an incorrect zero-knowledge proof.
-
-\noindent \textbf{Oracle Functionality:}
-\begin{itemize}
-    \item $\OHU(i)$: Creates honest user $i$ with secret key $\usk[i]$ and identifier $\id_i$.
-    
-    \item $\OCU(i)$: Corrupts user $i$, revealing $\usk[i]$ and all credentials.
-    
-    \item $\OOBTMASTER(i, \attrsm)$: Issues master credential $\credm = (\sigmam, \cmm)$ where $\cmm = \CMCom([\id_i, \attrsm]; \usk[i])$ and $\sigmam = \Issue(\osk, \cmm)$.
-    
-    \item $\OOBTCONTEXT(i, \attrsc, \credm)$: Issues context credential $\credc = (\sigmac, \cmc)$ linked to $\credm$ where $\cmc = \CMCom([\id_i, \attrsc]; \usk[i])$ and $\sigmac = \Issue(\osk, \cmc)$ after verifying $\credm$ is valid for user $i$ and proving $\cmm, \cmc$ share the same $\id_i$.
-    
-    \item $\OSHOW(i, \phi)$: Returns rerandomized credentials with proof $\pi$ that they satisfy $\phi$ and share the same $\id_i$.
-\end{itemize}
-
-\noindent Intuitively, the adversary wins by producing valid credentials and a proof that satisfies a policy $\phi^*$ that no corrupt user's legitimate credentials could satisfy.
-
-
-
-
-
-
-\subsection{Step 3. Multi-Issuer Multi-Credential Unforgeability}
-
-A multi-issuer multi-credential system introduces new attack vectors beyond those in single-issuer scenarios. In this setting, users obtain credentials from multiple issuers and must prove these credentials share the same identity during verification.
-
-\begin{definition}[Unforgeability]
-A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-\[
-\Pr[\mathsf{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}, \mathcal{A}}(\lambda) = 1] \leq \negl(\lambda)
-\]
-\end{definition}
-
-\paragraph{Attack Vectors}
-\begin{itemize}
-        
-    \item \textbf{Issuer Collusion:} Corrupt issuers collaborate with malicious users to create credentials that circumvent the identity binding mechanisms.
-\end{itemize}
-
-\paragraph{Example (Identity Binding Attack)} A corrupt user possesses a master credential from issuer $j_1$ with $\id=123$ and another master credential from issuer $j_2$ with $\id=456$. The adversary attempts to prove these credentials share the same identity, a false claim that would break the equality proof soundness.
-
-\noindent The experiment $\mathsf{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}, \mathcal{A}}(\lambda)$ proceeds as follows:
-
-\begin{enumerate}
-    \item \textbf{Setup:} Initialize parameters and empty sets:
-    \begin{itemize}
-        \item $\mathsf{pp} \gets \Setup(1^\lambda)$, $\mathsf{ck} \gets \CMSetup(1^\lambda)$
-        \item For each issuer $j \in [n]$: $(\mathsf{osk}_j, \mathsf{opk}_j) \gets \OrgKeyGen(\mathsf{pp})$
-        \item Initialize $\mathsf{HU} = \emptyset$, $\mathsf{CU} = \emptyset$, and for each $j \in [n]$: $\CRED_j = \emptyset$, $\OWNR_j = \emptyset$
-        \item Give $\{\mathsf{opk}_j\}_{j \in [n]}$ and $\mathsf{ck}$ to $\mathcal{A}$
-    \end{itemize}
-    
-    \item \textbf{Oracle Access:} $\mathcal{A}$ is given access to the following oracles:
-    \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}(i)$: Creates an honest user with ID $i$ if $i \notin \mathsf{HU} \cup \mathsf{CU}$
-        \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupts a user $i \in \mathsf{HU}$, returning their secrets and credentials
-        \item $\mathcal{O}_{\mathsf{ObtMaster}}(i, \mathsf{attrs}_m, j)$: Issues a master credential to honest user $i$ from issuer $j$
-        \item $\mathcal{O}_{\mathsf{ObtContext}}(i, \mathsf{attrs}_c, \mathsf{cred}_m, j)$: Issues a context credential linked to $\mathsf{cred}_m$
-        \item $\mathcal{O}_{\mathsf{Show}}(i, \phi, \{j_k\}_{k \in K})$: Shows credentials of user $i$ from issuers $\{j_k\}$ satisfying $\phi$
-    \end{itemize}
-    
-    \item \textbf{Forgery:} $\mathcal{A}$ outputs $(\{\mathsf{cred}_k'^*\}_{k \in K}, \{\mathsf{cm}_k'^*\}_{k \in K}, \pi^*, \phi^*)$
-    
-    \item \textbf{Success Condition:} The experiment returns 1 if:
-    \begin{itemize}
-        \item $\MIMCVerify(\{\mathsf{cred}_k'^*\}_{k \in K}, \{\mathsf{cm}_k'^*\}_{k \in K}, \pi^*, \phi^*) = 1$, and
-        \item $\nexists i \in \mathsf{CU}$ such that $\forall k \in K$: $(\mathsf{id}_i, \mathsf{attrs}_k, i, \cdot, \cdot) \in \CRED_{j_k}$ and $\phi^*(\{(\mathsf{id}_i, \mathsf{attrs}_k)\}_{k \in K}) = 1$
-    \end{itemize}
-\end{enumerate}
-
-\noindent The oracles operate as follows:
-
-\noindent \textbf{User Management:}
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{HU}}(i)$: If $i \notin \mathsf{HU} \cup \mathsf{CU}$, adds $i$ to $\mathsf{HU}$, generates $\mathsf{usk}[i] \sample \UserKeyGen(1^\lambda)$ and a unique $\mathsf{id}_i \sample \{0,1\}^\lambda$, then returns $i$.
-    
-    \item $\mathcal{O}_{\mathsf{CU}}(i)$: If $i \in \mathsf{HU}$, moves $i$ from $\mathsf{HU}$ to $\mathsf{CU}$ and returns $\mathsf{usk}[i]$, $\mathsf{id}_i$, and all credentials from all issuers owned by $i$.
-\end{itemize}
-
-\noindent \textbf{Credential Issuance:}
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{ObtMaster}}(i, \mathsf{attrs}_m, j)$: For honest user $i$, computes $\mathsf{cm}_m \gets \CMCom([\mathsf{id}_i, \mathsf{attrs}_m]; \mathsf{usk}[i])$, obtains signature $\sigma_m \gets \Issue_j(\mathsf{osk}_j, \mathsf{cm}_m)$, and returns credential $\mathsf{cred}_m = (\sigma_m, \mathsf{cm}_m, \mathsf{opk}_j)$ after updating $\CRED_j$ and $\OWNR_j$.
-    
-    \item $\mathcal{O}_{\mathsf{ObtContext}}(i, \mathsf{attrs}_c, \mathsf{cred}_m, j)$: Verifies $\mathsf{cred}_m$ belongs to user $i$, computes $\mathsf{cm}_c \gets \CMCom([\mathsf{id}_i, \mathsf{attrs}_c]; \mathsf{usk}[i])$ and equality proof $\pi_{\mathsf{eq}}$, then obtains $\sigma_c \gets \Issue_j(\mathsf{osk}_j, \mathsf{cm}_c, \pi_{\mathsf{eq}})$ and returns $\mathsf{cred}_c = (\sigma_c, \mathsf{cm}_c, \mathsf{opk}_j)$.
-\end{itemize}
-
-\noindent \textbf{Credential Showing:}
-\begin{itemize}
-    \item $\mathcal{O}_{\mathsf{Show}}(i, \phi, \{j_k\}_{k \in K})$: Finds credentials of user $i$ from issuers $\{j_k\}$ that satisfy $\phi$, rerandomizes them to $\{\mathsf{cred}_k', \mathsf{cm}_k'\}$, and returns these with a proof $\pi$ that they share the same identity and satisfy $\phi$.
-\end{itemize}
-
-\noindent Intuitively, the adversary's goal is to produce a forged cross-credential presentation that passes verification but cannot be traced to any single corrupt user's legitimate credentials. This captures the fundamental threat model of unauthorized credential creation or combination.
-
-
-
-\subsection{Unforgeability Reduction}
-
-We present a unified approach to proving unforgeability across all credential models: single-issuer single-credential, single-issuer multi-credential, and multi-issuer multi-credential. This approach classifies forgeries based on which underlying cryptographic primitive they violate, simplifying the security analysis while maintaining the full strength of the security guarantees.
-
-\begin{theorem}[Unified Unforgeability]
-If the rerandomizable signature scheme is $\EUFCMA$-secure, the commitment scheme is binding, and the zero-knowledge proof system is sound, then the multi-issuer multi-credential anonymous credential system satisfies unforgeability according to any of the experiment definitions $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer}}$, $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{SingleIssuer\text{-}MultiCred}}$, or $\mathrm{Exp}^{\mathsf{UNF}}_{\mathsf{MIMC\text{-}ABC}}$.
-\end{theorem}
-
-\begin{proof}
-We construct a unified reduction that maps any successful credential forgery to a break in one of the underlying security primitives. Our approach categorizes forgeries by which primitive they violate, regardless of the specific credential model.
-
-\paragraph{Forgery Classification}
-Any successful forgery against our credential system must fall into at least one of these categories:
-
-\begin{itemize}
-    \item \textbf{Type-A Forgery (Signature Forgery):} The adversary produces a valid signature on a commitment that was never legitimately signed by the claimed issuer.
-    
-    \item \textbf{Type-B Forgery (Commitment Binding Violation):} The adversary produces a proof involving a commitment that opens to values different from those originally committed.
-    
-    \item \textbf{Type-C Forgery (Zero-Knowledge Proof Soundness Violation):} The adversary produces a proof that verifies a false statement about credential attributes or relationships.
-\end{itemize}
-
-\paragraph{Reduction Setup}
-Given an adversary $\adv$ with non-negligible success probability $\epsilon$ against the unforgeability of our credential system, we construct a meta-reduction $\advb$ that receives challenges from all three underlying primitives and outputs a forgery against at least one of them with related probability.
-
-$\advb$ receives:
-\begin{itemize}
-    \item A verification key $\vk_j^*$ and signing oracle access $\OSIGN$ from the $\EUFCMA$ challenger for a randomly chosen issuer index $j^*$
-    \item A commitment key $\ck$ from the binding challenger
-    \item Parameters for verifying the soundness of zero-knowledge proofs
-\end{itemize}
-
-$\advb$ then:
-\begin{itemize}
-    \item Selects issuer $j^*$ uniformly from $[n]$ to embed the signature challenge
-    \item Generates all other issuer keys honestly: $\{(\osk_j, \opk_j)\}_{j \neq j^*}$ 
-    \item Sets $\opk_{j^*} = \vk_j^*$ (embedding the $\EUFCMA$ challenge)
-    \item Initializes empty sets $\HU$, $\CU$, credential maps $\{\CRED_j\}_{j \in [n]}$, and owner maps $\{\OWNR_j\}_{j \in [n]}$
-    \item Provides $\{\opk_j\}_{j \in [n]}$ and $\ck$ to $\adv$
-\end{itemize}
-
-\paragraph{Oracle Simulation}
-$\advb$ simulates all required oracles consistently:
-
-\begin{itemize}
-    \item $\OHU(i)$: Adds $i$ to $\HU$ and generates $\usk[i] \sample \UserKeyGen(\secparam)$ and a unique $\id_i$.
-    
-    \item $\OCU(i)$: If $i \in \HU$, moves $i$ to $\CU$ and returns all secrets and credentials for user $i$.
-    
-    \item $\mathcal{O}_{\mathsf{ObtMaster}}(i, \attrs_m, j)$: For honest user $i$ requesting a master credential from issuer $j$:
-    \begin{itemize}
-        \item Computes $\cm_m \gets \CMCom([\id_i, \attrs_m]; \usk[i])$
-        \item If $j = j^*$, obtains signature $\sigma_m \gets \OSIGN(\cm_m)$ using the $\EUFCMA$ signing oracle
-        \item If $j \neq j^*$, computes $\sigma_m \gets \Issue_j(\osk_j, \cm_m)$ using the honestly generated key
-        \item Records $(\id_i, \attrs_m, i, \cm_m, \sigma_m)$ in $\CRED_j$
-        \item Sets $\OWNR_j[(\sigma_m, \cm_m)] = i$
-        \item Returns credential $\cred_m = (\sigma_m, \cm_m, \opk_j)$
-    \end{itemize}
-    
-    \item $\mathcal{O}_{\mathsf{ObtContext}}$: Handles context credentials similarly, with additional verification that the master credential belongs to the user.
-    
-    \item $\OSHOW$: Simulates credential showing by finding appropriate credentials and generating rerandomized versions with proofs.
-\end{itemize}
-
-These simulations are perfect as $\advb$ uses the exact same distribution of parameters, keys, and signatures as the real system.
-
-\paragraph{Forgery Analysis}
-When $\adv$ outputs a purported forgery $(\{\cred_k'^*\}_{k \in K}, \{\cm_k'^*\}_{k \in K}, \pi^*, \phi^*)$, $\advb$ performs the following analysis:
-
-\begin{enumerate}
-    \item \textbf{Validity Check}: Verify that 
-    \[
-    \MIMCVerify(\{\cred_k'^*\}_{k \in K}, \{\cm_k'^*\}_{k \in K}, \pi^*, \phi^*) = 1
-    \]
-    
-    \item \textbf{Winning Condition Check}: Verify that 
-    \[
-    \nexists i \in \CU \text{ such that } \forall k \in K: (\id_i, \attrs_k, i, \cdot, \cdot) \in \CRED_{j_k} \text{ and } \phi^*(\{(\id_i, \attrs_k)\}_{k \in K}) = 1
-    \]
-    
-    \item \textbf{Forgery Type Classification}:
-    \begin{itemize}
-        \item \textbf{Check for Type-A}: For each credential $\cred_k'^* = (\sigma_k'^*, \cm_k'^*, \opk_{j_k})$, determine if $\sigma_k'^*$ is a valid signature on $\cm_k'^*$ under $\opk_{j_k}$, but $\cm_k'^*$ was never signed by issuer $j_k$ (accounting for rerandomization)
-        
-        \item \textbf{Check for Type-B}: Using the ZK proof extractor, extract the committed attributes $\{\attrs_k^*\}$ from $\{\cm_k'^*\}$ and check if any commitment opens to attributes different from those recorded during issuance
-        
-        \item \textbf{Check for Type-C}: Check if $\pi^*$ correctly proves the claimed relationship (e.g., identity equality across credentials) when the underlying attributes do not satisfy this relationship
-    \end{itemize}
-    
-    \item \textbf{Output Forgery}:
-    \begin{itemize}
-        \item If Type-A detected for issuer $j^*$: Output $(\cm_{j^*}'^*, \sigma_{j^*}'^*)$ as an $\EUFCMA$ forgery
-        \item If Type-B detected: Output the commitment and two different openings as a binding forgery
-        \item If Type-C detected: Output the proof $\pi^*$ and the false statement as a ZKP soundness forgery
-    \end{itemize}
-\end{enumerate}
-
-\paragraph{Probability Analysis}
-Given that $\adv$ succeeds with probability $\epsilon$, at least one of the forgery types must occur with probability at least $\epsilon/3$:
-
-\begin{itemize}
-    \item If Type-A forgeries occur with probability at least $\epsilon/3$, there's a $1/n$ chance that the targeted issuer is $j^*$, giving $\advb$ at least $\epsilon/(3n)$ probability of breaking $\EUFCMA$ security.
-    
-    \item If Type-B forgeries occur with probability at least $\epsilon/3$, $\advb$ breaks commitment binding with probability at least $\epsilon/3$.
-    
-    \item If Type-C forgeries occur with probability at least $\epsilon/3$, $\advb$ breaks ZKP soundness with probability at least $\epsilon/3$.
-\end{itemize}
-
-Thus, $\advb$ successfully breaks at least one of the underlying primitives with non-negligible probability, contradicting our security assumptions.
-
-\paragraph{Application to Specific Credential Models}
-Our unified reduction applies to all credential models by focusing on fundamental security violations:
-
-\begin{enumerate}
-    \item \textbf{Single-Issuer Single-Credential}: 
-    \begin{itemize}
-        \item Type-A reduces to creating a valid signature on a commitment that was never signed
-        \item Type-C reduces to falsely claiming a credential satisfies predicate $\phi$ when it doesn't
-    \end{itemize}
-    
-    \item \textbf{Single-Issuer Multi-Credential}:
-    \begin{itemize}
-        \item Adds the critical case of falsely claiming two credentials share the same identity
-        \item Falls under Type-C in our classification
-    \end{itemize}
-    
-    \item \textbf{Multi-Issuer Multi-Credential}:
-    \begin{itemize}
-        \item Handles the full case where credentials come from different issuers
-        \item The reduction embeds the $\EUFCMA$ challenge in a randomly chosen issuer
-    \end{itemize}
-\end{enumerate}
-
-Since any successful credential forgery must violate at least one of the underlying primitives, and our reduction correctly maps these violations to the appropriate forgery types, the unified proof establishes unforgeability for all credential models.
-\end{proof}
-
-
-
-\section{Anonymity}
-
-
-\begin{definition}[MIMC-ABC Anonymity]
-A MIMC-ABC system provides anonymity if for all PPT adversaries $\mathcal{A}$,
-\[
-\adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) := \left|\Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}1}_{\mathcal{A}}(\lambda)=1] - \Pr[\mathsf{Exp}^{\mathsf{anon}\mbox{-}0}_{\mathcal{A}}(\lambda)=1]\right| \leq \negl
-\]
-where the experiment $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$ proceeds as follows:
-\end{definition}
-
-\begin{enumerate}
-    \item \textbf{Setup Phase:}
-    \begin{itemize}
-        \item $\ppar \sample \mathsf{Setup}(1^\lambda)$
-        \item $(st, \{\mathsf{opk}_j\}_{j \in [n]}) \sample \mathcal{A}(\ppar)$ \quad \emph{// Adversary generates (potentially malicious) issuer keys}
-        \item Initialize $\mathsf{HU}, \mathsf{CU} \gets \emptyset$ \quad \emph{// Honest and corrupt users}
-        \item For each issuer $j \in [n]$: Initialize $\mathsf{CRED}_j, \mathsf{COM}_j, \mathsf{OWNR}_j \gets \emptyset$
-        \item $\mathcal{J}_{\mathsf{LoR}} \gets \emptyset$ \quad \emph{// Tracks challenge credential tuples}
-        \item Sample challenge bit $b \sample \{0,1\}$
-    \end{itemize}
-
-    \item \textbf{Query Phase:} $\mathcal{A}(st)$ adaptively accesses:
-    \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}(i)$: Create honest user $i$ with secret key $\mathsf{usk}[i]$, add to $\mathsf{HU}$
-        
-        \item $\mathcal{O}_{\mathsf{CU}}(i)$: Corrupt user $i \in \mathsf{HU}$, move to $\mathsf{CU}$, return $\mathsf{usk}[i]$ and all credentials 
-        
-        \item $\mathcal{O}_{\mathsf{Obtain}}(i, j, \vec{m})$: Honest user $i$ obtains credential from issuer $j$ for attributes $\vec{m}$
-        
-        \item $\mathcal{O}_{\mathsf{Show}}(i, \{\mathsf{cred}_{j_k}\}_{k \in K}, \phi)$: Honest user $i$ shows credentials $\{\mathsf{cred}_{j_k}\}$ satisfying predicate $\phi$
-        
-        \item $\mathcal{O}_{\mathsf{LoR}}(\{\mathsf{cred}_{0,j_k}\}_{k \in K}, \{\mathsf{cred}_{1,j_k}\}_{k \in K}, \phi) \rightarrow \pi_b$: Challenge oracle, detailed below
-    \end{itemize}
-
-    \item \textbf{Challenge Oracle $\mathcal{O}_{\mathsf{LoR}}$:}
-    \begin{itemize}
-        \item Input: Two credential sets $\mathsf{Creds}_0 = \{\mathsf{cred}_{0,j_k}\}_{k \in K}$ and $\mathsf{Creds}_1 = \{\mathsf{cred}_{1,j_k}\}_{k \in K}$ from issuers $\{j_k\}_{k \in K}$, and predicate $\phi$
-        
-        \item For $\beta \in \{0,1\}$: 
-        \begin{enumerate}
-            \item Determine $i_\beta \gets \mathsf{OWNR}_{j_1}[\mathsf{cred}_{\beta,j_1}]$ \quad \emph{// Owner of first credential}
-            \item Verify $\forall k \in K: \mathsf{OWNR}_{j_k}[\mathsf{cred}_{\beta,j_k}] = i_\beta$ \quad \emph{// Same owner across all credentials}
-            \item Require $i_\beta \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// Honest, uncorrupted user}
-        \end{enumerate}
-        
-        \item Verify $\phi(\{\mathsf{cred}_{0,j_k}\}_{k \in K}) = \phi(\{\mathsf{cred}_{1,j_k}\}_{k \in K}) = 1$ \quad \emph{// Both satisfy the predicate}
-        
-        \item Consistency check: If $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ and $(\mathsf{Creds}_0, \mathsf{Creds}_1) \notin \mathcal{J}_{\mathsf{LoR}}$, return $\bot$
-        
-        \item Compute showing proof: $\pi_b \gets \mathsf{Show}(\mathsf{Creds}_b, \phi)$ using bit $b$
-        
-        \item Update $\mathcal{J}_{\mathsf{LoR}} \gets \mathcal{J}_{\mathsf{LoR}} \cup \{(\mathsf{Creds}_0,\mathsf{Creds}_1)\}$
-        
-        \item Return $\pi_b$
-    \end{itemize}
-
-    \item \textbf{Win Condition:} $\mathcal{A}$ outputs guess $b' \in \{0,1\}$. 
-    Experiment returns 1 if and only if:
-    \begin{enumerate}
-        \item $b' = b$ \quad \emph{// Correct guess}
-        \item $\mathcal{J}_{\mathsf{LoR}} \neq \emptyset$ \quad \emph{// Challenge was used}
-        \item $\forall (\mathsf{Creds}_0,\mathsf{Creds}_1) \in \mathcal{J}_{\mathsf{LoR}}$ with $i_0 = \mathsf{OWNR}[\mathsf{Creds}_0]$ and $i_1 = \mathsf{OWNR}[\mathsf{Creds}_1]$: $i_0, i_1 \in \mathsf{HU} \setminus \mathsf{CU}$ \quad \emph{// No credential leakage}
-    \end{enumerate}
-\end{enumerate}
-
-\begin{theorem}[MIMC-ABC Anonymity]
-If the underlying rerandomizable signature scheme provides unlinkability after rerandomization, the commitment scheme is perfectly hiding, and the zero-knowledge proof system satisfies the zero-knowledge property, then the MIMC-ABC system provides anonymity as defined in $\mathsf{Exp}^{\mathsf{anon}\mbox{-}b}_{\mathcal{A}}(\lambda)$.
-
-Formally, for any PPT adversary $\mathcal{A}$ with non-negligible advantage $\epsilon(\lambda)$ in the anonymity experiment, there exists a PPT adversary $\mathcal{B}$ that breaks at least one of the underlying security properties with non-negligible advantage.
-\end{theorem}
-
-\begin{proof}
-We proceed via a hybrid argument. Let $\mathcal{A}$ be a PPT adversary against the anonymity of MIMC-ABC with advantage $\adv^{\mathsf{anon}}_{\mathcal{A}}(\lambda) = \epsilon(\lambda)$, which is non-negligible. We construct a simulator $\mathcal{B}$ that breaks the unlinkability of the rerandomizable signature scheme.
-
-Let $\mathcal{C}$ be the challenger for the signature scheme's unlinkability property. We construct the simulator:
-
-\begin{enumerate}
-    \item \textbf{Setup:}
-    \begin{itemize}
-        \item $\mathcal{B}$ receives public parameters from $\mathcal{C}$ and forwards them to $\mathcal{A}$
-        \item $\mathcal{A}$ generates $\{\mathsf{opk}_j\}_{j \in [n]}$ and sends to $\mathcal{B}$
-        \item $\mathcal{B}$ initializes $\mathsf{HU}, \mathsf{CU} \gets \emptyset$ and $\mathsf{CRED}_j, \mathsf{COM}_j, \mathsf{OWNR}_j \gets \emptyset$ for each issuer $j \in [n]$
-    \end{itemize}
-
-    \item \textbf{Oracle Simulation:}
-    \begin{itemize}
-        \item $\mathcal{O}_{\mathsf{HU}}(i)$: $\mathcal{B}$ generates $\mathsf{usk}[i]$ for honest user $i$ and adds $i$ to $\mathsf{HU}$
-        
-        \item $\mathcal{O}_{\mathsf{CU}}(i)$: If $i \in \mathsf{HU}$, $\mathcal{B}$ moves $i$ from $\mathsf{HU}$ to $\mathsf{CU}$ and returns $\mathsf{usk}[i]$ and all credentials
-        
-        \item $\mathcal{O}_{\mathsf{Obtain}}(i, j, \vec{m})$: $\mathcal{B}$ computes commitment $\cm_{i,j} \gets \mathsf{CM.Com}(\vec{m}; r_{i,j})$ and obtains signature $\sigma_{i,j}$ from $\mathcal{C}$ for honest user $i$
-        
-        \item $\mathcal{O}_{\mathsf{Show}}(i, \{\mathsf{cred}_{j_k}\}_{k \in K}, \phi)$: $\mathcal{B}$ rerandomizes credentials, constructs proof $\pi$, and returns $(\{\mathsf{cred}'_{j_k}\}_{k \in K}, \pi)$
-    \end{itemize}
-
-    \item \textbf{Challenge Oracle $\mathcal{O}_{\mathsf{LoR}}$:}
-    
-    When $\mathcal{A}$ queries $\mathcal{O}_{\mathsf{LoR}}(\{\mathsf{cred}_{0,j_k}\}_{k \in K}, \{\mathsf{cred}_{1,j_k}\}_{k \in K}, \phi)$:
-    \begin{itemize}
-        \item $\mathcal{B}$ verifies all requirements (credential consistency, predicate satisfaction, etc.)
-        
-        \item $\mathcal{B}$ extracts signatures $\{\sigma_{0,j_k}\}_{k \in K}$ and $\{\sigma_{1,j_k}\}_{k \in K}$ from credential sets
-        
-        \item $\mathcal{B}$ forwards these signatures to the unlinkability challenger $\mathcal{C}$
-        
-        \item $\mathcal{C}$ selects bit $d$ (which $\mathcal{B}$ doesn't know), rerandomizes signatures $\{\sigma_{d,j_k}\}_{k \in K}$ to $\{\sigma'_{j_k}\}_{k \in K}$, and returns them to $\mathcal{B}$
-        
-        \item $\mathcal{B}$ rerandomizes corresponding commitments consistently, and constructs ZK proof $\pi$ for predicate $\phi$
-        
-        \item $\mathcal{B}$ returns $(\{\mathsf{cred}'_{j_k}\}_{k \in K}, \pi)$ to $\mathcal{A}$
-    \end{itemize}
-
-    \item \textbf{Output:} When $\mathcal{A}$ outputs guess $b'$, $\mathcal{B}$ forwards $b'$ to $\mathcal{C}$ as its own guess
-\end{enumerate}
-
-\noindent We now analyze the security through a hybrid argument:
-
-\begin{itemize}
-    \item $H_0$: Original experiment with $b=0$ (showing credentials from set 0)
-    
-    \item $H_1$: Replace rerandomized signatures with simulated ones
-    
-    \item $H_2$: Replace zero-knowledge proofs with simulated ones
-    
-    \item $H_3$: Use commitments from credential set 1 instead of set 0
-    
-    \item $H_4$: Use real zero-knowledge proofs for credential set 1
-    
-    \item $H_5$: Use real rerandomized signatures for credential set 1 (equivalent to $b=1$ case)
-\end{itemize}
-
-\noindent For each consecutive pair of hybrids:
-
-\begin{itemize}
-    \item $H_0 \approx_c H_1$: Indistinguishable by the rerandomization property of the signature scheme
-    
-    \item $H_1 \approx_c H_2$: Indistinguishable by the zero-knowledge property of the proof system
-    
-    \item $H_2 \approx_c H_3$: Indistinguishable by the perfect hiding property of the commitment scheme
-    
-    \item $H_3 \approx_c H_4$: Indistinguishable by the zero-knowledge property of the proof system
-    
-    \item $H_4 \approx_c H_5$: Indistinguishable by the rerandomization property of the signature scheme
-\end{itemize}
-
-\noindent By the hybrid argument, $\mathcal{A}$'s advantage satisfies:
-\[
-\epsilon \leq \sum_{i=0}^{4} |\Pr[\mathcal{A}(H_i) = 1] - \Pr[\mathcal{A}(H_{i+1}) = 1]|
-\]
-
-\noindent If $\epsilon$ is non-negligible, then at least one term in this sum must be non-negligible, allowing $\mathcal{B}$ to break the corresponding security property with non-negligible advantage.
-
-\noindent For the multi-issuer case, we extend this argument by:
-\begin{enumerate}
-    \item Considering a sequence of hybrids where credentials from each issuer are progressively replaced
-    
-    \item Showing that distinguishing between these hybrids implies breaking the unlinkability of at least one issuer's signature scheme
-\end{enumerate}
-
-\noindent Therefore, if the underlying primitives are secure, no PPT adversary can have non-negligible advantage in the anonymity experiment.
-\end{proof}
-
-
-
-
-
-
-
-
-
-\section{Preliminaries}
-\subsection{Rerandomizable Signature over Commitments}\label{sec:pssignature}
-\subsubsection{Definition}
-\begin{definition}[Rerandomizable Signature over Commitments]
-    A rerandomizable signature scheme over commitments $\mathsf{RS}$ is a tuple $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Rerand}, \mathsf{Ver}, \mathsf{VerKey})$ of PPT algorithms where:
-        \begin{itemize}
-            \item $\mathsf{RS.KeyGen(pp, ck)} \to \mathsf{(sk, pk = (pp, vk, ck))}$ is a probabilistic algorithm that takes in the public parameters $\mathsf{pp}$ and commitment key $\mathsf{ck}$, outputs a signing key $\sk$, a public verification key $\vk$ and outputs $\mathsf{(sk, pk = (pp, vk, ck))}$
-
-            \item $\mathsf{RS.Sign}(\mathsf{sk, cm};u ) \to \sigma$: probabilistic algorithm takes the signing key $\sk$, commitment $\cm$ from the commitment space $\mathcal{C}$ and random coins $u$ sampled from random space of the signature scheme. Output $\sigma$
-
-            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new signature $\sigma'$. 
-
-            \item $\mathsf{RS.Ver}(\mathsf{pk = (pp, vk, ck), cm}, \sigma) \rightarrow \bit$: is a deterministic algorithm, takes as input the public key $\mathsf{pk}$, $\cm \in \mathcal{C}$ and signature $\sigma$, outputs 1 for successful verification, otherwise 0. 
-
-            \item $\mathsf{RS.VerKey}(\mathsf{sk, pk = (pp, vk, ck)}) \to \bit:$ is a deterministic algorithm that takes in a secret key $\sk$ and verification key $\vk$, checks for consistency and returns 1 for success, 0 for failure
-        \end{itemize}
-\end{definition}
-
-
-\begin{definition}[Correctness] 
-A rerandomizable signature scheme over commitments is correct if for all security parameters $\secparam$, for all $\ell > 1$, all bilinear groups $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \in [\mathsf{BGGen}(\secparam)]$, all key pairs $(\sk, \pk) \in [\mathsf{KeyGen}(\mathsf{BG, 1^{\ell}})]$, all messages $m \in \mathcal{M}$, all commitments $\cm \in \mathcal{C}$, all commitment keys $\mathsf{ck} \in [\mathsf{CM.KeyGen}(\secparam)]$, and all randomness $r, u, r_\Delta, u_\Delta \in \Z_p$ we have:
-    \begin{align*}
-        &\mathsf{RS.VerKey}(\sk, \pk) = 1 \qquad \wedge \\
-        &\Pr \left[ \mathsf{RS.Ver}(\pk, \left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r), u)\right), m) = 1 \right] =1 \qquad \wedge \\
-        &\Pr \left[ \mathsf{RS.Ver}(\pk, \mathsf{RS.Rerand}(\pk,\left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r), u)\right),r_\Delta, u_\Delta), m) = 1 \right] =1 \qquad \wedge \\
-        &\Pr \left[ \mathsf{RS.Ver}(\pk, \left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r+r_\Delta), u+u_\Delta)\right), m) = 1 \right] = 1\\
-    \end{align*}
-\end{definition}
-
-
-
-\begin{definition}[EUF-CMA]
-A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen message (commitment) attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-    \begin{align*}
-        &\Pr\left[
-            \begin{array}{l}
-                \mathsf{BG} \gets \mathsf{BGGen}(1^{\secparam}), \\
-                \mathsf{ck} \gets \mathsf{CM.KeyGen}(\mathsf{BG}), \\
-                (\sk, \pk) \gets \mathsf{KeyGen}(\mathsf{BG}), \\
-                (m^*, \cm^*, \sigma^*) \gets \mathcal{A}^{\mathsf{Sign}(\sk, \cdot)}(\pk) \\
-                \end{array}
-                \quad : \quad
-                \begin{array}{l}
-                \cm^* = \mathsf{CM.Com}(\mathsf{ck}, m^*, r^*) \land \\
-                \mathsf{RS.Ver}(\pk, \sigma^*, m^*) = 1 \land \\
-                \cm^* \notin Q_{\cm}
-            \end{array}
-        \right] \leq \negl
-    \end{align*}
-where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
-\end{definition}
-
-
-\begin{definition}[$\mathsf{RS}$ Signature Adaptation Under Malicious Keys]
-A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
-\begin{itemize}
-    \item $\cm \in \mathcal{C}$ is a valid commitment,
-    \item $\sigma$ is a valid signature under $\pk$ (i.e., $\mathsf{RS.Ver}(\pk, \cm, \sigma) = 1$),
-    \item $r \in \Z_p^*$,
-\end{itemize}
-the distribution of $\mathsf{RS.Rerand}(\pk, \sigma, \mu)$ is identical to $\mathsf{RS.Sign}(\sk, \mathsf{CM.Rerand}(\ck, \cm, r))$, even when $\pk$ is adversarially generated.
-\end{definition}
-
-
-
-
-\subsubsection{Construction}\label{sig-construction}
-We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as input into our rerandomizable signature scheme $\mathsf{RS}$. We copy the algorithm below for convenience.
-\begin{itemize}
-    \item $\mathsf{CM.Setup}(\secparam, \ell, (y_i, \ldots, y_{\ell} \in \Z_p^{\ell})) \to \ck:$  
-    Sample $(g, \tilde{g}) \sample \G_1 \times \G_2$, For $i \in [1,\ell]$: Compute $g_i = g^{y_i}$ and $\tilde{g}_i = \tilde{g}^{y_i}$. Return $\ck \gets (g, (g_1,\ldots,g_\ell), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_\ell))$
-    
-    \item $\mathsf{RS.KeyGen}(\secparam, \ck) \to (\sk, \vk):$ 
-        Retrieve $(g, \cdot, \tilde{g}, \cdot)$ from $\mathsf{ck}$,
-        Sample $x \sample \Z_p$,
-        Set $(\sk, \vk) \gets (g^x, \tilde{g}^x)$, return $(\sk, \vk))$
-        % Return $(\mathsf{sk} = (x,g), \mathsf{pk} = (\mathsf{pp}, \mathsf{vk}, \mathsf{ck}))$
-    
-    \item $\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{cm}; u) \to \sigma:$ 
-        Let $h \gets g^u$
-        Return $\sigma \gets (h, (\sk \cdot \mathsf{cm})^u)$
-    
-    \item $\mathsf{RS.Rerand}(\sigma, r_\Delta, u_\Delta) \to \sigma':$
-        Parse $\sigma$ as $(\sigma_1, \sigma_2)$
-        Set $\sigma_1' \gets \sigma_1^{u_\Delta}$
-        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}$
-        Return $\sigma' \gets (\sigma_1', \sigma_2')$
-    
-    \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
-        Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
-    \[
-        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): 
-    \]
-    \[
-         e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widehat{\cm}') \quad \wedge \quad
-        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
-        \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
-        \}
-    \]
-
-        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
-        \[
-        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-        \]
-        
-\end{itemize}
-
-
-
-
-\subsubsection{Security of our Construction}
-\begin{theorem}
-    RS is correct
-\end{theorem}
-\begin{proof}
-    First we demonstrate the provers rerandomized signature verifies with the verification key $\vk$ and the rerandomized commitment. Essentially, we need the following pairing to hold
-    \[
-          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk \cdot \widetilde{\cm'})
-    \]
-
-    We manipulate the bilinearity properties of the pairing groups to verify the initial pairing.
-    
-    \begin{align*}
-        e(\sigma_2', \tilde{g}) &= e((\sk \cdot \cm)^{u \cdot u\Delta}\cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-        &= e(h^{x \cdot u_\Delta}\cdot \cm^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-        &= e(h^{x \cdot u_\Delta}, \tilde{g}) \cdot e(\cm^{u \cdot u_\Delta}, \tilde{g}) \cdot e(h^{ u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-        &= e(h^{u_\Delta}, \tilde{g}^x) \cdot e(\cm, \tilde{g})^{u \cdot u_\Delta} \cdot e(h^{ u_\Delta}, \tilde{g})^{r_\Delta} \\
-        &= e(\sigma_1', \vk) \cdot e(g^{u \cdot u_\Delta}, \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g})^{r_\Delta} \\
-        &= e(\sigma_1', \vk) \cdot e(\sigma_1', \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g}^{r_\Delta}) \\
-        &= e(\sigma_1', \vk \cdot \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}) \\
-        &= e(\sigma_1', \vk \cdot \widetilde{\cm'}) \\
-    \end{align*}
-
-    Secondly, we need to verify knowledge of messages within the commitment. The Prover used $\widetilde{\cm'} \in \G_2$ during verification and this would be the natural method to for a sigma style proof of knowledge protocol, proving knowledge of the attributes of the commitment with $\G_2$ bases. However, due to the properties of the symmetric bilinear commitment \ref{sdlp}, we can prove the equality of $\cm' \in \G_1$ and $\widetilde{\cm'} \in \G_2$ to reduce $\G_2$ computation on both the prover and verifier during verification. 
-    Thus the prover computes 
-    \[
-        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}')
-    \]
-    Then runs a sigma protocol to prove
-    \[
-    \cm' = g^{r \cdot r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
-    \]
-
-\end{proof}
-
-
-
-
-
-
-\begin{theorem}[EUF-CMA Security]
-Assume the PS-LRSW assumption holds and the Pedersen commitment is computationally binding. Then, in the Algebraic Group Model, our rerandomizable signature scheme is existentially unforgeable under adaptive chosen-message(commitment) attacks. For any algebraic PPT adversary $\mathcal{A}$, there exist PPT reductions $\mathcal{B}_0, \mathcal{B}_1$ such that:
-\[
-\Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0}(\lambda) + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1}(\lambda) + \frac{q_v + q_s}{p},
-\]
-where $q_v$ (verification) and $q_s$ (signing) are query counts.
-\end{theorem}
-
-\begin{proof}
-We construct two reductions handling different forgery types. Let $\mathcal{A}$ be an adversary with advantage $\epsilon$.
-
-\paragraph{1. Setup}
-Given PS-LRSW challenge over bilinear groups $(g, \tilde{g}, X=g^x, \tilde{X}=\tilde{g}^x, Y=g^y, \tilde{Y}=\tilde{g}^y)$:
-\begin{enumerate}
-    \item \textbf{Commitment Setup:} For 2-slot Pedersen:
-    \begin{itemize}
-        \item Choose $\alpha_1, \alpha_2, \beta_1, \beta_2 \sample \Z_p$
-        \item Set $g_1 = Y^{\alpha_1}g^{\beta_1}$, $\tilde{g}_1 = \tilde{Y}^{\alpha_1}\tilde{g}^{\beta_1}$ 
-        \item Set $g_2 = Y^{\alpha_2}g^{\beta_2}$, $\tilde{g}_2 = \tilde{Y}^{\alpha_2}\tilde{g}^{\beta_2}$
-    \end{itemize}
-    \item \textbf{Public Key:} $\pk = (\tilde{X}, g_1, \tilde{g}_1, g_2, \tilde{g}_2)$
-    \item Send $\pk$ to $\mathcal{A}$. Distribution matches real scheme as $\alpha_i, \beta_i$ are random.
-\end{enumerate}
-
-
-\paragraph{2. Oracle Simulation} \textbf{Signing Oracle:}
-For query $(m_1, m_2, r)$:
-\begin{itemize}
-    \item \textbf{Case $\mathcal{B}_0$ (PS Reduction):}
-    \begin{enumerate}
-        \item Compute $m = \alpha_1m_1 + \alpha_2m_2$
-        \item Query PS-LRSW oracle for $(h, h^{x + my})$
-        \item Return $\sigma = (h, h^{x + my} \cdot h^{\beta_1m_1 + \beta_2m_2 + r})$
-    \end{enumerate}
-    \item \textbf{Case $\mathcal{B}_1$ (Binding Reduction):}
-    \begin{enumerate}
-        \item Compute $\mathsf{cm} = g_1^{m_1}g_2^{m_2}g^r$
-        \item Choose $u \sample \Z_p$, return $\sigma = (g^u, (X \cdot \mathsf{cm})^u)$
-    \end{enumerate}
-\end{itemize}
-
-\noindent \textbf{Verification Oracle:}
-
-\begin{itemize}
-    \item Parse $\sigma = (\sigma_1, \sigma_2)$
-    \item Check $e(\sigma_2, \tilde{g}) = e(\sigma_1, \tilde{X} \cdot \widetilde{\mathsf{cm}})$ where $\widetilde{\mathsf{cm}} = \tilde{g}_1^{m_1}\tilde{g}_2^{m_2}\tilde{g}^r$
-    \item Use AGM to extract exponents from $\sigma_1, \sigma_2$ if needed
-\end{itemize}
-
-
-\paragraph{3. Forgery Extraction}
-
-When $\mathcal{A}$ outputs forgery $(m_1^*, m_2^*, r^*, \sigma^* = (\sigma_1^*, \sigma_2^*))$:
-
-\noindent \textbf{Case 1: New Message Combination}
-If $m^* = \alpha_1m_1^* + \alpha_2m_2^*$ is new:
-\begin{itemize}
-    \item $\mathcal{B}_0$ computes:
-    \[
-    (U, B/U^{\beta_1m_1^* + \beta_2m_2^* + r^*}) = (g^u, X^uY^{m^*u})
-    \]
-    \item This breaks PS-LRSW as $m^*$ wasn't queried. Thus:
-    \[
-    \epsilon_0 \geq \Pr[\text{New } m^*] - \frac{q_s}{p}
-    \]
-\end{itemize}
-
-\noindent \textbf{Case 2: Commitment Collision}
-If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
-\begin{itemize}
-    \item $\mathcal{B}_1$ finds collision:
-    \[
-    g_1^{m_1}g_2^{m_2} = g_1^{m_1^*}g_2^{m_2^*}
-    \]
-    \item Solving gives DLOG relation for $\alpha_i, \beta_i$, breaking binding:
-    \[
-    \epsilon_1 \geq \Pr[\text{Collision}] - \frac{1}{p}
-    \]
-\end{itemize}
