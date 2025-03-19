@@ -1,0 +1,91 @@
+% 
+% Literature Review https://arxiv.org/pdf/2501.07209
+% 
+\newpage
+\section{Appendix}
+
+\subsection{Pedersen Commitment Reduction}\label{appendix:commitmentreduction}
+\begin{theorem}
+    In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG$, then our Commitment scheme satisfies position binding. Specifically, for any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
+    \[
+        \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda) \leq \ell \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\mathbb{G}}(\lambda)
+    \]
+    where $\ell$ is the vector length.
+\end{theorem}
+
+\begin{proof}
+We prove via reduction in the AGM. Given an algebraic PPT adversary $\mathcal{A}$ that breaks position binding with non-negligible probability $\epsilon$, we construct a PPT algorithm $\mathcal{B}$ that solves SDLP with probability $\epsilon/\ell$. For clarity, we illustrate with $\ell = 3$; the proof generalizes naturally.
+
+Algorithm $\mathcal{B}$ works as follows:
+\begin{enumerate}
+    \item \textbf{Setup}: On input SDLP instance $(g^x, \tilde{g}^x) \in \mathbb{G}_1 \times \mathbb{G}_2$, $\mathcal{B}$ proceeds to:
+    \begin{enumerate}
+        \item Sample $i^* \sample [1,\ell]$ uniformly at random
+        \item For position $i^*$: set $(g_{i^*}, \tilde{g}_{i^*}) \gets (g^x, \tilde{g}^x)$
+        \item For positions $j \neq i^*$: sample $y_j \sample \mathbb{Z}_p$, set $(g_j, \tilde{g}_j) \gets (g^{y_j}, \tilde{g}^{y_j})$
+        \item Give $\mathsf{ck} = ((g_1, g_2, g_3), (\tilde{g}_1, \tilde{g}_2, \tilde{g}_3))$ to $\mathcal{A}$
+    \end{enumerate}
+    
+    \item \textbf{Position Binding Break}: Since $\mathcal{A}$ is algebraic, when it outputs $(\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1)$, it also provides the representation of $\mathsf{cm}$ in terms of the generators:
+    \begin{itemize}
+        \item $\mathsf{cm} \in \mathbb{G}_1$ with its algebraic representation
+        \item $i \in [1,\ell]$ is the position where binding breaks
+        \item $\vec{m}_0, \vec{m}_1 \in \mathbb{Z}_p^\ell$ differ only at position $i$
+        \item $r_0, r_1 \in \mathbb{Z}_p$ are opening randomness values
+    \end{itemize}
+    
+    \item \textbf{Extracting SDLP}: If $i \neq i^*$, abort. Otherwise:
+    \begin{enumerate}
+        \item By the algebraic property of $\mathcal{A}$, we have explicit representations of the commitment openings:
+        \[
+            g^{r_0}g_1^{m_{0,1}}g_2^{x \cdot m_{0,2}}g_3^{m_{0,3}} = g^{r_1}g_1^{m_{1,1}}g_2^{x \cdot m_{1,2}}g_3^{m_{1,3}}
+        \]
+        
+        \item Since these representations are explicit in the AGM, we can directly compare exponents:
+        \[
+            r_0 + y_1m_{0,1} + xm_{0,2} + y_3m_{0,3} = r_1 + y_1m_{1,1} + xm_{1,2} + y_3m_{1,3}
+        \]
+        
+        \item Since $\vec{m}_0$ and $\vec{m}_1$ differ only at position $i^*=2$, we have $m_{0,1}=m_{1,1}$ and $m_{0,3}=m_{1,3}$. Terms cancel:
+        \[
+            r_0 + xm_{0,2} = r_1 + xm_{1,2}
+        \]
+        
+        \item Solve for $x$:
+        \[
+            x \equiv \frac{r_1-r_0}{m_{0,2}-m_{1,2}} \pmod{p}
+        \]
+        Note: Division is well-defined as $m_{0,2} \neq m_{1,2}$ by assumption.
+    \end{enumerate}
+\end{enumerate}
+
+The reduction succeeds whenever $i = i^*$ and $\mathcal{A}$ succeeds, which occurs with probability $\epsilon/\ell$. This is non-negligible when $\epsilon$ is non-negligible, contradicting the SDLP assumption.
+\end{proof}
+
+
+
+We analyze the reduction's properties in detail:
+\begin{itemize}
+    \item \textbf{Perfect Simulation:} The commitment key distribution is identical to the real scheme:
+        \begin{itemize}
+            \item At position $i^*$: $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$ is uniformly distributed in $\G_1 \times \G_2$ by the SDLP instance properties
+            \item At positions $j \neq i^*$: $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ is uniform due to $y_j \sample \Z_p$
+            \item Therefore, from $\mathcal{A}$'s view, $\mathsf{ck}$ is distributed identically to the real scheme
+        \end{itemize}
+    
+    \item \textbf{Extraction Success:} $\mathcal{B}$ successfully extracts the SDLP solution when:
+        \begin{itemize}
+            \item $\mathcal{A}$ outputs a valid position binding break (occurs with probability $\epsilon$)
+            \item The guessed position matches: $i = i^*$ (occurs with probability $1/\ell$)
+            \item The extraction equation is solvable: $m_{0,i^*} \neq m_{1,i^*}$ (guaranteed by definition of position binding break)
+        \end{itemize}
+    
+    \item \textbf{Advantage Analysis:} Combining these probabilities:
+        \begin{itemize}
+            \item Events are independent as $i^*$ is chosen before $\mathcal{A}$'s execution
+            \item $\mathsf{Pr}[\mathcal{B} \text{ succeeds}] = \epsilon \cdot \frac{1}{\ell}$
+            \item Therefore: $\mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\G}(\lambda) \geq \frac{1}{\ell} \cdot \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda)$
+        \end{itemize}
+\end{itemize}
+
+Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $\epsilon$, then $\mathcal{B}$ solves SDLP with non-negligible probability $\epsilon/\ell$, contradicting the SDLP hardness assumption in $\G$.
