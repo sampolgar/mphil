@@ -1133,3 +1133,10 @@ Notes 20/2 trying to understand basics of proofs w/o the oracles
 %     e(\cm_1 \cdot \cm_2, \widehat{g}) = e(g, \widehat{\cm_1} \cdot \widehat{\cm_2})
 % \]
 % \end{definition}
+
+
+  \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
+        \[
+        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+        \]
+        

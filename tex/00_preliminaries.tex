@@ -346,34 +346,34 @@ A full proof can be found in the appendix \ref{appendix:commitmentreduction}
 % 
 % % % % % % % % % % 
 \newpage
-\section{Rerandomizable Signature over Commitments}\label{sec:pssignature}
-\subsubsection{Definition}
+\section{Rerandomizable Signatures over Commitments}\label{sec:pssignature}
+We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu2022utt}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is a complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions.
+
+
 \begin{definition}[Rerandomizable Signature over Commitments]
-    A rerandomizable signature scheme over commitments $\mathsf{RS}$ is a tuple $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Rerand}, \mathsf{Ver}, \mathsf{VerKey})$ of PPT algorithms where:
-        \begin{itemize}
-            \item $\mathsf{RS.KeyGen(pp, ck)} \to \mathsf{(sk, pk = (pp, vk, ck))}$ is a probabilistic algorithm that takes in the public parameters $\mathsf{pp}$ and commitment key $\mathsf{ck}$, outputs a signing key $\sk$, a public verification key $\vk$ and outputs $\mathsf{(sk, pk = (pp, vk, ck))}$
-
-            \item $\mathsf{RS.Sign}(\mathsf{sk, cm};u ) \to \sigma$: probabilistic algorithm takes the signing key $\sk$, commitment $\cm$ from the commitment space $\mathcal{C}$ and random coins $u$ sampled from random space of the signature scheme. Output $\sigma$
-
-            \item $\mathsf{RS.Rerand}(\pk, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$ is a deterministic algorithm that enables signature rerandomization. Takes a public key $\pk = (\mathsf{pp,ck,vk})$, a signature $\sigma$, and randomization elements $r_\Delta, u_\Delta$, as input, outputs a new rerandomized signature $\sigma'$. 
-
-            \item $\mathsf{RS.Ver}(\mathsf{pk = (pp, vk, ck), cm}, \sigma) \rightarrow \bit$: is a deterministic algorithm, takes as input the public key $\mathsf{pk}$, $\cm \in \mathcal{C}$ and signature $\sigma$, outputs 1 for successful verification, otherwise 0. 
-
-            \item $\mathsf{RS.VerKey}(\mathsf{sk, pk = (pp, vk, ck)}) \to \bit:$ is a deterministic algorithm that takes in a secret key $\sk$ and verification key $\vk$, checks for consistency and returns 1 for success, 0 for failure
-        \end{itemize}
+A rerandomizable signature scheme over commitments $\mathsf{RS}$ extends a standard signature scheme with the following interface:
+\begin{itemize}
+    \item $\mathsf{KeyGen}(1^\lambda, \mathsf{ck}) \rightarrow (\mathsf{sk}, \mathsf{pk})$: Takes security parameter $\lambda$ and commitment key $\mathsf{ck}$, outputs signing key $\mathsf{sk}$ and verification key $\mathsf{pk}$.
+    
+    \item $\mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u) \rightarrow \sigma$: Signs commitment $\mathsf{cm}$ using signing key $\mathsf{sk}$ and randomness $u$.
+    
+    \item $\mathsf{Rerand}(\mathsf{pk}, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$: Creates a rerandomized signature $\sigma'$ from signature $\sigma$ using randomization values $r_\Delta, u_\Delta$.
+    
+    \item $\mathsf{Verify}(\mathsf{pk}, \mathsf{cm}, \sigma) \rightarrow \{0,1\}$: Verifies signature $\sigma$ on commitment $\mathsf{cm}$ using public key $\mathsf{pk}$.
+\end{itemize}
 \end{definition}
 
+\begin{definition}[Correctness]
+A rerandomizable signature scheme over commitments satisfies correctness if for all security parameters $\lambda$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^\lambda, \mathsf{ck})]$, all messages $m \in \mathcal{M}$, all valid commitments $\mathsf{cm} = \mathsf{CM.Commit}(\mathsf{ck}, m, r)$, and all randomness values $u, r_\Delta, u_\Delta$:
 
-\begin{definition}[Correctness] 
-A rerandomizable signature scheme over commitments is correct if for all security parameters $\secparam$, for all $\ell > 1$, all bilinear groups $\mathsf{BG} = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \in [\mathsf{BGGen}(\secparam)]$, all key pairs $(\sk, \pk) \in [\mathsf{KeyGen}(\mathsf{BG, 1^{\ell}})]$, all messages $m \in \mathcal{M}$, all commitments $\cm \in \mathcal{C}$, all commitment keys $\mathsf{ck} \in [\mathsf{CM.KeyGen}(\secparam)]$, and all randomness $r, u, r_\Delta, u_\Delta \in \Z_p$ we have:
-    \begin{align*}
-        &\mathsf{RS.VerKey}(\sk, \pk) = 1 \qquad \wedge \\
-        &\Pr \left[ \mathsf{RS.Ver}(\pk, \left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r), u)\right), m) = 1 \right] =1 \qquad \wedge \\
-        &\Pr \left[ \mathsf{RS.Ver}(\pk, \mathsf{RS.Rerand}(\pk,\left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r), u)\right),r_\Delta, u_\Delta), m) = 1 \right] =1 \qquad \wedge \\
-        &\Pr \left[ \mathsf{RS.Ver}(\pk, \left(\mathsf{RS.Sign}(\mathsf{sk}, \mathsf{CM.Com}(\mathsf{ck}, m, r+r_\Delta), u+u_\Delta)\right), m) = 1 \right] = 1\\
-    \end{align*}
+\begin{enumerate}
+    \item \textbf{Basic Verification}: $\mathsf{Verify}(\mathsf{pk}, \mathsf{cm}, \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u)) = 1$
+    
+    \item \textbf{Rerandomization Consistency}: $\mathsf{Verify}(\mathsf{pk}, \mathsf{CM.Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta), \mathsf{Rerand}(\mathsf{pk}, \sigma, r_\Delta, u_\Delta)) = 1$ where $\sigma = \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u)$
+    
+    \item \textbf{Rerandomization Equivalence}: The distribution of $\mathsf{Rerand}(\mathsf{pk}, \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u), r_\Delta, u_\Delta)$ is computationally indistinguishable from $\mathsf{Sign}(\mathsf{sk}, \mathsf{CM.Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta); u+u_\Delta)$
+\end{enumerate}
 \end{definition}
-
 
 
 \begin{definition}[EUF-CMA]
@@ -396,17 +396,6 @@ A rerandomizable signature scheme over commitments is existentially unforgeable 
     \end{align*}
 where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 \end{definition}
-
-
-% \begin{definition}[Signature Adaptation Under Malicious Keys]
-% A rerandomizable signature scheme $\mathsf{RS}$ satisfies \emph{signature adaptation under malicious keys} if for all tuples $(\pk, \cm, \sigma, r)$ where:
-% \begin{itemize}
-%     \item $\cm \in \mathcal{C}$ is a valid commitment,
-%     \item $\sigma$ is a valid signature under $\pk$ (i.e., $\mathsf{RS.Ver}(\pk, \cm, \sigma) = 1$),
-%     \item $r \in \Z_p^*$,
-% \end{itemize}
-% the distribution of $\mathsf{RS.Rerand}(\pk, \sigma, \mu)$ is identical to $\mathsf{RS.Sign}(\sk, \mathsf{CM.Rerand}(\ck, \cm, r))$, even when $\pk$ is adversarially generated.
-% \end{definition}
 
 
 
@@ -454,8 +443,45 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
 
 
 
+\subsection{Security Analysis}
 
-\subsubsection{Security of our Construction}
+\begin{theorem}
+The rerandomizable signature scheme is correct.
+\end{theorem}
+
+
+\begin{proof}
+First we demonstrate the prover's rerandomized signature verifies with the verification key $\mathsf{vk}$ and the rerandomized commitment. Essentially, we need the following pairing to hold:
+\[
+    e(\sigma_2', \tilde{g}) = e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}'})
+\]
+
+We manipulate the bilinearity properties of the pairing groups to verify this equation:
+    
+\begin{align*}
+    e(\sigma_2', \tilde{g}) &= e((\mathsf{sk} \cdot \mathsf{cm})^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+    &= e(h^{x \cdot u_\Delta} \cdot \mathsf{cm}^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+    &= e(h^{x \cdot u_\Delta}, \tilde{g}) \cdot e(\mathsf{cm}^{u \cdot u_\Delta}, \tilde{g}) \cdot e(h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
+    &= e(h^{u_\Delta}, \tilde{g}^x) \cdot e(\mathsf{cm}, \tilde{g})^{u \cdot u_\Delta} \cdot e(h^{u_\Delta}, \tilde{g})^{r_\Delta} \\
+    &= e(\sigma_1', \mathsf{vk}) \cdot e(g^{u \cdot u_\Delta}, \widetilde{\mathsf{cm}}) \cdot e(\sigma_1', \tilde{g})^{r_\Delta} \\
+    &= e(\sigma_1', \mathsf{vk}) \cdot e(\sigma_1', \widetilde{\mathsf{cm}}) \cdot e(\sigma_1', \tilde{g}^{r_\Delta}) \\
+    &= e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}} \cdot \tilde{g}^{r_\Delta}) \\
+    &= e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}'}) \\
+\end{align*}
+\end{proof}
+
+Secondly, we need to verify knowledge of messages within the commitment. The Prover used $\widetilde{\mathsf{cm}'} \in \G_2$ during verification, which would be the natural method for a sigma-style proof of knowledge protocol, proving knowledge of the attributes of the commitment with $\G_2$ bases. However, due to the properties of the symmetric bilinear commitment \ref{sdlp}, we can prove the equality of $\mathsf{cm}' \in \G_1$ and $\widetilde{\mathsf{cm}'} \in \G_2$ to reduce $\G_2$ computation on both the prover and verifier during verification. 
+Thus the prover computes the following to prove equality of commitments across groups:
+\[
+    e(\mathsf{cm}', \tilde{g}) = e(g, \widetilde{\mathsf{cm}}')
+\]
+Then proves the opening of the commitment in zero knowledge:
+\[
+ \pircom  \gets \mathsf{ZKPoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+\]
+
+
+
 \begin{theorem}
     RS is correct
 \end{theorem}
@@ -493,12 +519,10 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
 
 
 
-
-
 \begin{theorem}[EUF-CMA Security]
 Assume the PS-LRSW assumption holds and the Pedersen commitment is computationally binding. Then, in the Algebraic Group Model, our rerandomizable signature scheme is existentially unforgeable under adaptive chosen-message(commitment) attacks. For any algebraic PPT adversary $\mathcal{A}$, there exist PPT reductions $\mathcal{B}_0, \mathcal{B}_1$ such that:
 \[
-\Adv^{\mathsf{euf\mbox{-}cca}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0}(\lambda) + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1}(\lambda) + \frac{q_v + q_s}{p},
+\Adv^{\mathsf{EUF\mbox{-}CMA}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0}(\lambda) + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1}(\lambda) + \frac{q_v + q_s}{p},
 \]
 where $q_v$ (verification) and $q_s$ (signing) are query counts.
 \end{theorem}
@@ -506,33 +530,35 @@ where $q_v$ (verification) and $q_s$ (signing) are query counts.
 \begin{proof}
 We construct two reductions handling different forgery types. Let $\mathcal{A}$ be an adversary with advantage $\epsilon$.
 
-\paragraph{1. Setup}
-Given PS-LRSW challenge over bilinear groups $(g, \tilde{g}, X=g^x, \tilde{X}=\tilde{g}^x, Y=g^y, \tilde{Y}=\tilde{g}^y)$:
-\begin{enumerate}
-    \item \textbf{Commitment Setup:} For 2-slot Pedersen:
-    \begin{itemize}
-        \item Choose $\alpha_1, \alpha_2, \beta_1, \beta_2 \sample \Z_p$
-        \item Set $g_1 = Y^{\alpha_1}g^{\beta_1}$, $\tilde{g}_1 = \tilde{Y}^{\alpha_1}\tilde{g}^{\beta_1}$ 
-        \item Set $g_2 = Y^{\alpha_2}g^{\beta_2}$, $\tilde{g}_2 = \tilde{Y}^{\alpha_2}\tilde{g}^{\beta_2}$
-    \end{itemize}
-    \item \textbf{Public Key:} $\pk = (\tilde{X}, g_1, \tilde{g}_1, g_2, \tilde{g}_2)$
-    \item Send $\pk$ to $\mathcal{A}$. Distribution matches real scheme as $\alpha_i, \beta_i$ are random.
-\end{enumerate}
-
-
-\paragraph{2. Oracle Simulation} \textbf{Signing Oracle:}
-For query $(m_1, m_2, r)$:
+\textbf{Reduction Strategy: } Since we don't know in advance which type of forgery $\AdvA$ will produce, we design two reductions:
 \begin{itemize}
-    \item \textbf{Case $\mathcal{B}_0$ (PS Reduction):}
+    \item $\mathcal{B}_0$ handles forgeries with a new message combination
+    \item $\mathcal{B}_1$ handles forgeries where the same message appears in different commitments
+\end{itemize}
+
+\paragraph{1. Setup}
+Given a PS-LRSW challenge $(g, \tilde{g}, X=g^x, \tilde{X}=\tilde{g}^x, Y=g^y, \tilde{Y}=\tilde{g}^y)$, both reductions:
+\begin{itemize}
+    \item Sample $\alpha_1, \alpha_2, \beta_1, \beta_2 \sample \Z_p$ 
+    \item Set commitment base elements $g_i = Y^{\alpha_i}g^{\beta_i}$ and $\tilde{g}_i = \tilde{Y}^{\alpha_i}\tilde{g}^{\beta_i}$ for $i \in \{1,2\}$
+    \item Set $\mathsf{pk} = (\tilde{X}, \mathsf{ck} = (g, g_1, g_2, \tilde{g}, \tilde{g}_1, \tilde{g}_2))$
+    \item Send $\mathsf{pk}$ to $\mathcal{A}$
+\end{itemize}
+
+\textbf{Oracle Simulation:} 
+For a signing query on commitment $\mathsf{cm} = g_1^{m_1}g_2^{m_2}g^r$:
+\begin{itemize}
+    \item $\mathcal{B}_0$ (PS-LRSW Reduction):
     \begin{enumerate}
-        \item Compute $m = \alpha_1m_1 + \alpha_2m_2$
-        \item Query PS-LRSW oracle for $(h, h^{x + my})$
-        \item Return $\sigma = (h, h^{x + my} \cdot h^{\beta_1m_1 + \beta_2m_2 + r})$
+        \item Compute $m = \alpha_1m_1 + \alpha_2m_2$ 
+        \item Query PS-LRSW oracle to get $(h, h^{x+my})$
+        \item Return $\sigma = (h, h^{x+my} \cdot h^{\beta_1m_1 + \beta_2m_2 + r})$
     \end{enumerate}
-    \item \textbf{Case $\mathcal{B}_1$ (Binding Reduction):}
+    
+    \item $\mathcal{B}_1$ (Binding Reduction):
     \begin{enumerate}
-        \item Compute $\mathsf{cm} = g_1^{m_1}g_2^{m_2}g^r$
-        \item Choose $u \sample \Z_p$, return $\sigma = (g^u, (X \cdot \mathsf{cm})^u)$
+        \item Sample $u \sample \Z_p$
+        \item Compute $\sigma = (g^u, (X \cdot \mathsf{cm})^u)$
     \end{enumerate}
 \end{itemize}
 
@@ -545,40 +571,68 @@ For query $(m_1, m_2, r)$:
 \end{itemize}
 
 
-\paragraph{3. Forgery Extraction}
+\textbf{Forgery Analysis:} 
+When $\mathcal{A}$ outputs a forgery $(m_1^*, m_2^*, r^*, \sigma^* = (\sigma_1^*, \sigma_2^*))$:
 
-When $\mathcal{A}$ outputs forgery $(m_1^*, m_2^*, r^*, \sigma^* = (\sigma_1^*, \sigma_2^*))$:
-
-\noindent \textbf{Case 1: New Message Combination}
-If $m^* = \alpha_1m_1^* + \alpha_2m_2^*$ is new:
+\textbf{Case 1:} If $m^* = \alpha_1m_1^* + \alpha_2m_2^*$ was never queried:
 \begin{itemize}
-    \item $\mathcal{B}_0$ computes:
-    \[
-    (U, B/U^{\beta_1m_1^* + \beta_2m_2^* + r^*}) = (g^u, X^uY^{m^*u})
-    \]
-    \item This breaks PS-LRSW as $m^*$ wasn't queried. Thus:
-    \[
-    \epsilon_0 \geq \Pr[\text{New } m^*] - \frac{q_s}{p}
-    \]
+    \item Since $\mathcal{A}$ is algebraic, $\mathcal{B}_0$ knows the representation of $\sigma_1^*$ as $g^u$
+    \item $\mathcal{B}_0$ can compute $(g^u, \sigma_2^* / (\sigma_1^*)^{\beta_1m_1^* + \beta_2m_2^* + r^*})$
+    \item This equals $(g^u, (g^x \cdot g^{ym^*})^u)$, breaking PS-LRSW
 \end{itemize}
 
-\noindent \textbf{Case 2: Commitment Collision}
-If $m^*$ exists in prior query $(m_1, m_2) \neq (m_1^*, m_2^*)$:
+\textbf{Case 2:} If $m^*$ was queried but with different message components:
 \begin{itemize}
-    \item $\mathcal{B}_1$ finds collision:
-    \[
-    g_1^{m_1}g_2^{m_2} = g_1^{m_1^*}g_2^{m_2^*}
-    \]
-    \item Solving gives DLOG relation for $\alpha_i, \beta_i$, breaking binding:
-    \[
-    \epsilon_1 \geq \Pr[\text{Collision}] - \frac{1}{p}
-    \]
+    \item There exists a previous query $(m_1, m_2) \neq (m_1^*, m_2^*)$ but $\alpha_1m_1 + \alpha_2m_2 = \alpha_1m_1^* + \alpha_2m_2^*$
+    \item This gives $g_1^{m_1}g_2^{m_2} = g_1^{m_1^*}g_2^{m_2^*}$, breaking the binding property
+    \item $\mathcal{B}_1$ can extract the discrete logarithm relations, solving the binding challenge
 \end{itemize}
-
 \end{proof}
 
 
 
+\paragraph{Intuition for Security}
+Our dual reduction approach handles all possible forgery types. The key insight is embedding the PS-LRSW challenge in a structured way that ensures:
+\begin{enumerate}
+    \item If the adversary forges a signature for a new linear combination of messages, we break PS-LRSW
+    \item If the adversary reuses a linear combination but with different individual messages, we break binding
+\end{enumerate}
+We ensure a forgery must break one underlying assumption, the tight reduction only uses a factor related to the number of oracle queries. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 \section{Appendix}
 
 \subsection{Pedersen Commitment Reduction}\label{appendix:commitmentreduction}
