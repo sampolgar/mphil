@@ -125,6 +125,7 @@ $$\Pr\left[\begin{array}{l}
 \end{array}\right] \leq \negl(\lambda)$$
 \end{definition}
 
+\subsubsection{$\Sigma$-Protocols}
 
 \subsection{Assumptions}
 
@@ -332,7 +333,7 @@ A full proof can be found in the appendix \ref{appendix:commitmentreduction}
 % % % % % % % % % % 
 \newpage
 \section{Rerandomizable Signatures over Commitments}\label{sec:pssignature}
-We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu2022utt}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is a complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions.
+We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu2022utt}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is the first complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions (we note that \cite{tomescu2022utt} presents a proof sketch).
 
 
 \begin{definition}[Rerandomizable Signature over Commitments]
@@ -659,7 +660,7 @@ For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\v
 \end{definition}
 
 \newpage
-\subsection{Security}
+\subsection{Security Model}
 % Intuition of our security. 
 
 % Here i Can talk about the different attack vectors and how the security of our system changes between single issuer, single credential, to multi credential to multiple issuer.
@@ -762,7 +763,7 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 
 \begin{figure}
     \centering
-    \begin{pcvstack}[boxed, center]
+    \begin{pcvstack}[boxed, center, space=1em]
         \begin{pchstack}
                  \begin{pcvstack}
                  \procedure[linenumbering]{$\mathrm{Game}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\secparam)$}{%
@@ -1022,6 +1023,13 @@ The Credential is a signature $\sigma$ over commitment $\cm = \mathsf{CM.Com}([\
 \subsubsection{Intuition}
 Unforgeability ensures an Adversary cannot produce a valid proof for a predicate $\phi^*$ without possessing valid credentials. Credentials in our system are rerandomizable signatures over position-binding commitments to attribute vectors. Our reduction shows a successful forgery must break one of three security properties:
 
+
+
+Note: in the construction the user proves knowledge of the commitment - we can use this in the reduction
+
+
+
+
 \begin{enumerate} 
 \item Breaking $\EUFCMA$: The adversary generates a valid signature on a commitment not issued by a legitimate issuer. 
 \item Breaking Position Binding: The adversary violates the position-binding property of the commitment scheme, e.g., by mixing credentials when $\phi^*$ requires a shared identity. 
@@ -1074,8 +1082,66 @@ Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ wo
 
 
 
-In the unforgeability game, the adversary $\AdvA$ outputs a forgery, $\Verify(\{\cred_k'^*\}, \phi^*, \pi^*, \{\opk_j\}) = 1$. Using the $\Sigma$-protocol's extractor $\Extractor$, we obtain the attributes $\{\vec{m}_k^*\}$ and randomness $\{r^*_k\}$ such that each $\cred_k^*$ contains a valid signature $\sigma_k^*(\cm_k^*, \osk_j)$, and valid commitment commitment $\cm^*_k = g^{r_k^*} \prod_{i=1}^{\ell} g_i^{m_k, i}$ with $\{\vec{m_k^*}\}$ satisfying $\phi(\vec{m_k^*}) = 1$
- 
+
+
+\subsection{Anonymity}
+\begin{theorem}[Anonymity]
+    The $\MIMCABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable to the standard, the commitment is hiding and the zero-knowledgeness of the sigma proof system.
+\end{theorem}
+
+\begin{proof}[sketch]
+    We proceed with a 2-step hybrid argument where $\mathsf{Hybrid}$ 0 is the real game with $b = 0$ or $b = 1$. $\mathsf{Hybrid}$ 1 uses simulated proofs for the zero-knowledge part but retains real rerandomized signatures and commitments. 
+\end{proof}
+
+\subsubsection*{Hybrid Argument}
+\begin{enumerate}
+    \item $\mathsf{Hybrid \; 0} \stackrel{c}{\approx} \mathsf{Hybrid \; 1}$ $\mathsf{Zero-Knowledge}$ The proof 
+\end{enumerate}
+
+
+\subsection{Anonymity}
+\begin{theorem}[Anonymity]
+    The $\MIMCABC$ system is anonymous even with malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment scheme is hiding, and the sigma proof system is zero-knowledge.
+\end{theorem}
+
+\begin{proof}
+    We proceed with a hybrid argument where $\Hybrid_0$ is the real game with $b \in \{0, 1\}$ and $\Hybrid_1$ uses simulated proofs but real rerandomized signatures and commitments.
+    
+    \begin{description}
+        \item[$\Hybrid_0$ (Real Game):] The challenger follows $\mathrm{Game}_{\MIMCABC,\Adv}^{\ANON}$ exactly, using user $i_b$'s credentials $(\creds_{i_b}, \cm_{i_b}, \usk_{i_b})$ to generate $(\cred', \cm', \pi)$ via the real $\Show$ protocol. Let $V_{\real,b}$ be the adversary's view when $b$ is chosen.
+        
+        \item[$\Hybrid_1$ (Simulated Proof):] The challenger generates $\cred'$ and $\cm'$ by rerandomizing $\creds_{i_b}$ and $\cm_{i_b}$ as in $\Show$, but uses a zero-knowledge simulator $S$ to produce $\pi$:
+        \begin{align*}
+            \cred' &\leftarrow \RSRand(\creds_{i_b}, \Delta_r, \Delta_u)\\
+            \cm' &\leftarrow \CMRand(\cm_{i_b}, \Delta_r)\\
+            \pi &\leftarrow (\{\cred'\}, \{\cm'\}, \{ \opk_j \}, \phi)
+        \end{align*}
+        Let $V_{\Sim,b}$ be the adversary's view in this hybrid.
+    \end{description}
+    
+    \textbf{Analysis:}
+    \begin{enumerate}
+        \item $\Hybrid_0 \stackrel{c}{\approx} \Hybrid_1$ (Zero-Knowledge): By the zero-knowledge property of the sigma proof system, there exists a simulator $S$ such that for any $b$, real proofs and simulated proofs are computationally indistinguishable. Thus, $V_{\real,b} \stackrel{c}{\approx} V_{\Sim,b}$, and the difference in $\Adv$'s success probability between $\Hybrid_0$ and $\Hybrid_1$ is negligible (at most $\epsilon_1(\lambda)$).
+        
+        \item $\Hybrid_1$ is independent of $b$: In $\Hybrid_1$, $\cred'$ and $\cm'$ are rerandomized using fresh randomness $(r_\Delta, u_\Delta, \Delta_r)$. Since Pedersen commitments are perfectly hiding and the PS signatures are rerandomizable, their distributions are identical for $b = 0$ and $b = 1$. Furthermore, the simulated proof $\pi$ depends only on the public statement $(\{\cred'\}, \{\cm'\}, \phi)$, not the witness. Therefore, $V_{\Sim,0} = V_{\Sim,1}$, making $\Adv$'s advantage in $\Hybrid_1$ exactly zero.
+    \end{enumerate}
+    
+    The adversary's advantage in the real game is:
+    \[
+    \left|\Pr[b' = b] - \frac{1}{2}\right| = \frac{1}{2} \left|\Pr[\Adv = 1 | V_{\real,0}] - \Pr[\Adv = 1 | V_{\real,1}]\right|
+    \]
+    
+    Since $V_{\real,0} \stackrel{c}{\approx} V_{\Sim,0} = V_{\Sim,1} \stackrel{c}{\approx} V_{\real,1}$, the total advantage is at most $\epsilon_1(\lambda)$, which is negligible if the zero-knowledge property holds.
+    
+    Therefore, the $\MIMCABC$ system provides anonymity under the stated assumptions.
+\end{proof}
+
+
+
+
+
+
+
 
 
 
