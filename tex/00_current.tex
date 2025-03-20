@@ -351,7 +351,7 @@ A full proof can be found in the appendix \ref{appendix:commitmentreduction}
 % 
 % % % % % % % % % % 
 \newpage
-\section{Rerandomizable Signatures over Commitments}\label{sec:pssignature}
+\section{Rerandomizable Signatures over Commitments}\label{sec:rerandsig_g1}
 We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu2022utt}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is the first complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions (we note that \cite{tomescu2022utt} presents a proof sketch).
 
 
@@ -715,7 +715,16 @@ To model the adversary’s capabilities and the system’s state, we introduce t
 \end{itemize} 
 
 
-\paragraph{Correctness:} A MIMC-ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credentials to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user’s attributes, the verification process accepts the proof with overwhelming probability. 
+
+\begin{definition}[Correctness]
+    \[
+        \Pr \left[ 
+            \Verify(\{\cred_k'\}, \{\cm_k'\}, \phi, \pi) = 1 \mid \text{all steps honest} \wedge \phi(\{m_k\}) = 1
+        \right] = 1 - \negl[\lambda]
+    \]
+\end{definition}
+
+\paragraph{Intuition:} A MIMC-ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credentials to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user’s attributes, the verification process accepts the proof with overwhelming probability. 
 
     \begin{itemize}
         \item \textbf{Setup:} Challenger $\AdvC$ runs $\Setup(\secparam) \to \ppar$
@@ -725,13 +734,6 @@ To model the adversary’s capabilities and the system’s state, we introduce t
         \item \textbf{Winning Condition:} Correctness holds if $\Verify(\{\cred_k'\}, \{\cm_k'\}, \phi, \pi) = 1 $ with $\Pr = 1-\negl[\lambda]$
     \end{itemize}
 More formally,
-\begin{definition}[Correctness]
-    \[
-        \Pr \left[ 
-            \Verify(\{\cred_k'\}, \{\cm_k'\}, \phi, \pi) = 1 \mid \text{all steps honest} \wedge \phi(\{m_k\}) = 1
-        \right] = 1 - \negl[\lambda]
-    \]
-\end{definition}
 
 
 
@@ -745,9 +747,6 @@ More formally,
 
 
 
-
-
-\paragraph{Unforgeability:} A MIMC-ABC system is unforgeable if no probabilistic polynomial-time (PPT) adversary can produce a valid proof for a predicate that they cannot legitimately satisfy, based on the credentials they have obtained or corrupted. This prevents \emph{forging credentials} or \emph{proving false statements} about them including faking identity binding and credential relationships when stated by $\phi$.
 
 
 \begin{definition}[Unforgeability]
@@ -757,8 +756,7 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
 \]
 \end{definition}
 
-   
-
+\paragraph{Intuition:} A MIMC-ABC system is unforgeable if no probabilistic polynomial-time (PPT) adversary can produce a valid proof for a predicate that they cannot legitimately satisfy, based on the credentials they have obtained or corrupted. This prevents \emph{forging credentials} or \emph{proving false statements} about them including faking identity binding and credential relationships when stated by $\phi$.
 
 \paragraph{The intuition for the forgery success condition}: The adversary's forgery is successful if their proof verifies correctly \emph{and} the credentials used in the forgery cannot be traced back to a single corrupted user. The trivial forgery is one where the adversary corrupts a user and verifies a statement with their legitimately issued credentials. The adversary can win by combining credentials from multiple corrupt users to create valid proofs, combining credentials from corrupt users with newly forged credentials, and lastly creating entirely forged credentials. This is where our security properties, Identity Binding, and Credential Relationship Binding stem from.
 
@@ -767,10 +765,6 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
     
 \end{remark}
 
-\newpage
-\paragraph{Anonymity: }A MIMC-ABC system provides anonymity if no PPT adversary can determine which user’s credentials were used in a proof, even if the adversary controls the issuers and chooses the messages and predicates. This ensures that presentations reveal only what the predicate explicitly requires, protecting user privacy.
-
-\paragraph{Intuition}: the challenger sets up the game by picking a random bit $b \sample \bit$, which decides whether it uses "Alice or Bob's" credential in the game. Based on the bit, the challenger generates a credential "show" proof and presents it to the adversary. The adversary's guess should be no better than guessing.
 
 
 \begin{definition}[MIMC-ABC Anonymity]
@@ -866,7 +860,9 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 \end{figure}
 
 
+\paragraph{Anonymity: }A MIMC-ABC system provides anonymity if no PPT adversary can determine which user’s credentials were used in a proof, even if the adversary controls the issuers and chooses the messages and predicates. This ensures that presentations reveal only what the predicate explicitly requires, protecting user privacy.
 
+\paragraph{Intuition}: the challenger sets up the game by picking a random bit $b \sample \bit$, which decides whether it uses "Alice or Bob's" credential in the game. Based on the bit, the challenger generates a credential "show" proof and presents it to the adversary. The adversary's guess should be no better than guessing.
 
 
 
@@ -948,7 +944,7 @@ Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials
 For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{''passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{''dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
 
 
-\subsection{Core Relations and $\Sigma$-protocol Implementation}
+\subsection{$\Sigma$-protocol and core relations}
 
 Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
 \begin{enumerate}
@@ -1030,127 +1026,40 @@ Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
     
 \end{enumerate}
 
-% Each relation is implemented as a standard 3-move Sigma protocol with:
-% - Commitment: Prover selects random values r and computes first message t
-% - Challenge: Verifier sends random challenge c
-% - Response: Prover computes response z using witness and challenge
 
-% The protocols provide special honest-verifier zero-knowledge and special soundness, 
-% enabling our security proofs in Section 7.
+\subsection{Security Mechanisms}
 
+\subsubsection{Identity Binding}
+Identity binding leverages the position-binding property of our commitment scheme. When proving multiple credentials belong to the same identity:
+\begin{itemize}
+    \item Prover demonstrates $\id_1 = \id_2 = \ldots = \id_n$ via $\Sigma$-protocol equality proof
+    \item Position-binding prevents credential mixing attacks
+    \item Breaking identity binding reduces to breaking position-binding (SDLP assumption)
+\end{itemize}
 
-
-
-% 4. Security Mechanisms
-
-% 4.1 Identity Binding
-% Identity binding ensures all credentials in a presentation belong to the 
-% same identity. We leverage the position-binding property of our commitment 
-% scheme from Section 3. Given commitments cm_j and cm_k with openings to 
-% [id_j,ctx_j,attrs_j] and [id_k,ctx_k,attrs_k]:
-
-% - The prover demonstrates id_j = id_k via a zero-knowledge proof of equality
-% - Our position-binding guarantee ensures this equality cannot be forged
-% - The security reduction (Section 7.1) shows breaking identity binding 
-%   requires breaking the position-binding property
-
-% 4.2 Credential Relationship Binding
-% Beyond identity binding, our system can enforce structured relationships 
-% between credentials through predicate φ. For example, requiring:
-% - One credential derived from another (e.g., degree → professional license)
-% - Consistency across credentials (e.g., name, date of birth)
-% - Hierarchical verification (e.g., basic credential → extended privileges)
-
-% These relationships are proven via the R_φ relation using standard techniques 
-% for arithmetic circuits in Sigma protocols.
-
-% 4.3 Protection Against Malicious Issuers
-% We prevent malicious issuers from undermining anonymity or unforgeability 
-% through a proof of correct key generation:
-
-% R_verkey = {(vk,ck, (sk,x,{y_i})) | sk = g^x ∧ vk = g̃^x ∧ 
-%                                   ∀i: g_i = g^{y_i} ∧ g̃_i = g̃^{y_i}}
-
-% This ensures issuers cannot create keys with undisclosed structure that might 
-% enable deanonymization or signature forgery.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\subsubsection{Credential Relationships}
+Our system, and underlying $\Sigma$-protocols support credential relationship proofs:
+\begin{itemize}
+    \item Credential derivation $\cred_a \to \cred_b$
+    \item Cross-credential attribute consistency
+    \item Hierarchical credential verification
+    \item Sybil-resistant nullifiers
+\end{itemize}
+These are implemented through $\Sigma$-protocol compositions on cross-credential attributes.
 
 \subsubsection{Freshness}
-To prevent replay attacks in credential show/verify protocols, we employ an interactive challenge-response mechanism as per Sigma protocols \cite{desmedt_proofs_1994, damgard_sigma_2010}. During showing, the verifier generates a random challenge that the user must incorporate into their zero-knowledge proofs ensuring each proof is tied to the single transaction. Interaction could be removed using the Fiat-Shamir transform \cite{odlyzko_how_1986}, this would require verifiers to maintain a list of used proofs introducing overhead and potential security concerns in a multi-verifier/distributed setting.
+We prevent replay attacks via the challenge phase of our $\Sigma$-protocols~\cite{desmedt_proofs_1994, damgard_sigma_2010}. Verifiers send random challenges that provers must incorporate into their responses. This approach requires no persistent state for verifiers and prevents cross-verifier-proof reuse. Non-interactive versions via Fiat-Shamir~\cite{odlyzko_how_1986} would require tracking used proofs.
 
 \subsubsection{Malicious Organization Keys}
-We include an addition to the Rerandomizable Signature scheme algorithm 
+To prevent attacks from malicious issuers, we extend our signature scheme with:
 \begin{itemize}
-    \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
-        \[
-        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-        \]
+    \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit$: Verifies issuer keys via relation:
 \end{itemize}
-  
-        
-
-To ensure security against maliciously generated issuer keys in our rerandomizable signature (RS)-based attribute-based credential (ABC) system, we require each issuer to prove knowledge of their secret key and the correctness of their public parameters. We define an NP-relation $\mathcal{R}_O$ that captures well-formed organization keys:
-
 \[
-\mathcal{R}_O = \{ (\opk_j = (\vk_j, \ck_j), (\osk_j, x, \{y_i\}_{i=1}^\ell)) \mid \RSVerKey(\osk_j, \vk_j, \ck_j) = 1 \}
+\mathcal{R}_{\mathsf{verkey}} = \{(\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \wedge \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
 \]
 
-where:
-\begin{itemize}
-    \item $\opk_j = (\vk_j, \ck_j)$ is the issuer’s public key, with $\vk_j$ as the verification key and $\ck_j = (g, \{g_i = g^{y_i}\}_{i=1}^\ell, \tilde{g}, \{\tilde{g}_i = \tilde{g}^{y_i}\}_{i=1}^\ell)$ as the commitment key;
-    \item $\osk_j = g^x$ is the secret key, and $\vk_j = \tilde{g}^x$ is its corresponding verification key;
-    \item $\RSVerKey(\osk_j, \vk_j, \ck_j)$ verifies that:
-    \[
-    \osk_j = g^x \land \vk_j = \tilde{g}^x \land \bigwedge_{i=1}^\ell (g_i = g^{y_i} \land \tilde{g}_i = \tilde{g}^{y_i})
-    \]
-\end{itemize}
-
-During the credential issuance protocol ($\Obtain$), the issuer generates a zero-knowledge proof of knowledge:
-
-\[
-\pi \gets \mathsf{ZKPoK}\{ (\osk_j, x, \{y_i\}_{i=1}^\ell) : (\opk_j, (\osk_j, x, \{y_i\}_{i=1}^\ell)) \in \mathcal{R}_O \}
-\]
-
-This proof ensures:
-\begin{itemize}
-    \item \textbf{Secret Key Knowledge}: The issuer knows $\osk_j$ corresponding to $\vk_j$.
-    \item \textbf{Commitment Key Correctness}: The commitment key $\ck_j$ is properly formed with respect to the secret exponents $\{y_i\}_{i=1}^\ell$.
-\end{itemize}
-
-This mechanism guarantees that even a malicious issuer cannot generate keys that undermine user anonymity or system unforgeability. In security proofs, the zero-knowledge property allows extraction of $\osk_j$, enabling reductions to the underlying cryptographic assumptions.
+This prevents deanonymization via specially crafted keys, and signature forgery via hidden key relationships. In security proofs, extractability enables reductions to standard cryptographic assumptions.
 
 
 \newpage
@@ -1198,6 +1107,7 @@ The Credential is a signature $\sigma$ over commitment $\cm = \mathsf{CM.Com}([\
 \subsection{Unforgeability} 
 \subsubsection{Intuition}
 Unforgeability ensures an Adversary cannot produce a valid proof for a predicate $\phi^*$ without possessing valid credentials. Credentials in our system are rerandomizable signatures over position-binding commitments to attribute vectors. Our reduction shows a successful forgery must break one of three security properties:
+
 
 
 \begin{enumerate} 
@@ -1310,27 +1220,8 @@ Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ wo
 
 \newpage
 
-\section{Performance Evaluation}
 
-Here I would like to say that the ability to prove multiple credentials at the same time from different issuers means we can't use signature aggregation as the public keys are different (a requirement for signature aggregation for BBS+ and PS signatures). Signature schemes combined with efficient zero knowledge proofs of knowledge are required. The 2 popular schemes, BBS+ and PS both support sigma protocols for efficient zero knowledge proofs. With Sigma protocols, the proof of knowledge of a commitment inside the signature can then be used in a clever way to prove that the id within one signature is the same as the other, position binding ensures that is the case. 
-
-We show in the next section that the variant here is state of the art and extremely efficient for these operations. We also show that the original constructions of BBS+ and PS have been dramatically improved over time. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Analysis}
+\section{Efficiency Analysis}
 
 In this section, we compare the computational efficiency of two variants of the rerandomizable signature scheme used within our anonymous credential system. Specifically, we analyze the impact of shifting the signature group elements from $\G_1$ to $\G_2$ on the verification process. Our key finding is that this optimization eliminates one pairing operation by adding one additional $\G_2$ exponentiation, reducing the computational overhead without compromising security.
 
@@ -1353,7 +1244,7 @@ The original scheme as describe in \cite{tomescu2022utt} defines the signature $
 
 The commitment consistency pairing check is needed to avoid a proof of knowledge in $\G_2$. Given the commitment used in signature verification is in $\G_2$, the prover must use that same commitment for proof of knowledge, or in this case, the prover verifies the symmetric-group consistency of their commitment and then uses $\cm \in \G_1$ for the proof protocol. 
 
-\subsection{PSUTT \cite{tomescu2022utt} $\G_2$ Signature}
+\subsection{PSUTT \cite{tomescu2022utt} $\G_2$ Signature}\label{rerandsig_g2}
 
 In our optimized variant, we redefine the signature as $\widetilde{\sigma} = (\widetilde{\sigma_1}, \widetilde{\sigma_2}) \in \G_2$. The verification process $\MIMCVerify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ shows the pairing reduction:
 
@@ -1380,8 +1271,101 @@ Correctness stems from the verification equation:
     \end{align*}
 
 
-\subsection{Practical Analysis}
-We analyse the 
+\section{Performance Evaluation}
+We implemented our $\MIMCABC$ system using the arkworks library \cite{arkworks_contributors_arkworks_2022} in rust. All experiments were conducted on a Macbook Air M2 (2022) with 16GB RAM with over 10 repeated measurements. 
+
+We show a comparison of the algorithms between PS signatures and BBS+ signatures
+
+We compare our approach using PS \cite{sako_short_2016} signatures, 
+against two state-of-the-art anonymous credential schemes
+
+
+Here I would like to say that the ability to prove multiple credentials at the same time from different issuers means we can't use signature aggregation as the public keys are different (a requirement for signature aggregation for BBS+ and PS signatures). Signature schemes combined with efficient zero knowledge proofs of knowledge are required. The 2 popular schemes, BBS+ and PS both support sigma protocols for efficient zero knowledge proofs. With Sigma protocols, the proof of knowledge of a commitment inside the signature can then be used in a clever way to prove that the id within one signature is the same as the other, position binding ensures that is the case. 
+
+We show in the next section that the variant here is state of the art and extremely efficient for these operations. We also show that the original constructions of BBS+ and PS have been dramatically improved over time. 
+
+
+
+
+
+
+
+
+
+
+
+LaTeX Table for Combined Operations with Summaries:
+\begin{table}[htbp]
+\centering
+\caption{Performance of Anonymous Credential Operations (time in ms)}
+\label{tab:anoncred_performance}
+\begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
+\toprule
+n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & This Paper \ref{rerandsig_g2} \\
+\midrule
+\multicolumn{6}{c}{\textbf{Obtain}}  \\
+\midrule
+\textbf{2} & 0.51 & 0.90 & 0.66 & 0.25 & \textbf{0.23} \\
+\textbf{5} & 0.65 & 1.00 & 0.66 & 0.28 & \textbf{0.27} \\
+\textbf{10} & 0.67 & 1.13 & 0.82 & 0.36 & \textbf{0.31} \\
+\textbf{15} & 0.78 & 1.26 & 0.87 & 0.37 & \textbf{0.36} \\
+\textbf{20} & 0.86 & 1.38 & 0.94 & \textbf{0.41} & 0.41 \\
+\textbf{30} & 1.07 & 1.63 & 1.11 & 0.51 & \textbf{0.49} \\
+\midrule
+\multicolumn{6}{c}{\textbf{Issue}}  \\
+\midrule
+\textbf{2} & 1.25 & \textbf{0.72} & 1.48 & 1.27 & 2.99 \\
+\textbf{5} & 1.66 & \textbf{0.75} & 1.79 & 1.66 & 3.31 \\
+\textbf{10} & 2.33 & \textbf{0.83} & 2.54 & 2.35 & 4.00 \\
+\textbf{15} & 2.98 & \textbf{0.84} & 3.23 & 3.03 & 4.64 \\
+\textbf{20} & 3.96 & \textbf{0.90} & 3.79 & 3.66 & 5.88 \\
+\textbf{30} & 4.97 & \textbf{0.94} & 5.16 & 5.10 & 6.86 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Show}}  \\
+\midrule
+\textbf{2} & 5.39 & 2.31 & 3.20 & \textbf{1.14} & 1.29 \\
+\textbf{5} & 6.05 & 2.42 & 3.15 & \textbf{1.16} & 1.29 \\
+\textbf{10} & 7.44 & 1.71 & 4.53 & \textbf{1.22} & 1.33 \\
+\textbf{15} & 8.86 & 2.71 & 6.14 & 1.40 & \textbf{1.37} \\
+\textbf{20} & 11.88 & 1.88 & 7.66 & \textbf{1.41} & 1.51 \\
+\textbf{30} & 12.91 & 3.15 & 16.23 & \textbf{1.37} & 1.59 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Verify}}  \\
+\midrule
+\textbf{2} & 7.59 & 2.18 & 4.57 & 2.47 & \textbf{1.79} \\
+\textbf{5} & 9.25 & 2.25 & 5.52 & 2.73 & \textbf{2.01} \\
+\textbf{10} & 11.09 & \textbf{2.25} & 7.10 & 3.16 & 2.44 \\
+\textbf{15} & 13.96 & \textbf{2.30} & 8.62 & 3.47 & 2.72 \\
+\textbf{20} & 16.93 & \textbf{2.34} & 9.88 & 3.84 & 3.21 \\
+\textbf{30} & 26.30 & \textbf{2.57} & 16.55 & 4.67 & 3.79 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Issuing Phase Total (Obtain + Issue)}}  \\
+\midrule
+\textbf{2} & 1.76 & 1.62 & 2.14 & \textbf{1.53} & 3.22 \\
+\textbf{5} & 2.31 & \textbf{1.76} & 2.45 & 1.95 & 3.57 \\
+\textbf{10} & 3.00 & \textbf{1.96} & 3.37 & 2.71 & 4.31 \\
+\textbf{15} & 3.75 & \textbf{2.10} & 4.10 & 3.40 & 5.00 \\
+\textbf{20} & 4.82 & \textbf{2.29} & 4.74 & 4.06 & 6.28 \\
+\textbf{30} & 6.04 & \textbf{2.57} & 6.27 & 5.60 & 7.35 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Showing Phase Total (Show + Verify)}}  \\
+\midrule
+\textbf{2} & 12.98 & 4.48 & 7.77 & 3.61 & \textbf{3.08} \\
+\textbf{5} & 15.30 & 4.67 & 8.68 & 3.90 & \textbf{3.30} \\
+\textbf{10} & 18.53 & 3.96 & 11.62 & 4.38 & \textbf{3.77} \\
+\textbf{15} & 22.82 & 5.01 & 14.76 & 4.87 & \textbf{4.09} \\
+\textbf{20} & 28.81 & \textbf{4.22} & 17.53 & 5.25 & 4.72 \\
+\textbf{30} & 39.21 & 5.72 & 32.77 & 6.04 & \textbf{5.37} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+
 
 
 
@@ -1401,6 +1385,140 @@ We analyse the
     \caption{Performance Comparison of Anonymous Credential Schemes}
     \label{fig:enter-label}
 \end{figure}
+
+
+
+\begin{table}[htbp]
+\centering
+\caption{Performance of Anonymous Credential Operations (time in ms)}
+\label{tab:anoncred_performance}
+\begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
+\toprule
+n & BBS+ 06 & BBS+ 16 & PS 16 & PS-UTT G1 & PS-UTT G2 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Obtain}}  \\
+\midrule
+\textbf{2} & 0.51 & 0.90 & 0.66 & 0.25 & \textbf{0.23} \\
+\textbf{5} & 0.65 & 1.00 & 0.66 & 0.28 & \textbf{0.27} \\
+\textbf{10} & 0.67 & 1.13 & 0.82 & 0.36 & \textbf{0.31} \\
+\textbf{15} & 0.78 & 1.26 & 0.87 & 0.37 & \textbf{0.36} \\
+\textbf{20} & 0.86 & 1.38 & 0.94 & \textbf{0.41} & 0.41 \\
+\textbf{30} & 1.07 & 1.63 & 1.11 & 0.51 & \textbf{0.49} \\
+\midrule
+\multicolumn{6}{c}{\textbf{Issue}}  \\
+\midrule
+\textbf{2} & 1.25 & \textbf{0.72} & 1.48 & 1.27 & 2.99 \\
+\textbf{5} & 1.66 & \textbf{0.75} & 1.79 & 1.66 & 3.31 \\
+\textbf{10} & 2.33 & \textbf{0.83} & 2.54 & 2.35 & 4.00 \\
+\textbf{15} & 2.98 & \textbf{0.84} & 3.23 & 3.03 & 4.64 \\
+\textbf{20} & 3.96 & \textbf{0.90} & 3.79 & 3.66 & 5.88 \\
+\textbf{30} & 4.97 & \textbf{0.94} & 5.16 & 5.10 & 6.86 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Show}}  \\
+\midrule
+\textbf{2} & 5.39 & 2.31 & 3.20 & \textbf{1.14} & 1.29 \\
+\textbf{5} & 6.05 & 2.42 & 3.15 & \textbf{1.16} & 1.29 \\
+\textbf{10} & 7.44 & 1.71 & 4.53 & \textbf{1.22} & 1.33 \\
+\textbf{15} & 8.86 & 2.71 & 6.14 & 1.40 & \textbf{1.37} \\
+\textbf{20} & 11.88 & 1.88 & 7.66 & \textbf{1.41} & 1.51 \\
+\textbf{30} & 12.91 & 3.15 & 16.23 & \textbf{1.37} & 1.59 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Verify}}  \\
+\midrule
+\textbf{2} & 7.59 & 2.18 & 4.57 & 2.47 & \textbf{1.79} \\
+\textbf{5} & 9.25 & 2.25 & 5.52 & 2.73 & \textbf{2.01} \\
+\textbf{10} & 11.09 & \textbf{2.25} & 7.10 & 3.16 & 2.44 \\
+\textbf{15} & 13.96 & \textbf{2.30} & 8.62 & 3.47 & 2.72 \\
+\textbf{20} & 16.93 & \textbf{2.34} & 9.88 & 3.84 & 3.21 \\
+\textbf{30} & 26.30 & \textbf{2.57} & 16.55 & 4.67 & 3.79 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Issuing Phase Total (Obtain + Issue)}}  \\
+\midrule
+\textbf{2} & 1.76 & 1.62 & 2.14 & \textbf{1.53} & 3.22 \\
+\textbf{5} & 2.31 & \textbf{1.76} & 2.45 & 1.95 & 3.57 \\
+\textbf{10} & 3.00 & \textbf{1.96} & 3.37 & 2.71 & 4.31 \\
+\textbf{15} & 3.75 & \textbf{2.10} & 4.10 & 3.40 & 5.00 \\
+\textbf{20} & 4.82 & \textbf{2.29} & 4.74 & 4.06 & 6.28 \\
+\textbf{30} & 6.04 & \textbf{2.57} & 6.27 & 5.60 & 7.35 \\
+\midrule
+\multicolumn{6}{c}{\textbf{Verify Phase Total (Show + Verify)}}  \\
+\midrule
+\textbf{2} & 12.98 & 4.48 & 7.77 & 3.61 & \textbf{3.08} \\
+\textbf{5} & 15.30 & 4.67 & 8.68 & 3.90 & \textbf{3.30} \\
+\textbf{10} & 18.53 & 3.96 & 11.62 & 4.38 & \textbf{3.77} \\
+\textbf{15} & 22.82 & 5.01 & 14.76 & 4.87 & \textbf{4.09} \\
+\textbf{20} & 28.81 & \textbf{4.22} & 17.53 & 5.25 & 4.72 \\
+\textbf{30} & 39.21 & 5.72 & 32.77 & 6.04 & \textbf{5.37} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Summary}
+- Both PS and BBS+ anonymous credentials use pedersen commitment schemes and sigma protocols for proving knowledge of committed attributes
+- PS benefits structurally, rerandomization is much cleaner, and with our variant, show + verify time is more efficient
+- Proving knowledge of the committed attributes in PS and BBS+ delivers the Schnorr responses that can be used to prove identity binding - we actually get this for free with no extra cost
+- Sigma proofs are the most efficient and expressive proofs for proving knowledge of committed attributes. Although theoretically, they are linear in the size of the attributes, they are still extraordinarily efficient. Practical efficiencies in cryptography libraries such as MSM and batch techniques such as window tables and parallel computation reduce the practical complexity to, in many cases, log of the committed attributes. Polynomial commitments such as in the case of SPS-EQ improve the theoretical complexity but reduce the expressiveness of the proofs, further analysis needs to be done to benchmark the practical comparison. 
+- A users transaction with a 30 message anonymous credential (large but not impossible) will cost approximately 5.37ms which is considered efficient in transactions. 
+- For proving knowledge of multiple credentials together, the schnorr protocol used in both BBS+ and PS outputs a mechanism (equality of responses) to verify the identifier in each credential and therefore, this almost comes for free. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
