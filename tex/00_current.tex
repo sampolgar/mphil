@@ -39,10 +39,13 @@ Traditional centralized identity systems expose users to privacy risks (e.g., da
 \subsection{Contributions}
 
 \begin{enumerate}
-    \item Extend the rerandomizable signature from \cite{tomescu2022utt} 
-    We prove the commitment is position-binding and extend the signature scheme with an algorithm to verify the correctness of the issuer's secret key, verification key, and commitment key. We prove the construction is $\EUFCMA$ secure in the algebraic group model. We then show our optimized version achieves a 10\% reduction in overall prove and verify times to previous construction. 
+    \item We extend the rerandomizable signature from \cite{tomescu2022utt} by proving the pedersen commitment is position binding in the Algebraic Group Model and prove the signature is $\EUFCMA$ secure in the Algebraic Group Model. 
     
-    \item We formalize Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC), introducing game-based security definitions tailored to multi-issuer challenges. These include cross-credential unlinkability, identity binding, and credential relationship binding. We construct a $\MIMCABC$ system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM). In addition, our system ensures anonymity against malicious issuers
+    \item \textbf{Formalized Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC)}, introducing game-based security definitions tailored to multi-issuer challenges. These include cross-credential unlinkability, identity binding, and credential relationship binding. We construct a $\MIMCABC$ system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM). 
+
+    \item \textbf{Anonymity against malicious issuers:} We extend the standard notion of anonymity and include anonymity against malicious issuers by implementing a proof mechanism requiring the issuer to prove the structure of their keys 
+
+    \item Present an optimized construction of the signature scheme and show it achieves a 10\% reduction in overall prove and verify times to previous construction. 
 
 \end{enumerate}
 
@@ -125,7 +128,23 @@ $$\Pr\left[\begin{array}{l}
 \end{array}\right] \leq \negl(\lambda)$$
 \end{definition}
 
-\subsubsection{$\Sigma$-Protocols}
+\subsubsection{Zero-Knowledge Proofs}
+A zero-knowledge proof (ZKP) enables a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ that a statement $x \in L$ holds for some language $L$, without revealing the witness $w$. Formally, an interactive proof system $(\mathcal{P}, \mathcal{V})$ for $L$ satisfies:
+\begin{itemize}
+    \item \textbf{Completeness}: If $x \in L$, then $\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] \geq 1 - \negl(\lambda)$.
+    \item \textbf{Soundness}: If $x \notin L$, then for any $\mathcal{P}^*$, $\Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] \leq \negl(\lambda)$.
+    \item \textbf{Zero-Knowledge}: There exists a simulator $\mathcal{S}$ such that for all $x \in L$, the view of any $\mathcal{V}^*$ is computationally indistinguishable from $\mathcal{S}(x)$.
+\end{itemize}
+ZKPs are essential to our anonymous credential system, allowing users to prove credential validity and attribute relations without compromising privacy.
+
+\subsubsection{Sigma-Protocols}
+A Sigma-protocol is a three-move, public-coin ZKP: (1) $\mathcal{P}$ sends a commitment $a$, (2) $\mathcal{V}$ sends a random challenge $e$, and (3) $\mathcal{P}$ responds with $z$. It satisfies:
+\begin{itemize}
+    \item \textbf{Completeness}: Honest execution accepts with probability 1.
+    \item \textbf{Special Soundness}: From two accepting transcripts $(a, e, z)$ and $(a, e', z')$ with $e \neq e'$, a witness $w$ can be extracted.
+    \item \textbf{Special Honest-Verifier Zero-Knowledge (SHVZK)}: A simulator can generate transcripts $(a, e, z)$ matching the real distribution for any $e$.
+\end{itemize}
+We leverage Sigma-protocols to prove knowledge of committed attributes (e.g., $\pircom$ for relation $\rcom$) efficiently. See Appendix~\ref{app:zkp} for details.
 
 \subsection{Assumptions}
 
@@ -641,7 +660,7 @@ We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous 
 \subsection{Predicate Satisfaction}
 We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
 For a credential with attributes $m = [\id, \ctx, \attrs]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
-For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master", \attrs]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legimitate way.
+For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master", \attrs]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
 
 \subsection{Syntax}
 \begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
@@ -877,12 +896,12 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 \newpage
 \section{Construction}
 
-
 \subsection{Intuition of Construction}
 
 \subsubsection{Outline}
 Our credential system operates over attribute space $\Z_p$. The user is indexed by $i$, the issuer by $j$, and the $k^{th}$ credential issued to user $i$ from issuer $j$. The credential $\cred$ is a rerandomizable Pointcheval-Sanders signature over commitments $\sigma \gets \mathsf{RS.Sign}(\cm, \mathsf{osk})$ where $\cm \gets \CMCom(\vec{m}; \usk)$. During verification, the user rerandomizes both signature and commitment for anonymity, then uses $\Sigma$-protocols to prove their correctness for any predicate $\phi$. This approach leverages the algebraic structure of PS Signatures and Pedersen Commitments, that is, messages are exponents of a commitment which yields well-known, highly expressive and efficient zero-knowledge proofs of group element exponents, supporting a wide range of statements from selective disclosure to complex arithmetic relations. However, proofs are linear in the number of exponents. In contrast, SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} use constant-size set commitments and although proofs have limited expressiveness, they are constant size and very efficient. On the other hand, \cite{rabaninejad_attribute-based_2024} use Groth-Sahai proofs. During $\Obtain, \Issue$, the user sends the commitment $\cm$ along with a proof of opening $\pircom(\cm)$ allowing the extraction of $\usk$ for corrupt users in the unforgeability proof.
 
+\subsubsection{Example}
 Consider a user holding credentials from three issuers, denoted $j = 1, 2, 3$, each providing one credential $k = 1$. The user rerandomizes each credential’s commitment and signature as follows: $\cm_{j,1}' \gets \CMRand(\cm_{j,1}, \Delta_{r_{j,1}})$ and $\sigma_{j,1}' \gets \RSRand(\sigma_{j,1}, \Delta_{r_{j,1}}, \Delta_{u_{j,1}})$. These rerandomized pairs $(\cm_{j,1}', \sigma_{j,1}')$ are indistinguishable from their original issuance. In the $\Show$ protocol, the verifier confirms their validity: $\RSVer(\sigma_{j,1}', \cm_{j,1}', \vk_j) = 1$ for all $j \in \{1, 2, 3\}$.
 
 \begin{figure}
@@ -926,24 +945,181 @@ Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials
 \right\}
 \]
 
-For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{``passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{``dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
+For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{''passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{''dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
 
-\subsection{Proof Predicate Construction}
 
-The zero-knowledge proof $\Pi_\phi$ demonstrates knowledge of a witness $w = (\id, \{\ctx_{j,k}, \attrs_{j,k}, \usk_{j,k}, \Delta_{r_{j,k}}, \Delta_{u_{j,k}}\})$ satisfying $\mathcal{R}_\phi$. The public inputs are $\{\sigma_{j,k}', \cm_{j,k}', \vk_j, \phi\}$. This proof can be implemented using Sigma protocols (e.g., Schnorr variants for exponent relations), with a proof size linear in the number of credentials and attributes. Practical optimizations, such as batching or multi-scalar multiplication, can reduce computation time, enhancing efficiency even for large attribute sets.
+\subsection{Core Relations and $\Sigma$-protocol Implementation}
+
+Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
+\begin{enumerate}
+    \item \textbf{Commitment Opening:} For commitment $\cm$ to message vector $\vec{m} = [\id, \ctx, \attrs]$. $\pircom(\cm)$ is a proof for relation:
+    \[
+     \rcom = \zkpok \left\{(\cm, (\id, \ctx, \attrs, \usk))| \cm = g_1^{\id}g_2^{\ctx},\attrs, g^{\usk} \right\}
+    \]
+    
+    \item \textbf{Signature Validity:} after rerandomization, our signatures in the form $\sigma' = (\sigma_1', \sigma_2')$ combine pairing verification with sigma protocol to prove knowledge of the committed messages and randomization factor. $\pirsigma$ is a proof for relation:
+         \[
+    \rsigma = \zkpok \left\{ 
+    \begin{array}{l} 
+    (\sigma', \cm', (\ctx, \attrs, \usk + \Delta_{\usk})) \\
+    \end{array} 
+    \middle|
+    \begin{array}{l}
+    e(\sigma_1, \vk \cdot \widetilde{\cm}) = e(\sigma_2, \tilde{g}) \quad \wedge \\
+    e(\cm, \tilde{g}) = e(g, \widetilde{\cm}) \quad \wedge\\
+    \cm = g_1^{\id}g_2^{\ctx},\attrs, g^{\usk + \Delta_\usk} \\
+    \end{array} 
+    \right\}
+    \]
+
+
+    \item \textbf{Identity Binding:} For two credentials with commitments $\cm_1$ and $\cm_2$:
+
+    \[
+    \rid = \zkpok \left\{ 
+    \begin{array}{l} 
+    (\cm_1, \cm_2, (\id, \usk_1, \usk_2, \ctx_1, \ctx_2, \attrs_1, \attrs_2)) \\
+    \end{array} 
+    \middle|
+    \begin{array}{l}
+    \cm_1 = g^{\usk_1} \cdot g_1^{\id} \cdot g_2^{\ctx_1} \cdot \prod g_i^{\attrs_{1,i}} \wedge \\
+     \cm_2 = g^{\usk_2} \cdot g_1^{\id} \cdot g_2^{\ctx_2} \cdot \prod g_i^{\attrs_{2,i}} \\
+    \end{array} 
+    \right\}
+    \]
+    
+    This proves both credentials share the same $\id$ without revealing the $\id$ value. This generalizes to $n$ credentials by proving equality across all $n$ commitments.
+    
+    The position-binding property of our commitment scheme (Section \ref{sec:commitment}) ensures this equality relation can't be forged - an adversary can't make two commitments appear to share the same $\id$ when they actually don't.
+
+    \item \textbf{Malicious Issuer Protection:} For verification key $\vk$ and commitment key $\ck$, $\pirverkey$ is a proof for relation:
+    \[
+    \mathcal{R}_{\mathsf{verkey}} = \{(\vk, \ck, (\sk, x, \{y_i\}_{i=1}^{\ell})) \mid \sk = g^x \wedge \vk = \tilde{g}^x \wedge 
+    \forall i \in [1,\ell]: g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i} \}
+    \]
+    
+    This relation proves the issuer knows the discrete logarithms of their public keys, ensuring they can't create malformed keys that might enable deanonymization or signature forgery. The issuer must provide this proof during credential issuance, preventing attacks that exploit maliciously crafted keys with hidden structures.     
+
+     \item \textbf{Predicate Satisfaction:} For credentials with attributes that satisfy a policy $\phi$:
+    \[
+    \mathcal{R}_{\phi} = \{(\{\cm_j\}, (\{\attrs_j\})) \mid \forall j: \cm_j \text{ correctly commits to } \attrs_j \wedge
+    \phi(\{\attrs_j\}) = 1 \}
+    \]
+    
+    A predicate $\phi$ is simply a policy statement about attributes that is satisfiable by the supported algebraic constraints in Sigma protocols, noting that sigma protocols are extremely expressive and can  . For example:
+
+    These can be composed to support complex policies while maintaining zero-knowledge properties, revealing nothing beyond the fact that the policy is satisfied.
+    \begin{itemize}
+    \item ``age > 18'' (for a single credential)
+    \item ``has valid driver's license AND passport'' (requiring multiple credentials)
+    \item ``degree = 'Computer Science' AND university in accredited\_list''
+    \end{itemize}
+    
+    The $\Sigma$-protocol allows proving these statements are true without revealing the actual attribute values, only that they satisfy the predicate $\phi$.
+
+    
+    The $\Sigma$-protocol framework allows for highly expressive predicates $\phi$ including:
+    \begin{itemize}
+    \item \textbf{Boolean operations:} AND, OR, and NOT compositions of simpler predicates
+    \item \textbf{Arithmetic relations:} Equality, inequality ($<$, $>$, $\leq$, $\geq$), and linear combinations 
+    \item \textbf{Range proofs:} Demonstrating a value lies within a specific range (e.g., ``18 $\leq$ age $<$ 65'')
+    \item \textbf{Set membership:} Proving an attribute belongs to an approved set without revealing which one
+    \item \textbf{Cross-credential relations:} Equality of attributes across different credentials (e.g., name matches across passport and driver's license)
+    \end{itemize}
+
+    
+\end{enumerate}
+
+% Each relation is implemented as a standard 3-move Sigma protocol with:
+% - Commitment: Prover selects random values r and computes first message t
+% - Challenge: Verifier sends random challenge c
+% - Response: Prover computes response z using witness and challenge
+
+% The protocols provide special honest-verifier zero-knowledge and special soundness, 
+% enabling our security proofs in Section 7.
+
+
+
+
+% 4. Security Mechanisms
+
+% 4.1 Identity Binding
+% Identity binding ensures all credentials in a presentation belong to the 
+% same identity. We leverage the position-binding property of our commitment 
+% scheme from Section 3. Given commitments cm_j and cm_k with openings to 
+% [id_j,ctx_j,attrs_j] and [id_k,ctx_k,attrs_k]:
+
+% - The prover demonstrates id_j = id_k via a zero-knowledge proof of equality
+% - Our position-binding guarantee ensures this equality cannot be forged
+% - The security reduction (Section 7.1) shows breaking identity binding 
+%   requires breaking the position-binding property
+
+% 4.2 Credential Relationship Binding
+% Beyond identity binding, our system can enforce structured relationships 
+% between credentials through predicate φ. For example, requiring:
+% - One credential derived from another (e.g., degree → professional license)
+% - Consistency across credentials (e.g., name, date of birth)
+% - Hierarchical verification (e.g., basic credential → extended privileges)
+
+% These relationships are proven via the R_φ relation using standard techniques 
+% for arithmetic circuits in Sigma protocols.
+
+% 4.3 Protection Against Malicious Issuers
+% We prevent malicious issuers from undermining anonymity or unforgeability 
+% through a proof of correct key generation:
+
+% R_verkey = {(vk,ck, (sk,x,{y_i})) | sk = g^x ∧ vk = g̃^x ∧ 
+%                                   ∀i: g_i = g^{y_i} ∧ g̃_i = g̃^{y_i}}
+
+% This ensures issuers cannot create keys with undisclosed structure that might 
+% enable deanonymization or signature forgery.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsubsection{Freshness}
 To prevent replay attacks in credential show/verify protocols, we employ an interactive challenge-response mechanism as per Sigma protocols \cite{desmedt_proofs_1994, damgard_sigma_2010}. During showing, the verifier generates a random challenge that the user must incorporate into their zero-knowledge proofs ensuring each proof is tied to the single transaction. Interaction could be removed using the Fiat-Shamir transform \cite{odlyzko_how_1986}, this would require verifiers to maintain a list of used proofs introducing overhead and potential security concerns in a multi-verifier/distributed setting.
 
-
 \subsubsection{Malicious Organization Keys}
-
-We need to add this tot he signature scheme!!!
-
-  \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
+We include an addition to the Rerandomizable Signature scheme algorithm 
+\begin{itemize}
+    \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
         \[
         \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
         \]
+\end{itemize}
+  
         
 
 To ensure security against maliciously generated issuer keys in our rerandomizable signature (RS)-based attribute-based credential (ABC) system, we require each issuer to prove knowledge of their secret key and the correctness of their public parameters. We define an NP-relation $\mathcal{R}_O$ that captures well-formed organization keys:
@@ -1024,19 +1200,14 @@ The Credential is a signature $\sigma$ over commitment $\cm = \mathsf{CM.Com}([\
 Unforgeability ensures an Adversary cannot produce a valid proof for a predicate $\phi^*$ without possessing valid credentials. Credentials in our system are rerandomizable signatures over position-binding commitments to attribute vectors. Our reduction shows a successful forgery must break one of three security properties:
 
 
-
-Note: in the construction the user proves knowledge of the commitment - we can use this in the reduction
-
-
-
-
 \begin{enumerate} 
 \item Breaking $\EUFCMA$: The adversary generates a valid signature on a commitment not issued by a legitimate issuer. 
 \item Breaking Position Binding: The adversary violates the position-binding property of the commitment scheme, e.g., by mixing credentials when $\phi^*$ requires a shared identity. 
 \item Breaking Proof Soundness: The adversary convinces the verifier a false statement is true. 
 \end{enumerate}
 
-When $\AdvA$ outputs a valid forgery such that $\MIMCVerify(\{\cred_k'^*, \phi^*, \pi^*\})=1$, the reduction algorithm $\AdvB$ analyzes the forgery type. For a Forged Signature, where the commitment $\cm_k'^*$ was not issued by $\OOBTAIN$, $\AdvB$ extracts $\sigma_k'^*$ from $\cred_k'^*$ and outputs $(\cm_k'^*, \sigma_k'^*)$ as a valid $\EUFCMA$ forgery. For Commitment Misuse, where $\cm_k'^*$ is a rerandomization of an issued commitment but attributes $\{\vec{m}_k^*\}$ don't satisfy $\phi^*$, $\AdvB$ identifies two distinct openings of $\cm_k'^*$, breaking position-binding. For Broken Soundness, where attributes don't satisfy $\phi^*$ yet $\pi^*$ is accepted, $\AdvB$ uses $\pi^*$ as evidence of a valid proof for a false statement, breaking the $\Sigma$-protocol's soundness.
+When $\AdvA$ outputs a valid forgery such that $\MIMCVerify(\{\cred_k'^*, \phi^*, \pi^*\})=1$, the reduction algorithm $\AdvB$ analyzes the forgery type. For a Forged Signature, where the commitment $\cm_k'^*$ was not issued by $\OOBTAIN$, $\AdvB$ extracts $\sigma_k'^*$ from $\cred_k'^*$ and outputs $(\cm_k'^*, \sigma_k'^*)$ as a valid $\EUFCMA$ forgery. For Commitment Misuse, where $\cm_k'^*$ is a rerandomization of an issued commitment but attributes $\{\vec{m}_k^*\}$ don't satisfy $\phi^*$, $\AdvB$ identifies two distinct openings of $\cm_k'^*$, breaking position-binding. For Broken Soundness, where attributes don't satisfy $\phi^*$ yet $\pi^*$ is accepted, $\AdvB$ uses $\pi^*$ as evidence of a valid proof for a false statement, and by the special soundness of the $\Sigma$-protocol \ref{app:zkp} we extract the witness from $\pi^*$ breaking $\EUFCMA$ or position binding.
+
 
 Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ works by having $\AdvB$ obtain challenges from the $\EUFCMA$ and $\POSBINDING$ games, embedding these into the public parameters and issuer keys. $\AdvB$ simulates $\OOBTAIN$ by generating commitments to attributes and signing them with either known issuer keys or by querying the $\EUFCMA$ oracle. For $\OSHOW$, $\AdvB$ simulates proofs without witnesses using the zero-knowledge simulator. This construction ensures that any valid forgery by $\mathcal{A}$ can be translated into breaking one of the underlying cryptographic assumptions.
 
@@ -1086,7 +1257,7 @@ Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ wo
 
 \subsection{Anonymity}
 \begin{theorem}[Anonymity]
-    The $\MIMCABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable to the standard, the commitment is hiding and the zero-knowledgeness of the sigma proof system.
+    The $\MIMCABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{app:zkp} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
 \end{theorem}
 
 \begin{proof}[sketch]
@@ -1137,32 +1308,43 @@ Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ wo
 \end{proof}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 \newpage
 \section{Performance Evaluation}
 
+We compared these algorithms for the most popular schemes, we show ours is sota
+furthermore, we show our benefit in generating proof of knowledge is simple
 
 
-Describe the Variant: Explain what makes it efficient (e.g., fewer exponentiations, optimized pairing checks).
-Validate Security: Reference your security proofs or add a short discussion confirming it meets EUF-CMA and rerandomization requirements.
-Quantify Benefits: Report the 10\% reduction (or updated figures from your experiments) and compare it to the standard PS scheme.
-End to end implementation performance
 
-benchmark
-1. 1 issuer, 1 credential
-2. 1 issuer, multiple credentials
-3. multiple issuer, multiple credentials
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Analysis}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1205,5 +1387,8 @@ benchmark
 \end{table}
 
 \todonote{Summarize / Introduce the step changes. Introduce all oracles. Introduce the step change in attacks. Summarise reductions after each step}
+
+
+
 
 
