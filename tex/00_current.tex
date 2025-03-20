@@ -1309,10 +1309,12 @@ Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ wo
 
 
 \newpage
+
 \section{Performance Evaluation}
 
-We compared these algorithms for the most popular schemes, we show ours is sota
-furthermore, we show our benefit in generating proof of knowledge is simple
+Here I would like to say that the ability to prove multiple credentials at the same time from different issuers means we can't use signature aggregation as the public keys are different (a requirement for signature aggregation for BBS+ and PS signatures). Signature schemes combined with efficient zero knowledge proofs of knowledge are required. The 2 popular schemes, BBS+ and PS both support sigma protocols for efficient zero knowledge proofs. With Sigma protocols, the proof of knowledge of a commitment inside the signature can then be used in a clever way to prove that the id within one signature is the same as the other, position binding ensures that is the case. 
+
+We show in the next section that the variant here is state of the art and extremely efficient for these operations. We also show that the original constructions of BBS+ and PS have been dramatically improved over time. 
 
 
 
@@ -1330,63 +1332,76 @@ furthermore, we show our benefit in generating proof of knowledge is simple
 
 \section{Analysis}
 
+In this section, we compare the computational efficiency of two variants of the rerandomizable signature scheme used within our anonymous credential system. Specifically, we analyze the impact of shifting the signature group elements from $\G_1$ to $\G_2$ on the verification process. Our key finding is that this optimization eliminates one pairing operation by adding one additional $\G_2$ exponentiation, reducing the computational overhead without compromising security.
+
+\subsection{PSUTT \cite{tomescu2022utt} $\G_1$ Signature}
+The original scheme as describe in \cite{tomescu2022utt} defines the signature $\sigma = (\sigma_1, \sigma_2) \in \G_1$. The verification process $\MIMCVerify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$  involves:
+\begin{enumerate}
+    \item signature verification:
+    \[
+    e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk \cdot \widetilde{\cm'})
+    \]
+    \item Commitment Consistency Pairing: 
+    \[
+    e(\cm', \tilde{g}) = e(g, \widetilde{\cm'})
+    \]
+    \item Zero-Knowledge Proof Verification
+    \[
+    \mathsf{ZK.Verify}(\pi, \cm') = 1 \quad \mid \quad \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{enumerate}
+
+The commitment consistency pairing check is needed to avoid a proof of knowledge in $\G_2$. Given the commitment used in signature verification is in $\G_2$, the prover must use that same commitment for proof of knowledge, or in this case, the prover verifies the symmetric-group consistency of their commitment and then uses $\cm \in \G_1$ for the proof protocol. 
+
+\subsection{PSUTT \cite{tomescu2022utt} $\G_2$ Signature}
+
+In our optimized variant, we redefine the signature as $\widetilde{\sigma} = (\widetilde{\sigma_1}, \widetilde{\sigma_2}) \in \G_2$. The verification process $\MIMCVerify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ shows the pairing reduction:
+
+\begin{enumerate}
+    \item Signature verification:
+    \[
+    e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}',\widetilde{\sigma_1}')
+    \]
+    \item Zero-Knowledge Proof Verification
+    \[
+    \mathsf{ZK.Verify}(\pi, \cm') = 1 \quad \mid \quad \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{enumerate}
+
+Correctness stems from the verification equation:
+    \begin{align*}
+        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}) \\
+        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{u_\Delta} \cdot \tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g, \widetilde{\sk}^{u_\Delta}) \cdot e(g, \widetilde{\cm}^{u + u_\Delta}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g^x, \widetilde{h}^{u_\Delta}) \cdot e(g, \widetilde{\cm})^{u + u_\Delta} \cdot e(g,\tilde{h}^{u_\Delta})^{r_{\Delta}} \\
+        &= e(\vk, \widetilde{h}^{u_\Delta}) \cdot e(\cm, \widetilde{h}^{u_\Delta}) \cdot e(g^{r_{\Delta}},\tilde{h}^{u_\Delta}) \\
+        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
+        &= e(\vk \cdot \cm', \sigma_1')  \\
+    \end{align*}
+
+
+\subsection{Practical Analysis}
+We analyse the 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{ancilliary}
-\begin{table}[h]
+\begin{figure}
     \centering
-    \begin{tabular}{|c|c|c|c|c|}
-        \hline
-        \textbf{Scheme} & \textbf{Commitment} & \textbf{Proof System} & \textbf{Proof Size} & \textbf{Expressiveness} \\
-        \hline
-        PS-based ABCs & Pedersen & $\Sigma$-protocols & Varies (linear for complex statements) & High: selective disclosure, AND, OR, range proofs \\
-        \hline
-        SPS-EQ-based ABCs & Set Commitments & Structure-Preserving Proofs & Constant & Limited: selective disclosure, AND statements \\
-        \hline
-        Threshold Counting Tokens & Pairing-based & Groth-Sahai Proofs & Linear & Moderate: pairing equations (equality, linear combinations) \\
-        \hline
-    \end{tabular}
-    \caption{Comparison of Cryptographic Schemes for Attribute-Based Credentials}
-    \label{tab:abc_comparison}
-\end{table}
+    \includegraphics[width=1\linewidth]{comparison-line-graph.png}
+    \caption{Performance Comparison of Anonymous Credential Schemes}
+    \label{fig:enter-label}
+\end{figure}
 
-\todonote{Summarize / Introduce the step changes. Introduce all oracles. Introduce the step change in attacks. Summarise reductions after each step}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{performance-30.png}
+    \includegraphics[width=0.7\linewidth]{performance-20.png}
+    \includegraphics[width=0.7\linewidth]{performance-10.png}
+     \includegraphics[width=0.7\linewidth]{performance-5.png}
+    \caption{Performance Comparison of Anonymous Credential Schemes}
+    \label{fig:enter-label}
+\end{figure}
+
 
 
 
