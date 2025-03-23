@@ -1,7 +1,7 @@
 \usepackage{makecell}
 \usepackage{amsmath} 
-\usepackage{amsthm} 
-\usepackage{wasysym} 
+% \usepackage{amsthm} don't use this, makes errors
+% \usepackage{wasysym} don't use this, makes errors
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 % \usepackage{hyperref}
@@ -33,7 +33,7 @@
 \usepackage[textsize=small]{todonotes}
 \usepackage{multirow}
 % \usepackage[lambda,n,operators]{cryptocode}
-\usepackage{caption}
+% \usepackage{caption} % Removed to avoid warning with llncs class
 \usepackage[skip=10pt plus1pt, indent=40pt]{parskip}
 \usepackage{cancel} 
 \usepackage[
@@ -77,7 +77,8 @@ keys
 \newcommand{\UNFTWO}{\ensuremath{\mathsf{UNF\text{-}2}}\xspace}
 
 
-\newcommand{\Nul}{\mathsf{Nul}}
+\newcommand{\Nul}{\mathsf{N}}
+\newcommand{\nul}{\mathsf{N}}
 
 
 
@@ -174,12 +175,12 @@ keys
 
 \makeatletter
 % First, clear the current definitions
-\let\proposition\relax
-\let\endproposition\relax
-\let\lemma\relax
-\let\endlemma\relax
-\let\definition\relax
-\let\enddefinition\relax
+% \let\proposition\relax
+% \let\endproposition\relax
+% \let\lemma\relax
+% \let\endlemma\relax
+% \let\definition\relax
+% \let\enddefinition\relax
 
 % % Now create fresh counters
 % \newcounter{proposition}
@@ -187,15 +188,15 @@ keys
 % \newcounter{definition}
 
 % Define the environments with their own counters
-\spnewtheorem{proposition}{Proposition}{\bfseries}{\itshape}
-\spnewtheorem{lemma}{Lemma}{\bfseries}{\itshape}
-\spnewtheorem{definition}{Definition}{\bfseries}{\itshape}
-\makeatother
+% \spnewtheorem{proposition}{Proposition}{\bfseries}{\itshape}
+% \spnewtheorem{lemma}{Lemma}{\bfseries}{\itshape}
+% \spnewtheorem{definition}{Definition}{\bfseries}{\itshape}
+% \makeatother
 
-\makeatletter
-\@removefromreset{proposition}{theorem}
-\@removefromreset{lemma}{theorem}
-\makeatother
+% \makeatletter
+% \@removefromreset{proposition}{theorem}
+% \@removefromreset{lemma}{theorem}
+% \makeatother
 
 \newtcbtheorem[auto counter]{protocol}{Protocol}{
     colback=white,
@@ -229,30 +230,30 @@ keys
 % Construction Environment
 %--------------------------------------------------------
 
-\newtcbtheorem[auto counter]{construction}{Construction }{
-    colback=white,
-    colframe=black,
-    fonttitle=\bfseries,
-    coltitle=black,
-    attach boxed title to top center={yshift=-2mm},
-    boxed title style={
-        colframe=black,
-        colback=white,
-        boxrule=0.5mm,
-    },
-    enhanced,
-    sharp corners,
-    % Add internal padding
-    top=12pt,
-    bottom=12pt,
-    left=12pt,
-    right=12pt,
-    % Add spacing between paragraphs
-    before skip=2em,
-    after skip=2em,
-    % Increase line spacing within the box
-    before upper={\setlength{\baselineskip}{2em}},
-}{construct}
+% \newtcbtheorem[auto counter]{construction}{Construction }{
+%     colback=white,
+%     colframe=black,
+%     fonttitle=\bfseries,
+%     coltitle=black,
+%     attach boxed title to top center={yshift=-2mm},
+%     boxed title style={
+%         colframe=black,
+%         colback=white,
+%         boxrule=0.5mm,
+%     },
+%     enhanced,
+%     sharp corners,
+%     % Add internal padding
+%     top=12pt,
+%     bottom=12pt,
+%     left=12pt,
+%     right=12pt,
+%     % Add spacing between paragraphs
+%     before skip=2em,
+%     after skip=2em,
+%     % Increase line spacing within the box
+%     before upper={\setlength{\baselineskip}{2em}},
+% }{construct}
 
 
 %--------------------------------------------------------

@@ -4748,7 +4748,6 @@ notes, recall
 \begin{figure}
     \centering
     \caption{Complexity comparison between standard PS UTT and optimized variant. The optimized version uses Multi-Scalar Multiplication to reduce Schnorr proof from $\mathcal{O}(\ell)$ individual exponentiation to $\mathcal{O}(log \ell)$ effective operations using MSM techniques. Verifier pairing checks are re-arranged with Miller Loop + Final Exponentiation techniques with Pairing Inversion. Miller Loop batching (MLoop) and final exponentiation sharing (F.Exp), reducing the pairing cost from 4P to approximately 2.5P. MSM(n) denotes an n-point multi-scalar multiplication with complexity O(n/log n) using window methods}
-    \label{fig:enter-label}
         \begin{tabular}{|l|p{4.5cm}|p{4.5cm}|p{3.5cm}|}
             \hline
             \textbf{Protocol} & \textbf{Show (Prover)} & \textbf{Verify (Verifier)} & \textbf{Data Sent} \\

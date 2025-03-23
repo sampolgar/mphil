@@ -1,10 +1,3 @@
-\section*{Thesis Roadmap}
-
-This thesis explores anonymous credential systems, emphasizing efficiency, security, and real-world utility. We start with an efficiency analysis of predicate proofs in anonymous credentials using AGM security and benchmarks (Section 1). Next, we introduce MIMC-ABC, a multi-issuer system for privacy-preserving identity binding (Section 2). We then extend it with a hierarchical structure for managing complex credentials securely (Section 3). To address sybil attacks and revocation, we propose the Credential Relationship Bound Nullifier (Section 4). Finally, tMIMC-ABC decentralizes issuance with a threshold approach, enhancing security and efficiency (Section 5).
-
-% \section*{Thesis Roadmap}
-
-This thesis advances anonymous credential systems through a series of connected contributions focusing on efficiency, security, and practical deployment:
 
 \begin{itemize}
     \item \textbf{Chapter 1: Efficient Predicate Proofs in Anonymous Credentials}
@@ -12,85 +5,22 @@ This thesis advances anonymous credential systems through a series of connected 
         \item Security analysis of our position binding commitments and rerandomizable signature in the Algebraic Group Model
         \item First comprehensive benchmarks comparing BBS+, PS, and SPS-EQ signature schemes for predicate proofs
         \item Analysis of cryptographic optimizations demonstrating logarithmic performance improvements
-    \end{itemize}
 
-    \item \textbf{Chapter 2: MIMC-ABC for Multi-Issuer Identity Binding}
-    \begin{itemize}
-        \item Novel system supporting privacy-preserving proofs across multiple issuers
-        \item Security analysis proving resilience against forgery and identity spoofing
-        \item Comparative evaluation against established schemes (BBS+, CL, Idemix)
-    \end{itemize}
-
-    \item \textbf{Chapter 3: Hierarchical MIMC-ABC}
-    \begin{itemize}
-        \item Formal definition of credential hierarchy supporting master and sub-credentials
-        \item Secure private key issuance protocol preserving unlinkability while maintaining hierarchy
-    \end{itemize}
-
-    \item \textbf{Chapter 4: Sybil Resistance and Revocation in MIMC-ABC}
-    \begin{itemize}
-        \item Credential Relationship Bound Nullifier (CRBN) preventing duplicate credential use
-        \item Privacy-preserving revocation mechanism with minimal verifier overhead
-        \item Security analysis of sybil resistance properties
-    \end{itemize}
-
-    \item \textbf{Chapter 5: tMIMC-ABC: Threshold MIMC-ABC}
-    \begin{itemize}
-        \item Efficient threshold issuance construction outperforming comparable systems
-        \item Decentralized identity binding maintaining privacy and integrity
+        \item expressive predicates (e.g., "age > 18 AND degree = 'BS'")
     \end{itemize}
 \end{itemize}
-
-Each chapter builds upon previous work, creating a comprehensive framework for secure, efficient, and practical anonymous credential systems suitable for modern distributed environments.
-
-\section{Intro}
-\subsection{Problem}
-Our research addresses the secure and private verification of complex identity assertions using multiple digital credentials from different issuers. The system ensures all credentials are bound to the same identity and, additionally, supports credential relationship binding to prove structured relationships between credentials while preserving privacy through anonymous authentication.
-
-% We introduce the Multi-Issuer Multi-Credential Attribute-Based Anonymous Credential (MIMC-ABC) system, a novel framework for privacy-preserving identity verification. Unlike single-issuer systems like Idemix, MIMC-ABC enables users to combine credentials from multiple issuers without coordination, using rerandomizable Pointcheval-Sanders signatures and commitments. Our system supports expressive predicates (e.g., "age > 18 AND degree = 'BS'") via zero-knowledge proofs. We prove unforgeability and anonymity—even against malicious issuers—in the Algebraic Group Model, addressing key limitations in prior work and aligning with emerging digital identity needs.
-
-\subsubsection{Problem}
-
-Non-digital identity interactions 
-
-The privacy of non-digital identity interactions is often overlooked. Although users may need to present multiple physical identity documents to satisfy a verification requirement, oftentimes, our identity documents will be verified in plain sight and not digitally recorded. During the interaction, the verifier will check identity binding (that both identity documents are for the same person) and that the user provided different types of identity documents. This interaction is anonymous in many ways and unlinkable. 
-
-Traditional identity systems fail to preserve the privacy of the user but retain accountability of the user 
-Traditional systems fail to balance privacy, security, and accountability in these multi-issuer scenarios.
-
-\subsubsection{Key dimensions of the problem}
-\begin{itemize}
-    \item \textbf{Multi-Issuer Multi-Credentials} The need for MIMC stems from the need to combine credentials issued by various issuers such as a government, university, or private issuers and combine multiple credentials together such as having a valid driver's license and healthcare card to satisfy a government requirement. 
-
-    \item \textbf{Identity binding} Ensuring all credentials in a presentation belong to the same identity without compromising privacy or requiring issuer coordination. Without Identity Binding, an attacker could mix credentials from different individuals to falsely satisfy a verification requirement. Especially important in a multi-issuer setting where different users may have equivalent attributes 
-
-    \item \textbf{Credential Relationship Binding}: Beyond linking credentials to a single identity, users often need to prove structured relationships between credentials (e.g., one credential derived from another or a dependency between them). This property supports advanced use cases, such as nullifiers for Sybil-resistant systems or hierarchical credential verification.
-
-    \item \textbf{Anonymity} Users need to present credentials anonymously, ensuring that different presentations (e.g., to different service providers) cannot be linked to the same individual unless intended and that the underlying credential values not used openly. This protects against tracking and profiling, a growing concern in digital systems. preventing different presentations from being linked to the same individual while maintaining essential security properties
-
-
-\end{itemize}
-
-\subsection{Related Work}
-Compare with TACT, Coconut, Idemix, how we improve on them
-
-\subsection{Motivation}
-
-
-
-Traditional centralized identity systems expose users to privacy risks (e.g., data breaches) and lack flexibility for multi-issuer scenarios. Existing anonymous credential systems, while privacy-focused, often assume a single issuer or fail to efficiently integrate multiple credentials with features like Sybil resistance and revocation. As digital identity frameworks, such as the EU’s Mandatory Digital Identity Wallet, push for privacy-preserving solutions, there is an urgent need for a system that supports the complexity of real-world identity use cases—where users juggle multiple online credentials—while ensuring security, privacy, and accountability
 
 
 \subsection{Contributions}
 
 \begin{enumerate}
     \item We extend the rerandomizable signature from \cite{tomescu2022utt} by proving the pedersen commitment is position binding in the Algebraic Group Model and prove the signature is $\EUFCMA$ secure in the Algebraic Group Model. 
+
     
-    \item \textbf{Formalized Multi-Issuer, Multi-Credential Attribute-Based Anonymous Credentials (MIMC-ABC)}, introducing game-based security definitions tailored to multi-issuer challenges. These include cross-credential unlinkability, identity binding, and credential relationship binding. We construct a $\MIMCABC$ system using a variant of Pointcheval-Sanders (PS) signatures and prove its security in the Algebraic Group Model (AGM). 
+    \item Present an optimized construction of the signature scheme and show it achieves a 10\% reduction in overall prove and verify times to previous construction. 
 
     \item \textbf{Anonymity against malicious issuers:} We extend the standard notion of anonymity and include anonymity against malicious issuers by implementing a proof mechanism requiring the issuer to prove the structure of their keys 
 
-    \item Present an optimized construction of the signature scheme and show it achieves a 10\% reduction in overall prove and verify times to previous construction. 
 
 \end{enumerate}
 
@@ -189,7 +119,7 @@ A Sigma-protocol is a three-move, public-coin ZKP: (1) $\mathcal{P}$ sends a com
     \item \textbf{Special Soundness}: From two accepting transcripts $(a, e, z)$ and $(a, e', z')$ with $e \neq e'$, a witness $w$ can be extracted.
     \item \textbf{Special Honest-Verifier Zero-Knowledge (SHVZK)}: A simulator can generate transcripts $(a, e, z)$ matching the real distribution for any $e$.
 \end{itemize}
-We leverage Sigma-protocols to prove knowledge of committed attributes (e.g., $\pircom$ for relation $\rcom$) efficiently. See Appendix~\ref{app:zkp} for details.
+We leverage Sigma-protocols to prove knowledge of committed attributes (e.g., $\pircom$ for relation $\rcom$) efficiently. app:zkp for details. %See Appendix~\ref{app:zkp}
 
 \subsection{Assumptions}
 
@@ -369,7 +299,7 @@ The reduction succeeds whenever $i = i^*$ (probability $1/n$) and $\mathcal{A}$ 
 
 The hiding property follows directly from the perfect hiding of Pedersen commitments, while binding follows from the discrete logarithm assumption. For completeness, this construction also satisfies the standard homomorphic properties of Pedersen commitments, enabling efficient aggregation and zero-knowledge proofs in our credential system.
 
-A full proof can be found in the appendix \ref{appendix:commitmentreduction}
+A full proof can be found in the appendix 
 % % % % % % % % % % 
 % 
 % END Randomizable Vector Commitments
@@ -860,7 +790,7 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
         \end{pchstack}
         \end{pcvstack}
     \caption{Caption}
-    \label{fig:enter-label}
+    % 
 \end{figure}
 
 \begin{figure}
@@ -901,7 +831,7 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
         \end{pcvstack}
     \end{pchstack}
     \caption{Caption}
-    \label{fig:enter-label}
+    \label{}
 \end{figure}
 
 
@@ -989,7 +919,7 @@ Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials
 For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{''passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{''dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
 
 
-\subsection{$\Sigma$-protocol and core relations}
+\subsection{Sigma-protocol and core relations}
 
 Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
 \begin{enumerate}
@@ -1149,7 +1079,7 @@ The Credential is a signature $\sigma$ over commitment $\cm = \mathsf{CM.Com}([\
 \newpage
 \section{\MIMCABC Security}
 
-\subsection{Unforgeability} 
+\subsection{Unforgeability} \label{sec:unforgeability}
 \subsubsection{Intuition}
 Unforgeability ensures an Adversary cannot produce a valid proof for a predicate $\phi^*$ without possessing valid credentials. Credentials in our system are rerandomizable signatures over position-binding commitments to attribute vectors. Our reduction shows a successful forgery must break one of three security properties:
 
@@ -1203,14 +1133,14 @@ Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ wo
         }
     \end{pcvstack}
     \caption{Simulated Oracles}
-    \label{fig:enter-label}
+    
 \end{figure}
 
 
 
 
 
-\subsection{Anonymity}
+\subsection{Anonymity}\label{sec:anonymity}
 \begin{theorem}[Anonymity]
     The $\MIMCABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{app:zkp} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
 \end{theorem}
@@ -1272,7 +1202,8 @@ In multi-issuer, multi-credential verification scenarios, pairing operations are
 
 In this section, we compare the computational efficiency of two variants of the rerandomizable signature scheme used within our anonymous credential system. Specifically, we analyze the impact of shifting the signature group elements from $\G_1$ to $\G_2$ on the verification process. Our key finding is that this optimization eliminates one pairing operation by adding one additional $\G_2$ exponentiation, reducing the computational overhead without compromising security.
 
-\subsection{PSUTT \cite{tomescu2022utt} $\G_1$ Signature}
+\subsection{PSUTT  G1 Signature}
+\cite{tomescu2022utt}
 The original scheme as describe in \cite{tomescu2022utt} defines the signature $\sigma = (\sigma_1, \sigma_2) \in \G_1$. The verification process $\MIMCVerify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$  involves:
 \begin{enumerate}
     \item signature verification:
@@ -1291,8 +1222,8 @@ The original scheme as describe in \cite{tomescu2022utt} defines the signature $
 
 The commitment consistency pairing check is needed to avoid a proof of knowledge in $\G_2$. Given the commitment used in signature verification is in $\G_2$, the prover must use that same commitment for proof of knowledge, or in this case, the prover verifies the symmetric-group consistency of their commitment and then uses $\cm \in \G_1$ for the proof protocol. 
 
-\subsection{PSUTT \cite{tomescu2022utt} $\G_2$ Signature}\label{rerandsig_g2}
-
+\subsection{PSUTT  G2 Signature}\label{rerandsig_g2}
+\cite{tomescu2022utt}
 In our optimized variant, we redefine the signature as $\widetilde{\sigma} = (\widetilde{\sigma_1}, \widetilde{\sigma_2}) \in \G_2$. The verification process $\MIMCVerify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ shows the pairing reduction:
 
 \begin{enumerate}
@@ -1345,7 +1276,6 @@ LaTeX Table for Combined Operations with Summaries:
 \begin{table}[htbp]
 \centering
 \caption{Performance of Anonymous Credential Operations (time in ms)}
-\label{tab:anoncred_performance}
 \begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
 \toprule
 n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & This Paper \ref{rerandsig_g2} \\
@@ -1420,7 +1350,7 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
     \centering
     \includegraphics[width=1\linewidth]{comparison-line-graph.png}
     \caption{Performance Comparison of Anonymous Credential Schemes}
-    \label{fig:enter-label}
+    
 \end{figure}
 
 \begin{figure}
@@ -1430,7 +1360,7 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
     \includegraphics[width=0.7\linewidth]{performance-10.png}
      \includegraphics[width=0.7\linewidth]{performance-5.png}
     \caption{Performance Comparison of Anonymous Credential Schemes}
-    \label{fig:enter-label}
+    
 \end{figure}
 
 
@@ -1438,7 +1368,6 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
 \begin{table}[htbp]
 \centering
 \caption{Performance of Anonymous Credential Operations (time in ms)}
-\label{tab:anoncred_performance}
 \begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
 \toprule
 n & BBS+ 06 & BBS+ 16 & PS 16 & PS-UTT G1 & PS-UTT G2 \\
@@ -1625,10 +1554,6 @@ For attribute vectors, we use parameter n to represent the number of attributes 
 % \label{tab:arkworks-performance}
 % \end{table}
 % \footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
-
-
-
-
 
 
 
