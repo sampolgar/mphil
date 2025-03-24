@@ -1,11 +1,10 @@
-
 \begin{itemize}
     \item \textbf{Chapter 1: Efficient Predicate Proofs in Anonymous Credentials}
     \begin{itemize}
+        \item efficient and more expressive anonymous credential system with benchmarks and proven security in the anonymous credential system model
         \item Security analysis of our position binding commitments and rerandomizable signature in the Algebraic Group Model
         \item First comprehensive benchmarks comparing BBS+, PS, and SPS-EQ signature schemes for predicate proofs
         \item Analysis of cryptographic optimizations demonstrating logarithmic performance improvements
-
         \item expressive predicates (e.g., "age > 18 AND degree = 'BS'")
     \end{itemize}
 \end{itemize}
@@ -626,11 +625,67 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 
 
 
-\section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
+\section{Building an Attribute Based Credential System (ABC)}\label{sec:abc}
+
+We construct an Attribute-Based Anonymous Credential System from our Rerandomizable Commitment and Signature schemes and prove its security in the model \cite{fuchsbauer_structure-preserving_2019}; we extend it to support predicate-based zero-knowledge proof verification, allowing users to prove statements about their committed and signed attributes without revealing any additional information.
+
+\subsection{Access Policy Syntax}
+In our system, we adopt the access policy syntax from \cite{moriai_monipolyexpressive_2020} to specify the conditions under which a user is granted access based on their attributes. These policies are defined using a formal grammar that combines attributes into sets, clauses, statements, and policies. The syntax for an access policy $\phi$ is outlined in Table~\ref{tab:access_policy}.
+
+\begin{table}[h]
+\centering
+\caption{Syntax for an access policy $\phi$.}
+\label{tab:access_policy}
+\begin{tabular}{ll}
+\hline
+\texttt{attr} & ::= \texttt{<attribute>=<value>} \\
+\texttt{set} & ::= \texttt{attr\_set} | \texttt{attr} \\
+\texttt{con} & ::= \texttt{AND} | \texttt{NAND} | \texttt{OR} | \texttt{NOR} \\
+\texttt{cont} & ::= \texttt{ANY} | \texttt{NANY} \\
+\texttt{clause} & ::= \texttt{con(set)} | \texttt{cont(l, set)} \\
+\texttt{stmt} & ::= \texttt{clause $\land$ stmt} | \texttt{clause} \\
+\texttt{policy} & ::= \texttt{stmt(set)} | \texttt{$\bot$} \\
+\hline
+\multicolumn{2}{l}{\textit{Note:} \texttt{con} = connective, \texttt{cont} = connective with threshold} \\
+\end{tabular}
+\end{table}
 
 
-\subsection{Notation}
-We base our Multi Issuer, Multi Credential Multi-show Attribute based Anonymous Credentials off the model in \cite{fuchsbauer_structure-preserving_2019} and extend it to support rerandomizable signatures over commitments and predicate-based zero-knowledge proof verification allowing users to prove statements about their committed and signed attributes without revealing any additional information.
+\begin{itemize}
+    \item \textbf{Attribute (\texttt{attr})}: A key-value pair representing a user property, such as \texttt{"role=manager"} or \texttt{"department=HR"}.  
+    Formal Notation: $\texttt{attr} ::= \texttt{<attribute>=<value>}$
+
+    \item \textbf{Set (\texttt{set})}: A collection of attributes, which can be a single attribute or multiple attributes grouped together, e.g., \texttt{\{"role=manager", "department=HR"\}}.  
+    Formal Notation: $\texttt{set} ::= \texttt{attr} \mid \texttt{\{attr, \ldots, attr\}}$
+
+    \item \textbf{Clause (\texttt{clause})}: A logical condition applied to a set of attributes. Common clauses include requiring all attributes (\texttt{AND}), at least one (\texttt{OR}), or a minimum number (\texttt{ANY}).  
+    Formal Notation: $\texttt{clause} ::= \texttt{AND(set)} \mid \texttt{OR(set)} \mid \texttt{ANY(l, set)}$  
+    where:
+    \begin{itemize}
+        \item $\texttt{AND(set)}$: True if all attributes in the set are present.
+        \item $\texttt{OR(set)}$: True if at least one attribute in the set is present.
+        \item $\texttt{ANY(l, set)}$: True if at least \texttt{l} attributes in the set are present.
+    \end{itemize}
+
+    \item \textbf{Statement (\texttt{stmt})}: A combination of clauses connected by logical AND ($\land$), forming a compound condition.  
+    Formal Notation: $\texttt{stmt} ::= \texttt{clause} \mid \texttt{clause $\land$ stmt}$
+
+    \item \textbf{Policy (\texttt{policy})}: The complete access rule, applying a statement to a set of attributes. A special case, $\bot$, denotes "access denied."  
+    Formal Notation: $\texttt{policy} ::= \texttt{stmt(set)} \mid \bot$
+
+    \item \textbf{Evaluation}: To evaluate the policy, the statement $\text{stmt}$ is applied to the user’s attribute set $A$, and access is granted if $\phi(A) = \text{stmt}(A) = 1$, where $\text{stmt}(A)$ is determined by the logical conditions of its clauses.
+\end{itemize}
+
+\textbf{Example}  
+Consider a policy requiring a user to be a manager and work in either the HR or IT department. This can be expressed as:
+$$ \texttt{AND}(\{\text{"role=manager"}\}) \land \texttt{OR}(\{\text{"department=HR"}, \text{"department=IT"}\}) $$
+- \textbf{Evaluation}:  
+  - If a user has attributes \texttt{\{"role=manager", "department=HR"\}}, the policy evaluates to true (\texttt{AND} is satisfied by "role=manager," and \texttt{OR} is satisfied by "department=HR"), granting access.  
+  - If a user has \texttt{\{"role=manager", "department=Sales"\}}, the policy evaluates to false (\texttt{OR} fails as neither "department=HR" nor "department=IT" is present), denying access.
+
+This syntax provides a flexible and precise way to define access control rules while remaining straightforward to understand and apply.
+
+
 
 \subsection{Predicate Satisfaction}
 We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
@@ -643,15 +698,105 @@ For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\v
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
     
     \item $\mathsf{OrgKeygen}(\ppar, \ell) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
+       
+    \item $(\mathsf{Obtain}(\vec{m}, \opk), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$. User generates $\usk \sample Z_p$, commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$. The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
     
-    % \item $\mathsf{UserKeyGen}(\ppar) \to (\usk)$: Is a probabilistic algorithm that takes public parameters $\ppar$, outputs user's secret key $\usk$ unique to the credential
-    
-    \item $(\mathsf{Obtain}(\vec{m}, \opk, \aux), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$. User generates $\usk \sample Z_p$, commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$. The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
-    
-    \item $(\mathsf{Show}(\{\credi\}, \{\uski\}, \phi), \mathsf{Verify}(\{\credi'\}, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
+    \item $(\mathsf{Show}(\cred, \usk, \phistmt), \mathsf{Verify}(\{\credi'\}, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
     $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
     \end{itemize}
 \end{definition}
+
+
+
+
+
+
+
+
+
+\subsection{Construction}
+\begin{figure}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
+    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
+    \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}), \; \text{Return } (\osk, \opk) = (\sk, (\vk, \ck))$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
+    \multicolumn{3}{l}{$\pircom(\cm) = \zkpok\{(\vec{m}, \usk) \mid \cm = g^{\usk} \prod_{i=1}^\ell g_i^{m_i} \}$} \\[1em]
+    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
+    $\underline{\mathsf{Obtain}(\vec{m}, \opk)}$ && $\underline{\mathsf{Issue}(\pircom, \cm, \osk)}$ \\[1em]
+    & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
+    If $\pirverkey(\sk, \vk, \ck)$ fails, return $\bot$ && \\[1em]
+    $\usk \sample \Z_p, \; \cm = \CMCom(\vec{m}; \usk)$ & $\xrightarrow{\;\; \pircom(\cm) \;\;}$ & If $\pircom(\cm)$ fails, return $\bot$ \\[1em]
+    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
+    \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
+    $\underline{\mathsf{Show}(\cred)}$ && $\underline{\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)}$ \\[1em]
+    \multicolumn{3}{r}{Send empty access policy $\phi = \bot$} \\[0.5em]
+    \multicolumn{3}{l}{Parse $\cred = (\sigma, \cm, \usk, \opk)$} \\[0.5em]
+    \multicolumn{3}{l}{\quad Sample $\usk_\Delta, u_\Delta \sample \Z_p$} \\[1em]
+    \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \usk_\Delta, u_\Delta)$} \\[1em]
+    \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \usk_\Delta), \; \usk' = \usk + \usk_\Delta$} \\[1em]
+    \multicolumn{3}{l}{\quad Compute $\pi_\phi = \Pi_\phi$} \\[1em]
+    & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
+    \end{tabular}
+    \end{center}
+    \caption{ABC System}
+    \label{fig:single-cred-protocol}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \newpage
 \subsection{Security Model}
