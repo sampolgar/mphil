@@ -15,10 +15,11 @@
 \begin{enumerate}
     \item We extend the rerandomizable signature from \cite{tomescu2022utt} by proving the pedersen commitment is position binding in the Algebraic Group Model and prove the signature is $\EUFCMA$ secure in the Algebraic Group Model. 
 
-    
     \item Present an optimized construction of the signature scheme and show it achieves a 10\% reduction in overall prove and verify times to previous construction. 
 
     \item \textbf{Anonymity against malicious issuers:} We extend the standard notion of anonymity and include anonymity against malicious issuers by implementing a proof mechanism requiring the issuer to prove the structure of their keys 
+
+    \item 
 
 
 \end{enumerate}
@@ -687,10 +688,10 @@ This syntax provides a flexible and precise way to define access control rules w
 
 
 
-\subsection{Predicate Satisfaction}
-We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
-For a credential with attributes $m = [\id, \ctx, \attrs]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
-For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master", \attrs]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
+% \subsection{Predicate Satisfaction}
+% We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
+% For a credential with attributes $m = [\id, \ctx, \attrs]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
+% For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master", \attrs]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
 
 \subsection{Syntax}
 \begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
@@ -701,7 +702,7 @@ For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\v
        
     \item $(\mathsf{Obtain}(\vec{m}, \opk), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$. User generates $\usk \sample Z_p$, commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$. The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
     
-    \item $(\mathsf{Show}(\cred, \usk, \phistmt), \mathsf{Verify}(\{\credi'\}, \pi)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
+    \item $(\mathsf{Show}(\cred, \usk, \phistmt), \mathsf{Verify}(\{\cred'\}, \phistmt)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
     $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
     \end{itemize}
 \end{definition}
@@ -1707,6 +1708,18 @@ For attribute vectors, we use parameter n to represent the number of attributes 
 
 
 
+\section{Practical Proof Analysis}
+Many schemes refer to sigma protocol as having linear size proofs. 
+While this is true in theory, using multi-scalar-multiplication, a popular algorithm in many cryptographic libraries, we show that sigma protocols are, in fact, sublinear rather than linear when message size doubles.
+
+These findings support the hypothesis that practical efficiency is substantially better than theoretical complexity would suggest when using MSM in Schnorr protocols and thus the proof protocols in PS and BBS+ based anonymous credentials are sublinear in practice.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{schnorr_msm_no_msm.png}
+    \caption{Schnorr Protocol Benchmarks}
+    \label{fig:schnorr-benchmarks}
+\end{figure}
 
 
 
