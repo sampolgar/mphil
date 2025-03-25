@@ -7,19 +7,21 @@
 % How - what can be done to solve this problem
 % Here's how we solved it and why we're better, what: it's a  Credential Relationship Bound Verifier from Pairing-Free VRF
 \section{Credential Relationship Binding: Problem and Motivation}
-In the $\MIMCABC$ system, identity binding ensures all credentials in a presentation belong to the same user by proving the equality of a committed identifier $\id$ across credentials. This enables users to prove multiple credentials together for application scenarios 
-Credential Relationship binding extends this, enabling users to prove structured relationships between anonymous credentials, such as generating single-use tokens for integration with other systems for e.g. privacy-pass-like applications \cite{davidson2018privacy} and for sybil-resistant context credentials.
+In the $\MIMCABC$ system, identity binding ensures all credentials in a presentation belong to the same user by proving the equality of a committed identifier $\id$ across credentials. This enables users to prove multiple credentials together for application scenarios.
+Credential Relationship binding extends this, enabling users to prove structured relationships between anonymous credentials, such as generating single-use tokens for integration with other systems e.g. privacy-pass-like applications \cite{davidson2018privacy} and for sybil-resistant context credentials.
 
 Identity binding links credentials to a single user, credential relationship binding enforces dependency constraints between credentials, and a credential relationship bound nullifier is a deterministic anonymous token that proves the user has this relationship. Because it's determinisitic and based on the users secret attributes, they can only derive it in the same way, so the token is used for Sybil Resistance scenarios where privacy is still required and furthermore can be used in Revocation checks.
 
 Sybil Resistance in private systems is difficult and furthermore in a multi-issuer, multi-credential scenario, simple relationship binding is not enough, as in $\MIMCABC$ a user can more easily maliciously create credentials with lower-security issuers that allow them to prove identity binding with attributes of their choice. 
 
-\subsection{}
-In the MIMC-ABC system, users possess a master credential that encapsulates their core identity through a secret key k. From this, they derive context-specific credentials—such as a driver’s license or healthcare card—each associated with a unique context identifier ctx. This hierarchical structure allows users to operate anonymously across multiple applications while enabling issuers to enforce dependency constraints. However, it also introduces a challenge: ensuring that a user cannot illicitly generate multiple context credentials for the same purpose, necessitating robust sybil resistance mechanisms
-
 \subsection{Limitation of existing approaches}
 \begin{enumerate}
-    \item \textbf{Standard VRF} computes a deterministic nullifier $\nul \gets g^{1/(\key + \ctx)}$ where $\key$ is the secret key, $\pk = g^{\key}$ is the public key, and $\nul$ is verifiable by $\nul \cdot (\pk)^{\ctx}$ for a public $\ctx$. This does not preserve the anonymity notions required for Anonymous Credentials as $\pk$ is publicly used each usage
+    \item \textbf{Standard VRF} computes a deterministic nullifier
+    \[
+        \nul \gets g^{1/(\key + \ctx)}    \qquad \nul \cdot (\pk)^{\ctx}
+    \]
+    
+    where $\key$ is the secret key, $\pk = g^{\key}$ is the public key, and $\nul$ is verifiable by $\nul \cdot (\pk)^{\ctx}$ for a public $\ctx$. This does not preserve the anonymity notions required for Anonymous Credentials as $\pk$ is publicly used each usage
     \item \textbf{MPC PRF}: CanDID, a decentralized identity system, computes nullifiers from MPC PRF during credential issuance preserving anonymity properties with secure multiparty computation, which has large overhead, and because of the time spent during PRF generation, can't be used easily for other mechanisms like the output being in a revocation list.
     \item \textbf{Pairing-based VRF:}  We base our scheme on the notions in \cite{tomescu2022utt}, our novel contribution is its computation in $\G_1$ and thus removing the pairing computation and operation in $\G_2$, improving computation efficiency and allowing its use in non-pairing based schemes.
 \end{enumerate}
