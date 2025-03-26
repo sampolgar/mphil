@@ -739,7 +739,7 @@ This syntax provides a flexible and precise way to define access control rules w
     \multicolumn{3}{l}{\quad Sample $\usk_\Delta, u_\Delta \sample \Z_p$} \\[1em]
     \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \usk_\Delta, u_\Delta)$} \\[1em]
     \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \usk_\Delta), \; \usk' = \usk + \usk_\Delta$} \\[1em]
-    \multicolumn{3}{l}{\quad Compute $\pi_\phi = \Pi_\phi$} \\[1em]
+    \multicolumn{3}{l}{\quad Compute $\Pi_\phi$} \\[1em]
     & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
     \end{tabular}
     \end{center}
@@ -1424,7 +1424,7 @@ LaTeX Table for Combined Operations with Summaries:
 \caption{Performance of Anonymous Credential Operations (time in ms)}
 \begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
 \toprule
-n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & This Paper \ref{rerandsig_g2} \\
+n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & Our Improved \ref{rerandsig_g2} \\
 \midrule
 \multicolumn{6}{c}{\textbf{Obtain}}  \\
 \midrule
@@ -1476,8 +1476,8 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
 \textbf{2} & 12.98 & 4.48 & 7.77 & 3.61 & \textbf{3.08} \\
 \textbf{5} & 15.30 & 4.67 & 8.68 & 3.90 & \textbf{3.30} \\
 \textbf{10} & 18.53 & 3.96 & 11.62 & 4.38 & \textbf{3.77} \\
-\textbf{15} & 22.82 & 5.01 & 14.76 & 4.87 & \textbf{4.09} \\
-\textbf{20} & 28.81 & \textbf{4.22} & 17.53 & 5.25 & 4.72 \\
+\textbf{15} & 22.82 & 4.22 & 14.76 & 4.87 & \textbf{4.09} \\
+\textbf{20} & 28.81 & 5.01 & 17.53 & 5.25 & \textbf{4.72} \\
 \textbf{30} & 39.21 & 5.72 & 32.77 & 6.04 & \textbf{5.37} \\
 \bottomrule
 \end{tabular}
@@ -1508,74 +1508,6 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
     \caption{Performance Comparison of Anonymous Credential Schemes}
     
 \end{figure}
-
-
-
-\begin{table}[htbp]
-\centering
-\caption{Performance of Anonymous Credential Operations (time in ms)}
-\begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
-\toprule
-n & BBS+ 06 & BBS+ 16 & PS 16 & PS-UTT G1 & PS-UTT G2 \\
-\midrule
-\multicolumn{6}{c}{\textbf{Obtain}}  \\
-\midrule
-\textbf{2} & 0.51 & 0.90 & 0.66 & 0.25 & \textbf{0.23} \\
-\textbf{5} & 0.65 & 1.00 & 0.66 & 0.28 & \textbf{0.27} \\
-\textbf{10} & 0.67 & 1.13 & 0.82 & 0.36 & \textbf{0.31} \\
-\textbf{15} & 0.78 & 1.26 & 0.87 & 0.37 & \textbf{0.36} \\
-\textbf{20} & 0.86 & 1.38 & 0.94 & \textbf{0.41} & 0.41 \\
-\textbf{30} & 1.07 & 1.63 & 1.11 & 0.51 & \textbf{0.49} \\
-\midrule
-\multicolumn{6}{c}{\textbf{Issue}}  \\
-\midrule
-\textbf{2} & 1.25 & \textbf{0.72} & 1.48 & 1.27 & 2.99 \\
-\textbf{5} & 1.66 & \textbf{0.75} & 1.79 & 1.66 & 3.31 \\
-\textbf{10} & 2.33 & \textbf{0.83} & 2.54 & 2.35 & 4.00 \\
-\textbf{15} & 2.98 & \textbf{0.84} & 3.23 & 3.03 & 4.64 \\
-\textbf{20} & 3.96 & \textbf{0.90} & 3.79 & 3.66 & 5.88 \\
-\textbf{30} & 4.97 & \textbf{0.94} & 5.16 & 5.10 & 6.86 \\
-\midrule
-\multicolumn{6}{c}{\textbf{Show}}  \\
-\midrule
-\textbf{2} & 5.39 & 2.31 & 3.20 & \textbf{1.14} & 1.29 \\
-\textbf{5} & 6.05 & 2.42 & 3.15 & \textbf{1.16} & 1.29 \\
-\textbf{10} & 7.44 & 1.71 & 4.53 & \textbf{1.22} & 1.33 \\
-\textbf{15} & 8.86 & 2.71 & 6.14 & 1.40 & \textbf{1.37} \\
-\textbf{20} & 11.88 & 1.88 & 7.66 & \textbf{1.41} & 1.51 \\
-\textbf{30} & 12.91 & 3.15 & 16.23 & \textbf{1.37} & 1.59 \\
-\midrule
-\multicolumn{6}{c}{\textbf{Verify}}  \\
-\midrule
-\textbf{2} & 7.59 & 2.18 & 4.57 & 2.47 & \textbf{1.79} \\
-\textbf{5} & 9.25 & 2.25 & 5.52 & 2.73 & \textbf{2.01} \\
-\textbf{10} & 11.09 & \textbf{2.25} & 7.10 & 3.16 & 2.44 \\
-\textbf{15} & 13.96 & \textbf{2.30} & 8.62 & 3.47 & 2.72 \\
-\textbf{20} & 16.93 & \textbf{2.34} & 9.88 & 3.84 & 3.21 \\
-\textbf{30} & 26.30 & \textbf{2.57} & 16.55 & 4.67 & 3.79 \\
-\midrule
-\multicolumn{6}{c}{\textbf{Issuing Phase Total (Obtain + Issue)}}  \\
-\midrule
-\textbf{2} & 1.76 & 1.62 & 2.14 & \textbf{1.53} & 3.22 \\
-\textbf{5} & 2.31 & \textbf{1.76} & 2.45 & 1.95 & 3.57 \\
-\textbf{10} & 3.00 & \textbf{1.96} & 3.37 & 2.71 & 4.31 \\
-\textbf{15} & 3.75 & \textbf{2.10} & 4.10 & 3.40 & 5.00 \\
-\textbf{20} & 4.82 & \textbf{2.29} & 4.74 & 4.06 & 6.28 \\
-\textbf{30} & 6.04 & \textbf{2.57} & 6.27 & 5.60 & 7.35 \\
-\midrule
-\multicolumn{6}{c}{\textbf{Verify Phase Total (Show + Verify)}}  \\
-\midrule
-\textbf{2} & 12.98 & 4.48 & 7.77 & 3.61 & \textbf{3.08} \\
-\textbf{5} & 15.30 & 4.67 & 8.68 & 3.90 & \textbf{3.30} \\
-\textbf{10} & 18.53 & 3.96 & 11.62 & 4.38 & \textbf{3.77} \\
-\textbf{15} & 22.82 & 5.01 & 14.76 & 4.87 & \textbf{4.09} \\
-\textbf{20} & 28.81 & \textbf{4.22} & 17.53 & 5.25 & 4.72 \\
-\textbf{30} & 39.21 & 5.72 & 32.77 & 6.04 & \textbf{5.37} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
 
 
 
@@ -1718,15 +1650,19 @@ These findings support the hypothesis that practical efficiency is substantially
 \begin{figure}
     \centering
     \includegraphics[width=0.75\linewidth]{schnorr_msm_no_msm.png}
-    \caption{Schnorr Protocol Benchmarks}
+    \caption{Schnorr Protocol - Practical Benchmarks with Multi-Scalar Multiplication}
     \label{fig:schnorr-benchmarks}
 \end{figure}
 
 
 
 
+\subsection{Pairing Protocols}
 
-
-
-
-
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{pairing_comparison.png}
+        \includegraphics[width=0.75\linewidth]{pairing_comparison2.png}
+    \caption{Elliptic Curve Pairings - Practical Benchmarks with Miller-Loop Intermediate Computation}
+    \label{fig:enter-label}
+\end{figure}

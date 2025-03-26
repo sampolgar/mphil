@@ -11,6 +11,7 @@
 \def\allow{1}      % 0 = remove todo command
 \def\anonymous{1}      % 1 = anonymous
 
+% \documentclass[envcountsame,runningheads,notitlepage]{llncs}
 \documentclass[envcountsame,runningheads,notitlepage]{llncs}
 \ifnum\fullversion=1
 \usepackage[a4paper, margin=1.1in]{geometry}
@@ -18,11 +19,15 @@
 \fi
 
 \input{tex/ZZZ_header}
+
 \begin{document}
+  \input{tex/1_titlepage}
+
+
 \title{Privacy-Preserving Identity Systems}
 \titlerunning{Privately Linked Credentials}
-\date{}
-\maketitle
+% \date{}
+% \maketitle
 
 \ifnum\anonymous=0
 \author{
@@ -43,15 +48,21 @@
 
 
   
+  \input{tex/2_abstract}
+  \input{tex/3_attributions}
+  \input{tex/4_originality}
+  \input{tex/5_acknowledgements}
+  
   \tableofcontents
-  \newpage
-  \input{tex/01_C1}
-  \input{tex/01_C11_Appendix}
-  \input{tex/02_C2}
-  \input{tex/03_C3}
-  \input{tex/04_C4}
-  \input{tex/05_C5}
-  % \input{tex/01}
+  \listoffigures
+  
+  \input{tex/B_introduction}
+  \input{tex/C_C1}
+  \input{tex/C_C1_App}
+  \input{tex/C_C2}
+  \input{tex/C_C3}
+  \input{tex/C_C4}
+  \input{tex/C_C5}
 
 
 \ifnum\fullversion=0

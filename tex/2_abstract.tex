@@ -1,0 +1,64 @@
+\chapter*{Abstract}
+
+Contributions
+
+\textbf{Anonymous Credential and MIMC}
+We address a critical gap in anonymous credential literature by formalizing new security properties for multi-issuer, multi-credential environments. 
+We construct an MIMC system from our optimized anonymous credential based on PS Signatures; we show its 5-10 percent speedup from previous construction and further, show its strengths in this application. We prove it is secure in the algebraic group model.
+
+We introduce Identity Binding property for Credentials. 
+We introduce structured relationship binding property for credentials
+
+% Identity Binding: “In our MIMC-ABC system, identity binding ensures all credentials share a common identifier, preventing credential mixing and Sybil attacks while preserving anonymity.”
+% Credential Relationship Binding: “We further define credential relationship binding to prove structured relationships between credentials, such as the derivation of a context credential from a master credential, enabling expressive and secure use-cases like our Sybil-resistant identity system.”
+
+
+\textbf{Novel ZKP Scheme for Sybil Resistance}
+We create a novel zero-knowledge building block to add privacy-preserving sybil resistance to MIMC-ABCs. The nullifier scheme we use achieves a speedup of 1.9 times compared to previous constructions (UTT, ACT)
+
+
+\textbf{Privacy-Preserving Decentralized Identity System with Sybil Resistance and Revocation}
+We extend our MIMC system for a Threshold environment and use our Sybil-resistant mechanism to build a privacy-preserving decentralized identity system with Sybil resistance. We show that our system is state-of-the-art and has improved on all benchmark metrics compared to previous construction. 
+
+
+
+\textbf{Opensource Benchmark Framwork}
+We address inconsistencies in previous evaluations by building the first open-source toolkit for fair benchmarking of Anonymous Credential schemes. 
+
+
+Roadmap
+sec1. MIMC-ABC + security reductions
+sec2. Optimized PS
+sec3. Security in AGM
+
+chap2. 
+sec1. building block
+sec2. benchmark
+
+chap3. 
+sec1. 
+
+chap5. extended preliminaries
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% We are often forced to make decisions without having access to all the information we need. The need to make some guarantees about the quality of the solution resulting from these decisions is what motivates our search for strongly competitive online algorithms. Traditionally, an online algorithm must service a request upon its arrival. In many practical situations, one can delay the service of a request in the hope of servicing it more efficiently in the near future. As a result, the study of online algorithms \emph{with delay} has recently gained considerable traction. A variety of problems have been considered with delay. For most problems, competitive algorithms have been developed that are independent of properties of the delay functions associated with each request. Interestingly, this is not the case for the online min-cost perfect matching with delays (MPMD) problem, introduced by Emek et al. (STOC 2016). Existing work for this problem is heavily tailored to the particular type of delay function considered. 
+
+% In this thesis we show that some techniques can be modified to extend to larger classes of delay functions, without affecting the competitive ratio. In the interest of designing competitive solutions for the problem in a more general setting, we introduce the study of online problems with \emph{set delay}. Here, the delay cost at any time is given by an arbitrary function of the set of pending requests, rather than the sum over individual delay functions associated with each request. In particular, we study the online min-cost perfect matching with set delay (\MPMGAD) problem, which provides a generalisation of MPMD. The notion of set delay allows us to examine an algorithm's accumulation of delay cost from a new perspective and define new classes of delay functions. In contrast to previous work, the new model also allows us to study the problem in the non-clairvoyant setting, i.e. where the future delay costs are unknown to the algorithm. 
+
+% We prove that for \MPMGAD in the most general non-clairvoyant setting, there exists no competitive algorithm. Motivated by this impossibility, we explore what the most general setting of \MPMGAD is for which we can design competitive algorithms. To this end, we introduce a new class of delay functions called \emph{size-based} and prove that for this version of the problem, there exist both non-clairvoyant deterministic and randomised algorithms that are competitive in the number of requests. Our results reveal that the quality of an online matching depends both on the algorithm's access to information about future delay costs, and the properties of the delay function. 

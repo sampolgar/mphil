@@ -449,10 +449,25 @@ keys
 
 
 
+% \newcommand{\mychapter}[1]{
+%   \clearpage
+%   \phantomsection
+%   \addcontentsline{toc}{section}{#1}
+%   \vspace*{2cm}
+%   {\huge\bfseries\centering #1\par\vspace{1.5cm}}
+% }
 
 
-
-
+\newcounter{mychapter}
+\newcommand{\mychapter}[1]{
+  \clearpage
+  \stepcounter{mychapter}
+  \vspace*{2cm}
+  {\centering\Huge\bfseries Chapter \themychapter\par}
+  \vspace{1em}
+  {\centering\Huge\bfseries #1\par}
+  \vspace{2em}
+}
 
 %--------------------------------------------------------
 % New from NDSS paper
