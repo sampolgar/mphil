@@ -8,17 +8,31 @@ This thesis advances anonymous credential systems through a series of connected 
 
 \begin{itemize}
     \item \textbf{Chapter 1: Efficient Predicate Proofs in Attribute-Based Anonymous Credentials (ABC)}
+    
+    Gap Analysis: Most Expressive and Efficient, Secure ABC. 
+    
+    % We're choosing this because it's expressive, efficient, and secure, we also optimized it to make it even better.
+    
     \begin{itemize}
+        \item compare the expressiveness of ABC's - reasoning why sigma protocols for committed exponents are most expressive. 
+        
+        \item compare the efficiency of BBS+, PS variants, show ours is the most efficient variant for show/verify
+    
         \item Security analysis of our position binding commitments and rerandomizable signature in the Algebraic Group Model
+        
         \item First comprehensive benchmarks comparing the variants of BBS+ and PS signature schemes for predicate proofs
-        \item 
-        Analysis of cryptographic optimizations demonstrating practical logarithmic performance improvements
+
+        \item we have the most efficient PS variant for show/verify
+        
+        \item practical improvements: analysed schnorr proofs and show it's actually logarithmic practically
+        
     \end{itemize}
 
     \item \textbf{Chapter 2: MIMC-ABC for Multi-Issuer Identity Binding}
     \begin{itemize}
-        \item Novel system supporting privacy-preserving proofs across multiple issuers
+        \item is proven secure, extended by security of base
         \item Security analysis proving resilience against forgery and identity
+        \item 
     \end{itemize}
 
     \item \textbf{Chapter 3: Hierarchical MIMC-ABC}

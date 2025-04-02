@@ -1,4 +1,4 @@
-
+\mychapter{}
 
 \section{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
 
@@ -855,7 +855,6 @@ If possible, compare against TACT or another system that supports multi-credenti
 
 
 
-
 9.1 Experimental Methodology
 We implemented our MIMC-ABC system using the arkworks library [citation] in Rust. All experiments were conducted on a MacBook Air M2 (2022) with 16GB RAM. Each measurement represents the average of 10 independent trials with standard deviations below 5%.
 Our evaluation focuses on three key dimensions:
@@ -928,3 +927,84 @@ For attribute vectors, we use parameter n to represent the number of attributes 
 % \footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
 
 
+\section{Identity Binding Results}
+
+\subsubsection*{Experimental Setup}
+Each scenario is tested across varying parameters ([4,16,32] credentials, [4,16,32] attributes per credential). We compare the non-private verification scenario against privacy-preserving verification to show the privacy overhead, we also include a comparison between single-issuer and multi-issuer to demonstrate that the multi-issuer environment is less efficient due to its inability to use batch verification because each verification key is different, but it's more flexible and required in certain use-cases like decentralized identity. All benchmarks use a fixed security parameter (BLS12-381 curve) and are executed on MacBook Air M2 16GB RAM on Sequoia 15.3.2. Results demonstrate the practical viability of privacy-preserving identity binding across multiple credential issuers in realistic authentication scenarios.
+
+\subsection{Benchmarking Methodology}
+
+Our benchmarking methodology focuses on evaluating the performance of identity binding across credentials, the core contribution of the MIMC-ABC system. We measure execution time specifically for credential show and verification scenarios, as these represent the critical path in authentication scenarios.
+
+\begin{enumerate}
+    \item \textbf{Non-private Mutli-Issuer verification (baseline)}: A user verifies their credential signatures and reveals identifiers in the clear. This establishes a performance baseline to quantify the overhead introduced by privacy-preserving techniques.
+
+    \item \textbf{Non-private Single Issuer with Batch verification (baseline)}: A user verifies their credential signatures with batch verification and reveals identifiers in the clear. This establishes a performance baseline to quantify the overhead introduced by privacy-preserving techniques.
+
+    \item \textbf{Private identity binding with multiple issuers}: The complete MIMC-ABC scenario where credentials from different issuers are presented with proofs of shared identity, demonstrating the system's full capability.
+
+    \item \textbf{Private identity binding with single issuer}: Multiple credentials from the same issuer are presented with zero-knowledge proofs establishing shared identity, enabling batch verification optimizations for signatures from the same issuer.
+
+\end{enumerate}
+
+\subsection{The Privacy Overhead}
+\begin{table}[ht]
+\centering
+\caption{Performance of Anonymous Credential Operations (time in ms)}
+\label{tab:performance}
+\begin{tabular}{lrrr}
+\toprule
+\multicolumn{4}{c}{\textbf{Non-Private Verify Baseline - 16 Attributes}} \\
+\midrule
+Credential Count & 4 & 16 & 32 \\
+\midrule
+Single Issuer (Batch) & 2.85 & 10.03 & 19.79 \\
+Multi Issuer & 6.77 & 27.69 & 54.31 \\
+\midrule
+\multicolumn{4}{c}{\textbf{Private Verify - 16 Attributes}} \\
+\midrule
+Credential Count & 4 & 16 & 32 \\
+\midrule
+Single Issuer (Batch) & 7.28 & 27.12 & 54.00 \\
+Multi Issuer & 18.67 & 76.52 & 148.24 \\
+\midrule
+\multicolumn{4}{c}{\textbf{Private Show + Verify - 16 Attributes}} \\
+\midrule
+Credential Count & 4 & 16 & 32 \\
+\midrule
+Single Issuer (Batch) & 12.28 & 47.35 & 94.10 \\
+Multi Issuer & 25.08 & 102.27 & 199.87 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[ht]
+\centering
+\caption{Performance of Anonymous Credential Operations (time in ms), using 16 attributes per credential}
+\label{tab:performance}
+\begin{tabular}{l@{\hspace{1.5em}}r@{\hspace{1.5em}}r@{\hspace{1.5em}}r}
+\toprule
+\multicolumn{4}{c}{\textbf{Signature Verify Baseline}} \\
+\midrule
+Credential Count & 4 & 16 & 32 \\
+\midrule
+Single Issuer & 2.85 & 10.03 & 19.79 \\
+Multi Issuer & 6.77 & 27.69 & 54.31 \\
+\midrule
+\multicolumn{4}{c}{\textbf{Identity Binding (Verify)}} \\
+\midrule
+Credential Count & 4 & 16 & 32 \\
+\midrule
+Single Issuer & 7.28 & 27.12 & 54.00 \\
+Multi Issuer & 18.67 & 76.52 & 148.24 \\
+\midrule
+\multicolumn{4}{c}{\textbf{Identity Binding (Show + Verify)}} \\
+\midrule
+Credential Count & 4 & 16 & 32 \\
+\midrule
+Single Issuer & 12.28 & 47.35 & 94.10 \\
+Multi Issuer & 25.08 & 102.27 & 199.87 \\
+\bottomrule
+\end{tabular}
+\end{table}
