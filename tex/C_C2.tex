@@ -732,7 +732,6 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
     \includegraphics[width=0.7\linewidth]{performance-10.png}
      \includegraphics[width=0.7\linewidth]{performance-5.png}
     \caption{Performance Comparison of Anonymous Credential Schemes}
-    
 \end{figure}
 
 
@@ -948,63 +947,52 @@ Our benchmarking methodology focuses on evaluating the performance of identity b
 \end{enumerate}
 
 \subsection{The Privacy Overhead}
-\begin{table}[ht]
-\centering
-\caption{Performance of Anonymous Credential Operations (time in ms)}
-\label{tab:performance}
-\begin{tabular}{lrrr}
-\toprule
-\multicolumn{4}{c}{\textbf{Non-Private Verify Baseline - 16 Attributes}} \\
-\midrule
-Credential Count & 4 & 16 & 32 \\
-\midrule
-Single Issuer (Batch) & 2.85 & 10.03 & 19.79 \\
-Multi Issuer & 6.77 & 27.69 & 54.31 \\
-\midrule
-\multicolumn{4}{c}{\textbf{Private Verify - 16 Attributes}} \\
-\midrule
-Credential Count & 4 & 16 & 32 \\
-\midrule
-Single Issuer (Batch) & 7.28 & 27.12 & 54.00 \\
-Multi Issuer & 18.67 & 76.52 & 148.24 \\
-\midrule
-\multicolumn{4}{c}{\textbf{Private Show + Verify - 16 Attributes}} \\
-\midrule
-Credential Count & 4 & 16 & 32 \\
-\midrule
-Single Issuer (Batch) & 12.28 & 47.35 & 94.10 \\
-Multi Issuer & 25.08 & 102.27 & 199.87 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 
 \begin{table}[ht]
 \centering
-\caption{Performance of Anonymous Credential Operations (time in ms), using 16 attributes per credential}
-\label{tab:performance}
+\label{tab:single_issuer_performance}
 \begin{tabular}{l@{\hspace{1.5em}}r@{\hspace{1.5em}}r@{\hspace{1.5em}}r}
 \toprule
-\multicolumn{4}{c}{\textbf{Signature Verify Baseline}} \\
+\multicolumn{4}{c}{\textbf{Single Issuer (Batch Verify)}} \\
 \midrule
 Credential Count & 4 & 16 & 32 \\
 \midrule
-Single Issuer & 2.85 & 10.03 & 19.79 \\
-Multi Issuer & 6.77 & 27.69 & 54.31 \\
-\midrule
-\multicolumn{4}{c}{\textbf{Identity Binding (Verify)}} \\
-\midrule
-Credential Count & 4 & 16 & 32 \\
-\midrule
-Single Issuer & 7.28 & 27.12 & 54.00 \\
-Multi Issuer & 18.67 & 76.52 & 148.24 \\
-\midrule
-\multicolumn{4}{c}{\textbf{Identity Binding (Show + Verify)}} \\
+Baseline Public Verify & 2.85 & 10.03 & 19.79 \\
+Identity Binding (Private) Verify & 7.28 & 27.12 & 54.00 \\
+Identity Binding (Private) Show + Verify & 12.28 & 47.35 & 94.10 \\
+\bottomrule
+\toprule
+\multicolumn{4}{c}{\textbf{Multi Issuer}} \\
 \midrule
 Credential Count & 4 & 16 & 32 \\
 \midrule
-Single Issuer & 12.28 & 47.35 & 94.10 \\
-Multi Issuer & 25.08 & 102.27 & 199.87 \\
+Baseline (Public) Verify & 6.77 & 27.69 & 54.31 \\
+Identity Binding (Private) Verify & 18.67 & 76.52 & 148.24 \\
+Identity Binding (Private) Show + Verify & 25.08 & 102.27 & 199.87 \\
 \bottomrule
 \end{tabular}
+\caption{Single and Multi Issuer Performance Comparison (time in ms, 16 attributes per credential, Single-Issuer uses batch verification optimizations)}
 \end{table}
+
+
+\begin{figure}
+    \centering
+    % First row with two figures side by side
+    \begin{minipage}{\textwidth}
+        \centering
+        \includegraphics[width=0.48\textwidth]{figures/identity_binding_single_issuer_performance.png}
+        \hfill
+        \includegraphics[width=0.48\textwidth]{figures/identity_binding_multi_issuer_performance.png}
+    \end{minipage}
+    
+    \vspace{1em} % Add some vertical space between rows
+    
+    % Second row with one figure
+    \begin{minipage}{\textwidth}
+        \centering
+        \includegraphics[width=0.48\textwidth]{figures/identity_binding_combined_performance.png}
+    \end{minipage}
+    
+    \caption{Performance comparison between multi-issuer and single-issuer scenarios}
+    \label{fig:performance-comparison}
+\end{figure}
