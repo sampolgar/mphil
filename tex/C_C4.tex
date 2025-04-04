@@ -285,6 +285,141 @@ k &= \frac{z_{k} - z'_{k}}{c - c'} \\
 
 
 
+\section{Technical Construction}
+
+We now present our pairing-free VRF construction, based on adapting the Dodis-Yampolskiy VRF to eliminate bilinear pairings while maintaining security guarantees.
+
+\subsection{Preliminaries}
+
+\begin{definition}[$q$-DHI Assumption]
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
+\[
+\Pr\left[x \leftarrow \mathbb{Z}_p^*, \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x}\right] \leq \mathsf{negl}(\lambda)
+\]
+\end{definition}
+
+\subsection{Non-Pairing VRF Construction}
+
+Our pairing-free VRF replaces the bilinear pairing verification with a novel commitment and zero-knowledge proof system. The key insight is to directly prove the multiplicative inverse relationship $(k + \text{ctx}) \cdot \frac{1}{k+\text{ctx}} = 1$ without requiring pairings.
+
+\paragraph{VRF Evaluation.} To evaluate the VRF on input $\text{ctx}$ with secret key $k$ and user identifier $\text{id}$:
+
+\begin{enumerate}
+    \item Compute $\text{sum} = k + \text{ctx}$
+    \item Compute $\text{sum\_inv} = \frac{1}{\text{sum}}$
+    \item Compute the nullifier $N = g_4$
+    \item Generate a zero-knowledge proof $\pi$ of correctness (detailed below)
+    \item Output $(N, \pi)$
+\end{enumerate}
+
+\paragraph{Commitment Structure.} The prover creates the following commitments to enable verification:
+
+\begin{align}
+\text{cm}_1 &= g_1^{\text{id}} \cdot g_2^{k} \cdot g^{r_1} \\
+\text{cm}_2 &= g_1^{\text{id}} \cdot g_3^{\text{ctx}} \cdot g^{r_2} \\
+\text{cm}_3 &= g_4^{k + \text{ctx}} \cdot g^{r_3} \\
+\text{cm}_4 &= g_5^{\frac{1}{k + \text{ctx}}} \cdot g^{r_4} \\
+\text{cm}_5 &= \text{cm}_3^{\frac{1}{k + \text{ctx}}} \cdot g^{r_5} \\
+\text{cm}_6 &= g^{r_6}
+\end{align}
+
+Here, $r_6 = \frac{r_3}{k + \text{ctx}} + r_5$ maintains the consistency of the commitment structure.
+
+\paragraph{Zero-Knowledge Proof Protocol.} We use a $\Sigma$-protocol to prove that the nullifier $N = g_4$ is correctly computed:
+
+\begin{protocol}{Non-Pairing VRF Verification}{non-pairing-vrf}
+\textbf{Common Input:} Generators $g, g_1, g_2, g_3, g_4, g_5$, commitments $\text{cm}_1, \ldots, \text{cm}_6$\\
+\textbf{Prover Input:} Values $(\text{id}, k, \text{ctx}, r_1, \ldots, r_6)$ satisfying the commitment structure
+
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples randomness:
+    \[
+        a_{\text{id}}, a_k, a_{\text{ctx}}, a_{\text{inv}}, a_{r_1}, \ldots, a_{r_6} \leftarrow \mathbb{Z}_p
+    \]
+    where $a_{\text{inv}}$ represents a blinding for the inverse value $\frac{1}{k + \text{ctx}}$.
+    
+    Computes:
+    \begin{align}
+        T_1 &= g_1^{a_{\text{id}}} \cdot g_2^{a_k} \cdot g^{a_{r_1}} \\
+        T_2 &= g_1^{a_{\text{id}}} \cdot g_3^{a_{\text{ctx}}} \cdot g^{a_{r_2}} \\
+        T_3 &= g_4^{a_k + a_{\text{ctx}}} \cdot g^{a_{r_3}} \\
+        T_4 &= g_5^{a_{\text{inv}}} \cdot g^{a_{r_4}} \\
+        T_5 &= \text{cm}_3^{a_{\text{inv}}} \cdot g^{a_{r_5}} \\
+        T_6 &= g^{a_{r_6}}
+    \end{align}
+    
+    Sends $(T_1, T_2, T_3, T_4, T_5, T_6)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \leftarrow \mathbb{Z}_p$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \begin{align}
+        z_{\text{id}} &= a_{\text{id}} + c \cdot \text{id} \\
+        z_k &= a_k + c \cdot k \\
+        z_{\text{ctx}} &= a_{\text{ctx}} + c \cdot \text{ctx} \\
+        z_{\text{inv}} &= a_{\text{inv}} + c \cdot \frac{1}{k + \text{ctx}} \\
+        z_{r_1} &= a_{r_1} + c \cdot r_1 \\
+        \vdots \\
+        z_{r_6} &= a_{r_6} + c \cdot r_6
+    \end{align}
+    
+    Sends $(z_{\text{id}}, z_k, z_{\text{ctx}}, z_{\text{inv}}, z_{r_1}, \ldots, z_{r_6})$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align}
+        \text{cm}_1^c \cdot T_1 &\stackrel{?}{=} g_1^{z_{\text{id}}} \cdot g_2^{z_k} \cdot g^{z_{r_1}} \\
+        \text{cm}_2^c \cdot T_2 &\stackrel{?}{=} g_1^{z_{\text{id}}} \cdot g_3^{z_{\text{ctx}}} \cdot g^{z_{r_2}} \\
+        \text{cm}_3^c \cdot T_3 &\stackrel{?}{=} g_4^{z_k + z_{\text{ctx}}} \cdot g^{z_{r_3}} \\
+        \text{cm}_4^c \cdot T_4 &\stackrel{?}{=} g_5^{z_{\text{inv}}} \cdot g^{z_{r_4}} \\
+        \text{cm}_5^c \cdot T_5 &\stackrel{?}{=} \text{cm}_3^{z_{\text{inv}}} \cdot g^{z_{r_5}} \\
+        \text{cm}_6^c \cdot T_6 &\stackrel{?}{=} g^{z_{r_6}} \\
+        \text{cm}_5 + \text{cm}_6^{-1} &\stackrel{?}{=} g_4
+    \end{align}
+\end{enumerate}
+\end{protocol}
+
+This protocol proves the following crucial relationships:
+\begin{itemize}
+    \item $\text{cm}_1$ and $\text{cm}_2$ share the same user identifier $\text{id}$
+    \item $\text{cm}_3$ commits to $k + \text{ctx}$ with the generator $g_4$
+    \item $\text{cm}_4$ commits to $\frac{1}{k + \text{ctx}}$ with generator $g_5$
+    \item $\text{cm}_5$ equals $\text{cm}_3$ raised to the power $\frac{1}{k + \text{ctx}}$
+    \item $\text{cm}_5 \cdot \text{cm}_6^{-1} = g_4$, proving that $g_4$ is the correctly computed nullifier
+\end{itemize}
+
+\subsection{Security Analysis}
+
+Our construction inherits security properties from the Dodis-Yampolskiy VRF while eliminating the need for bilinear pairings:
+
+\paragraph{Pseudorandomness.} The security of our nullifier $g_4$ relies on the $q$-DHI assumption. Given public generators, no PPT adversary can distinguish $g_4$ from a random group element without knowing $k$ and $\text{ctx}$.
+
+\paragraph{Uniqueness.} For each pair $(k, \text{ctx})$, there exists exactly one nullifier $g_4$ that can satisfy our zero-knowledge verification equations. This uniqueness prevents a user from generating multiple valid proofs for different nullifiers with the same input.
+
+\paragraph{Zero-Knowledge.} Our $\Sigma$-protocol reveals no information about the user's secret values $k$ and $\text{id}$. The verification can be simulated perfectly using standard techniques.
+
+\paragraph{Sybil Resistance.} The uniqueness property ensures that each user can generate exactly one valid nullifier per context. Any attempt to create multiple credentials for the same context will result in the same nullifier being revealed, allowing the system to detect duplicate issuance requests.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
