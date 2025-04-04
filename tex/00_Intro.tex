@@ -1,3 +1,10 @@
+We start with an efficient ABC
+We use it in an MIMC-ABC system with identity binding to show how it will be used in the future.
+
+Having multiple credentials from multiple issuers can be a security issue and identity binding isn't good enough, so we organise credentials in a hierarchy, tethered to a master credential, we then enforce relationships and sybil resistance of issuing credentials in privacy. 
+
+
+
 \section*{Thesis Roadmap}
 
 This thesis explores anonymous credential systems, emphasizing efficiency, security, and real-world utility. We start with an efficiency analysis of predicate proofs in anonymous credentials using AGM security and benchmarks (Section 1). Next, we introduce MIMC-ABC, a multi-issuer system for privacy-preserving identity binding (Section 2). We then extend it with a hierarchical structure for managing complex credentials securely (Section 3). To address sybil attacks and revocation, we propose the Credential Relationship Bound Nullifier (Section 4). Finally, tMIMC-ABC decentralizes issuance with a threshold approach, enhancing security and efficiency (Section 5).
@@ -24,7 +31,7 @@ This thesis advances anonymous credential systems through a series of connected 
 
         \item we have the most efficient PS variant for show/verify
         
-        \item practical improvements: analysed schnorr proofs and show it's actually logarithmic practically
+        \item practical improvements: analysed schnorr proofs and show it's actually logarithmic practically. Analyzed Pairing with optimization and showed it's linear but not as bad.
         
     \end{itemize}
 

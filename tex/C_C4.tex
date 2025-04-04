@@ -6,18 +6,358 @@
 % Why = Motivation, Problem 
 % How - what can be done to solve this problem
 % Here's how we solved it and why we're better, what: it's a  Credential Relationship Bound Verifier from Pairing-Free VRF
-\mychapter{}
-\section{Credential Relationship Binding: Problem and Motivation}
+\mychapter{Credential Relationship Binding Nullifier: Problem and Motivation}
+
+\section{Problem Statement and Motivation}
+
+Anonymous credentials provide privacy-preserving authentication in identity systems, allowing users to selectively disclose attributes without revealing their full identity. However, in many applications, system designers must balance user privacy with protection against Sybil attacks, where a single entity creates multiple identities to gain disproportionate influence or access.
+
+In our $\MIMCABC$ anonymous credential system, eusers possess a Master Credential containing a secret key $k$ and may obtain multiple Context Credentials for different services or contexts. Each Context Credential contains a unique identifier $\text{ctx}$ (e.g., $H(\text{``DriverLicense''})$). During issuance, the system must ensure that each user receives at most one credential per context—without compromising privacy by revealing user identities.
+
+\subsection{The Sybil Resistance Challenge}
+
+Specifically, we need a privacy-preserving mechanism that:
+\begin{enumerate}
+    \item Creates a unique, deterministic token (nullifier) for each user-context pair
+    \item Prevents the creation of multiple credentials for the same user-context combination
+    \item Maintains unlinkability between different presentations of the same credential
+    \item Does not reveal the user's identity during verification
+\end{enumerate}
+
+Traditionally, non-private systems use unique credential identifiers to prevent credential reuse. In privacy-preserving systems, we require a different approach: a deterministic but unlinkable nullifier that depends cryptographically on both the user's secret credential and the specific context.
+
+\subsection{Limitations of Existing Approaches}
+
+Verifiable Random Functions (VRFs) offer a promising foundation for nullifier construction, but existing implementations have significant limitations:
+
+\paragraph{Standard VRF Constructions.} Traditional VRFs compute nullifiers of the form $N \leftarrow g^{1/(k+\text{ctx})}$, where verification requires checking $N \cdot (pk)^{\text{ctx}} \stackrel{?}{=} g^k$. This approach exposes the public key $pk = g^k$ during each verification, breaking unlinkability between credential uses.
+
+\paragraph{Secure Multi-party Computation.} Systems like CanDID employ MPC to compute PRF outputs during credential issuance. While this approach preserves anonymity, it introduces substantial computational and communication overhead, limiting scalability and preventing dynamic nullifier generation during credential use.
+
+\paragraph{Pairing-based VRFs.} Recent constructions like UTT use bilinear pairings to verify nullifiers without revealing identities. While secure, pairing operations are computationally expensive—often 5-10 times slower than standard group operations—making them suboptimal for resource-constrained environments or high-throughput applications.
+
+We address these limitations by introducing a pairing-free VRF construction specifically optimized for anonymous credential systems, providing both strong privacy guarantees and practical efficiency.
+
+% Anonymous credentials need Sybil resistance without privacy compromise
+
+% In MIMC-ABC: users must prove one credential per context without revealing identity
+
+% Key Challenge: Creating deterministic, verifiable, unlinkable nullifiers
+
+% Limitations of Existing Approaches:
+% - Standard VRFs: reveal public keys, breaking anonymity
+% - MPC PRF (CanDID): high computation/communication overhead
+% - Pairing-based VRFs (UTT): expensive bilinear operations
+
+
+
+
+
+
+
+
+\section{Our Contributions}
+
+We improve the state of the art in privacy-preserving credential systems by creating a lightweight, efficient VRF construction specifically tailored for sybil resistance in anonymous credentials:
+
+\subsection{Pairing-Free VRF in Prime-Order Groups}
+
+We present a novel adaptation of the Dodis-Yampolskiy VRF structure that eliminates the need for computationally expensive bilinear pairings. Our construction:
+
+\begin{itemize}
+    \item Operates entirely in a single prime-order group ($\G_1$)
+    \item Achieves provable pseudorandomness under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption
+    \item Produces verifiable nullifiers of the form $\nul = g^{1/(k+\text{ctx})}$ where $k$ is a credential-specific secret and $\text{ctx}$ is the context identifier
+\end{itemize}
+
+This adaptation significantly reduces computational overhead compared to pairing-based alternatives while maintaining the same security guarantees.
+
+\subsection{Zero-Knowledge Proof of Multiplicative Inverse}
+
+We introduce an efficient $\Sigma$-protocol that proves the relationship between committed values $m_1 = k+\text{ctx}$ and $m_2 = 1/m_1$ without revealing either value. This protocol:
+
+\begin{itemize}
+    \item Enables verification of VRF outputs without compromising credential privacy
+    \item Uses auxiliary commitments to enforce the multiplicative inverse relation
+    \item Achieves perfect honest-verifier zero-knowledge
+    \item Generalizes naturally to other cryptographic scenarios requiring proofs of inverse relationships
+\end{itemize}
+
+Our protocol structure can be applied beyond VRFs to any system requiring proofs of multiplicative inverse relationships in zero-knowledge.
+
+\subsection{Formal Security Guarantees}
+
+We demonstrate that sybil resistance in our system reduces to:
+\begin{itemize}
+    \item The $q$-DHI assumption in prime-order groups
+    \item The binding property of Pedersen commitments
+    \item The soundness of our $\Sigma$-protocol
+\end{itemize}
+
+These formal security guarantees ensure our construction maintains:
+\begin{itemize}
+    \item \textbf{Pseudorandomness:} VRF outputs are indistinguishable from random without knowledge of the secret
+    \item \textbf{Uniqueness:} One nullifier per $(k,\text{ctx})$ pair, preventing sybil attacks
+    \item \textbf{Unlinkability:} Multiple uses of the same credential remain unlinkable
+\end{itemize}
+
+\subsection{Efficiency Improvements}
+
+Our experimental evaluation demonstrates substantial performance gains over pairing-based approaches:
+\begin{itemize}
+    \item 33\% faster evaluation (3.89ms vs. 5.83ms)
+    \item 60\% faster verification (2.52ms vs. 6.37ms)
+\end{itemize}
+
+These improvements directly translate to enhanced scalability and user experience in credential systems, particularly on resource-constrained devices where bilinear pairings are prohibitively expensive.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Technical Construction}
+
+We now present our pairing-free VRF construction, starting with essential preliminaries and then detailing our protocol for creating and verifying nullifiers in zero-knowledge.
+
+\subsection{Preliminaries}
+
+\begin{definition}[$q$-DHI Assumption]
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
+\[
+\Pr\left[x \leftarrow \mathbb{Z}_p^*, \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x}\right] \leq \mathsf{negl}(\lambda)
+\]
+\end{definition}
+
+\begin{remark}
+The $q$-DHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption as shown by Boneh and Boyen \cite{BB04}. This equivalence provides a solid theoretical foundation for our VRF construction's security.
+\end{remark}
+
+\begin{definition}[Verifiable Random Function in Prime-Order Group]
+A VRF in a prime-order group $\mathbb{G}$ is a tuple of algorithms $(\mathsf{VRF.Gen}, \mathsf{VRF.Eval}, \mathsf{VRF.Vfy})$ with message space $\mathcal{X}$, output space $\mathcal{Y}$, and proof space $\Pi$ satisfying:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda) \rightarrow (sk, pk)$: Samples secret key $sk \leftarrow \mathbb{Z}_p^*$, computes public key $pk = g^{sk}$
+    \item $\mathsf{VRF.Eval}(sk, x) \rightarrow (y, \pi)$: Computes output $y = g^{1/(sk+x)}$ and proof $\pi$
+    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \rightarrow \{0,1\}$: Verifies that $y = g^{1/(sk+x)}$
+\end{itemize}
+
+with correctness, unique provability, and pseudorandomness properties as defined in standard VRF literature.
+\end{definition}
+
+\subsection{From Pairing-Based to Pairing-Free VRF}
+
+We begin by analyzing the classic Dodis-Yampolskiy VRF, which relies on bilinear pairings. In this construction, verification proceeds by checking:
+\[
+e(g_1^{\text{ctx}} \cdot pk, N) \stackrel{?}{=} e(g_1, g_2)
+\]
+
+where $N = g_2^{1/(k+\text{ctx})}$ is the VRF output, $pk = g_1^k$ is the public key, and $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ is a bilinear pairing.
+
+Expanding this equation:
+\[
+e(g_1^{\text{ctx}} \cdot g_1^k, g_2^{1/(k+\text{ctx})}) = e(g_1, g_2)
+\]
+
+This verification essentially proves that $(k+\text{ctx}) \cdot \frac{1}{k+\text{ctx}} = 1$.
+
+Our key insight is that we can eliminate the pairing by directly proving this multiplicative inverse relationship. We define:
+\begin{align}
+m_1 &= k + \text{ctx} \\
+m_2 &= \frac{1}{k+\text{ctx}}
+\end{align}
+
+With these values, the nullifier becomes $N = g^{m_2}$, and verification reduces to proving that $m_1 \cdot m_2 = 1$.
+
+\subsection{Commitment Structure for VRF Verification}
+
+To support zero-knowledge proofs of the VRF relationship, we use the following commitment structure:
+
+\begin{align}
+\text{cm}_1 &= g_1^{\text{id}} \cdot g_2^{k} \cdot g^{r_1} \\
+\text{cm}_2 &= g_1^{\text{id}} \cdot g_3^{\text{ctx}} \cdot g^{r_2} \\
+\text{cm}_3 &= g_4^{\text{exponent\_k\_ctx}} \cdot g^{r_3} \\
+\text{cm}_4 &= g_5^{\text{exponent\_k\_ctx\_inv}} \cdot g^{r_4} \\
+\text{cm}_5 &= \text{cm}_3^{\text{exponent\_k\_ctx\_inv}} \cdot g^{r_5} \\
+\text{cm}_6 &= g^{r_6}
+\end{align}
+
+where $\text{exponent\_k\_ctx} = k + \text{ctx}$ and $\text{exponent\_k\_ctx\_inv} = 1/\text{exponent\_k\_ctx}$.
+
+This commitment structure allows us to prove:
+\begin{enumerate}
+    \item $\text{cm}_1$ and $\text{cm}_2$ contain the same id
+    \item $\text{cm}_3$ contains the sum of $k$ and ctx from $\text{cm}_1$ and $\text{cm}_2$
+    \item $\text{cm}_4$ contains the inverse of the value in $\text{cm}_3$
+    \item $\text{cm}_3 \cdot \text{cm}_4$ equals the identity element (proving the inverse relationship)
+    \item The nullifier $N = g_4$ is correctly formed
+\end{enumerate}
+
+\subsection{$\Sigma$-Protocol Construction}
+
+We now present our $\Sigma$-protocol for proving the correctness of a VRF nullifier:
+
+\begin{protocol}[Non-Pairing VRF Verification]
+Common Input: Commitments $\text{cm}_1, \ldots, \text{cm}_6$, group generators $g, g_1, \ldots, g_5$, and nullifier $N$
+
+Prover Input: Witness $(\text{id}, k, \text{ctx}, r_1, \ldots, r_6)$ satisfying the commitment structure
+
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples random values:
+    \begin{align}
+        a_{\text{id}}, a_{k}, a_{\text{ctx}}, a_{\text{exponent\_k\_ctx\_inv}}, a_{r_1}, \ldots, a_{r_6} \leftarrow \mathbb{Z}_p
+    \end{align}
+    
+    Computes commitments:
+    \begin{align}
+        T_1 &= g_1^{a_{\text{id}}} \cdot g_2^{a_{k}} \cdot g^{a_{r_1}} \\
+        T_2 &= g_1^{a_{\text{id}}} \cdot g_3^{a_{\text{ctx}}} \cdot g^{a_{r_2}} \\
+        T_3 &= g_4^{a_{k} + a_{\text{ctx}}} \cdot g^{a_{r_3}} \\
+        T_4 &= g_5^{a_{\text{exponent\_k\_ctx\_inv}}} \cdot g^{a_{r_4}} \\
+        T_5 &= \text{cm}_3^{a_{\text{exponent\_k\_ctx\_inv}}} \cdot g^{a_{r_5}} \\
+        T_6 &= g^{a_{r_6}}
+    \end{align}
+    
+    \item \textbf{Challenge:} Verifier samples $c \leftarrow \mathbb{Z}_p$
+    
+    \item \textbf{Response:} Prover computes:
+    \begin{align}
+        z_{\text{id}} &= a_{\text{id}} + c \cdot \text{id} \\
+        z_{k} &= a_{k} + c \cdot k \\
+        z_{\text{ctx}} &= a_{\text{ctx}} + c \cdot \text{ctx} \\
+        z_{r_1} &= a_{r_1} + c \cdot r_1 \\
+        \vdots \\
+        z_{\text{exponent\_k\_ctx\_inv}} &= a_{\text{exponent\_k\_ctx\_inv}} + c \cdot \text{exponent\_k\_ctx\_inv}
+    \end{align}
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align}
+        \text{cm}_1^c \cdot T_1 &\stackrel{?}{=} g_1^{z_{\text{id}}} \cdot g_2^{z_{k}} \cdot g^{z_{r_1}} \\
+        \text{cm}_2^c \cdot T_2 &\stackrel{?}{=} g_1^{z_{\text{id}}} \cdot g_3^{z_{\text{ctx}}} \cdot g^{z_{r_2}} \\
+        \text{cm}_3^c \cdot T_3 &\stackrel{?}{=} g_4^{z_{k} + z_{\text{ctx}}} \cdot g^{z_{r_3}} \\
+        \text{cm}_4^c \cdot T_4 &\stackrel{?}{=} g_5^{z_{\text{exponent\_k\_ctx\_inv}}} \cdot g^{z_{r_4}} \\
+        \text{cm}_5^c \cdot T_5 &\stackrel{?}{=} \text{cm}_3^{z_{\text{exponent\_k\_ctx\_inv}}} \cdot g^{z_{r_5}} \\
+        \text{cm}_6^c \cdot T_6 &\stackrel{?}{=} g^{z_{r_6}} \\
+        \text{cm}_5 + \text{cm}_6^{-1} &\stackrel{?}{=} g_4
+    \end{align}
+\end{enumerate}
+\end{protocol}
+
+\subsection{Security Analysis}
+
+Our protocol satisfies the following security properties:
+
+\paragraph{Completeness.} For honestly generated commitments and responses, all verification equations hold algebraically by construction.
+
+\paragraph{Special Soundness.} Given two accepting transcripts $(T_1,\ldots,T_6,c,z_{\ldots})$ and $(T_1,\ldots,T_6,c',z'_{\ldots})$ with $c \neq c'$, we can extract a valid witness by computing:
+\begin{align}
+\text{id} &= \frac{z_{\text{id}} - z'_{\text{id}}}{c - c'} \\
+k &= \frac{z_{k} - z'_{k}}{c - c'} \\
+\vdots
+\end{align}
+
+\paragraph{Honest-Verifier Zero-Knowledge.} A simulator can generate accepting transcripts without knowing the witness by selecting random responses and computing the commitments to satisfy the verification equations.
+
+\paragraph{Connection to VRF Security.} Our protocol's soundness guarantees that a valid nullifier $N = g_4$ is uniquely determined by the values $k$ and $\text{ctx}$, with an inverse relationship enforced between $\text{exponent\_k\_ctx}$ and $\text{exponent\_k\_ctx\_inv}$. By the $q$-DHI assumption, computing such a nullifier without knowing the inputs is computationally infeasible.
+
+\paragraph{Sybil Resistance.} Our construction provides sybil resistance through the uniqueness property of the VRF and the binding property of our commitment scheme. For each pair $(k, \text{ctx})$, there exists exactly one valid nullifier that can be verified. Any attempt to create multiple credentials for the same context would result in the same nullifier being revealed, allowing detection of duplicate issuance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Technical Construction}
+
+Preliminaries: q-DHI assumption, VRF definition
+Our Construction:
+
+From pairing-based to pairing-free VRF
+Commitment structure for verification
+Complete sigma-protocol description (aligned with your code)
+
+
+Security Analysis: Sketch of completeness, soundness, zero-knowledge
+
+
+
+
+
+
+
+4. Performance Evaluation (1/2 page)
+
+Benchmark methodology
+Results comparison with pairing-based approach
+Interpretation of performance gains for credential systems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 In the $\MIMCABC$ system, identity binding ensures all credentials in a presentation belong to the same user by proving the equality of a committed identifier $\id$ across credentials. This enables users to prove multiple credentials together for application scenarios.
 Credential Relationship binding extends this, enabling users to prove structured relationships between anonymous credentials, such as generating single-use tokens for integration with other systems e.g. privacy-pass-like applications \cite{davidson2018privacy} and for sybil-resistant context credentials.
 
-Identity binding links credentials to a single user, credential relationship binding enforces dependency constraints between credentials, and a credential relationship bound nullifier is a deterministic anonymous token that proves the user has this relationship. Because it's determinisitic and based on the users secret attributes, they can only derive it in the same way, so the token is used for Sybil Resistance scenarios where privacy is still required and furthermore can be used in Revocation checks.
+Identity binding links credentials to a single user identifier, credential relationship binding enforces dependency constraints between credentials, and a credential relationship bound nullifier is a deterministic anonymous token that proves the user has this relationship. Because it's determinisitic and based on the users secret attributes, they can only derive it in the same way, so the token is used for Sybil Resistance scenarios where privacy is still required and furthermore can be used in Revocation checks.
 
 Sybil Resistance in private systems is difficult and furthermore in a multi-issuer, multi-credential scenario, simple relationship binding is not enough, as in $\MIMCABC$ a user can more easily maliciously create credentials with lower-security issuers that allow them to prove identity binding with attributes of their choice. 
 
 \subsection{Limitation of existing approaches}
 \begin{enumerate}
-    \item \textbf{Standard VRF} computes a deterministic nullifier
+    \item \textbf{Standard VRF} verifies a nullifier $\nul$ by computes a deterministic nullifier
     \[
         \nul \gets g^{1/(\key + \ctx)}    \qquad \nul \cdot (\pk)^{\ctx}
     \]
@@ -382,3 +722,13 @@ Dodis Yampolskiy
     \item GT exponentiation, g2 exponentiation 
     \item 1 g1 mul + 2 pairing + 2 GT equality check
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
