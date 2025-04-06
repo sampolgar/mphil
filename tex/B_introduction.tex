@@ -1,1 +1,78 @@
 \mychapter{Introduction}
+
+\begin{enumerate}
+    \item Chapter 1: Introduce the new Privacy Preserving Digital Identity landscape \\
+    We need ABCs that can prove expressive statements efficiently, components that can be decentralized
+
+    \item Chapter 2: Foundations: Optimized Expressive Predicate Proofs \\
+    We need efficient, expressive proofs for credentials, so I optimized PS signatures and benchmarked it against other similar schemes
+
+    \item Chapter 3: Multi-Issuer Multi-Credential System (MIMC-ABC) \\
+    Using this, I solved the problem of securely combining credentials from multiple issuers and showed privacy has a small overhead.
+
+    \item Chapter 4: Private Accountability: Sybil Resistance \\
+    I solve the private accountability problem by adding a hierarchy, improving a nullifier scheme, and show it can be used for revocation
+
+    \item Chapter 5: Threshold Sybil Resistant Identity System \\
+    To make it even more robust, I thresholdized the scheme and show it's more efficient than sota in key use-cases
+
+    \item Chapter 6: Use-case application, identity system + iPhone credential wallet \\
+    We incorporate the contributions in a credential wallet to show how it can be used for eidas
+    
+    \item Chapter 7: Conclusion and Future Work
+
+    \item Appendices: Detailed Proofs, Sigma Protocols
+    
+\end{enumerate}
+
+
+
+\newpage
+\section{Motivation}
+\subsubsection*{Overarching Research Problem: }
+How can we build privacy-preserving credential systems that are simultaneously expressive, efficient, secure against malicious actors, resistant to abuse, and free from centralized trust?
+
+
+\subsubsection*{Chapter 2: Foundations: } 
+How can we construct anonymous credential systems that support expressive policy verification while maintaining practical efficiency and security against malicious issuers?
+
+Existing Anonymous Credential Schemes verify efficiently but lack expressiveness (like sps-eq, ACT), or are expressive but aren't efficient (like zk-creds), or haven't considered security against malicious issuers (ACT, Coconut). 
+
+Technical Challenges: 1) Anonymous Credential schemes that balance security and efficiency. 2) proving complex predicates in zero knowledge without expensive snark circuits. 3) protection against malicious issuers without a trusted setup
+
+\subsubsection*{Chapter 3: Multi-Issuer Multi-Credential System: } 
+How can users securely combine credentials from multiple, mutually distrusting issuers while maintaining privacy and proving they all belong to the same identity?
+
+In the identity use case, a non-private approach to using multiple credentials from different issuers is easy; a user presents their credentials, and the connection is checked in plain sight. In a private setting, this process done securely is challenging. 
+
+Technical challenges: 1) defining identity binding and formal security for multi issuer multi credential scenarios. 2) identifying system attacks like malicious credential mixing and preventing them. 3) ensuring the system is efficient.
+
+
+\subsubsection*{Chapter 4: Sybil Resistance: } 
+How can we efficiently prevent Sybil attacks in anonymous credential systems without compromising privacy?
+
+Balancing Privacy with Accountability is a difficult problem.
+
+Technical Challenges: 1) creating secure bindings between credentials without a central registry. 2) designing efficient nullifier schemes to be used in multi-issuer multi-credential schemes efficiently.
+
+
+\subsubsection*{Chapter 5: Threshold Issuance: } 
+How can we eliminate central points of trust in credential issuance while maintaining the security and efficiency properties of our anonymous credential system?
+
+Centralized issuers create risks - malicious actors get hold of the signing keys, and they can issue unlimited credentials without knowledge. Existing schemes aren't efficient enough for Multi Credential scenarios where users verify multiple credentials together.
+
+Technical Challenges: 1) adapting efficient schemes for threshold issuance. 2) preserving privacy during issuance. 3) maintaining security against malicious issuers. 
+
+
+
+\subsubsection*{Chapter 6: Credential Wallet Use Case: } 
+How can users anonymously verify multiple credentials together from their digital wallet.
+
+
+Technical Challenges: 1) lightweight efficiency for use on smartphones. 
+
+
+
+
+
+% \section{Contributions Roadmap}

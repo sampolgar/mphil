@@ -1,7 +1,50 @@
-We start with an efficient ABC
-We use it in an MIMC-ABC system with identity binding to show how it will be used in the future.
 
-Having multiple credentials from multiple issuers can be a security issue and identity binding isn't good enough, so we organise credentials in a hierarchy, tethered to a master credential, we then enforce relationships and sybil resistance of issuing credentials in privacy. 
+
+
+
+
+
+
+
+
+
+
+
+Introduction
+Content: Introduce the importance of anonymous credentials for privacy-preserving authentication. Highlight challenges: efficiency of expressive proofs, multi-issuer support, Sybil resistance, and trust distribution.
+Narrative Role: Sets the stage, motivating why your contributions matter.
+Suggestion: Expand to include a roadmap of your contributions and their progression.
+
+
+
+Story Overview
+\begin{enumerate}
+    \item Chapter 2: Foundations: Optimized Expressive Predicate Proofs \\
+    We need efficient, expressive proofs for credentials, so I optimized PS signatures
+    
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -41,7 +84,7 @@ This thesis advances anonymous credential systems through a series of connected 
         \item Security analysis proving resilience against forgery and identity
     \end{itemize}
 
-    \item \textbf{Chapter 3: Hierarchical MIMC-ABC}
+    \item \textbf{Chapter 3: Hierarchical MIMC-ABC for Identity System}
     \begin{itemize}
         \item Formal definition of credential hierarchy supporting master and sub-credentials
         \item Secure private key issuance protocol preserving unlinkability while maintaining hierarchy
@@ -49,7 +92,7 @@ This thesis advances anonymous credential systems through a series of connected 
 
     \item \textbf{Chapter 4: Sybil Resistance and Revocation in MIMC-ABC}
     \begin{itemize}
-        \item Credential Relationship Bound Nullifier (CRBN) preventing duplicate credential use
+        \item Credential Relationship Bound Nullifier (CRBN) preventing duplicate credential useÍ
         \item Privacy-preserving revocation mechanism with minimal verifier overhead
         \item Security analysis of sybil resistance properties
     \end{itemize}
@@ -95,8 +138,6 @@ Traditional systems fail to balance privacy, security, and accountability in the
 Compare with TACT, Coconut, Idemix, how we improve on them
 
 \subsection{Motivation}
-
-
 
 Traditional centralized identity systems expose users to privacy risks (e.g., data breaches) and lack flexibility for multi-issuer scenarios. Existing anonymous credential systems, while privacy-focused, often assume a single issuer or fail to efficiently integrate multiple credentials with features like Sybil resistance and revocation. As digital identity frameworks, such as the EU’s Mandatory Digital Identity Wallet, push for privacy-preserving solutions, there is an urgent need for a system that supports the complexity of real-world identity use cases—where users juggle multiple online credentials—while ensuring security, privacy, and accountability
 
