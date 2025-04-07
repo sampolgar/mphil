@@ -696,7 +696,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
 
 \paragraph{Intuition:} An ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credential to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user's attributes, the verification process accepts the proof with overwhelming probability.
 
-\begin{figure}
+\begin{figure}[h!]
     \centering
     \begin{pcvstack}[boxed, center, space=1em]
         \begin{pchstack}
@@ -740,7 +740,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
     \label{fig:abc-security-games}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \begin{pchstack}[boxed]
         \begin{pcvstack}
@@ -804,19 +804,15 @@ An $\ABC$ system provides anonymity if, for all PPT adversaries $\adv$, the adva
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 \subsection{Construction (ABC)}
-\begin{figure}
+
+
+
+\subsubsection{Outline}
+Our credential system operates over attribute space $\Z_p$. The user is indexed by $i$. The credential $\cred$ is a rerandomizable Pointcheval-Sanders signature over commitments $\sigma \gets \mathsf{RS.Sign}(\cm, \mathsf{osk})$ where $\cm \gets \CMCom(\vec{m}; \usk)$. During verification, the user rerandomizes both signature and commitment for anonymity, then uses $\Sigma$-protocols to prove their correctness for any predicate $\phi$. This approach leverages the algebraic structure of PS Signatures and Pedersen Commitments, that is, messages are exponents of a commitment which yields well-known, highly expressive and efficient zero-knowledge proofs of group element exponents, supporting a wide range of statements from selective disclosure to complex arithmetic relations. Theoretically, proofs are linear in the size of the attribute vector, however, we prove in \ref{sigma-protocol-analysis} that the practical performance is sub-linear and extremely efficient. In contrast, SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} use constant-size, efficient set commitment proof with albeit limited expressiveness. On the other hand, \cite{rabaninejad_attribute-based_2024} use Groth-Sahai proofs which are expressive but less efficient as each proof is an elliptic curve pairing. During $\Obtain, \Issue$, the user sends the commitment $\cm$ along with a proof of opening $\pircom(\cm)$ allowing the extraction of $\usk$ for corrupt users in the unforgeability proof.
+
+
+\begin{figure}[h!]
     \begin{center}
     \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
     \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
@@ -850,12 +846,6 @@ An $\ABC$ system provides anonymity if, for all PPT adversaries $\adv$, the adva
     \label{fig:single-cred-protocol}
 \end{figure}
 
-
-
-
-
-\subsubsection{Outline}
-Our credential system operates over attribute space $\Z_p$. The user is indexed by $i$. The credential $\cred$ is a rerandomizable Pointcheval-Sanders signature over commitments $\sigma \gets \mathsf{RS.Sign}(\cm, \mathsf{osk})$ where $\cm \gets \CMCom(\vec{m}; \usk)$. During verification, the user rerandomizes both signature and commitment for anonymity, then uses $\Sigma$-protocols to prove their correctness for any predicate $\phi$. This approach leverages the algebraic structure of PS Signatures and Pedersen Commitments, that is, messages are exponents of a commitment which yields well-known, highly expressive and efficient zero-knowledge proofs of group element exponents, supporting a wide range of statements from selective disclosure to complex arithmetic relations. Theoretically, proofs are linear in the size of the attribute vector, however, we prove in \ref{sigma-protocol-analysis} that the practical performance is sub-linear and extremely efficient. In contrast, SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} use constant-size, efficient set commitment proof with albeit limited expressiveness. On the other hand, \cite{rabaninejad_attribute-based_2024} use Groth-Sahai proofs which are expressive but less efficient as each proof is an elliptic curve pairing. During $\Obtain, \Issue$, the user sends the commitment $\cm$ along with a proof of opening $\pircom(\cm)$ allowing the extraction of $\usk$ for corrupt users in the unforgeability proof.
 
 \subsection{Sigma-protocol and core relations}
 
@@ -1012,120 +1002,82 @@ The reduction algorithm $\mathcal{B}$ proceeds as follows: $\AdvB$ receives a PS
 
 
 
-
-\subsection{Unforgeability} \label{sec:unforgeability}
-\subsubsection{Intuition}
-Unforgeability ensures an Adversary cannot produce a valid proof for a predicate $\phi^*$ without possessing valid credentials. Credentials in our system are rerandomizable signatures over position-binding commitments to attribute vectors. Our reduction shows a successful forgery must break one of three security properties:
-
-\begin{enumerate} 
-\item Breaking $\EUFCMA$: The adversary generates a valid signature on a commitment not issued by a legitimate issuer. 
-\item Breaking Position Binding: The adversary violates the position-binding property of the commitment scheme, e.g., by mixing credentials when $\phi^*$ requires a shared identity. 
-\item Breaking Proof Soundness: The adversary convinces the verifier a false statement is true. 
-\end{enumerate}
-
-When $\AdvA$ outputs a valid forgery such that $\MIMCVerify(\{\cred_k'^*, \phi^*, \pi^*\})=1$, the reduction algorithm $\AdvB$ analyzes the forgery type. For a Forged Signature, where the commitment $\cm_k'^*$ was not issued by $\OOBTAIN$, $\AdvB$ extracts $\sigma_k'^*$ from $\cred_k'^*$ and outputs $(\cm_k'^*, \sigma_k'^*)$ as a valid $\EUFCMA$ forgery. For Commitment Misuse, where $\cm_k'^*$ is a rerandomization of an issued commitment but attributes $\{\vec{m}_k^*\}$ don't satisfy $\phi^*$, $\AdvB$ identifies two distinct openings of $\cm_k'^*$, breaking position-binding. For Broken Soundness, where attributes don't satisfy $\phi^*$ yet $\pi^*$ is accepted, $\AdvB$ uses $\pi^*$ as evidence of a valid proof for a false statement, and by the special soundness of the $\Sigma$-protocol \ref{app:zkp} we extract the witness from $\pi^*$ breaking $\EUFCMA$ or position binding.
-
-
-Our simulation $\mathrm{Sim}^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda)$ works by having $\AdvB$ obtain challenges from the $\EUFCMA$ and $\POSBINDING$ games, embedding these into the public parameters and issuer keys. $\AdvB$ simulates $\OOBTAIN$ by generating commitments to attributes and signing them with either known issuer keys or by querying the $\EUFCMA$ oracle. For $\OSHOW$, $\AdvB$ simulates proofs without witnesses using the zero-knowledge simulator. This construction ensures that any valid forgery by $\mathcal{A}$ can be translated into breaking one of the underlying cryptographic assumptions.
-
-\begin{figure}
-    \centering
-\begin{pcvstack}[boxed]
-        \procedure[linenumbering]{$\mathrm{Sim}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\lambda)$}{%
-            \AdvB \text{ Setup Simulation  } \\
-            \vk \gets \text{Challenge from } \EUFCMA \text{ game from $\RS$} \\
-            \ck \gets \text{Challenge from } \POSBINDING \text{ game from $\CM$} \\
-            \AdvB \text{ Embeds $\vk, \ck$ into $\MIMCABC$ public params $\pp$ and issuer keys $\{\opk_j\}$} \\
-            \text{Simulating $\mathrm{Game}^{\mathsf{UNF}_{\MIMCABC}}$ setup for $\AdvA$} 
-            \\
-            \AdvB \text{ uses real $\OHU, \OCU$ and simulates $\OOBTAIN, \OSHOW$} \\
-            \AdvA \text{ outputs forgery } \{ \cred_k'^*, \phi^*, \pi^* \} \\
-            \AdvB \text{ processes the forgery to break the assumption}
-        }
-        \procedure[]{$\AdvB$ Simulates $\OOBTAIN(i, j, \vec{m})$}{%
-            \pcif i \notin \HU, \pcreturn \bot \quad \greyt{// Only honest users can obtain credentials} \\
-            \t \usk \gets \mathbb{Z}_p \quad \greyt{// Generate fresh randomness for commitment} \\
-            \t \cm \gets \CMCom(\vec{m}; \usk) \quad \greyt{// Commitment to attributes} \\
-            \t \pcif j \neq j^*, \\
-            \t \t \sigma \gets \RSSign(\osk_j, \cm) \quad \greyt{// Sign using known issuer key} \\
-            \t \pcelse \quad \greyt{// Case: } j = j^* \\
-            \t \t \sigma \gets \OEUFCMA(\cm) \quad \greyt{// Query EUF-CMA oracle for signature} \\
-            \t \cred \gets (\sigma, \cm) \quad  \\
-            \t \CRED_j \gets \CRED_j \cup \{(\cred, \cm, \vec{m}, \usk, i)\} \\
-            \t \OWNR[\cred] \gets i \\
-            \pcreturn \cred
-        }
-        \procedure[]{$\AdvB$ Simulates $\OSHOW(i, \phi)$}{%
-            \pcif i \notin \HU, \pcreturn \bot \quad \greyt{// Only honest users can show proofs} \\
-            \t \text{Let } \creds_i \text{ be the credentials of user } i \text{ in } \HU \\
-            \t \pcif \phi(\text{attributes in } \creds_i) = 0, \pcreturn \bot \quad \greyt{// Check policy satisfaction} \\
-            \t \pi \gets \text{ZKSim}(\phi, \{ \cred_k' \}, \{ \cm_k' \}, \text{ Simulate proof without witness})\\
-            \SHOW \gets \SHOW \cup (i, \phi, \pi) \\
-            \pcreturn \pi
-        }
-    \end{pcvstack}
-    \caption{Simulated Oracles}
-    
-\end{figure}
-
-
-
-
-
-\subsection{Anonymity}\label{sec:anonymity}
+\subsection{Anonymity}\label{sec:abc-anonymity}
 \begin{theorem}[Anonymity]
-    The $\MIMCABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{app:zkp} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
+    The $\ABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{app:zkp} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
 \end{theorem}
 
-\begin{proof}[sketch]
-    We proceed with a 2-step hybrid argument where $\mathsf{Hybrid}$ 0 is the real game with $b = 0$ or $b = 1$. $\mathsf{Hybrid}$ 1 uses simulated proofs for the zero-knowledge part but retains real rerandomized signatures and commitments. 
-\end{proof}
 
-\subsubsection*{Hybrid Argument}
+
+\begin{proof}[Sketch]
+We prove anonymity using a hybrid argument that shows the adversary's advantage is negligible. The proof specifically addresses protection against malicious issuers through our key verification mechanism.
+
+\begin{description}
+    \item[\textbf{Hybrid 0} (Real Game):] The challenger follows $\mathrm{Game}_{\ABC,\Adv}^{\ANON}$ exactly. For a randomly chosen $b \in \{0,1\}$, the challenger uses user $i_b$'s credentials $(\cred_{i_b}, \cm_{i_b}, \usk_{i_b})$ to generate $(\cred', \cm', \pi)$ via the real $\Show$ protocol. 
+    
+    \item[\textbf{Hybrid 1} (Simulated Proof):] The challenger generates $\cred'$ and $\cm'$ by rerandomizing $\cred_{i_b}$ and $\cm_{i_b}$ as in $\Show$, but uses a zero-knowledge simulator $\mathcal{S}$ to produce the proof $\pi$ without using the witness:
+    \begin{align*}
+        \cred' &\gets \RSRand(\cred_{i_b}, \Delta_r, \Delta_u)\\
+        \cm' &\gets \CMRand(\cm_{i_b}, \Delta_r)\\
+        \pi &\gets \mathcal{S}(\cred', \cm', \opk, \phi)
+    \end{align*}
+\end{description}
+
+\noindent\textbf{Indistinguishability of Hybrid 0 and Hybrid 1:} By the zero-knowledge property of our $\Sigma$-protocol, there exists a simulator $\mathcal{S}$ such that for any $b \in \{0,1\}$, real proofs and simulated proofs are computationally indistinguishable. This holds even with adversarially chosen parameters, provided the issuer proves validity of the verification key using $\pirverkey$. The difference in the adversary's success probability between $\Hybrid_0$ and $\Hybrid_1$ is negligible.
+
+\noindent\textbf{Independence of $b$ in Hybrid 1:} In $\Hybrid_1$, the adversary's view is independent of the bit $b$. This follows from:
 \begin{enumerate}
-    \item $\mathsf{Hybrid \; 0} \stackrel{c}{\approx} \mathsf{Hybrid \; 1}$ $\mathsf{Zero-Knowledge}$ The proof 
+    \item \textbf{Perfect Hiding of Commitments:} The rerandomized commitment $\cm'$ has a uniform distribution regardless of which original commitment was used, due to the perfect hiding property of Pedersen commitments.
+    
+    \item \textbf{Rerandomization of Signatures:} The rerandomized signature $\cred'$ has a distribution that is computationally indistinguishable from a fresh signature, due to the rerandomization property of the PS signature scheme.
+    
+    \item \textbf{Simulated Proof Independence:} The simulated proof $\pi$ depends only on the public statement $(\cred', \cm', \phi)$, not on the witness, making it independent of which user was chosen.
+    
+    \item \textbf{Protection Against Malicious Keys:} The $\pirverkey$ proof executed during issuance ensures the issuer knows the discrete logarithms of all generators, preventing the embedding of malicious structures that could break unlinkability.
 \end{enumerate}
 
+Therefore, $\Pr[\Adv = 1 | b = 0] = \Pr[\Adv = 1 | b = 1]$ in $\Hybrid_1$, making the adversary's advantage exactly zero in this hybrid.
 
-\subsection{Anonymity}
-\begin{theorem}[Anonymity]
-    The $\MIMCABC$ system is anonymous even with malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment scheme is hiding, and the sigma proof system is zero-knowledge.
-\end{theorem}
-
-\begin{proof}
-    We proceed with a hybrid argument where $\Hybrid_0$ is the real game with $b \in \{0, 1\}$ and $\Hybrid_1$ uses simulated proofs but real rerandomized signatures and commitments.
-    
-    \begin{description}
-        \item[$\Hybrid_0$ (Real Game):] The challenger follows $\mathrm{Game}_{\MIMCABC,\Adv}^{\ANON}$ exactly, using user $i_b$'s credentials $(\creds_{i_b}, \cm_{i_b}, \usk_{i_b})$ to generate $(\cred', \cm', \pi)$ via the real $\Show$ protocol. Let $V_{\real,b}$ be the adversary's view when $b$ is chosen.
-        
-        \item[$\Hybrid_1$ (Simulated Proof):] The challenger generates $\cred'$ and $\cm'$ by rerandomizing $\creds_{i_b}$ and $\cm_{i_b}$ as in $\Show$, but uses a zero-knowledge simulator $S$ to produce $\pi$:
-        \begin{align*}
-            \cred' &\leftarrow \RSRand(\creds_{i_b}, \Delta_r, \Delta_u)\\
-            \cm' &\leftarrow \CMRand(\cm_{i_b}, \Delta_r)\\
-            \pi &\leftarrow (\{\cred'\}, \{\cm'\}, \{ \opk_j \}, \phi)
-        \end{align*}
-        Let $V_{\Sim,b}$ be the adversary's view in this hybrid.
-    \end{description}
-    
-    \textbf{Analysis:}
-    \begin{enumerate}
-        \item $\Hybrid_0 \stackrel{c}{\approx} \Hybrid_1$ (Zero-Knowledge): By the zero-knowledge property of the sigma proof system, there exists a simulator $S$ such that for any $b$, real proofs and simulated proofs are computationally indistinguishable. Thus, $V_{\real,b} \stackrel{c}{\approx} V_{\Sim,b}$, and the difference in $\Adv$'s success probability between $\Hybrid_0$ and $\Hybrid_1$ is negligible (at most $\epsilon_1(\lambda)$).
-        
-        \item $\Hybrid_1$ is independent of $b$: In $\Hybrid_1$, $\cred'$ and $\cm'$ are rerandomized using fresh randomness $(r_\Delta, u_\Delta, \Delta_r)$. Since Pedersen commitments are perfectly hiding and the PS signatures are rerandomizable, their distributions are identical for $b = 0$ and $b = 1$. Furthermore, the simulated proof $\pi$ depends only on the public statement $(\{\cred'\}, \{\cm'\}, \phi)$, not the witness. Therefore, $V_{\Sim,0} = V_{\Sim,1}$, making $\Adv$'s advantage in $\Hybrid_1$ exactly zero.
-    \end{enumerate}
-    
-    The adversary's advantage in the real game is:
-    \[
-    \left|\Pr[b' = b] - \frac{1}{2}\right| = \frac{1}{2} \left|\Pr[\Adv = 1 | V_{\real,0}] - \Pr[\Adv = 1 | V_{\real,1}]\right|
-    \]
-    
-    Since $V_{\real,0} \stackrel{c}{\approx} V_{\Sim,0} = V_{\Sim,1} \stackrel{c}{\approx} V_{\real,1}$, the total advantage is at most $\epsilon_1(\lambda)$, which is negligible if the zero-knowledge property holds.
-    
-    Therefore, the $\MIMCABC$ system provides anonymity under the stated assumptions.
+The adversary's total advantage in the anonymity game is thus bounded by the advantage in distinguishing between $\Hybrid_0$ and $\Hybrid_1$, which is negligible under our security assumptions.
 \end{proof}
 
 
-\newpage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \section{Efficiency Analysis}
