@@ -334,7 +334,8 @@ The reduction succeeds whenever $i = i^*$ (probability $1/n$) and $\mathcal{A}$ 
 
 The hiding property follows directly from the perfect hiding of Pedersen commitments, while binding follows from the discrete logarithm assumption. For completeness, this construction also satisfies the standard homomorphic properties of Pedersen commitments, enabling efficient aggregation and zero-knowledge proofs in our credential system.
 
-A full proof can be found in the appendix 
+A full proof can be found in the appendix \ref{appendix:commitmentreduction}
+
 % % % % % % % % % % 
 % 
 % END Randomizable Vector Commitments
@@ -497,40 +498,6 @@ Then proves the opening of the commitment in zero knowledge:
 
 
 
-\begin{theorem}
-    RS is correct
-\end{theorem}
-\begin{proof}
-    First we demonstrate the provers rerandomized signature verifies with the verification key $\vk$ and the rerandomized commitment. Essentially, we need the following pairing to hold
-    \[
-          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk \cdot \widetilde{\cm'})
-    \]
-
-    We manipulate the bilinearity properties of the pairing groups to verify the initial pairing.
-    
-    \begin{align*}
-        e(\sigma_2', \tilde{g}) &= e((\sk \cdot \cm)^{u \cdot u\Delta}\cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-        &= e(h^{x \cdot u_\Delta}\cdot \cm^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-        &= e(h^{x \cdot u_\Delta}, \tilde{g}) \cdot e(\cm^{u \cdot u_\Delta}, \tilde{g}) \cdot e(h^{ u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-        &= e(h^{u_\Delta}, \tilde{g}^x) \cdot e(\cm, \tilde{g})^{u \cdot u_\Delta} \cdot e(h^{ u_\Delta}, \tilde{g})^{r_\Delta} \\
-        &= e(\sigma_1', \vk) \cdot e(g^{u \cdot u_\Delta}, \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g})^{r_\Delta} \\
-        &= e(\sigma_1', \vk) \cdot e(\sigma_1', \widetilde{\cm}) \cdot e(\sigma_1', \tilde{g}^{r_\Delta}) \\
-        &= e(\sigma_1', \vk \cdot \widetilde{\cm} \cdot \tilde{g}^{r_\Delta}) \\
-        &= e(\sigma_1', \vk \cdot \widetilde{\cm'}) \\
-    \end{align*}
-
-    Secondly, we need to verify knowledge of messages within the commitment. The Prover used $\widetilde{\cm'} \in \G_2$ during verification and this would be the natural method to for a sigma style proof of knowledge protocol, proving knowledge of the attributes of the commitment with $\G_2$ bases. However, due to the properties of the symmetric bilinear commitment \ref{sdlp}, we can prove the equality of $\cm' \in \G_1$ and $\widetilde{\cm'} \in \G_2$ to reduce $\G_2$ computation on both the prover and verifier during verification. 
-    Thus the prover computes 
-    \[
-        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}')
-    \]
-    Then runs a sigma protocol to prove
-    \[
-    \cm' = g^{r \cdot r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
-    \]
-
-\end{proof}
-
 
 
 
@@ -660,73 +627,16 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 
 
 
-
+\newpage
 \section{Building an Attribute Based Credential System (ABC)}\label{sec:abc}
 
 We construct an Attribute-Based Anonymous Credential System from our Rerandomizable Commitment and Signature schemes and prove its security in the model \cite{fuchsbauer_structure-preserving_2019}; we extend it to support predicate-based zero-knowledge proof verification, allowing users to prove statements about their committed and signed attributes without revealing any additional information.
 
-\subsection{Access Policy Syntax}
-In our system, we adopt the access policy syntax from \cite{moriai_monipolyexpressive_2020} to specify the conditions under which a user is granted access based on their attributes. These policies are defined using a formal grammar that combines attributes into sets, clauses, statements, and policies. The syntax for an access policy $\phi$ is outlined in Table~\ref{tab:access_policy}.
 
-\begin{table}[h]
-\centering
-\caption{Syntax for an access policy $\phi$.}
-\label{tab:access_policy}
-\begin{tabular}{ll}
-\hline
-\texttt{attr} & ::= \texttt{<attribute>=<value>} \\
-\texttt{set} & ::= \texttt{attr\_set} | \texttt{attr} \\
-\texttt{con} & ::= \texttt{AND} | \texttt{NAND} | \texttt{OR} | \texttt{NOR} \\
-\texttt{cont} & ::= \texttt{ANY} | \texttt{NANY} \\
-\texttt{clause} & ::= \texttt{con(set)} | \texttt{cont(l, set)} \\
-\texttt{stmt} & ::= \texttt{clause $\land$ stmt} | \texttt{clause} \\
-\texttt{policy} & ::= \texttt{stmt(set)} | \texttt{$\bot$} \\
-\hline
-\multicolumn{2}{l}{\textit{Note:} \texttt{con} = connective, \texttt{cont} = connective with threshold} \\
-\end{tabular}
-\end{table}
-
-
-\begin{itemize}
-    \item \textbf{Attribute (\texttt{attr})}: A key-value pair representing a user property, such as \texttt{"role=manager"} or \texttt{"department=HR"}.  
-    Formal Notation: $\texttt{attr} ::= \texttt{<attribute>=<value>}$
-
-    \item \textbf{Set (\texttt{set})}: A collection of attributes, which can be a single attribute or multiple attributes grouped together, e.g., \texttt{\{"role=manager", "department=HR"\}}.  
-    Formal Notation: $\texttt{set} ::= \texttt{attr} \mid \texttt{\{attr, \ldots, attr\}}$
-
-    \item \textbf{Clause (\texttt{clause})}: A logical condition applied to a set of attributes. Common clauses include requiring all attributes (\texttt{AND}), at least one (\texttt{OR}), or a minimum number (\texttt{ANY}).  
-    Formal Notation: $\texttt{clause} ::= \texttt{AND(set)} \mid \texttt{OR(set)} \mid \texttt{ANY(l, set)}$  
-    where:
-    \begin{itemize}
-        \item $\texttt{AND(set)}$: True if all attributes in the set are present.
-        \item $\texttt{OR(set)}$: True if at least one attribute in the set is present.
-        \item $\texttt{ANY(l, set)}$: True if at least \texttt{l} attributes in the set are present.
-    \end{itemize}
-
-    \item \textbf{Statement (\texttt{stmt})}: A combination of clauses connected by logical AND ($\land$), forming a compound condition.  
-    Formal Notation: $\texttt{stmt} ::= \texttt{clause} \mid \texttt{clause $\land$ stmt}$
-
-    \item \textbf{Policy (\texttt{policy})}: The complete access rule, applying a statement to a set of attributes. A special case, $\bot$, denotes "access denied."  
-    Formal Notation: $\texttt{policy} ::= \texttt{stmt(set)} \mid \bot$
-
-    \item \textbf{Evaluation}: To evaluate the policy, the statement $\text{stmt}$ is applied to the user’s attribute set $A$, and access is granted if $\phi(A) = \text{stmt}(A) = 1$, where $\text{stmt}(A)$ is determined by the logical conditions of its clauses.
-\end{itemize}
-
-\textbf{Example}  
-Consider a policy requiring a user to be a manager and work in either the HR or IT department. This can be expressed as:
-$$ \texttt{AND}(\{\text{"role=manager"}\}) \land \texttt{OR}(\{\text{"department=HR"}, \text{"department=IT"}\}) $$
-- \textbf{Evaluation}:  
-  - If a user has attributes \texttt{\{"role=manager", "department=HR"\}}, the policy evaluates to true (\texttt{AND} is satisfied by "role=manager," and \texttt{OR} is satisfied by "department=HR"), granting access.  
-  - If a user has \texttt{\{"role=manager", "department=Sales"\}}, the policy evaluates to false (\texttt{OR} fails as neither "department=HR" nor "department=IT" is present), denying access.
-
-This syntax provides a flexible and precise way to define access control rules while remaining straightforward to understand and apply.
-
-
-
-% \subsection{Predicate Satisfaction}
-% We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
-% For a credential with attributes $m = [\id, \ctx, \attrs]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
-% For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master", \attrs]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
+\subsection{Predicate Satisfaction}
+We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
+For a credential with attributes $\vec{m} = [\id, \k, \ctx, \exp]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
+For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
 
 \subsection{Syntax}
 \begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
@@ -741,6 +651,172 @@ This syntax provides a flexible and precise way to define access control rules w
     $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
     \end{itemize}
 \end{definition}
+
+
+\subsection{Security Model}
+
+Our Multi-Show Attribute-Based Anonymous Credential system satisfies the three properties:
+
+\begin{itemize}
+    \item \textbf{Correctness:} When all parties follow the protocol honestly, a user with valid credentials should always be able to generate proofs for predicates satisfied by their attributes, which verifiers will accept with overwhelming probability.
+    
+    \item \textbf{Unforgeability:} No probabilistic polynomial-time adversary should be able to produce a valid proof for a predicate that they cannot legitimately satisfy based on credentials they have been issued.
+    
+    \item \textbf{Anonymity:} Proofs should reveal only that the predicate is satisfied, without identifying which specific user produced the proof, even if the verifier and issuer collude.
+\end{itemize}
+
+We model these properties using a standard cryptographic game-based approach:
+
+\subsection{Security Model}
+
+For our attribute-based anonymous credential system, we define three fundamental security properties:
+
+\begin{itemize}
+    \item \textbf{Correctness:} When all parties follow the protocol honestly, a user with valid credentials should always be able to generate proofs for predicates satisfied by their attributes, which verifiers will accept with overwhelming probability.
+    
+    \item \textbf{Unforgeability:} No probabilistic polynomial-time adversary should be able to produce a valid proof for a predicate that they cannot legitimately satisfy based on credentials they have been issued.
+    
+    \item \textbf{Anonymity:} Proofs should reveal only that the predicate is satisfied, without identifying which specific user produced the proof, even if the verifier and issuer collude.
+\end{itemize}
+
+To model the adversary's capabilities and the system's state, we introduce the following lists and oracles:
+
+\noindent\textbf{Lists}
+\begin{itemize}
+    \item $\HU$: The set of honest users whose secret keys remain unknown to the adversary $\adv$
+    \item $\CU$: The set of corrupt users whose secret keys are known to the adversary $\adv$
+    \item $\CRED$: A list tracking all issued credentials, where each credential is associated with a user and their attributes
+    \item $\OWNR$: A mapping from each credential to its owning user, i.e., $\OWNR[\cred] = i$ if credential $\cred$ belongs to user $i$
+    \item $\SHOW$: A list tracking all credential show outputs
+\end{itemize} 
+
+\noindent\textbf{Oracles}
+\begin{itemize}
+    \item $\OHU()$: Creates a new honest user $i$, adds them to $\HU$, and returns $i$
+    \item $\OCU(i)$: Corrupts user $i$ by moving them from $\HU$ to $\CU$, revealing their secret keys and all credentials owned by $i$
+    \item $\OOBTAIN(i, \vec{m})$: Issues a credential $\cred$ to user $i$ for the attribute vector $\vec{m}$, provided $i \in \HU$. The credential is added to $\CRED$, and $\OWNR[\cred]$ is set to $i$
+    \item $\OSHOW(i, \phi)$: Generates a proof $\pi$ that the credentials of user $i$ satisfy the predicate $\phi$, provided $i \in \HU$ and the credentials meet the condition $\phi$
+\end{itemize} 
+
+\begin{definition}[Correctness]
+    \[
+        \Pr \left[ 
+            \Verify(\cred', \cm', \phi, \pi) = 1 \mid \text{all steps honest} \wedge \phi(m) = 1
+        \right] = 1 - \negl[\lambda]
+    \]
+\end{definition}
+
+\paragraph{Intuition:} An ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credential to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user's attributes, the verification process accepts the proof with overwhelming probability.
+
+\begin{figure}
+    \centering
+    \begin{pcvstack}[boxed, center, space=1em]
+        \begin{pchstack}
+            \begin{pcvstack}
+                \procedure[linenumbering]{$\mathrm{Game}^{\mathsf{\UNF}}_{\ABC, \adv}(\secparam)$}{%
+                    \pccomment{Challenger Setup} \\
+                    \text{Initialize } \HU \gets \emptyset, \CU \gets \emptyset, \\
+                    \CRED \gets \emptyset, \OWNR \gets \{\} \\
+                    \ppar \gets \Setup(\secparam), (\osk, \opk) \gets \OrgKeyGen(\ppar) \\
+                    \pccomment{$\AdvA$ queries oracles} \\
+                    \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW}(\opk) \\
+                    \pccomment{Forgery} \\
+                    \AdvA \text{ outputs } (\cred'^* = (\sigma'^*, \cm'^*), \phi^*, \pi^*) \\
+                    \pccomment{Winning Condition} \\
+                    \Verify(\cred'^*, \phi^*, \pi^*, \opk) = 1 \; \wedge \\
+                    \OWNR[\cred'^*] \notin \CU \; \vee \; \phi^*(\vec{m}^*) = 0 \\
+                    \pccomment{i.e., either the credential belongs to an honest user} \\
+                    \pccomment{or does not satisfy the claimed predicate}
+                }
+            \end{pcvstack}
+            \begin{pcvstack}
+                \procedure[linenumbering]{$\mathrm{Game}^{\mathsf{\ANON}}_{\ABC, \adv}(\lambda)$}{%
+                    \ppar \gets \Setup(\secparam), \HU \gets \emptyset, \CU \gets \emptyset \quad \pclinecomment{Challenger Setup} \\
+                    (\osk, \opk) \gets \AdvA(\OrgKeyGen(\ppar)) \quad \pclinecomment{Adversary may corrupt issuer} \\
+                    \text{For $i \in \{0,1\}$:} \quad \pclinecomment{Setup two challenge users} \\
+                    \t \usk_i \gets \UserKeyGen(\ppar), \HU \gets \HU \cup \{i\} \\
+                    \t \vec{m}_i \gets \AdvA(i) \; \text{such that} \; \phi(\vec{m}_i) = 1 \\
+                    \t \cm_i \gets \CMCom(\vec{m}_i; \usk_i), \cred_i \gets \Issue(\osk, \cm_i) \\
+                    \AdvA^{\OHU, \OCU, \OOBTAIN, \OSHOW}(\opk) \quad \pclinecomment{Learning Phase} \\
+                    \phi \gets \AdvA() \quad \pclinecomment{Challenge Phase} \\
+                    \text{Assert} \; \phi(\vec{m}_0) = \phi(\vec{m}_1) = 1 \; \text{and} \; \{0,1\} \subset \HU \\
+                    b \sample \{0,1\} \quad \pclinecomment{Challenger samples random bit} \\
+                    (\cred', \cm', \pi) \gets \Show(\cred_b, \cm_b, \usk_b, \phi) \\
+                    b' \gets \AdvA(\cred', \cm', \pi) \quad \pclinecomment{Adversary guesses} \\
+                    \text{Return} \; (b' = b)
+                }
+            \end{pcvstack}
+        \end{pchstack}
+    \end{pcvstack}
+    \caption{Unforgeability and Anonymity Games for the Basic ABC System}
+    \label{fig:abc-security-games}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{pchstack}[boxed]
+        \begin{pcvstack}
+            \procedure[]{$\OHU()$}{%
+                \pcif i \notin \HU \cup \CU \\
+                \t \HU \gets \HU \cup \{i\} \\
+                \pcreturn i \\
+            }
+            \procedure[]{$\OCU(i)$}{%
+                \pcif i \in \HU:\\
+                \t \HU \gets \HU \setminus \{i\} \\
+                \t \CU \gets \CU \cup \{i\} \\
+                \t \creds_i \gets \{\cred | \OWNR[\cred] = i\} \\
+                \t \pcreturn \{(\cred, \usk) | (\cred, \cm, \vec{m}, \usk, i) \in \CRED\} \\
+                \pcreturn \bot \\
+            }
+        \end{pcvstack}
+        \begin{pcvstack}
+            \procedure[]{$\OOBTAIN(i, \vec{m})$}{%
+                \pcif i \in \HU: \\
+                \t \usk \sample \Z_p \\
+                \t \cm \gets \CMCom([\vec{m}]; \usk) \\
+                \t \cred \gets \Issue(\osk, \cm) \\
+                \t \CRED \gets \CRED \cup \{(\cred, \cm, \vec{m}, \usk, i)\} \\
+                \t \OWNR[\cred] = i \\
+                \pcreturn \cred \\
+            }
+            \procedure[]{$\OSHOW(i, \phi)$}{%
+                \pcif i \in \HU \; \wedge \; \phi(\cred_i) = 1: \\
+                \t \text{Parse} \; \cred_i = (\sigma, \cm, \vec{m}, \usk) \\
+                \t \pi \gets \Show(\cred_i, \phi) \\
+                \t \SHOW \gets \SHOW \cup \{(i, \phi, \pi)\} \\
+                \t \pcreturn \pi \\
+                \pcreturn \bot \\
+            }
+        \end{pcvstack}
+    \end{pchstack}
+    \caption{Oracles for the ABC Security Games}
+    \label{fig:abc-security-oracles}
+\end{figure}
+
+\begin{definition}[Unforgeability]
+An ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\mathsf{Adv}\left[\mathrm{Game}^{\mathsf{\UNF}}_{\ABC, \adv}(\lambda) = 1\right] \leq \negl[\secparam]
+\]
+\end{definition}
+
+\paragraph{Intuition:} An ABC system is unforgeable if no probabilistic polynomial-time adversary can produce a valid proof for a predicate that they cannot legitimately satisfy based on credentials they have been issued. This prevents forging credentials or proving false statements about them.
+
+\begin{definition}[Anonymity]
+An ABC system provides anonymity if for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
+\[
+\mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Game}^{\mathsf{anon}}_{\ABC, \adv}(\secparam) = 1] - \frac{1}{2} \right| \leq \negl(\lambda)
+\]
+\end{definition}
+
+\paragraph{Anonymity Intuition:} An ABC system provides anonymity if no PPT adversary can determine which user's credential was used in a proof, even if the adversary controls the issuer and chooses the messages and predicates. The challenger sets up the game by picking a random bit $b \sample \{0,1\}$, which determines whether "Alice's or Bob's" credential is used. The adversary's probability of guessing correctly should be negligibly close to random guessing.
+
+
+
+
+
+
 
 
 
@@ -762,7 +838,7 @@ This syntax provides a flexible and precise way to define access control rules w
     \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
     $\underline{\mathsf{Obtain}(\vec{m}, \opk)}$ && $\underline{\mathsf{Issue}(\pircom, \cm, \osk)}$ \\[1em]
     & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
-    If $\pirverkey(\sk, \vk, \ck)$ fails, return $\bot$ && \\[1em]
+    If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
     $\usk \sample \Z_p, \; \cm = \CMCom(\vec{m}; \usk)$ & $\xrightarrow{\;\; \pircom(\cm) \;\;}$ & If $\pircom(\cm)$ fails, return $\bot$ \\[1em]
     If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
     \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
@@ -824,21 +900,8 @@ This syntax provides a flexible and precise way to define access control rules w
 
 
 
-
-
-
-
-
-
-
-
-
-
 \newpage
 \subsection{Security Model}
-% Intuition of our security. 
-
-% Here i Can talk about the different attack vectors and how the security of our system changes between single issuer, single credential, to multi credential to multiple issuer.
 
 \subsubsection{Security Properties}
 
@@ -880,7 +943,7 @@ To model the adversary’s capabilities and the system’s state, we introduce t
     \]
 \end{definition}
 
-\paragraph{Intuition:} A MIMC-ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credentials to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user’s attributes, the verification process accepts the proof with overwhelming probability. 
+\paragraph{Intuition Correctness:} A MIMC-ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credentials to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user’s attributes, the verification process accepts the proof with overwhelming probability. 
 
     \begin{itemize}
         \item \textbf{Setup:} Challenger $\AdvC$ runs $\Setup(\secparam) \to \ppar$
@@ -912,9 +975,9 @@ A MIMC-ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there
 \]
 \end{definition}
 
-\paragraph{Intuition:} A MIMC-ABC system is unforgeable if no probabilistic polynomial-time (PPT) adversary can produce a valid proof for a predicate that they cannot legitimately satisfy, based on the credentials they have obtained or corrupted. This prevents \emph{forging credentials} or \emph{proving false statements} about them including faking identity binding and credential relationships when stated by $\phi$.
+\paragraph{Intuition Unforgeability:} A MIMC-ABC system is unforgeable if no probabilistic polynomial-time (PPT) adversary can produce a valid proof for a predicate that they cannot legitimately satisfy, based on the credentials they have obtained or corrupted. This prevents \emph{forging credentials} or \emph{proving false statements} about them including faking identity binding and credential relationships when stated by $\phi$.
 
-\paragraph{The intuition for the forgery success condition}: The adversary's forgery is successful if their proof verifies correctly \emph{and} the credentials used in the forgery cannot be traced back to a single corrupted user. The trivial forgery is one where the adversary corrupts a user and verifies a statement with their legitimately issued credentials. The adversary can win by combining credentials from multiple corrupt users to create valid proofs, combining credentials from corrupt users with newly forged credentials, and lastly creating entirely forged credentials. This is where our security properties, Identity Binding, and Credential Relationship Binding stem from.
+The adversary's forgery is successful if their proof verifies correctly \emph{and} the credentials used in the forgery cannot be traced back to a single corrupted user. The trivial forgery is one where the adversary corrupts a user and verifies a statement with their legitimately issued credentials. The adversary can win by combining credentials from multiple corrupt users to create valid proofs, combining credentials from corrupt users with newly forged credentials, and lastly creating entirely forged credentials. This is where our security properties, Identity Binding, and Credential Relationship Binding stem from.
 
 \begin{remark}
     For \emph{identity binding}, if $\phi^*$ requires all $\id$ to match, $\AdvA$ can't mix credentials from different $\id$'s. For \emph{credential relationship binding}, if $\phi^*$ requires a specific relationship, for example $\cred_1$ contains $\CMCom([\id, \ctx="passport", \attrs]) \wedge \cred_2$ contains $\CMCom([\id, \ctx="driversLicense", \attrs])$ then $\AdvA$ can't win with different $\ctx$ or use something in $\attrs$ to satisfy $\phi^*$

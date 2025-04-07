@@ -1,3 +1,68 @@
+
+\subsection{Access Policy Syntax}
+In our system, we adopt the access policy syntax from \cite{moriai_monipolyexpressive_2020} to specify the conditions under which a user is granted access based on their attributes. These policies are defined using a formal grammar that combines attributes into sets, clauses, statements, and policies. The syntax for an access policy $\phi$ is outlined in Table~\ref{tab:access_policy}.
+
+\begin{table}[h]
+\centering
+\caption{Syntax for an access policy $\phi$.}
+\label{tab:access_policy}
+\begin{tabular}{ll}
+\hline
+\texttt{attr} & ::= \texttt{<attribute>=<value>} \\
+\texttt{set} & ::= \texttt{attr\_set} | \texttt{attr} \\
+\texttt{con} & ::= \texttt{AND} | \texttt{NAND} | \texttt{OR} | \texttt{NOR} \\
+\texttt{cont} & ::= \texttt{ANY} | \texttt{NANY} \\
+\texttt{clause} & ::= \texttt{con(set)} | \texttt{cont(l, set)} \\
+\texttt{stmt} & ::= \texttt{clause $\land$ stmt} | \texttt{clause} \\
+\texttt{policy} & ::= \texttt{stmt(set)} | \texttt{$\bot$} \\
+\hline
+\multicolumn{2}{l}{\textit{Note:} \texttt{con} = connective, \texttt{cont} = connective with threshold} \\
+\end{tabular}
+\end{table}
+
+
+\begin{itemize}
+    \item \textbf{Attribute (\texttt{attr})}: A key-value pair representing a user property, such as \texttt{"role=manager"} or \texttt{"department=HR"}.  
+    Formal Notation: $\texttt{attr} ::= \texttt{<attribute>=<value>}$
+
+    \item \textbf{Set (\texttt{set})}: A collection of attributes, which can be a single attribute or multiple attributes grouped together, e.g., \texttt{\{"role=manager", "department=HR"\}}.  
+    Formal Notation: $\texttt{set} ::= \texttt{attr} \mid \texttt{\{attr, \ldots, attr\}}$
+
+    \item \textbf{Clause (\texttt{clause})}: A logical condition applied to a set of attributes. Common clauses include requiring all attributes (\texttt{AND}), at least one (\texttt{OR}), or a minimum number (\texttt{ANY}).  
+    Formal Notation: $\texttt{clause} ::= \texttt{AND(set)} \mid \texttt{OR(set)} \mid \texttt{ANY(l, set)}$  
+    where:
+    \begin{itemize}
+        \item $\texttt{AND(set)}$: True if all attributes in the set are present.
+        \item $\texttt{OR(set)}$: True if at least one attribute in the set is present.
+        \item $\texttt{ANY(l, set)}$: True if at least \texttt{l} attributes in the set are present.
+    \end{itemize}
+
+    \item \textbf{Statement (\texttt{stmt})}: A combination of clauses connected by logical AND ($\land$), forming a compound condition.  
+    Formal Notation: $\texttt{stmt} ::= \texttt{clause} \mid \texttt{clause $\land$ stmt}$
+
+    \item \textbf{Policy (\texttt{policy})}: The complete access rule, applying a statement to a set of attributes. A special case, $\bot$, denotes "access denied."  
+    Formal Notation: $\texttt{policy} ::= \texttt{stmt(set)} \mid \bot$
+
+    \item \textbf{Evaluation}: To evaluate the policy, the statement $\text{stmt}$ is applied to the user’s attribute set $A$, and access is granted if $\phi(A) = \text{stmt}(A) = 1$, where $\text{stmt}(A)$ is determined by the logical conditions of its clauses.
+\end{itemize}
+
+\textbf{Example}  
+Consider a policy requiring a user to be a manager and work in either the HR or IT department. This can be expressed as:
+$$ \texttt{AND}(\{\text{"role=manager"}\}) \land \texttt{OR}(\{\text{"department=HR"}, \text{"department=IT"}\}) $$
+- \textbf{Evaluation}:  
+  - If a user has attributes \texttt{\{"role=manager", "department=HR"\}}, the policy evaluates to true (\texttt{AND} is satisfied by "role=manager," and \texttt{OR} is satisfied by "department=HR"), granting access.  
+  - If a user has \texttt{\{"role=manager", "department=Sales"\}}, the policy evaluates to false (\texttt{OR} fails as neither "department=HR" nor "department=IT" is present), denying access.
+
+This syntax provides a flexible and precise way to define access control rules while remaining straightforward to understand and apply.
+
+
+
+
+
+
+
+
+
 Identity System
 
 
