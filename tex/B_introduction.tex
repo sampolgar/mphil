@@ -16,10 +16,7 @@
     \item Chapter 5: Threshold Sybil Resistant Identity System \\
     To make it even more robust, I thresholdized the scheme and show it's more efficient than sota in key use-cases
 
-    \item Chapter 6: Use-case application, identity system + iPhone credential wallet \\
-    We incorporate the contributions in a credential wallet to show how it can be used for eidas
-    
-    \item Chapter 7: Conclusion and Future Work
+    \item Chapter 6: Conclusion and Future Work
 
     \item Appendices: Detailed Proofs, Sigma Protocols
     
@@ -34,45 +31,72 @@ How can we build privacy-preserving credential systems that are simultaneously e
 
 
 \subsubsection*{Chapter 2: Foundations: } 
-How can we construct anonymous credential systems that support expressive policy verification while maintaining practical efficiency and security against malicious issuers?
+% How can we construct anonymous credential systems that support expressive policy verification while maintaining practical efficiency and security against malicious issuers?
 
-Existing Anonymous Credential Schemes verify efficiently but lack expressiveness (like sps-eq, ACT), or are expressive but aren't efficient (like zk-creds), or haven't considered security against malicious issuers (ACT, Coconut). 
+% Existing Anonymous Credential Schemes verify efficiently but lack expressiveness (like sps-eq, ACT), or are expressive but aren't efficient (like zk-creds), or haven't considered security against malicious issuers (ACT, Coconut). 
 
-Technical Challenges: 1) Anonymous Credential schemes that balance security and efficiency. 2) proving complex predicates in zero knowledge without expensive snark circuits. 3) protection against malicious issuers without a trusted setup
+% Technical Challenges: 1) Anonymous Credential schemes that balance security and efficiency. 2) proving complex predicates in zero knowledge without expensive snark circuits. 3) protection against malicious issuers via checking the issuer keys and generating the key k securely
+
+How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
+
+\noindent \textbf{Technical Challenges}
+\begin{enumerate}
+    \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
+    \item Ensuring security for malicious issuers without affecting performance
+    \item Balancing computational overhead with practical usability
+\end{enumerate}
 
 \subsubsection*{Chapter 3: Multi-Issuer Multi-Credential System: } 
-How can users securely combine credentials from multiple, mutually distrusting issuers while maintaining privacy and proving they all belong to the same identity?
+% How can users securely combine credentials from multiple, mutually distrusting issuers while maintaining privacy and proving they all belong to the same identity?
 
-In the identity use case, a non-private approach to using multiple credentials from different issuers is easy; a user presents their credentials, and the connection is checked in plain sight. In a private setting, this process done securely is challenging. 
+% In the identity use case, a non-private approach to using multiple credentials from different issuers is easy; a user presents their credentials, and the connection is checked in plain sight. In a private setting, this process done securely is challenging. 
 
-Technical challenges: 1) defining identity binding and formal security for multi issuer multi credential scenarios. 2) identifying system attacks like malicious credential mixing and preventing them. 3) ensuring the system is efficient.
+% Technical challenges: 1) defining identity binding and formal security for multi issuer multi credential scenarios. 2) identifying system attacks like malicious credential mixing and preventing them. 3) ensuring the system is efficient.
+
+How can users privately combine credentials from multiple, mutually distrusting issuers (e.g., government IDs and bank statements) to prove they belong to the same identity, especially in decentralized settings? Non-private systems easily verify credential consistency, but privacy-preserving approaches struggle to bind credentials securely without a trusted party, aggregate signatures \cite{mir_aggregate_2023} have trouble with revoking individual credentials from an aggregate.
+
+\noindent \textbf{Technical Challenges}
+\begin{enumerate}
+    \item Defining and achieving identity binding across credentials without revealing the user’s identity.
+    \item Preventing attacks where users mix credentials from different identities (e.g., credential swapping).
+    \item Maintaining efficiency as the number of issuers and credentials scales.
+\end{enumerate}
+
 
 
 \subsubsection*{Chapter 4: Sybil Resistance: } 
-How can we efficiently prevent Sybil attacks in anonymous credential systems without compromising privacy?
+% How can we efficiently prevent Sybil attacks in anonymous credential systems without compromising privacy?
 
-Balancing Privacy with Accountability is a difficult problem.
+% Balancing Privacy with Accountability is a difficult problem.
 
-Technical Challenges: 1) creating secure bindings between credentials without a central registry. 2) designing efficient nullifier schemes to be used in multi-issuer multi-credential schemes efficiently.
+% Technical Challenges: 1) creating secure bindings between credentials without a central registry. 2) designing efficient nullifier schemes to be used in multi-issuer multi-credential schemes efficiently.
+
+
+How can we prevent Sybil attacks—where users create multiple identities to abuse services like voting or payments—in anonymous credential systems without compromising privacy? Traditional nullifier schemes either leak information or are too costly for multi-issuer scenarios.
+
+\noindent \textbf{Technical Challenges}
+\begin{enumerate}
+    \item Creating unique, privacy-preserving bindings (e.g., nullifiers) for credentials without a central authority.
+    \item Designing efficient nullifiers that scale to multi-issuer, multi-credential settings.
+    \item Integrating these with zero-knowledge proofs to ensure verification doesn’t reveal identities.
+\end{enumerate}
+
 
 
 \subsubsection*{Chapter 5: Threshold Issuance: } 
-How can we eliminate central points of trust in credential issuance while maintaining the security and efficiency properties of our anonymous credential system?
+% How can we eliminate central points of trust in credential issuance while maintaining the security and efficiency properties of our anonymous credential system?
 
-Centralized issuers create risks - malicious actors get hold of the signing keys, and they can issue unlimited credentials without knowledge. Existing schemes aren't efficient enough for Multi Credential scenarios where users verify multiple credentials together.
+% Centralized issuers create risks - malicious actors get hold of the signing keys, and they can issue unlimited credentials without knowledge. Existing schemes aren't efficient enough for Multi Credential scenarios where users verify multiple credentials together.
 
-Technical Challenges: 1) adapting efficient schemes for threshold issuance. 2) preserving privacy during issuance. 3) maintaining security against malicious issuers. 
+% Technical Challenges: 1) adapting efficient schemes for threshold issuance. 2) preserving privacy during issuance. 3) maintaining security against malicious issuers. 
 
+How can we distribute trust in credential issuance to eliminate central points of failure, while preserving the efficiency and security of our anonymous credential system? Centralized issuers risk catastrophic breaches—malicious actors could issue unlimited credentials—yet adapting efficient schemes to a threshold model is complex, especially for multi-credential verification.
 
-
-\subsubsection*{Chapter 6: Credential Wallet Use Case: } 
-How can users anonymously verify multiple credentials together from their digital wallet.
-
-
-Technical Challenges: 1) lightweight efficiency for use on smartphones. 
-
-
-
-
+\noindent \textbf{Technical Challenges}
+\begin{enumerate}
+    \item Adapting our efficient signature scheme for threshold key generation and signing.
+    \item Ensuring private, distributed issuance.
+    \item Security against colluding or malicious threshold issuers
+\end{enumerate}
 
 % \section{Contributions Roadmap}
