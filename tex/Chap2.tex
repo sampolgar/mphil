@@ -1,51 +1,48 @@
-\mychapter{Expressive Predicates for Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}
-How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
+\mychapter{Expressive Proof Predicates for Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}
+% How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
 
-\noindent \textbf{Technical Challenges}
-\begin{enumerate}
-    \item Formalizing security in the Algebraic Group Model
-    \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
-    \item Ensuring user-anonymity in the presence of malicious issuers without affecting performance
-\end{enumerate}
+% \noindent \textbf{Technical Challenges}
+% \begin{enumerate}
+%     \item Formalizing security in the Algebraic Group Model
+%     \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
+%     \item Ensuring user-anonymity in the presence of malicious issuers without affecting performance
+% \end{enumerate}
 
+% \begin{itemize}
+%     \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
+    % \item Formalized security model for anonymity against colluding credential issuers
+%     \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
+%     \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
+% \end{itemize}
+
+Anonymous credentials represent a fundamental building block for privacy-preserving digital identity, enabling users to prove statements about their attributes without revealing their full identity. Since their introduction by Chaum \cite{chaum_untraceable_1981}, they have evolved from theoretical constructs to practical systems deployed in real-world applications such as U-Prove, Idemix, and PrivacyPass \cite{paquin2011u, camenisch_design_2002, davidson2018privacy}.
+
+The development of anonymous credentials has followed several key advancements:
 \begin{itemize}
-    \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
-    \item Formalized security model for anonymity against colluding credential issuers
-    \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
-    \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
+    \item \textbf{Blind Signatures:} Early constructions using blind signatures provided basic privacy but were limited to single-use scenarios to prevent credential reuse.
+    
+    \item \textbf{Multi-Show Capabilities:} The introduction of pairing-based signatures \cite{cimato_signature_2003, hutchison_constant-size_2006} enabled efficient multi-show credentials through signature randomization, allowing users to present the same credential multiple times without being linked.
+    
+    \item \textbf{Attribute-Based Credentials and Expressive Proofs:} Modern systems extend beyond simple possession proofs to enable selective disclosure and complex predicate verification over attributes.
 \end{itemize}
 
+Despite these advances, current attribute-based anonymous credential (ABC) systems face a critical trade-off between expressiveness and efficiency. Systems like SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} and ACT \cite{guo_anonymous_2023} achieve high efficiency but support only limited predicates, while approaches based on zkSNARKs enable rich expressiveness \cite{rosenberg_zk-creds_2022} but at computational cost. Furthermore, many anonymous credential systems assume honest issuers, leaving users vulnerable to privacy breaches from malicious credential providers.
 
-\section{Introduction}
-
-
-Three Contributions
-
-1. Extended the rerandomizable signature scheme from \cite{tomescu2022utt} with formalized security treatment (position binding in the Algebraic Group Model)
-
-2. Benchmarked our rerandomizable signature against others and our predicate proofs against SOTA showing on average [X\%] improvement
-
-3. Construction of multi-show attribute-based anonymous credentials secure against malicious issuers
-
-
-
-
-
-
-Anonymous credential systems enable users to selectively disclose information while preserving privacy. However, existing systems face critical challenges when supporting expressive predicates: they either [problem 1] or [problem 2]. This limits their practicality for real-world applications requiring [important use case].
-
-In this chapter, we address these challenges through three key contributions:
-
+This chapter addresses these limitations through four key contributions:
 \begin{enumerate}
-    \item We extend the rerandomizable signature scheme from \cite{tomescu2022utt} with formal position-binding security in the Algebraic Group Model
+    \item \textbf{Extended Rerandomizable Signature Scheme:} We build upon the foundations in \cite{tomescu2022utt} to develop a rerandomizable signature scheme over commitments, proven secure in the Algebraic Group Model (AGM) and satisfies the Anonymous Credential System model from \cite{fuchsbauer_structure-preserving_2019}.
     
-    \item We present an optimized construction that reduces prover and verifier computation costs by X\%, while maintaining strong security guarantees under the [specific assumptions]
+    \item \textbf{Optimized Verification Construction:} Our optimized variant reduces show/verify costs by X\% compared to previous approaches
     
-    \item We provide comprehensive benchmarks demonstrating that our approach achieves [specific performance improvement] compared to state-of-the-art alternatives, with practical efficiency benefits from multi-scalar multiplication techniques
+    \item \textbf{Formalized Security Against Malicious Issuers:} We provide a comprehensive security model that guarantees user privacy even against colluding credential issuers, addressing a critical limitation in existing systems.
+    
+    \item \textbf{Empirical Performance Validation:} We benchmark against state-of-the-art alternatives, and we demonstrate that schnorr proofs, as used in our construction, are, in fact, sub-linear in practice and fully expressive for predicate proofs.
 \end{enumerate}
 
-Our results show that efficient predicate proofs for anonymous credentials are possible without resorting to complex zero-knowledge proving systems, significantly advancing the practicality of privacy-preserving credential verification.
+These foundations support the multi-issuer, multi-credential system presented in subsequent chapters while maintaining security against malicious issuers and offering practical performance for real-world applications.
 
+
+\subsubsection*{Chapter Roadmap}
 The remainder of this chapter is organized as follows: Section 2.1 presents preliminaries and notation. Section 2.2 introduces our position-binding commitment scheme. Section 2.3 details our rerandomizable signature construction. Section 2.4 presents our attribute-based credential system construction. Section 2.5 provides comprehensive performance evaluations, and Section 2.6 summarizes our findings.
 
 
@@ -54,16 +51,12 @@ The remainder of this chapter is organized as follows: Section 2.1 presents prel
 
 
 
-\begin{itemize}
-    \item \textbf{Efficient Predicate Proofs in Anonymous Credentials}
-    \begin{itemize}
-        \item efficient and more expressive anonymous credential system with benchmarks and proven security in the anonymous credential system model
-        \item Security analysis of our position binding commitments and rerandomizable signature in the Algebraic Group Model
-        \item First comprehensive benchmarks comparing BBS+, PS, and SPS-EQ signature schemes for predicate proofs
-        \item Analysis of cryptographic optimizations demonstrating logarithmic performance improvements
-        \item expressive predicates (e.g., "age > 18 AND degree = 'BS'")
-    \end{itemize}
-\end{itemize}
+
+
+
+
+
+
 
 
 
