@@ -237,6 +237,28 @@ In this section, we introduce a specialized extension of Pedersen commitments th
 
 Building on the standard commitment scheme defined in Section \ref{def:commitmentscheme}, we extend it with the following properties:
 
+
+\begin{definition}[Position Binding]
+A commitment scheme with message vectors in $\mathcal{M}^n$ is position binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+    \Pr
+    \left[
+        \begin{array}{l}
+        \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
+        (\mathsf{cm}, i, \attrs_0, \attrs_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck}) 
+        \end{array}
+        : \begin{array}{l}
+            \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, \attrs_0, r_0) = 1 \land \\
+            \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, \attrs_1, r_1) = 1 \land \\
+            \attrs_0[i] \neq \attrs_1[i] \land \\
+            \attrs_0[j] = \attrs_1[j] \; \forall j \neq i
+          \end{array}
+    \right] \leq \negl(\lambda)
+\]
+This ensures that an adversary cannot open a commitment to two different values at any single position while keeping other positions constant.
+\end{definition}
+
+
 \begin{definition}[Rerandomizability]
 A commitment scheme $\mathsf{Com} = (\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is rerandomizable if it includes an additional algorithm $\mathsf{Rerand}$ such that:
 
@@ -251,26 +273,6 @@ Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indist
 \end{definition}
 
 
-\begin{definition}[Position Binding]
-A commitment scheme with message vectors in $\mathcal{M}^n$ is position binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-\[
-    \Pr
-    \left[
-        \begin{array}{l}
-        \mathsf{ck} \sample \mathsf{Setup}(1^\lambda, 1^n) \\
-        (\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck}) 
-        \end{array}
-        : \begin{array}{l}
-            \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, \vec{m}_0, r_0) = 1 \land \\
-            \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, \vec{m}_1, r_1) = 1 \land \\
-            \vec{m}_0[i] \neq \vec{m}_1[i] \land \\
-            \vec{m}_0[j] = \vec{m}_1[j] \; \forall j \neq i
-          \end{array}
-    \right] \leq \negl(\lambda)
-\]
-This ensures that an adversary cannot open a commitment to two different values at any single position while keeping other positions constant.
-\end{definition}
-
 \subsection{Dual-Group Construction}
 
 We instantiate a rerandomizable vector commitment scheme in the bilinear group setting as per the construction in \cite{tomescu2022utt} to enable efficient integration with our signature scheme. Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$.
@@ -281,13 +283,13 @@ We instantiate a rerandomizable vector commitment scheme in the bilinear group s
     For $i \in [1,n]$: Sample $y_i \sample \Z_p$, compute $(g_i, \tilde{g}_i) \gets (g^{y_i}, \tilde{g}^{y_i})$.
     Return $\mathsf{ck} \gets (g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
     
-    \item $\mathsf{Commit}(\mathsf{ck}, \vec{m}) \to (\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$:
+    \item $\mathsf{Commit}(\mathsf{ck}, \attrs) \to (\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$:
     Parse $\mathsf{ck}$ as $(g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
     Sample $r \sample \Z_p$.
     Compute $\mathsf{cm} \gets g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} \gets \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
     Return $(\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$.
     
-    \item $\mathsf{Open}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \vec{m}, r) \to \{0,1\}$:
+    \item $\mathsf{Open}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \attrs, r) \to \{0,1\}$:
     Check if $\mathsf{cm} = g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} = \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
     Additionally, verify $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$.
     Return 1 if all checks pass, 0 otherwise.
@@ -311,7 +313,7 @@ We construct a reduction algorithm $\mathcal{B}$ that uses an adversary $\mathca
 \begin{enumerate}
     \item $\mathcal{B}$ sets $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$
     \item For all $j \neq i^*$, $\mathcal{B}$ generates $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ with $y_j \sample \Z_p$
-    \item When $\mathcal{A}$ outputs a position binding break $(\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1)$, if $i = i^*$, then $\mathcal{B}$ can solve for $x$
+    \item When $\mathcal{A}$ outputs a position binding break $(\mathsf{cm}, i, \attrs_0, \attrs_1, r_0, r_1)$, if $i = i^*$, then $\mathcal{B}$ can solve for $x$
 \end{enumerate}
 
 Since $\mathcal{A}$ is algebraic, $\mathcal{B}$ knows the representation of $\mathsf{cm}$ in terms of the group generators. When $i = i^*$ and $\mathcal{A}$ successfully breaks position binding, we have:
@@ -634,18 +636,18 @@ We construct an Attribute-Based Anonymous Credential System from our Rerandomiza
 
 
 \subsection{Predicate Satisfaction}
-We define a predicate $\phi$ as a boolean function over an attribute vector $\vec{m}$, formally  $\phi: \mathcal{M} \rightarrow \{0,1\}$, where $\mathcal{M}$ is the space of the attribute vectors. 
-For a credential with attributes $\vec{m} = [\id, \k, \ctx, \exp]$, we say that "$m$ satisfies $\phi$", denoted as $\phi(m) = 1$, if the boolean function evaluates to true on the attributes.
-For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\vec{m} = [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi = age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
+We define a predicate $\phi$ as a boolean function over an attribute vector $\attrs$, formally  $\phi: (\mathcal{A}) \rightarrow \{0,1\}$, where $\mathcal{A}$ is the space of the attribute vectors. 
+For a credential with attributes $\attrs = [\id, \k, \ctx, \exp]$, we say that "$\attrs$ satisfies $\phi$", denoted as $\phi(\attrs) = 1$, if the boolean function evaluates to true on the attributes.
+For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\attrs: [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi: age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
 
 \subsection{Syntax}
-\begin{definition}[MIMC-ABC System] A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
+\begin{definition}[ABC System] An Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
     \begin{itemize}
     \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
     
     \item $\mathsf{OrgKeygen}(\ppar, \ell) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
        
-    \item $(\mathsf{Obtain}(\vec{m}, \opk), \mathsf{Issue}(\osk, \cm, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\id, \ctx, \attrs]$ containing a unique identifier $\id$ and context $\ctx$. User generates $\usk \sample Z_p$, commits to their messages $\cm \gets \CMCom(\vec{m}; \usk)$. The issuer inputs their secret key $\osk$. The protocol outputs a credential $\cred$ containing $(\sigma, \cm)$ to the user and $\bot$ to the issuer.    
+    \item $(\mathsf{Obtain}(\attrs, \opk), \mathsf{Issue}(\osk, \cm_1, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs an attribute vector with just one element with zero's at the other indexes $\attrs = [0,0,0, k_1]$, generates $\usk \sample \Z_p$, commits to their messages $\cm_1 \gets \CMCom([0,0,0, k_1]; \usk)$. The issuer finalizes the shared key $\k$ by sampling $\k_2$ and committing to the user's attributes $\cm_2 = \CMCom([\id,\ctx,\exp, \k_2]; 0)$ while retaining $0$ at the user's randomness position as to not alter it. The issuer finalises $\cm$ by homomorphically adding $\cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp, \k_1+\k_2]; \usk)$ then signs the commitment. The protocol outputs a credential $\cred$ containing $(\sigma, \cm, \k_2)$ to the user and $\bot$ to the issuer.    
     
     \item $(\mathsf{Show}(\cred, \usk, \phistmt), \mathsf{Verify}(\{\cred'\}, \phistmt)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
     $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
@@ -655,21 +657,7 @@ For example, the predicate $\phi_{master} = \ctx = "master"$ is satisfied by $\v
 
 \subsection{Security Model}
 
-Our Multi-Show Attribute-Based Anonymous Credential system satisfies the three properties:
-
-\begin{itemize}
-    \item \textbf{Correctness:} When all parties follow the protocol honestly, a user with valid credentials should always be able to generate proofs for predicates satisfied by their attributes, which verifiers will accept with overwhelming probability.
-    
-    \item \textbf{Unforgeability:} No probabilistic polynomial-time adversary should be able to produce a valid proof for a predicate that they cannot legitimately satisfy based on credentials they have been issued.
-    
-    \item \textbf{Anonymity:} Proofs should reveal only that the predicate is satisfied, without identifying which specific user produced the proof, even if the verifier and issuer collude.
-\end{itemize}
-
-We model these properties using a standard cryptographic game-based approach:
-
-\subsection{Security Model}
-
-For our attribute-based anonymous credential system, we define three fundamental security properties:
+Our Multi-Show Attribute-Based Anonymous Credential is defined by three properties:
 
 \begin{itemize}
     \item \textbf{Correctness:} When all parties follow the protocol honestly, a user with valid credentials should always be able to generate proofs for predicates satisfied by their attributes, which verifiers will accept with overwhelming probability.
@@ -702,7 +690,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
     \[
         \Pr \left[ 
             \Verify(\cred', \cm', \phi, \pi) = 1 \mid \text{all steps honest} \wedge \phi(m) = 1
-        \right] = 1 - \negl[\lambda]
+        \right] = 1 - \negl(\secparam)
     \]
 \end{definition}
 
@@ -743,7 +731,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
                     b \sample \{0,1\} \quad \pclinecomment{Challenger samples random bit} \\
                     (\cred', \cm', \pi) \gets \Show(\cred_b, \cm_b, \usk_b, \phi) \\
                     b' \gets \AdvA(\cred', \cm', \pi) \quad \pclinecomment{Adversary guesses} \\
-                    \text{Return} \; (b' = b)
+                    \pcreturn b', \pclinecomment{Return the adversary guess}
                 }
             \end{pcvstack}
         \end{pchstack}
@@ -797,18 +785,19 @@ To model the adversary's capabilities and the system's state, we introduce the f
 \begin{definition}[Unforgeability]
 An ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
-\mathsf{Adv}\left[\mathrm{Game}^{\mathsf{\UNF}}_{\ABC, \adv}(\lambda) = 1\right] \leq \negl[\secparam]
+\mathsf{Adv}\left[\mathrm{Game}^{\mathsf{\UNF}}_{\ABC, \adv}(\lambda) = 1\right] \leq \negl(\secparam)
 \]
 \end{definition}
 
 \paragraph{Intuition:} An ABC system is unforgeable if no probabilistic polynomial-time adversary can produce a valid proof for a predicate that they cannot legitimately satisfy based on credentials they have been issued. This prevents forging credentials or proving false statements about them.
 
 \begin{definition}[Anonymity]
-An ABC system provides anonymity if for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
+An $\ABC$ system provides anonymity if, for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
 \[
-\mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Game}^{\mathsf{anon}}_{\ABC, \adv}(\secparam) = 1] - \frac{1}{2} \right| \leq \negl(\lambda)
+\mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Game}^{\mathsf{anon-1}}_{\ABC, \adv}(\secparam) = 1] - \Pr[\mathrm{Game}^{\mathsf{anon-0}}_{\ABC, \adv}(\secparam) = 1] \right| \leq \negl(\lambda)
 \]
 \end{definition}
+
 
 \paragraph{Anonymity Intuition:} An ABC system provides anonymity if no PPT adversary can determine which user's credential was used in a proof, even if the adversary controls the issuer and chooses the messages and predicates. The challenger sets up the game by picking a random bit $b \sample \{0,1\}$, which determines whether "Alice's or Bob's" credential is used. The adversary's probability of guessing correctly should be negligibly close to random guessing.
 
@@ -834,13 +823,16 @@ An ABC system provides anonymity if for all PPT adversaries $\adv$, the advantag
     \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
     \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}), \; \text{Return } (\osk, \opk) = (\sk, (\vk, \ck))$} \\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
-    \multicolumn{3}{l}{$\pircom(\cm) = \zkpok\{(\vec{m}, \usk) \mid \cm = g^{\usk} \prod_{i=1}^\ell g_i^{m_i} \}$} \\[1em]
+    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\k_1,\usk) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
     \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
-    $\underline{\mathsf{Obtain}(\vec{m}, \opk)}$ && $\underline{\mathsf{Issue}(\pircom, \cm, \osk)}$ \\[1em]
+    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)}$ \\[1em]
     & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
     If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
-    $\usk \sample \Z_p, \; \cm = \CMCom(\vec{m}; \usk)$ & $\xrightarrow{\;\; \pircom(\cm) \;\;}$ & If $\pircom(\cm)$ fails, return $\bot$ \\[1em]
-    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{$\k_1 \sample \Z_p, \usk \sample \Z_p\;, \cm_1 = \CMCom([0,0,0,\k_1];\usk)$} \\[1em]
+     & $\xrightarrow{\;\; \pirzero(\cm_1) \;\;}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
+     \multicolumn{3}{r}{$\k_2 \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
+     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
+    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \k_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
     \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
     \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
@@ -862,139 +854,40 @@ An ABC system provides anonymity if for all PPT adversaries $\adv$, the advantag
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{OLD}
-
 \subsubsection{Outline}
-Our credential system operates over attribute space $\Z_p$. The user is indexed by $i$, the issuer by $j$, and the $k^{th}$ credential issued to user $i$ from issuer $j$. The credential $\cred$ is a rerandomizable Pointcheval-Sanders signature over commitments $\sigma \gets \mathsf{RS.Sign}(\cm, \mathsf{osk})$ where $\cm \gets \CMCom(\vec{m}; \usk)$. During verification, the user rerandomizes both signature and commitment for anonymity, then uses $\Sigma$-protocols to prove their correctness for any predicate $\phi$. This approach leverages the algebraic structure of PS Signatures and Pedersen Commitments, that is, messages are exponents of a commitment which yields well-known, highly expressive and efficient zero-knowledge proofs of group element exponents, supporting a wide range of statements from selective disclosure to complex arithmetic relations. However, proofs are linear in the number of exponents. In contrast, SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} use constant-size set commitments and although proofs have limited expressiveness, they are constant size and very efficient. On the other hand, \cite{rabaninejad_attribute-based_2024} use Groth-Sahai proofs. During $\Obtain, \Issue$, the user sends the commitment $\cm$ along with a proof of opening $\pircom(\cm)$ allowing the extraction of $\usk$ for corrupt users in the unforgeability proof.
-
-\subsubsection{Example}
-Consider a user holding credentials from three issuers, denoted $j = 1, 2, 3$, each providing one credential $k = 1$. The user rerandomizes each credential’s commitment and signature as follows: $\cm_{j,1}' \gets \CMRand(\cm_{j,1}, \Delta_{r_{j,1}})$ and $\sigma_{j,1}' \gets \RSRand(\sigma_{j,1}, \Delta_{r_{j,1}}, \Delta_{u_{j,1}})$. These rerandomized pairs $(\cm_{j,1}', \sigma_{j,1}')$ are indistinguishable from their original issuance. In the $\Show$ protocol, the verifier confirms their validity: $\RSVer(\sigma_{j,1}', \cm_{j,1}', \vk_j) = 1$ for all $j \in \{1, 2, 3\}$.
-
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Passport}{%
-                \id: 12345, \\
-                \ctx: "passport", \\
-                \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                 \id: 12345, \\
-                \ctx: "dmv", \\
-                 \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{University Degree}{%
-                 \id: 12345, \\
-                \ctx: "usyd{-}bcompsc", \\
-                \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Three Example Credentials, $\attrs$ holds arbitrary number of attributes such as expiry}
-    \label{fig:three-creds}
-\end{figure}
-
-Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials satisfy a predicate $\phi$. 
-\[
-\mathcal{R}_\phi = \left\{ 
-\begin{array}{l} 
-\forall j, k: \RSVer(\sigma_{j,k}', \cm_{j,k}', \vk_j) = 1 \\ 
-\forall j, k: \cm_{j,k}' = \CMRand(\CMCom([\id, \ctx_{j,k}, \attrs_{j,k}]; \usk_{j,k}), \Delta_{r_{j,k}}) \\ 
-\phi(\{\ctx_{j,k}, \attrs_{j,k}\}) = 1 
-\end{array} 
-\right\}
-\]
-
-For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{''passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{''dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
-
+Our credential system operates over attribute space $\Z_p$. The user is indexed by $i$. The credential $\cred$ is a rerandomizable Pointcheval-Sanders signature over commitments $\sigma \gets \mathsf{RS.Sign}(\cm, \mathsf{osk})$ where $\cm \gets \CMCom(\vec{m}; \usk)$. During verification, the user rerandomizes both signature and commitment for anonymity, then uses $\Sigma$-protocols to prove their correctness for any predicate $\phi$. This approach leverages the algebraic structure of PS Signatures and Pedersen Commitments, that is, messages are exponents of a commitment which yields well-known, highly expressive and efficient zero-knowledge proofs of group element exponents, supporting a wide range of statements from selective disclosure to complex arithmetic relations. Theoretically, proofs are linear in the size of the attribute vector, however, we prove in \ref{sigma-protocol-analysis} that the practical performance is sub-linear and extremely efficient. In contrast, SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} use constant-size, efficient set commitment proof with albeit limited expressiveness. On the other hand, \cite{rabaninejad_attribute-based_2024} use Groth-Sahai proofs which are expressive but less efficient as each proof is an elliptic curve pairing. During $\Obtain, \Issue$, the user sends the commitment $\cm$ along with a proof of opening $\pircom(\cm)$ allowing the extraction of $\usk$ for corrupt users in the unforgeability proof.
 
 \subsection{Sigma-protocol and core relations}
 
-Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
+Our $\ABC$ system relies on five core relations proven via $\Sigma$-protocols:
 \begin{enumerate}
-    \item \textbf{Commitment Opening:} For commitment $\cm$ to message vector $\vec{m} = [\id, \ctx, \attrs]$. $\pircom(\cm)$ is a proof for relation:
+    \item \textbf{Commitment Opening:} For commitment $\cm$ to attribute vector $\attrs  = [\id, \ctx, \exp, \attrs]$ and randomness $\usk$. $\pircom(\cm)$ is a proof for relation:
     \[
-     \rcom = \zkpok \left\{(\cm, (\id, \ctx, \attrs, \usk))| \cm = g_1^{\id}g_2^{\ctx},\attrs, g^{\usk} \right\}
+     \rcom = \zkpok \left\{((\cm), (\id, \ctx, \exp, \k, \usk))| \cm = g_1^{\id}g_2^{\ctx},g_3^{\exp}g_4^{\k}, g^{\usk} \right\}
     \]
+
+     \item \textbf{Proof of Zero's}: we use adjust the commitment opening proof to prove specific committed values are zero by removing their position in the commitment key. To prove that $\cm=\CMCom([0,0,0,\k];\usk)$, we run the commitment opening protocol with $\ck = g_4g$, if the output verifies, we prove the absence of the first three exponents.
+     $\pirzero(\cm)$ is a proof for relation: 
+    \[
+    \rzero = \{((\cm),(\k_1, \usk)) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}
+    \]
+     
     
     \item \textbf{Signature Validity:} after rerandomization, our signatures in the form $\sigma' = (\sigma_1', \sigma_2')$ combine pairing verification with sigma protocol to prove knowledge of the committed messages and randomization factor. $\pirsigma$ is a proof for relation:
          \[
     \rsigma = \zkpok \left\{ 
     \begin{array}{l} 
-    (\sigma', \cm', (\ctx, \attrs, \usk + \Delta_{\usk})) \\
+    ((\sigma', \cm'), (\id, \ctx, \exp, \k, \usk + \Delta_{\usk})) \\
     \end{array} 
     \middle|
     \begin{array}{l}
     e(\sigma_1, \vk \cdot \widetilde{\cm}) = e(\sigma_2, \tilde{g}) \quad \wedge \\
     e(\cm, \tilde{g}) = e(g, \widetilde{\cm}) \quad \wedge\\
-    \cm = g_1^{\id}g_2^{\ctx},\attrs, g^{\usk + \Delta_\usk} \\
+    \cm = g_1^{\id}g_2^{\ctx}g_3^{\exp},g_4^{\k} g^{\usk + \Delta_\usk} \\
     \end{array} 
     \right\}
     \]
 
-
-    \item \textbf{Identity Binding:} For two credentials with commitments $\cm_1$ and $\cm_2$:
-
-    \[
-    \rid = \zkpok \left\{ 
-    \begin{array}{l} 
-    (\cm_1, \cm_2, (\id, \usk_1, \usk_2, \ctx_1, \ctx_2, \attrs_1, \attrs_2)) \\
-    \end{array} 
-    \middle|
-    \begin{array}{l}
-    \cm_1 = g^{\usk_1} \cdot g_1^{\id} \cdot g_2^{\ctx_1} \cdot \prod g_i^{\attrs_{1,i}} \wedge \\
-     \cm_2 = g^{\usk_2} \cdot g_1^{\id} \cdot g_2^{\ctx_2} \cdot \prod g_i^{\attrs_{2,i}} \\
-    \end{array} 
-    \right\}
-    \]
-    
-    This proves both credentials share the same $\id$ without revealing the $\id$ value. This generalizes to $n$ credentials by proving equality across all $n$ commitments.
-    
-    The position-binding property of our commitment scheme (Section \ref{sec:commitment}) ensures this equality relation can't be forged - an adversary can't make two commitments appear to share the same $\id$ when they actually don't.
 
     \item \textbf{Malicious Issuer Protection:} For verification key $\vk$ and commitment key $\ck$, $\pirverkey$ is a proof for relation:
     \[
@@ -1021,18 +914,52 @@ Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
     
     The $\Sigma$-protocol allows proving these statements are true without revealing the actual attribute values, only that they satisfy the predicate $\phi$.
 
-    
     The $\Sigma$-protocol framework allows for highly expressive predicates $\phi$ including:
     \begin{itemize}
     \item \textbf{Boolean operations:} AND, OR, and NOT compositions of simpler predicates
     \item \textbf{Arithmetic relations:} Equality, inequality ($<$, $>$, $\leq$, $\geq$), and linear combinations 
     \item \textbf{Range proofs:} Demonstrating a value lies within a specific range (e.g., ``18 $\leq$ age $<$ 65'')
     \item \textbf{Set membership:} Proving an attribute belongs to an approved set without revealing which one
-    \item \textbf{Cross-credential relations:} Equality of attributes across different credentials (e.g., name matches across passport and driver's license)
     \end{itemize}
 
     
 \end{enumerate}
+
+
+\subsubsection{Example}
+Consider a user holding a passport credential needing to satisfy $\phi$ such that $\ctx="master" \; \wedge \; \exp > \text{ today}$. 
+
+\begin{figure}[H]
+        \begin{pchstack}[boxed, center, space=4em]
+            \begin{pcvstack}
+                \procedure[space=auto]{Passport}{%
+                \id: 12345, \\
+                \ctx: "master", \\
+                \exp: "10/11/2026" \\
+                \k: 54321
+                }
+            \end{pcvstack}
+        \end{pchstack}
+    \caption{Example Master Credential}
+    \label{fig:master-cred}
+\end{figure}
+
+The user rerandomizes their signature and commitment by generating blinding factors $\Delta_r, \Delta_u \sample \Z_p^2$, computes $\sigma' \gets \RSRand(\sigma, \Delta_r, \Delta_u)$ and $\cm' \gets \CMRand(\cm, \Delta_r)$ and generates a $\zkpok$ satisfying 
+
+     \[
+    \mathcal{R}_\phi = \zkpok \left\{ 
+    \begin{array}{l} 
+    ((\cm', \sigma'),(\id, \ctx, \k, \exp, \usk+\Delta_{\usk})) \\
+    \end{array} 
+    \middle|
+    \begin{array}{l}
+    \RSVer(\sigma', \cm', \vk) = 1 \quad \wedge \\
+    \cm' = g_1^{\id}g_2^{\ctx},g_3^{\exp},g_4^{\k}, g^{\usk+\Delta_{\usk}} \quad \wedge  \\
+    \phi(\ctx, \exp) = 1
+    \end{array} 
+    \right\}
+    \]
+
 
 
 
@@ -1049,6 +976,10 @@ To prevent attacks from malicious issuers, we extend our signature scheme with:
 \]
 
 This prevents deanonymization via specially crafted keys, and signature forgery via hidden key relationships. In security proofs, extractability enables reductions to standard cryptographic assumptions.
+
+\subsubsection{Two Party Protocol VRF Key Generation}
+The key $\k$ in the master credential which will be used as the input key to a VRF is generated with a two-party protocol, improving unforgeability in the case a user is attempting to forge a new master credential from previously known key $\k$.
+
 
 
 
@@ -1471,7 +1402,7 @@ For attribute vectors, we use parameter n to represent the number of attributes 
 
 
 \section{Practical Proof Analysis}
-\subsection{Sigma Protocols}
+\subsection{Sigma Protocols}\label{sigma-protocol-analysis}
 Many schemes refer to sigma protocol as having linear size proofs. 
 While this is true in theory, using multi-scalar-multiplication, a popular algorithm in many cryptographic libraries, we show that sigma protocols are, in fact, sublinear rather than linear when message size doubles.
 

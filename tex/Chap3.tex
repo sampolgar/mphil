@@ -157,7 +157,7 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
                     b \sample \bit \quad \pclinecomment{$\AdvC$ samples random bit}\\
                     (\cred', \cm', \pi) \gets \Show(\creds_{i_b}, \cm_{i_b}, \usk_{i_b}, \phi)\\
                     b' \gets \AdvA(\cred', \cm', \pi) \qquad \pclinecomment{$\AdvA$ guesses who's $\cred$ it is } \\
-                    \text{Return } (b' = b), \pclinecomment{Wins with the correct guess}}
+                    \text{Return } b', \pclinecomment{Return the adversary guess}}
             \end{pcvstack}
         \end{pchstack}
         \end{pcvstack}
