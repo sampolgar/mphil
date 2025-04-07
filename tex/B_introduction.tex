@@ -79,7 +79,7 @@ How can we distribute trust in credential issuance to eliminate central points o
 This thesis develops a comprehensive privacy-preserving digital identity framework that enables expressive credential verification, multi-issuer identity binding, and sybil resistance without compromising efficiency or security. My contributions span four interconnected areas:
 
 \begin{enumerate}
-    \item \textbf{Foundations: Optimized Expressive Predicate Proofs} (Chapter 2)
+    \item \textbf{Foundations: Expressive Predicates for Attribute-Based (Anonymous) Credentials (ABC's)} (Chapter 2)
     \begin{itemize}
         \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
         \item Formalized security model for anonymity against colluding credential issuers
@@ -110,6 +110,13 @@ This thesis develops a comprehensive privacy-preserving digital identity framewo
             \item Demonstrated 2-3× performance improvements over comparable threshold anonymous credential systems
             \item Integrated the threshold construction with sybil resistance mechanisms from Chapter 4, creating the first fully decentralized system with both properties
             \item Provided comprehensive benchmarks across varying threshold parameters to guide real-world deployments
+        \end{itemize}
+
+        \item \textbf{Open Source Library}
+        \begin{itemize}
+            \item Anonymous Credential Comparison
+            \item Developed a G2-variant optimization reducing verification costs by [X\%]
+            \item Demonstrated sub-linear practical performance using multi-scalar multiplication techniques
         \end{itemize}
 \end{enumerate}
 Collectively, these contributions address the fundamental tension between privacy and accountability in digital identity systems. The techniques developed in this thesis enable the construction of credential systems that simultaneously provide strong privacy guarantees, protection against abuse, expressiveness for complex policy verification, and practical efficiency. The implementations and benchmarks demonstrate that these theoretical advances translate to concrete performance improvements suitable for real-world deployment.

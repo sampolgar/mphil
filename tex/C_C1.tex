@@ -1,4 +1,59 @@
-\mychapter{Expressive Predicates for Attribute-Based Credentials (ABC's)}
+\mychapter{Expressive Predicates for Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}
+How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
+
+\noindent \textbf{Technical Challenges}
+\begin{enumerate}
+    \item Formalizing security in the Algebraic Group Model
+    \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
+    \item Ensuring user-anonymity in the presence of malicious issuers without affecting performance
+\end{enumerate}
+
+\begin{itemize}
+    \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
+    \item Formalized security model for anonymity against colluding credential issuers
+    \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
+    \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
+\end{itemize}
+
+
+\section{Introduction}
+
+
+Three Contributions
+
+1. Extended the rerandomizable signature scheme from \cite{tomescu2022utt} with formalized security treatment (position binding in the Algebraic Group Model)
+
+2. Benchmarked our rerandomizable signature against others and our predicate proofs against SOTA showing on average [X\%] improvement
+
+3. Construction of multi-show attribute-based anonymous credentials secure against malicious issuers
+
+
+
+
+
+
+Anonymous credential systems enable users to selectively disclose information while preserving privacy. However, existing systems face critical challenges when supporting expressive predicates: they either [problem 1] or [problem 2]. This limits their practicality for real-world applications requiring [important use case].
+
+In this chapter, we address these challenges through three key contributions:
+
+\begin{enumerate}
+    \item We extend the rerandomizable signature scheme from \cite{tomescu2022utt} with formal position-binding security in the Algebraic Group Model
+    
+    \item We present an optimized construction that reduces prover and verifier computation costs by X\%, while maintaining strong security guarantees under the [specific assumptions]
+    
+    \item We provide comprehensive benchmarks demonstrating that our approach achieves [specific performance improvement] compared to state-of-the-art alternatives, with practical efficiency benefits from multi-scalar multiplication techniques
+\end{enumerate}
+
+Our results show that efficient predicate proofs for anonymous credentials are possible without resorting to complex zero-knowledge proving systems, significantly advancing the practicality of privacy-preserving credential verification.
+
+The remainder of this chapter is organized as follows: Section 2.1 presents preliminaries and notation. Section 2.2 introduces our position-binding commitment scheme. Section 2.3 details our rerandomizable signature construction. Section 2.4 presents our attribute-based credential system construction. Section 2.5 provides comprehensive performance evaluations, and Section 2.6 summarizes our findings.
+
+
+
+
+
+
+
 \begin{itemize}
     \item \textbf{Efficient Predicate Proofs in Anonymous Credentials}
     \begin{itemize}
@@ -11,24 +66,10 @@
 \end{itemize}
 
 
-\subsection{Contributions}
-
-\begin{enumerate}
-    \item We extend the rerandomizable signature from \cite{tomescu2022utt} by proving the pedersen commitment is position binding in the Algebraic Group Model and prove the signature is $\EUFCMA$ secure in the Algebraic Group Model. 
-
-    \item Present an optimized construction of the signature scheme and show it achieves a 10\% reduction in overall prove and verify times to previous construction. 
-
-    \item \textbf{Anonymity against malicious issuers:} We extend the standard notion of anonymity and include anonymity against malicious issuers by implementing a proof mechanism requiring the issuer to prove the structure of their keys 
-
-    \item 
-
-
-\end{enumerate}
 
 
 
-
-
+\newpage
 \section{Preliminaries}
 
 \begin{definition}[Signature Scheme]
