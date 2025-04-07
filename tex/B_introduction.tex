@@ -31,12 +31,6 @@ How can we build privacy-preserving credential systems that are simultaneously e
 
 
 \subsubsection*{Chapter 2: Foundations: } 
-% How can we construct anonymous credential systems that support expressive policy verification while maintaining practical efficiency and security against malicious issuers?
-
-% Existing Anonymous Credential Schemes verify efficiently but lack expressiveness (like sps-eq, ACT), or are expressive but aren't efficient (like zk-creds), or haven't considered security against malicious issuers (ACT, Coconut). 
-
-% Technical Challenges: 1) Anonymous Credential schemes that balance security and efficiency. 2) proving complex predicates in zero knowledge without expensive snark circuits. 3) protection against malicious issuers via checking the issuer keys and generating the key k securely
-
 How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
 
 \noindent \textbf{Technical Challenges}
@@ -47,12 +41,6 @@ How can we construct anonymous credential systems that efficiently support expre
 \end{enumerate}
 
 \subsubsection*{Chapter 3: Multi-Issuer Multi-Credential System: } 
-% How can users securely combine credentials from multiple, mutually distrusting issuers while maintaining privacy and proving they all belong to the same identity?
-
-% In the identity use case, a non-private approach to using multiple credentials from different issuers is easy; a user presents their credentials, and the connection is checked in plain sight. In a private setting, this process done securely is challenging. 
-
-% Technical challenges: 1) defining identity binding and formal security for multi issuer multi credential scenarios. 2) identifying system attacks like malicious credential mixing and preventing them. 3) ensuring the system is efficient.
-
 How can users privately combine credentials from multiple, mutually distrusting issuers (e.g., government IDs and bank statements) to prove they belong to the same identity, especially in decentralized settings? Non-private systems easily verify credential consistency, but privacy-preserving approaches struggle to bind credentials securely without a trusted party, aggregate signatures \cite{mir_aggregate_2023} have trouble with revoking individual credentials from an aggregate.
 
 \noindent \textbf{Technical Challenges}
@@ -65,13 +53,6 @@ How can users privately combine credentials from multiple, mutually distrusting 
 
 
 \subsubsection*{Chapter 4: Sybil Resistance: } 
-% How can we efficiently prevent Sybil attacks in anonymous credential systems without compromising privacy?
-
-% Balancing Privacy with Accountability is a difficult problem.
-
-% Technical Challenges: 1) creating secure bindings between credentials without a central registry. 2) designing efficient nullifier schemes to be used in multi-issuer multi-credential schemes efficiently.
-
-
 How can we prevent Sybil attacks—where users create multiple identities to abuse services like voting or payments—in anonymous credential systems without compromising privacy? Traditional nullifier schemes either leak information or are too costly for multi-issuer scenarios.
 
 \noindent \textbf{Technical Challenges}
@@ -84,12 +65,6 @@ How can we prevent Sybil attacks—where users create multiple identities to abu
 
 
 \subsubsection*{Chapter 5: Threshold Issuance: } 
-% How can we eliminate central points of trust in credential issuance while maintaining the security and efficiency properties of our anonymous credential system?
-
-% Centralized issuers create risks - malicious actors get hold of the signing keys, and they can issue unlimited credentials without knowledge. Existing schemes aren't efficient enough for Multi Credential scenarios where users verify multiple credentials together.
-
-% Technical Challenges: 1) adapting efficient schemes for threshold issuance. 2) preserving privacy during issuance. 3) maintaining security against malicious issuers. 
-
 How can we distribute trust in credential issuance to eliminate central points of failure, while preserving the efficiency and security of our anonymous credential system? Centralized issuers risk catastrophic breaches—malicious actors could issue unlimited credentials—yet adapting efficient schemes to a threshold model is complex, especially for multi-credential verification.
 
 \noindent \textbf{Technical Challenges}
@@ -99,4 +74,42 @@ How can we distribute trust in credential issuance to eliminate central points o
     \item Security against colluding or malicious threshold issuers
 \end{enumerate}
 
-% \section{Contributions Roadmap}
+\section{Contributions and Thesis Organization}
+
+This thesis develops a comprehensive privacy-preserving digital identity framework that enables expressive credential verification, multi-issuer identity binding, and sybil resistance without compromising efficiency or security. My contributions span four interconnected areas:
+
+\begin{enumerate}
+    \item \textbf{Foundations: Optimized Expressive Predicate Proofs} (Chapter 2)
+    \begin{itemize}
+        \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
+        \item Formalized security model for anonymity against colluding credential issuers
+        \item Developed a G2-variant optimization reducing verification costs by [X\%]
+        \item Demonstrated sub-linear practical performance using multi-scalar multiplication techniques
+        \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
+        \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
+    \end{itemize}
+
+    \item \textbf{Multi-Issuer Multi-Credential System (MIMC-ABC)} (Chapter 3)
+    \begin{itemize}
+        \item Formalized security model for multi-issuer identity binding with position-binding commitments
+        \item Proved unforgeability and anonymity even against colluding credential issuers
+        \item Demonstrated 30\% performance improvement over comparable schemes for multi-credential verification
+    \end{itemize}
+    
+    \item \textbf{Private Accountability: Sybil Resistance} (Chapter 4)
+        \begin{itemize}
+            \item Introduced the Credential Relationship Binding Nullifier (CRBN), a pairing-free construction for preventing credential reuse while maintaining privacy
+            \item Developed a novel zero-knowledge proof of multiplicative inverse enabling efficient verification of nullifier correctness
+            \item Achieved 33\% faster nullifier evaluation and 60\% faster verification compared to state-of-the-art approaches
+            \item Formalized security properties (uniqueness, unlinkability, and double-spending prevention) with proofs under the q-Diffie-Hellman Inversion assumption
+        \end{itemize}
+
+    \item \textbf{Threshold Sybil Resistant Identity System} (Chapter 5)
+        \begin{itemize}
+            \item Designed a threshold issuance protocol eliminating central points of trust while preserving all MIMC-ABC security properties
+            \item Demonstrated 2-3× performance improvements over comparable threshold anonymous credential systems
+            \item Integrated the threshold construction with sybil resistance mechanisms from Chapter 4, creating the first fully decentralized system with both properties
+            \item Provided comprehensive benchmarks across varying threshold parameters to guide real-world deployments
+        \end{itemize}
+\end{enumerate}
+Collectively, these contributions address the fundamental tension between privacy and accountability in digital identity systems. The techniques developed in this thesis enable the construction of credential systems that simultaneously provide strong privacy guarantees, protection against abuse, expressiveness for complex policy verification, and practical efficiency. The implementations and benchmarks demonstrate that these theoretical advances translate to concrete performance improvements suitable for real-world deployment.
