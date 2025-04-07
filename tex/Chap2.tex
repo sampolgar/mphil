@@ -984,13 +984,38 @@ The key $\k$ in the master credential which will be used as the input key to a V
 
 
 
-\section{\MIMCABC Security}
+\section{Security}
+\begin{theorem}[Unforgeability]
+The $\ABC$ system is unforgeable if the rerandomizable signature scheme is $\EUFCMA$ secure, the Pedersen Commitment scheme is position binding, and the $\Sigma-$protocol is sound.
+\end{theorem}
+
+\begin{proof}[Sketch]
+We reduce the security of our $\ABC$ system to three underlying properties: $\EUFCMA$ security of the signature scheme, position binding of the commitment scheme, and the soundness of the $\Sigma$-protocol. Any successful forgery must break at least one of these properties.
+
+The reduction algorithm $\mathcal{B}$ proceeds as follows: $\AdvB$ receives a PS signature challenge verification key $vk$ and embeds it in the ABC public parameters given to $\AdvA$.For Obtain queries, $\AdvB$ forwards the commitment to the $\EUFCMA$ signing oracle and returns the signature to $\AdvA$. When $\AdvA$ outputs a forgery $(\cred^*, \phi^*, \pi^*)$, $\AdvB$ analyzes it
+\begin{itemize}
+    \item \textbf{Case 1:} If $\cred^*$ contains a signature on a commitment not previously queried, $\AdvB$ outputs this as an EUF-CMA forgery.
+
+    \item \textbf{Case 2:} If $\cred^*$ contains a signature on a legitimate commitment but proves a predicate $\phi^*$ the original attributes don't satisfy:
+        \begin{itemize}
+        \item By the special soundness of the Sigma protocol, $\AdvB$ can use a rewinding extractor to extract a valid witness from $\pi^*$.
+        \item This witness must include attribute values that satisfy $\phi^*$.
+        \item Since the original attributes don't satisfy $\phi^*$, the extracted witness must differ from the original commitment opening.
+        \item This gives two different openings for the same commitment, breaking position binding.
+    \end{itemize}
+
+    \item \textbf{Case 3:} If the proof $\pi^*$ verifies but neither Case 1 nor Case 2 applies, this directly contradicts the soundness of the Sigma protocol.
+
+\end{itemize}
+
+\end{proof}
+
+
+
 
 \subsection{Unforgeability} \label{sec:unforgeability}
 \subsubsection{Intuition}
 Unforgeability ensures an Adversary cannot produce a valid proof for a predicate $\phi^*$ without possessing valid credentials. Credentials in our system are rerandomizable signatures over position-binding commitments to attribute vectors. Our reduction shows a successful forgery must break one of three security properties:
-
-
 
 \begin{enumerate} 
 \item Breaking $\EUFCMA$: The adversary generates a valid signature on a commitment not issued by a legitimate issuer. 
