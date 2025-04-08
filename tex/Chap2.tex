@@ -1,4 +1,39 @@
 \mychapter{Expressive Proof Predicates for Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}
+
+
+\begin{table}
+\begin{center}
+\caption{Comparison of our construction over previous work.}
+\label{tab:comparison}
+\begin{tabular}{l|cccccc}
+Features    									& Multi Issuer & Sybil Resistance  & Revocation & Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$   & Anonymity$\footnotemark[3]$   \\
+\hline
+
+CanDID \cite{maram2021candid}     				& \ding{51}     & \ding{51} 	& \ding{51}  &  \ding{55}     & \ding{55}                     & \ding{55}		\\
+SyRA \cite{crites_syra_2024}     				& \ding{55}     & \ding{51}    	& \ding{55}  &  \ding{55}     & \ding{55}                     & \ding{51}		\\
+S3ID \cite{rabaninejad_attribute-based_nodate}  & \ding{51}     & \ding{51}    	& \ding{55}  &  \ding{51}     & \ding{55}\footnotemark[4]     & \ding{51}		\\
+Our Work  										& \ding{51}     & \ding{51}    	& \ding{51}  &  \ding{51}     & \ding{51}                     & \ding{51}		\\
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+\footnotesize
+$\footnotemark[1]$ Credential Chaining is a user presenting multiple credentials to be verified together for a complex identity statement.
+
+\footnotesize
+$\footnotemark[2]$ M-ABC is a Multi-Show Attribute Based Credential, allowing a user to satisfy rich, attribute-based identity statements 
+
+\footnotesize
+$\footnotemark[3]$ Anonymity is defined in the Anonymous Credential model, no verifier and issuer (collaborating together) may learn more about the user or their credentials other than what the user discloses and what their credentials verify. Multiple credential verifications are unlinkable.
+
+\footnotesize
+$\footnotemark[4]$ While possible in S3ID, they mention 
+
+\footnotesize
+$\footnotemark[5]$ Multi-issuer means supporting credentials from different authorities that can be cryptographically linked while preserving privacy
+\end{table}
+
+
 % How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
 
 % \noindent \textbf{Technical Challenges}
@@ -1161,12 +1196,12 @@ Correctness stems from the verification equation:
 We now present a comprehensive comparison of our PS-UTT G2 signature variant against four state-of-the-art anonymous credential schemes. Table~\ref{abc-performance-combined-table} summarizes the performance across all credential operations and attribute counts.
 
 
-\begin{table}[htbp]\label{abc-performance-combined-table}[h!]
+\begin{table}[htbp]\label{abc-performance-combined-table}
 \centering
-\caption{Performance of Anonymous Credential Operations (time in ms)}
+\caption{Performance of Anonymous Credential Operations (time in ms), $n$ is attribute count}
 \begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
 \toprule
-n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & Our Improved \ref{rerandsig_g2} \\
+$n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & Our Improved \ref{rerandsig_g2} \\
 \midrule
 \multicolumn{6}{c}{\textbf{Obtain}}  \\
 \midrule

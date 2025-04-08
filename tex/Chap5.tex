@@ -169,6 +169,14 @@ Our $\Sigma$-protocol for this relation works as follows:
 \end{enumerate}
 \end{protocol}
 
+\section{Proofs}
+
+Theorem: Correctness
+
+Theorem: Soundness
+
+Theorem: Zero Knowledge
+
 \section{Security}
 
 Our nullifier construction builds on the Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005}, adapting it to work efficiently in standard prime-order groups without pairings. The security relies on the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption, which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q})$, no PPT adversary can compute $g^{1/x}$ with non-negligible probability \cite{mitsunari_new_2002}.
@@ -192,7 +200,7 @@ The security of our construction follows directly from: (1) the hardness of the 
 \subsection{Performance Analysis}
 Benchmarks were performed on MacBook Air M2 16GB RAM using our Rust implementation with the arkworks library \cite{arkworks_contributors_arkworks_2022}. Compared to the state-of-the-art nullifier scheme from \cite{tomescu2022utt}, our scheme removes a pairing with a speedup of 33\% for VRF evaluation and 60\% for Verify.
 
-\begin{table}[ht]
+\begin{table}[h!]
 \centering
 \label{tab:cred-rel-binding-nullifier-table}
 \begin{tabular}{l@{\hspace{1.5em}}r@{\hspace{1.5em}}r@{\hspace{1.5em}}r}
@@ -205,8 +213,8 @@ Verify & 6.37 & 2.52 & 60.42 \\
 \end{tabular}
 \caption{Credential Relationship Binding Nullifier Scheme Comparison}
 \end{table}
-
-\begin{figure}
+\vspace{-1cm}
+\begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\linewidth]{figures/vrf-benchmark.png}
     \caption{VRF Benchmark}
