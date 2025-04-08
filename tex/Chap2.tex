@@ -1225,9 +1225,6 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
 \end{tabular}
 \end{table}
 
-
-\subsubsection{Key Findings}
-
 \subsubsection{Key Findings}
 \begin{enumerate}
     \item \textbf{Optimized}: Our PS-UTT G2 variant achieves the best Show+Verify performance (10-16\% faster than PS-UTT G1 and up to 83\% faster than BBS+ 2006), optimizing the operation that occurs most frequently in practice. While the Issue operation is more costly, credentials are issued once but verified many times.
@@ -1291,126 +1288,30 @@ n & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cit
 
 
 
+% \subsubsection{Case Study: Credential Expiration Verification}
 
+% To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
 
-
-
-
-
-
-
-
-
-
-\section{Summary}
-- Both PS and BBS+ anonymous credentials use pedersen commitment schemes and sigma protocols for proving knowledge of committed attributes
-- PS benefits structurally, rerandomization is much cleaner, and with our variant, show + verify time is more efficient
-- Proving knowledge of the committed attributes in PS and BBS+ delivers the Schnorr responses that can be used to prove identity binding - we actually get this for free with no extra cost
-- Sigma proofs are the most efficient and expressive proofs for proving knowledge of committed attributes. Although theoretically, they are linear in the size of the attributes, they are still extraordinarily efficient. Practical efficiencies in cryptography libraries such as MSM and batch techniques such as window tables and parallel computation reduce the practical complexity to, in many cases, log of the committed attributes. Polynomial commitments such as in the case of SPS-EQ improve the theoretical complexity but reduce the expressiveness of the proofs, further analysis needs to be done to benchmark the practical comparison. 
-- A users transaction with a 30 message anonymous credential (large but not impossible) will cost approximately 5.37ms which is considered efficient in transactions. 
-- For proving knowledge of multiple credentials together, the schnorr protocol used in both BBS+ and PS outputs a mechanism (equality of responses) to verify the identifier in each credential and therefore, this almost comes for free. 
-
-
-
-
-
-
-
-
-
-\section{Improvement Notes}
-Notes for performance summary improvements
-
-Conduct multi-credential benchmarks: Instead of just saying "verification produces Schnorr responses, we can use those to verify multiple credentials at the same time," actually measure and report the end-to-end time for verifying multiple credentials with identity binding. This is your main contribution and should be the centerpiece of your evaluation.
-
-Add a cost breakdown: Include a small table or graph showing the time spent in each cryptographic operation (exponentiations, pairings, etc.) to demonstrate where your optimizations matter most.
-
-
-Connect to application requirements: Briefly discuss what performance is needed for practical deployment (e.g., "authentication should complete in <100ms for acceptable user experience") and how your results meet these targets.
-
-Implementation Approach
-When conducting the multi-credential benchmarks, you might structure the experiment like this:
-
-Measure end-to-end time for Show+Verify with 1, 2, 3, 4, and 5 credentials from different issuers
-For each case, verify a predicate that requires identity binding across all credentials
-Compare against a naive approach where each credential is verified independently
-If possible, compare against TACT or another system that supports multi-credential verification
-
-
-
-
-
-
-9.1 Experimental Methodology
-We implemented our MIMC-ABC system using the arkworks library [citation] in Rust. All experiments were conducted on a MacBook Air M2 (2022) with 16GB RAM. Each measurement represents the average of 10 independent trials with standard deviations below 5%.
-Our evaluation focuses on three key dimensions:
-
-Single-credential efficiency: We compare the computational cost of basic operations (Obtain, Issue, Show, Verify) across five schemes: BBS+ (2006) [citation], BBS+ (2016) [citation], PS (2016) [citation], PS-UTT G1 [citation], and our optimized PS-UTT G2.
-Multi-credential scalability: We measure end-to-end verification time when presenting multiple credentials from different issuers, comparing our system against alternative approaches.
-Identity binding overhead: We evaluate the additional cost of our identity binding mechanism, which ensures multiple credentials belong to the same identity.
-
-For attribute vectors, we use parameter n to represent the number of attributes in each credential (ranging from 2 to 30). For multi-credential scenarios, parameter m represents the number of distinct credentials being verified simultaneously (ranging from 1 to 5).
-
-% https://claude.ai/chat/b60de4f9-f2a8-4640-85b3-bc87474dbf65
-% 9.3 Multi-Credential Performance
-% While single-credential performance is important, our system's key innovation is efficient verification of multiple credentials from different issuers. Figure 3 shows the end-to-end verification time (including both Show and Verify operations) as we increase the number of credentials presented simultaneously.
-% We compared three approaches:
-
-% Naive aggregation: Simply performing independent verification for each credential (linear scaling)
-% TACT [citation]: A recent system supporting multi-credential presentation
-% Our MIMC-ABC: Our system with optimized G2 signatures and identity binding
-
-% As shown in Figure 3, our approach demonstrates significantly better scaling as the number of credentials increases. For a predicate requiring 5 credentials from different issuers, our system completes verification in just 12.4ms—a 3.2× improvement over the naive approach (39.7ms) and 1.8× faster than TACT (22.8ms).
-% The efficiency stems from two key factors:
-
-% Our G2 signature optimization reduces pairing operations per credential
-% The Schnorr responses generated during Show protocol allow efficient identity binding verification with minimal additional overhead
-
-% Figure 4 isolates this second factor by measuring the specific cost of identity binding across credentials. The additional verification time remains nearly constant (~1.1ms) regardless of the number of credentials being bound, demonstrating the efficiency of our approach to identity binding.
-
-% 9.4 Analysis and Discussion
-% Our performance evaluation reveals several key insights about the efficiency of MIMC-ABC:
-% Single-Credential Performance Tradeoffs
-% Table 1 shows that our G2 optimization significantly improves verification time (up to 28% faster than PS-UTT G1) at the cost of slightly increased issuing time. This tradeoff is well-justified for anonymous credential systems where credentials are issued once but verified many times.
-% The performance profile of BBS+ (2016) deserves special mention—it achieves the fastest issuing times and competitive verification for large attribute counts. However, as we'll discuss below, it doesn't scale as efficiently for multi-credential scenarios due to limitations in its proof structure.
-% Multi-Credential Efficiency
-% The most significant advantage of our system emerges in multi-credential scenarios. Figure 3 demonstrates that MIMC-ABC's verification time grows much more slowly with additional credentials compared to alternative approaches. This is particularly important for complex verification policies that require multiple credentials from different issuers.
-% Specifically, our system exhibits near-linear scaling in the number of attributes (n) but sub-linear scaling in the number of credentials (m), thanks to the efficient reuse of Schnorr responses across credential proofs. This aligns perfectly with real-world usage patterns where users may have many credentials but typically present a small subset (3-5) for any given verification.
-% Practical Implications
-% For a typical scenario involving 5 credentials with 10 attributes each, our system completes the entire Show+Verify process in under 15ms, which is well below the 100ms threshold typically considered acceptable for interactive user experiences. This makes MIMC-ABC suitable for deployment in performance-sensitive contexts like mobile authentication.
-% The performance profile also allows us to recommend specific parameter choices for implementations:
-
-% For mobile clients: Limit attribute count to n≤15 to keep Show operations under 2ms
-% For verification servers: Up to m=10 credentials can be verified simultaneously while maintaining sub-50ms response times
-
-
-
-
-
-% \begin{table}[h]
+% \begin{table}[htbp]
 % \centering
-% \begin{tabular}{|l|r|}
-% \hline
-% \textbf{Operation} & \textbf{Time} \\
-% \hline
-% Full Pairing & 1.6218 ms \\
-% Miller Loop & 0.6931 ms \\
-% Final Exponentiation & 0.9287 ms \\
-% G1 Mixed Addition (Affine + Jacobian) & 672 ns \\
-% G1 Point Doubling (2P) & 414 ns \\
-% G2 Mixed Addition (Affine + Jacobian) & 2143 ns \\
-% G2 Point Doubling (2P) & 1302 ns \\
-% \hline
-% Estimated G1 Scalar Mult (255-bit) & 191.59 $\mu$s \\
-% \emph{\small(255 doublings + ~128 additions)} & \\
-% Estimated G2 Scalar Mult (255-bit) & 606.01 $\mu$s \\
-% \emph{\small(255 doublings + ~128 additions)} & \\
-% \hline
+% \caption{Performance Comparison for Credential Expiration Verification}
+% \label{tab:expiry-comparison}
+% \begin{tabular}{lrrr}
+% \toprule
+% \textbf{Approach} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
+% \midrule
+% Simple Possession & 2 & 2 & 424B \\
+% Expiry (ZK-Creds) & 50 & \multirow{3}{*}{$\left\}5\text{ ms}\right.$} & \multirow{3}{*}{744B} \\
+% Linkable Show (ZK-Creds) & 41 &  &  \\
+% Rate Limiting (ZK-Creds) & 58 &  &  \\
+% \textbf{Our Approach} & \textbf{1.3} & \textbf{2.0} & \textbf{512B} \\
+% \bottomrule
 % \end{tabular}
-% \caption{Performance metrics for arkworks BLS12-381 implementation. Scalar multiplication estimates assume naive double-and-add implementation without optimizations.}
-% \label{tab:arkworks-performance}
 % \end{table}
-% \footnotetext{The G1 and G2 scalar multiplication estimates are derived using a naive double-and-add implementation analysis for 255-bit scalars. For a random scalar $k$, we assume approximately 255 doubling operations (one per bit) and 128 addition operations (corresponding to an expected Hamming weight of $\frac{255}{2}$ for a random scalar). The G1 estimate of 191.59$\mu$s is computed as $(255 \times 414\text{ns}) + (128 \times 672\text{ns})$ using the measured doubling and mixed addition timings. Similarly, the G2 estimate of 606.01$\mu$s is computed as $(255 \times 1302\text{ns}) + (128 \times 2143\text{ns})$. These estimates represent upper bounds as they do not account for common optimizations such as windowing methods, NAF (Non-Adjacent Form) representations, or parallel computation strategies.}
+
+% Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
+
+% Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
 
 
 
@@ -1419,29 +1320,11 @@ For attribute vectors, we use parameter n to represent the number of attributes 
 
 
 
-\section{Practical Proof Analysis}
-\subsection{Sigma Protocols}\label{sigma-protocol-analysis}
-Many schemes refer to sigma protocol as having linear size proofs. 
-While this is true in theory, using multi-scalar-multiplication, a popular algorithm in many cryptographic libraries, we show that sigma protocols are, in fact, sublinear rather than linear when message size doubles.
-
-These findings support the hypothesis that practical efficiency is substantially better than theoretical complexity would suggest when using MSM in Schnorr protocols and thus the proof protocols in PS and BBS+ based anonymous credentials are sublinear in practice.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.75\linewidth]{schnorr_msm_no_msm.png}
-    \caption{Schnorr Protocol - Practical Benchmarks with Multi-Scalar Multiplication}
-    \label{fig:schnorr-benchmarks}
-\end{figure}
 
 
 
 
-\subsection{Pairing Protocols}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.75\linewidth]{pairing_comparison.png}
-        \includegraphics[width=0.75\linewidth]{pairing_comparison2.png}
-    \caption{Elliptic Curve Pairings - Practical Benchmarks with Miller-Loop Intermediate Computation}
-    \label{fig:enter-label}
-\end{figure}
+
+
+

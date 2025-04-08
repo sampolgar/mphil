@@ -1,0 +1,28 @@
+
+
+\section{Practical Proof Analysis}
+\subsection{Sigma Protocols}\label{sigma-protocol-analysis}
+Many schemes refer to sigma protocol as having linear size proofs. 
+While this is true in theory, using multi-scalar-multiplication, a popular algorithm in many cryptographic libraries, we show that sigma protocols are, in fact, sublinear rather than linear when message size doubles.
+
+These findings support the hypothesis that practical efficiency is substantially better than theoretical complexity would suggest when using MSM in Schnorr protocols and thus the proof protocols in PS and BBS+ based anonymous credentials are sublinear in practice.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{schnorr_msm_no_msm.png}
+    \caption{Schnorr Protocol - Practical Benchmarks with Multi-Scalar Multiplication}
+    \label{fig:schnorr-benchmarks}
+\end{figure}
+
+
+
+
+\subsection{Pairing Protocols}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{pairing_comparison.png}
+        \includegraphics[width=0.75\linewidth]{pairing_comparison2.png}
+    \caption{Elliptic Curve Pairings - Practical Benchmarks with Miller-Loop Intermediate Computation}
+    \label{fig:enter-label}
+\end{figure}
