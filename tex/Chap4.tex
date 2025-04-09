@@ -1,85 +1,46 @@
 \mychapter{Credential Relationship Binding Nullifier}
 
-While our $\MIMCABC$ system enables binding different credentials from different issuers to the same identity, practical identity systems based on Anonymous Credentials require additional structure and security properties to satisfy regulatory requirements. Real-world deployments distinguish between foundational identities like a government-Id or passport, and other credentials that depend on the foundational identity such as licenses and certificates. This hierarchy allows a system to focus security requirements like KYC/AML and revocation on the foundational identity and requiring a verifier to check the foundational identity status during verification rather than holding every credential accountable. 
-This natural hierarchy exists in systems such as access control lists, delegatable credentials, federated identity models and public certificate infrastructure. We refer to foundational identities and Master Credential, $(\credm)$ and the child-credentials as Context Credentials $(\credc)$. Much focus has been on enabling anonymous credential systems with this capability \cite{crites_syra_2024, rabaninejad_attribute-based_2024, maram2021candid} privately as it's not naive, many constructions work but sacrifice efficiency with pairing computation, or sacrifice privacy to establish it. 
+\section{Introduction}
 
-Furthermore, identity binding doesn't prevent Sybil attacks for users creating context credentials. Because credentials and identities are private, retaining sybil resistance of credentials is challenging in Anonymous Credentials. Non-private sybil resistance is easy, issuers can keep lists of the identifiers they've issued. However, when this information is secret, users can more easily create multiple credentials. 
+In Chapters 2 and 3, we developed a robust foundation for anonymous credentials, evolving from single-issuer Attribute-Based Anonymous Credentials $(\ABC)$ to the Multi-Issuer Multi-Credential ABC $(\MIMCABC)$ system with identity binding security. $\MIMCABC$ enables users to privately prove that credentials from multiple, mutually distrusting issuers belong to the same identity, a significant advance for applications like federated identity proofs or content credentialing. However, real-world identity systems impose additional requirements that $\MIMCABC$ does not fully address: hierarchical structure and sybil resistance for context-specific credentials.
 
-Technical Gap
-At the cryptographic level, implementing a privacy-preserving credential hierarchy with Sybil resistance requires a mechanism to generate unique, deterministic tokens (nullifiers) for each user-context pair without revealing user identity. This leads to our core technical challenge
+In practice, credentials often form a natural hierarchy, with foundational identities—such as government-issued IDs or passports—serving as Master Credentials, and dependent credentials—like driver’s licenses, professional certificates, or access rights—acting as Context Credentials. This structure enables efficient revocation: invalidating a Master Credential (e.g., upon employment termination) implicitly revokes all dependent Context Credentials, avoiding the need to track and revoke each individually. Furthermore, regulatory frameworks like KYC/AML demand accountability, requiring systems to prevent sybil attacks where users illegitimately obtain multiple credentials for the same context (e.g., multiple driver’s licenses). 
 
-\begin{center} 
-    \emph{How can we construct efficient verifiable random functions (VRFs) with zero-knowledge proofs of correctness without relying on expensive pairing operations, while maintaining security for nullifier generation?}
+While MIMC-ABC ensures credentials share a single identity, it lacks mechanisms to enforce this hierarchical dependency or prevent sybil attacks in a privacy-preserving manner, as its identity binding operates agnostically across all credentials without distinguishing their roles or contexts. To meet these practical and regulatory needs, we must extend MIMC-ABC with a cryptographic framework that organizes credentials hierarchically and ensures context-specific uniqueness, all while preserving user anonymity and computational efficiency
+
+
+\subsection{Background Work}
+
+Past works tackled hierarchy and sybil resistance in credential systems. None fully balances privacy, efficiency, and flexibility. 
+\begin{enumerate}
+    \item The UTT anonymous payment system ~\cite{tomescu2022utt} is the closest work, using a registration credential (like a Master Credential) and the coins are also credentials using serial numbers (like Context Credentials) where a coin can only be spent once. UTT uses pairings in their pseudorandom function which we benchmark against.
+
+    \item CanDID~\cite{maram2021candid} defines Master and Context Credentials clearly, but has weakened privacy. It uses mappings between credential public keys in a table, breaking unlinkability. It also relies on an MPC-based PRF for sybil resistance. This adds complexity and overhead, unfit for lightweight use.
+
+    \item Other pairing-based systems, like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024}, offer private hierarchies. Yet, they suffer from pairing-related efficiency issues. 
+
+    \item Standard Verifiable Random Functions  (VRFs)~\cite{hutchison_verifiable_2005} reveal the user’s public key during verification impact anonymity.
+
+\end{enumerate}
+
+
+Our MIMC-ABC system (Chapter 3) binds identities efficiently and anonymously but without hierarchy and context-specific sybil resistance. We need a solution that keeps MIMC-ABC’s strengths. It must add a light, private way to handle credential hierarchies and sybil resistance.
+
+
+\subsection{Problem Statement}
+
+We want to improve MIMC-ABC for real-world use. Our goal is a private credential hierarchy with Sybil resistance. A user has a Master Credential with a secret key $\k$. They also have Context Credentials with unique IDs $\ctx$ (e.g., $\mathcal{H}(\text{"DriverLicense"})$). We need a mechanism that:
+\begin{enumerate}
+    \item Links each Context Credential to the Master Credential. It uses a unique nullifier $\nul$ from committed values $\k$ and $\ctx$ from different commitments.
+    \item Prevents sybil attacks. It prevents multiple nullifiers for the same $(k, \ctx)$ pair.
+    \item Verifies nullifier correctness in zero-knowledge. It hides $\k$ and $\ctx$.
+\end{enumerate}
+
+
+Our main challenge is:
+\begin{center}
+\emph{How do we build an efficient, pairing-free VRF with zero-knowledge proofs? It must generate and verify nullifiers for a hierarchical anonymous credential system under standard assumptions.}
 \end{center}
-
-
-
-
-\subsection{Limitations of Existing Approaches}
-
-Verifiable Random Functions (VRFs) offer a promising foundation for nullifier construction, but existing implementations have significant limitations:
-
-\begin{itemize}
-    \item \textbf{Standard VRF:} Traditional constructions expose the user's public key during verification, breaking unlinkability during context credential issuance \cite{hutchison_verifiable_2005}
-
-    \item CanDID \cite{maram2021candid} uses master and context credentials but sacrifices privacy by maintaining public mappings between credential identifiers and prevents sybil resistance with an MPC-PRF introducing substantial overhead
-
-    \item \textbf{Pairing-based Approaches:} Recent constructions like UTT~\cite{tomescu2022utt} and \cite{rabaninejad_attribute-based_2024} use PRF's and bilinear pairings that, while private and secure, are computationally expensive which introduces significant overhead if multiple nullifiers are required simultaneously 
-\end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Our approach introduces a pairing-free nullifier construction optimized for anonymous credentials, providing strong privacy guarantees with practical efficiency.
-
-
-\begin{center} 
-    \emph{How can we extend $\MIMCABC$ to support a credential hierarchy while enforcing efficient, privacy-preserving sybil resistance}
-\end{center}
-
-
-We introduce a Credential Relationship Binding Nullifier (CRBN) that:
-
- credentials through an efficient, pairing-free nullifier construction
-
-Enables context-specific Sybil resistance without revealing user identity
-
-Supports efficient revocation through the hierarchy (revoking a master credential implicitly invalidates all its context credentials)
-
-Our construction features a novel zero-knowledge proof of multiplicative inverse that enables verification of nullifier correctness without expensive pairing operations, reducing computational overhead by 33-60\% compared to pairing-based approaches."
-
-
-
-
-
-
-Previous work
-
-
-\noindent This pairing-free nullifier construction extends our MIMC-ABC system with efficient Sybil resistance while maintaining privacy. Beyond preventing credential reuse, the underlying zero-knowledge proof of multiplicative inverse enables a broader class of credential relationship predicates, enhancing the expressiveness of our anonymous credential system without sacrificing performance.
-
-\section{Problem Statement and Motivation}
-Anonymous Credential systems must balance user privacy with protection against Sybil attacks, where a malicious user creates multiple credentials. In our $\MIMCABC$ based Identity System, users possess a Master Credential containing a secret key $\k$ and may obtain multiple Context Credentials for different services or contexts. Each Context Credential contains a unique identifier $\ctx$ (e.g., $\mathcal{H}(\text{``DriverLicense''})$). During issuance, the system must ensure that each user receives at most one credential per context—without compromising privacy by revealing user identities.
-
-Specifically, we need a privacy-preserving mechanism we need that creates a unique deterministic token (nullifier) for each user-context pair without compromising anonymity.
-
 
 \begin{table}
 \begin{center}
@@ -90,14 +51,14 @@ Features    									&
 Sybil Resist.  & 
 Hierarchy & 
 Private & 
-Efficient Token & 
+Pairing-Free & 
 Predicate Proofs \\
 \hline
 CanDID \cite{maram2021candid}     				&
 \ding{51}     & 
 \ding{51} 	& 
 \ding{55}  &  
-\ding{55}     & 
+-     & 
 \ding{55}		\\
 SyRA \cite{crites_syra_2024}     				& 
 \ding{51}    	& 
@@ -138,7 +99,8 @@ Ours  										&
 
 \subsection{Contributions}
 
-\noindent We improve the state of the art by creating a lightweight VRF construction tailored for Anonymous Credential systems with 3 contributions:
+We advance anonymous credential systems by developing a lightweight, pairing-free Verifiable Random Function (VRF) construction optimized for our use-case of hierarchical credential binding and sybil resistance. Our contributions are threefold:
+
 \begin{enumerate}
         \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure to function efficiently in standard prime-order groups, achieving provable pseudorandomness under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption. We show that VRF evaluation is 33\% faster and verification is 60\% faster than previous constructions.
 
@@ -148,18 +110,122 @@ Ours  										&
 
 \end{enumerate}
 
-By incorporating this innovation into our credential system, we create a Credential Relationship Binding Nullifier (CRBN) that:
+Levearging our work, we propose the Credential Relationship Binding Nullifier (CRBN) which extends the MIMC-ABC system into a complete identity framework with benefits:
 
 \begin{enumerate}
-    \item Cryptographically binds master credentials (containing key $\k$) to context credentials (with context identifiers $\ctx$) via a verifiable nullifier
+    \item Cryptographically binds master credentials (containing key $\k$) to context credentials (with context identifiers $\ctx$) via a verifiable nullifier enabling accountability
 
-    \item Enforces sybil resistance for context credentials while retaining privacy
+    \item Enforces sybil resistance for context credentials while retaining privacy by using committed attributes and zero-knowledge proofs
 
     \item Integrates with the efficient $\Sigma$-protocols used throughout the system
     
 \end{enumerate}
 
-This extends our MIMC-ABC system into a complete identity framework with Sybil resistance and practical efficiency. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Preliminaries}
+\subsection{Cryptographic Assumptions}
+% Define assumptions like $q$-DHI, group properties, etc.
+% Example: The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption states...
+
+\subsection{Building Blocks}
+% Introduce Pedersen commitments, VRFs, $\Sigma$-protocols
+% Example: A Pedersen commitment is $C = g_1^m g^r$, where...
+
+\subsection{Notation}
+% Define $\mathbb{G}$, $p$, $g$, $\mathsf{CM.Com}$, etc.
+
+\section{Nullifier Construction}
+\subsection{Intuition}
+% High-level overview: purpose, why pairing-free matters
+
+\subsection{Formal Definition}
+% Define $\nul = g^{1/(\k + \ctx)} \in \mathbb{G}$
+
+\subsection{Algorithms}
+% Nullifier generation: how $\nul$ is computed
+% Verification: sketch of zero-knowledge check
+
+\subsection{Properties}
+% List $Uniqueness$, $Pseudorandomness$, $Zero-Knowledge$
+
+\section{Protocol for Nullifier Verification}
+\subsection{Overview}
+% Goal: prove $\nul$ correctness without revealing $\k$, $\ctx$
+
+\subsection{Commitment Structure}
+% Master: $\cmm = g_1^\id g_2^{\ctx_m} g_3^{\exp_m} g_4^\k g^{r_m}$
+% Context: $\cmc = g_1^\id g_2^{\ctx_c} g_3^{\exp_c} g^{r_c}$
+
+\subsection{$\Sigma$-Protocol}
+% Define $\mathcal{R}_{\mathsf{vrf}} = \{ ... | \nul = g^{1/(\k + \ctx_c)} \}$
+
+\subsection{Efficiency}
+% Highlight pairing-free advantage
+
+
+
+
+
+
+\section{Integration into MIMC-ABC}
+\subsection{Modified Algorithms}
+% Issuance: Master/Context credential setup
+% Presentation: $\nul$ proof with MIMC-ABC
+
+\subsection{Revocation and Sybil Resistance}
+% Revocation: $\cmm$ or $\k$ invalidation
+% Sybil Resistance: nullifier registry
+
+\subsection{Example}
+% Passport and driver’s license with $\nul$
+
+\section{Security Analysis}
+\subsection{Security Model}
+% Adversary definition, security games
+
+\subsection{Theorems}
+% $Uniqueness$, $Pseudorandomness$, $Zero-Knowledge$ proofs
+
+\subsection{Sybil Resistance}
+% Nullifier prevents multiple credentials per context
+
+\section{Performance Evaluation}
+\subsection{Benchmarks}
+% Compare to pairing-based VRFs: 33\%/60\% speedup
+
+\subsection{Scalability}
+% Overhead with increasing credentials
+
+\subsection{Implementation}
+% Rust/arkworks details
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -230,13 +296,6 @@ During verification, the user proves in zero-knowledge that they possess a valid
     
 
 This requires only standard group operations and leverages the proof machinery already present in our credential system, avoiding the computational cost of pairings.
-
-
-
-
-
-
-
 
 
 
@@ -357,4 +416,62 @@ Verify & 6.37 & 2.52 & 60.42 \\
     \label{fig:vrf-benchmark}
 \end{figure}
 
-\clearpage
+
+
+
+
+
+
+
+% \subsection{Construction}
+
+% The Credential Relationship Binding Nullifier (CRBN) extends the Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system from Chapter 3 to support a hierarchical structure with sybil resistance. We define two credential types: a \emph{Master Credential} containing a secret key $\k$, and \emph{Context Credentials} with context identifiers $\ctx$. A nullifier $\nul = g^{1/(\k + \ctx)} \in \G$ binds each Context Credential to the Master Credential, ensuring uniqueness per context while preserving privacy via zero-knowledge proofs.
+
+% We modify MIMC-ABC’s algorithms as follows, reusing its position-binding Pedersen commitments and $\Sigma$-protocols. Let $\mathsf{pp}$ include $\G$, $p$, $g$, and commitment generators $(g_1, g_2, g_3, g_4, g)$, where $\ell = 4$ supports attributes $[\id, \ctx, \exp, \k]$ (extensible to more).
+
+% \begin{itemize}
+%     \item \textbf{Master Credential Issuance}:
+%     \begin{itemize}
+%         \item \emph{User}: Samples $\k \sample \Z_p$ and $\usk_m \sample \Z_p$. Computes commitment $\cmm = g_1^\id g_2^{\ctx_m} g_3^{\exp_m} g_4^\k g^{\usk_m}$, where $\ctx_m = \mathcal{H}(\text{"master"})$ and $\exp_m$ is the expiration. Runs $\mathsf{Obtain}(\attrs_m = [\id, \ctx_m, \exp_m, \k], \{\mathsf{opk}_j\}, \usk_m)$ with issuer $j_m$, proving $\cmm$’s opening via $\pircom$ (Section 2.4.3).
+%         \item \emph{Issuer $j_m$}: Verifies the proof, signs $\sigma_m = \mathsf{RS.Sign}(\cmm, \mathsf{osk}_{j_m})$, and returns $\credm = (\sigma_m, \cmm)$ via $\mathsf{Issue}$.
+%     \end{itemize}
+
+%     \item \textbf{Context Credential Issuance}:
+%     \begin{itemize}
+%         \item \emph{User}: For context $\ctx_c$ (e.g., $\mathcal{H}(\text{"DMV"})$), samples $\usk_c \sample \Z_p$. Computes $\cmc = g_1^\id g_2^{\ctx_c} g_3^{\exp_c} g^{\usk_c}$ (no $\k$ here, as it’s from $\credm$). Runs $\mathsf{Obtain}(\attrs_c = [\id, \ctx_c, \exp_c, 0], \{\mathsf{opk}_j\}, \usk_c)$ with issuer $j_c$, proving $\cmc$’s opening and that position 4 is 0.
+%         \item \emph{Issuer $j_c$}: Verifies the proof, optionally checks a nullifier registry (see below), signs $\sigma_c = \mathsf{RS.Sign}(\cmc, \mathsf{osk}_{j_c})$, and returns $\credc = (\sigma_c, \cmc)$.
+%     \end{itemize}
+
+%     \item \textbf{Nullifier Generation}: Given $\credm$ with $\k$ and $\credc$ with $\ctx_c$, compute:
+%     \[
+%     \nul = g^{1/(\k + \ctx_c)} \in \G
+%     \]
+%     where $\k + \ctx_c$ is computed in $\Z_p$, and the inverse $1/(\k + \ctx_c)$ exists with overwhelming probability (as $p$ is prime).
+
+%     \item \textbf{Presentation and Verification}:
+%     \begin{itemize}
+%         \item \emph{User}: Inputs $\credm$, $\credc$, $\usk_m$, $\usk_c$, and a predicate $\phi$ (e.g., $\ctx_c = \text{"DMV"} \land \exp_c > \text{today}$). Rerandomizes $\credm$ to $(\sigma_m', \cmm')$ and $\credc$ to $(\sigma_c', \cmc')$ using $\Delta_{r_m}, \Delta_{r_c}$ (Section 3.3). Computes $\nul = g^{1/(\k + \ctx_c)}$ and proves:
+%         \[
+%         \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
+%         (\cmm', \cmc', \nul), (\id, \ctx_m, \exp_m, \k, \usk_m', \ctx_c, \exp_c, \usk_c') 
+%         \middle|
+%         \begin{array}{l}
+%         \cmm' = g_1^\id g_2^{\ctx_m} g_3^{\exp_m} g_4^\k g^{\usk_m'} \land \ctx_m = \mathcal{H}(\text{"master"}) \land \\
+%         \mathsf{RS.Ver}(\sigma_m', \cmm', \mathsf{opk}_{j_m}) = 1 \land \\
+%         \cmc' = g_1^\id g_2^{\ctx_c} g_3^{\exp_c} g^{\usk_c'} \land \\
+%         \mathsf{RS.Ver}(\sigma_c', \cmc', \mathsf{opk}_{j_c}) = 1 \land \\
+%         \nul = g^{1/(\k + \ctx_c)} \land \phi(\ctx_c, \exp_c) = 1
+%         \end{array} 
+%         \right\}
+%         \]
+%         where $\usk_m' = \usk_m + \Delta_{r_m}$, $\usk_c' = \usk_c + \Delta_{r_c}$. The proof uses the $\Sigma$-protocol from Section 4.x (to be detailed).
+%         \item \emph{Verifier}: Checks $\pi$, $\sigma_m'$, $\sigma_c'$, and $\nul$ against $\mathsf{opk}_{j_m}$, $\mathsf{opk}_{j_c}$. Optionally queries a nullifier registry to ensure $\nul$ is unused for $\ctx_c$.
+%     \end{itemize}
+% \end{itemize}
+
+% \textbf{Note on Revocation}: If $\credm$ is revoked (e.g., via a public revocation list for $\cmm$ or $\k$), verifiers can reject proofs involving $\nul$, as $\k$’s validity underpins $\mathcal{R}_{\mathsf{vrf}}$. Details are deferred to Section 4.y.
+
+% \textbf{Note on Sybil Resistance}: Issuers or verifiers may maintain a context-specific nullifier registry. During issuance, users prove $\nul$’s correctness in zero-knowledge; issuers reject duplicates. Alternatively, verifiers check $\nul$’s uniqueness during presentation, balancing privacy and accountability (see Section 4.z).
+
+% This construction leverages MIMC-ABC’s efficient $\Sigma$-protocols and avoids pairings, using only standard group operations in $\G$. The nullifier $\nul$ enforces hierarchical binding and sybil resistance, computed deterministically from $\k$ and $\ctx_c$.
+
