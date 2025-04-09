@@ -1,5 +1,78 @@
 \mychapter{Credential Relationship Binding Nullifier}
 
+While our $\MIMCABC$ system enables binding different credentials from different issuers to the same identity, practical identity systems based on Anonymous Credentials require additional structure and security properties to satisfy regulatory requirements. Real-world deployments distinguish between foundational identities like a government-Id or passport, and other credentials that depend on the foundational identity such as licenses and certificates. This hierarchy allows a system to focus security requirements like KYC/AML and revocation on the foundational identity and requiring a verifier to check the foundational identity status during verification rather than holding every credential accountable. 
+This natural hierarchy exists in systems such as access control lists, delegatable credentials, federated identity models and public certificate infrastructure. We refer to foundational identities and Master Credential, $(\credm)$ and the child-credentials as Context Credentials $(\credc)$. Much focus has been on enabling anonymous credential systems with this capability \cite{crites_syra_2024, rabaninejad_attribute-based_2024, maram2021candid} privately as it's not naive, many constructions work but sacrifice efficiency with pairing computation, or sacrifice privacy to establish it. 
+
+Furthermore, identity binding doesn't prevent Sybil attacks for users creating context credentials. Because credentials and identities are private, retaining sybil resistance of credentials is challenging in Anonymous Credentials. Non-private sybil resistance is easy, issuers can keep lists of the identifiers they've issued. However, when this information is secret, users can more easily create multiple credentials. 
+
+Technical Gap
+At the cryptographic level, implementing a privacy-preserving credential hierarchy with Sybil resistance requires a mechanism to generate unique, deterministic tokens (nullifiers) for each user-context pair without revealing user identity. This leads to our core technical challenge
+
+\begin{center} 
+    \emph{How can we construct efficient verifiable random functions (VRFs) with zero-knowledge proofs of correctness without relying on expensive pairing operations, while maintaining security for nullifier generation?}
+\end{center}
+
+
+
+
+\subsection{Limitations of Existing Approaches}
+
+Verifiable Random Functions (VRFs) offer a promising foundation for nullifier construction, but existing implementations have significant limitations:
+
+\begin{itemize}
+    \item \textbf{Standard VRF:} Traditional constructions expose the user's public key during verification, breaking unlinkability during context credential issuance \cite{hutchison_verifiable_2005}
+
+    \item CanDID \cite{maram2021candid} uses master and context credentials but sacrifices privacy by maintaining public mappings between credential identifiers and prevents sybil resistance with an MPC-PRF introducing substantial overhead
+
+    \item \textbf{Pairing-based Approaches:} Recent constructions like UTT~\cite{tomescu2022utt} and \cite{rabaninejad_attribute-based_2024} use PRF's and bilinear pairings that, while private and secure, are computationally expensive which introduces significant overhead if multiple nullifiers are required simultaneously 
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Our approach introduces a pairing-free nullifier construction optimized for anonymous credentials, providing strong privacy guarantees with practical efficiency.
+
+
+\begin{center} 
+    \emph{How can we extend $\MIMCABC$ to support a credential hierarchy while enforcing efficient, privacy-preserving sybil resistance}
+\end{center}
+
+
+We introduce a Credential Relationship Binding Nullifier (CRBN) that:
+
+ credentials through an efficient, pairing-free nullifier construction
+
+Enables context-specific Sybil resistance without revealing user identity
+
+Supports efficient revocation through the hierarchy (revoking a master credential implicitly invalidates all its context credentials)
+
+Our construction features a novel zero-knowledge proof of multiplicative inverse that enables verification of nullifier correctness without expensive pairing operations, reducing computational overhead by 33-60\% compared to pairing-based approaches."
+
+
+
+
+
+
+Previous work
+
+
 \noindent This pairing-free nullifier construction extends our MIMC-ABC system with efficient Sybil resistance while maintaining privacy. Beyond preventing credential reuse, the underlying zero-knowledge proof of multiplicative inverse enables a broader class of credential relationship predicates, enhancing the expressiveness of our anonymous credential system without sacrificing performance.
 
 \section{Problem Statement and Motivation}
@@ -7,20 +80,61 @@ Anonymous Credential systems must balance user privacy with protection against S
 
 Specifically, we need a privacy-preserving mechanism we need that creates a unique deterministic token (nullifier) for each user-context pair without compromising anonymity.
 
-\subsection{Limitations of Existing Approaches}
 
-Verifiable Random Functions (VRFs) offer a promising foundation for nullifier construction, but existing implementations have significant limitations:
-
-\begin{itemize}
-    \item \textbf{Standard VRF:} Traditional constructions expose the user's public key during verification, breaking unlinkability between credential uses~\cite{hutchison_verifiable_2005}
-
-    \item \textbf{MPC PRF} Systems like CanDID~\cite{maram2021candid} use secure multi-party computation to preserve anonymity but introduce substantial overhead and prevent dynamic nullifier generation.
-
-    \item \textbf{Pairing-based Approaches:} Recent constructions like UTT~\cite{tomescu2022utt} use bilinear pairings and committed attributes that, while secure, are computationally expensive—often 5-10× slower than standard group operations.
-\end{itemize}
-
-Our approach introduces a pairing-free nullifier construction optimized for anonymous credentials, providing strong privacy guarantees with practical efficiency.
-
+\begin{table}
+\begin{center}
+\caption{Comparison of our construction over previous work.}
+\label{tab:comparison-chap4}
+\begin{tabular}{l|ccccc}
+Features    									& 
+Sybil Resist.  & 
+Hierarchy & 
+Private & 
+Efficient Token & 
+Predicate Proofs \\
+\hline
+CanDID \cite{maram2021candid}     				&
+\ding{51}     & 
+\ding{51} 	& 
+\ding{55}  &  
+\ding{55}     & 
+\ding{55}		\\
+SyRA \cite{crites_syra_2024}     				& 
+\ding{51}    	& 
+\ding{51}     & 
+\ding{51}  &  
+\ding{51}     & 
+\ding{55}		\\
+S3ID \cite{rabaninejad_attribute-based_2024}  & 
+\ding{51}     & 
+\ding{51}    	& 
+\ding{55}  &  
+\ding{55}     & 
+\ding{55}		\\
+UTT               & 
+\ding{51}     & 
+\ding{51}    	& 
+\ding{51}  &  
+\ding{55}     & 
+\ding{51}		\\
+Chap3             & 
+\ding{55}     & 
+\ding{55}    	& 
+\ding{51}  &  
+\ding{55}     & 
+\ding{51}		\\
+Ours  										& 
+\ding{51}     & 
+\ding{51}    	& 
+\ding{51}  &  
+\ding{51}     & 
+\ding{51}		\\
+\end{tabular}
+\end{center}
+\vspace{1em}
+\footnotetext[1]{Predicate Proofs allow users to prove statements about their credentials privately}
+\footnotetext[2]{Efficient Token refers to optimization of token verification}
+\end{table}
 
 \subsection{Contributions}
 
@@ -28,11 +142,33 @@ Our approach introduces a pairing-free nullifier construction optimized for anon
 \begin{enumerate}
         \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure to function efficiently in standard prime-order groups, achieving provable pseudorandomness under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption. We show that VRF evaluation is 33\% faster and verification is 60\% faster than previous constructions.
 
-        \item \textbf{Zero-Knowledge Proof of Multiplicative Inverse:} We introduce a novel $\Sigma$-protocol that proves the multiplicative inverse relation between committed values $(\k + \ctx)$ and $1/(\k + \ctx)$, we use it in our scheme to verify the correctness of the VRF nullifier without revealing user secrets. We show it generalizes naturally for similar requirements in $\Sigma$-protocols, especially those needing to prove the q-DHI.
+        \item \textbf{Novel $\Sigma$-protocol for Multiplicative Inverse:} We show our problem reduces to proving a committed value equals the multiplicative inverse of another committed value and introduce an efficient zero-knowledge proof technique for proving the relation without using pairings. The protocol has value beyond our specific application, offering a new general technique for $\Sigma$-protocols requiring $q-DHI$ relationships.
 
-         \item \textbf{Formal Security Guarantees:} maintains \emph{Pseudorandomness} of the VRF outputs in the indistinguishable outputs, \emph{uniqueness} in one nullifier per $(k, \ctx)$ pair preventing sybil attacks
+         \item \textbf{Formal Security Guarantees:} maintains \emph{Pseudorandomness} of the VRF outputs in the indistinguishable outputs, \emph{uniqueness} in one nullifier per $(\k, \ctx)$ pair preventing sybil attacks
 
 \end{enumerate}
+
+By incorporating this innovation into our credential system, we create a Credential Relationship Binding Nullifier (CRBN) that:
+
+\begin{enumerate}
+    \item Cryptographically binds master credentials (containing key $\k$) to context credentials (with context identifiers $\ctx$) via a verifiable nullifier
+
+    \item Enforces sybil resistance for context credentials while retaining privacy
+
+    \item Integrates with the efficient $\Sigma$-protocols used throughout the system
+    
+\end{enumerate}
+
+This extends our MIMC-ABC system into a complete identity framework with Sybil resistance and practical efficiency. 
+
+
+
+
+
+
+
+
+
 
 
 
