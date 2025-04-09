@@ -137,12 +137,151 @@ Levearging our work, we propose the Credential Relationship Binding Nullifier (C
 
 \section{Preliminaries}
 \subsection{Cryptographic Assumptions}
-% Define assumptions like $q$-DHI, group properties, etc.
-% Example: The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption states...
+
+\begin{definition}[q-DHI Assumption]
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption \cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\Pr\left[ x \sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x} \right] \leq \negl 
+\]
+where the probability is taken over the random choice of $x$ and the random coins of $\mathcal{A}$. Informally, no $\PPT$ adversary can distinguish between $g^{1/\alpha}$ from a random group element.
+\end{definition}
+
+\begin{remark}
+The $q$-DHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption (GDH) as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This equivalence provides a solid theoretical foundation for the security of our VRF construction.
+\end{remark}
+
 
 \subsection{Building Blocks}
+We use the Pedersen Commitments from chapter 2, committing to a vector of messages $\cm = \CMCom([\id, \ctx, \exp, \k];\usk) = g_1^\id g_2^\ctx g_3^\exp g_4^\k g^\usk$. Pedersen Commitments are hiding, binding, and position-binding which enforces their position in the vector of messages such that the exponent at one position can't be swapped with another position. 
+
+We use the three-move $\Sigma$-protocols \ref{preliminaries-sigmaprotocol} to prove relations of exponents which we represent as $\mathcal{R}_{\mathsf{VRF}} = \left\{(w)(x) \mid x = g^w \right\}$ proving knowledge of secret witness $w$ with public statement $x$. 
+
+
+\begin{definition}[Verifiable Random Function]
+A Verifiable Random Function (VRF) is a tuple of probabilistic polynomial-time algorithms $(\PPT)$ $(\mathsf{VRF.Gen}, \mathsf{VRF.Eval}, \mathsf{VRF.Vfy})$ with an associated message space $\setX$, output space $\setY$ and proof space $\Pi$ defined as:
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk)$: Takes a security parameter $\lambda$ and outputs a secret key $sk$ and a public key $pk$.
+    
+    \item $\mathsf{VRF.Eval}(sk, x) \to (y, \pi)$: On input $x \in \setX$ and secret key $sk$, outputs a value $y \in \setY$ and a proof $\pi \in \Pi$.
+    
+    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \to \{0,1\}$: Using the public key $pk$, verifies that $y$ is the correct output for input $x$ with proof $\pi$, returning 1 if valid, 0 otherwise.
+\end{itemize}
+    
+\end{definition}
+A $\VRF$ must satisfy three properties
+\begin{itemize}
+    \item \textbf{Correctness:} For all $(sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda)$ and all $x \in \setX$:
+    \[
+    \Pr\left[\begin{aligned}
+        (y, \pi) &\gets \mathsf{VRF.Eval}(sk, x) \\
+        1 &\gets \mathsf{VRF.Vfy}(pk, x, y, \pi)
+    \end{aligned}\right] = 1
+    \]
+
+    \item \textbf{Unique Provability:} For any $pk$ (possibly malicious) and $x \in \setX$, no $\PPT$ adversary $\AdvA$ can find two distinct pairs of outputs $(y_0, \pi_0) \neq (y_1, \pi_1)$ such that:
+    \[
+    \mathsf{VRF.Vfy}(pk, x, y_0, \pi_0) = \mathsf{VRF.Vfy}(pk, x, y_1, \pi_1) = 1
+    \]
+
+    \item \textbf{Pseudorandomness:} Informally, this property ensures that without the secret key, the output of the VRF for an unqueried input is indistinguishable from a random value, even when the adversary can see other input-output pairs.
+    Formally, For any PPT adversary $\mathcal{A}$, the advantage in the following experiment is negligible:
+    \[
+    \left|\Pr\left[\begin{array}{l}
+        (sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda) \\
+        x^* \gets \mathcal{A}^{\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}}(pk) \\
+        (y^*, \pi^*) \gets \mathsf{VRF.Eval}(sk, x^*) \\
+        y_0 \gets y^*; \, y_1 \sample \mathcal{Y} \\
+        b \sample \{0,1\} \\
+        b' \gets \mathcal{A}^{\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}}(pk, y_b)
+    \end{array} : b' = b \wedge x^* \notin \mathcal{Q}\right] - \frac{1}{2}\right| \leq \negl(\lambda)
+    \]
+    where the oracle $\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}$ takes input $x \in \mathcal{X}$ (where $x \neq x^*$) and outputs $(y, \pi) \gets \mathsf{VRF.Eval}(sk, x)$. $\mathcal{Q}$ is the set of oracle queries made to $\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}$  
+\end{itemize}
+
+
+
+
+
+\section{Construction}
+Our Verifiable Random Function (VRF) works in a prime-order group $\G$ with generator $g$, where the evaluation outputs $y = g^{1/(sk + x)}$ for an input $x$ and secret key $sk$, and the verification protocol shows that $y^{sk + x} = g$.
+
+\subsection{VRF Construction}
+Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. Define the message space $\setX = \mathbb{Z}_p$, output space $\setY = \mathbb{G}$, and proof space $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. 
+\begin{itemize}
+    \item $\VRFGen(1^\lambda) \to (sk, pk)$:  
+    Sample $sk \sample \mathbb{Z}_p^*$, compute $pk = g^{sk}$, and output $(sk, pk)$.
+    \item $\VRFEval(sk, x) \to (y, \pi)$:  
+    Compute $y = g^{1/(sk + x)}$.  
+    To generate $\pi$:  
+    \begin{enumerate}
+        \item \textbf{Commitment}: $\mathcal{P}$ Samples $r \sample \Z_q$. Computes $T_1 = g^r$, $T_2 = y^r$
+        \item \textbf{Challenge}: $\mathcal{V}$ sends challenge $c$
+        \item \textbf{Response}: $\mathcal{P}$ Computes $z= r + c \cdot (sk + x)$. Sets $\pi = (T_1, T_2, z)$
+    \end{enumerate}
+    \item $\VRFVfy(pk, x, y, \pi, st) \to \bit:$ retrieve $c$ from state $st$. Parse $\pi = (T_1, T_2, z)$, compute $C = pk \cdot g^x$, verify
+    \[
+        g^z = T_1 \cdot C^c \quad \wedge \quad y^z = T_2 \cdot g^c
+    \]
+\end{itemize}
+This construction satisfies the VRF properties under the $q$-DHI assumption.
+
+\subsubsection{Comparison to Dodis-Yampolskiy VRF}
+The Dodis-Yampolskiy VRF also evaluates $y = g^{1/(sk + x)}$, but relies on a bilinear group for the proof $\pi$ using a pairing check: $e(y, pk \cdot g^x) = e(g, g)$, which is computationally heavy. Our construction sticks to the prime-order group, proves $y^{sk + x} = g$ with a $\Sigma$-protocol.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 % Introduce Pedersen commitments, VRFs, $\Sigma$-protocols
-% Example: A Pedersen commitment is $C = g_1^m g^r$, where...
 
 \subsection{Notation}
 % Define $\mathbb{G}$, $p$, $g$, $\mathsf{CM.Com}$, etc.
@@ -150,6 +289,7 @@ Levearging our work, we propose the Credential Relationship Binding Nullifier (C
 \section{Nullifier Construction}
 \subsection{Intuition}
 % High-level overview: purpose, why pairing-free matters
+% 
 
 \subsection{Formal Definition}
 % Define $\nul = g^{1/(\k + \ctx)} \in \mathbb{G}$
@@ -171,6 +311,7 @@ Levearging our work, we propose the Credential Relationship Binding Nullifier (C
 
 \subsection{$\Sigma$-Protocol}
 % Define $\mathcal{R}_{\mathsf{vrf}} = \{ ... | \nul = g^{1/(\k + \ctx_c)} \}$
+
 
 \subsection{Efficiency}
 % Highlight pairing-free advantage
