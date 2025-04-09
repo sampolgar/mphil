@@ -872,9 +872,9 @@ Our credential system operates over attribute space $\Z_p$. The user is indexed 
     $\underline{\mathsf{Show}(\cred)}$ && $\underline{\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)}$ \\[1em]
     \multicolumn{3}{r}{Send empty access policy $\phi = \bot$} \\[0.5em]
     \multicolumn{3}{l}{Parse $\cred = (\sigma, \cm, \usk, \opk)$} \\[0.5em]
-    \multicolumn{3}{l}{\quad Sample $\usk_\Delta, u_\Delta \sample \Z_p$} \\[1em]
-    \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \usk_\Delta, u_\Delta)$} \\[1em]
-    \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \usk_\Delta), \; \usk' = \usk + \usk_\Delta$} \\[1em]
+    \multicolumn{3}{l}{\quad Sample $\Delta_\usk, \Delta_u \sample \Z_p$} \\[1em]
+    \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \Delta_\usk, \Delta_u)$} \\[1em]
+    \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \Delta_\usk), \; \usk' = \usk + \Delta_\usk$} \\[1em]
     \multicolumn{3}{l}{\quad Compute $\Pi_\phi$} \\[1em]
     & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
     \end{tabular}
