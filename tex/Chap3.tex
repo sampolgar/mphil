@@ -1,23 +1,21 @@
 \mychapter{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
 
-Motivate MIMCABC
+\section{Introduction}
+Anonymous credential systems enable users to prove statements about their attributes while preserving privacy, evolving from single-issuer designs (e.g., Idemix~\cite{camenisch_design_2002}) to meet complex, real-world demands. Building on the Attribute-Based Anonymous Credential (ABC) system from Chapter 2, which uses rerandomizable signatures and position-binding commitments for expressive predicate proofs, we tackle a pressing challenge: \emph{how can users privately combine credentials from multiple, mutually distrusting issuers to prove they belong to the same identity, without revealing it?} This problem is central to decentralized identity systems and content authentication, where privacy and accountability must coexist across issuer boundaries.
 
-Problems: 
-1. How can users privately combine credentials from multiple, mutually distrusting issuers (e.g., government IDs and bank statements) to prove they belong to the same identity?
+Consider a user proving they hold (1) a government-issued ID confirming residency, (2) an employer credential verifying income, and (3) a training certificate—all tied to one identity, without linking them via a public identifier. Alternatively, in content credentialing, a user might present images signed by different devices (e.g., cameras) to a journal, proving they share an account while selectively disclosing metadata. Existing approaches fall short: attribute-based signatures lack aggregation~\cite{cimato_signature_2003}, aggregate signatures assume a single issuer or limit revocation flexibility~\cite{boneh_aggregate_2003}, and generic zkSNARKs, while expressive, incur high computational costs~\cite{rosenberg_zk-creds_2022}. CanDID~\cite{maram2021candid} binds credentials via a consistent name, but this offers weaker security against malicious issuers and their system lacks issuer-privacy for internal identifiers. ZKcreds~\cite{rosenberg_zk-creds_2022} uses a zkSNARK-based join gadget for multi-credential proofs, yet its proof computation scales poorly, especially for multiple credentials. Our Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) overcomes these limitations with a secure, efficient solution.
 
-2. How to improve the accountability of that process
+MIMC-ABC employs position-binding commitments and zero-knowledge proofs to cryptographically bind credentials from distinct issuers to a single, private identifier, ensuring anonymity and unforgeability even against colluding adversaries. We formalize a security model for multi-issuer identity binding, define the identity binding property, and provide rigorous proofs of its guarantees. Our comprehensive attack taxonomy—covering forgery, predicate manipulation, and binding attacks—demonstrates robustness, while a scaling analysis shows security holds as issuers and credentials grow. Performance evaluations reveal that privacy-preserving multi-issuer verification, though roughly 3× slower than non-private baselines (e.g., 18.67ms vs. 6.77ms for 4 credentials), remains efficient for practical use.
 
-Use Cases (Where this is needed)
-- User is presenting their portfolio of images which have been digitally signed by different cameras, the user was logged in to the cameras with their account/identifier. 
-The issuer is the camera, the verifier is the website. 
-The commitment holds the user identifier and content hash. 
-The user proves identity binding across credentials and selectively discloses the content hash.
-(an app could be a user takes photos, each photo is signed by the phone, the signer has the user id and content hash)
-
-- Anonymous Payment Systems like UTT
-
-
-
+\subsection{Contributions}
+This chapter advances the state of anonymous credentials with:
+\begin{itemize}
+    \item A formalized security model for multi-issuer credential systems with identity binding.
+    \item A definition and analysis of the identity binding property, ensuring credentials belong to one user.
+    \item A comprehensive attack taxonomy addressing credential forgery, predicate manipulation, and identity binding threats.
+    \item Security proofs showing resilience as the number of issuers and credentials increases.
+    \item A performance evaluation methodology comparing non-private, private single-issuer (with batch verification), and private multi-issuer scenarios, quantifying privacy’s overhead.
+\end{itemize}
 
 
 
@@ -35,25 +33,303 @@ The user proves identity binding across credentials and selectively discloses th
 
 
 
-Multi-Issuer Multi-Credential System (MIMC-ABC) (Chapter 3)
-– Formalized security model for multi-issuer identity binding with position-binding commit-
-ments
-– Proved unforgeability and anonymity even against colluding credential issuers
-– Demonstrated 30\% performance improvement over comparable schemes for multi-credential
-verification
+
+\section{System Model and Definitions}
+\subsection{MIMC-ABC System}
+A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following PPT algorithms:
+
+\begin{definition}[MIMC-ABC System]
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda) \to \mathsf{pp}$: Takes security parameter $\lambda$ in unary, outputs public parameters $\mathsf{pp}$.
+    
+    \item $\mathsf{OrgKeyGen}(\mathsf{pp}, \ell) \to (\mathsf{osk}, \mathsf{opk})$: Takes public parameters $\mathsf{pp}$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\mathsf{osk}, \mathsf{opk})$.
+       
+    \item $(\mathsf{Obtain}(\vec{m}, \mathsf{opk}, \mathsf{aux}), \mathsf{Issue}(\mathsf{osk}, \mathsf{cm}, \mathsf{aux})) \rightarrow (\mathsf{cred}, \bot)$: An interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\mathsf{id}, \mathsf{ctx}, \mathsf{attrs}]$ containing a unique identifier $\mathsf{id}$ and context $\mathsf{ctx}$. User generates $\mathsf{usk} \stackrel{\$}{\leftarrow} \mathbb{Z}_p$, commits to their messages $\mathsf{cm} \gets \mathsf{CM.Com}(\vec{m}; \mathsf{usk})$. The issuer inputs their secret key $\mathsf{osk}$. The protocol outputs a credential $\mathsf{cred}$ containing $(\sigma, \mathsf{cm})$ to the user and $\bot$ to the issuer.    
+    
+    \item $(\mathsf{Show}(\{\mathsf{cred}_i\}, \{\mathsf{usk}_i\}, \phi), \mathsf{Verify}(\{\mathsf{cred}_i'\}, \pi)) \rightarrow \{0,1\}$: An interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
+    $\mathsf{Verify}$ is run by the verifier, which takes input from the randomized credentials $\mathsf{cred}_i'$, randomized commitments $\mathsf{cm}_i'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
+\end{itemize}
+\end{definition}
+
+\subsection{Security Properties}
+Our MIMC-ABC system offers three critical security properties:
+
+\begin{itemize}
+    \item \textbf{Correctness}: Ensures an honest user with valid credentials can always generate a proof for any predicate their credentials satisfy, which will verify with overwhelming probability.
+
+    \item \textbf{Unforgeability}: Prevents a malicious user, or colluding users, from creating valid proof for new forged credentials, misuse of legitimately issued ones, or unauthorized combination of credentials they don't own.
+
+    \item \textbf{Anonymity}: Protects user privacy, ensuring proofs reveal only that the predicate is satisfied, even if adversaries control the issuers or define predicates.
+\end{itemize}
+
+\subsection{Identity Binding Property}
+We introduce the identity binding property as a critical component of unforgeability in multi-issuer credential systems:
+
+\begin{definition}[Identity Binding]
+A MIMC-ABC system satisfies identity binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
+\begin{align*}
+\Pr\left[\begin{array}{l}
+    \mathsf{pp} \gets \mathsf{Setup}(1^\lambda) \\
+    \{(\mathsf{osk}_j, \mathsf{opk}_j)\}_j \gets \mathsf{OrgKeyGen}(\mathsf{pp}) \\
+    (\{\mathsf{cred}_i'\}, \phi^*, \pi^*) \gets \mathcal{A}^{\mathcal{O}}(\{\mathsf{opk}_j\}_j)
+\end{array}
+: \begin{array}{l}
+    \mathsf{Verify}(\{\mathsf{cred}_i'\}, \phi^*, \pi^*) = 1 \land \\
+    \phi^* \text{ requires identity binding} \land \\
+    \nexists \mathsf{id} : \forall i, \mathsf{cred}_i \text{ belongs to } \mathsf{id}
+\end{array}\right] \leq \mathsf{negl}(\lambda)
+\end{align*}
+where $\mathcal{O}$ represents the oracles available to the adversary.
+\end{definition}
+
+Informally, identity binding ensures that when a predicate requires multiple credentials to belong to the same identity, it is computationally infeasible to produce a valid proof unless all credentials genuinely belong to the same identity.
+
+\section{MIMC-ABC Construction}
+Our construction builds upon the foundational primitives established in Chapter 2, specifically leveraging position-binding commitments and rerandomizable signatures.
+
+\subsection{Intuition of Construction}
+
+\subsubsection{Example}
+Consider a user holding credentials from three issuers, denoted $j = 1, 2, 3$, each providing one credential $k = 1$. The user rerandomizes each credential’s commitment and signature as follows: $\cm_{j,1}' \gets \CMRand(\cm_{j,1}, \Delta_{r_{j,1}})$ and $\sigma_{j,1}' \gets \RSRand(\sigma_{j,1}, \Delta_{r_{j,1}}, \Delta_{u_{j,1}})$. These rerandomized pairs $(\cm_{j,1}', \sigma_{j,1}')$ are indistinguishable from their original issuance. In the $\Show$ protocol, the verifier confirms their validity: $\RSVer(\sigma_{j,1}', \cm_{j,1}', \vk_j) = 1$ for all $j \in \{1, 2, 3\}$.
+
+\begin{figure}
+        \begin{pchstack}[boxed, center, space=4em]
+            \begin{pcvstack}
+                \procedure[space=auto]{Passport}{%
+                \id: 12345, \\
+                \ctx: "passport", \\
+                \attrs: \mathsf{values}
+                }
+            \end{pcvstack}
+            \pcvspace
+            \begin{pcvstack}
+                \procedure[space=auto]{Driver License}{%
+                 \id: 12345, \\
+                \ctx: "dmv", \\
+                 \attrs: \mathsf{values}
+                }
+            \end{pcvstack}
+            \pcvspace
+            \begin{pcvstack}
+                \procedure[space=auto]{University Degree}{%
+                 \id: 12345, \\
+                \ctx: "usyd{-}bcompsc", \\
+                \attrs: \mathsf{values}
+                }
+            \end{pcvstack}
+        \end{pchstack}
+    \caption{Three Example Credentials, $\attrs$ holds arbitrary number of attributes such as expiry}
+    \label{fig:three-creds}
+\end{figure}
+
+Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials satisfy a predicate $\phi$. 
+\[
+\mathcal{R}_\phi = \left\{ 
+\begin{array}{l} 
+\forall j, k: \RSVer(\sigma_{j,k}', \cm_{j,k}', \vk_j) = 1 \\ 
+\forall j, k: \cm_{j,k}' = \CMRand(\CMCom([\id, \ctx_{j,k}, \attrs_{j,k}]; \usk_{j,k}), \Delta_{r_{j,k}}) \\ 
+\phi(\{\ctx_{j,k}, \attrs_{j,k}\}) = 1 
+\end{array} 
+\right\}
+\]
+
+For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{''passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{''dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
+
+\subsection{Sigma-protocol and core relations}
+
+Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
+\begin{enumerate}
+  
+
+    \item \textbf{Identity Binding:} For two credentials with commitments $\cm_1$ and $\cm_2$:
+
+    \[
+    \rid = \zkpok \left\{ 
+    \begin{array}{l} 
+    (\cm_1, \cm_2, (\id, \usk_1, \usk_2, \ctx_1, \ctx_2, \attrs_1, \attrs_2)) \\
+    \end{array} 
+    \middle|
+    \begin{array}{l}
+    \cm_1 = g^{\usk_1} \cdot g_1^{\id} \cdot g_2^{\ctx_1} \cdot \prod g_i^{\attrs_{1,i}} \wedge \\
+     \cm_2 = g^{\usk_2} \cdot g_1^{\id} \cdot g_2^{\ctx_2} \cdot \prod g_i^{\attrs_{2,i}} \\
+    \end{array} 
+    \right\}
+    \]
+    
+    This proves both credentials share the same $\id$ without revealing the $\id$ value. This generalizes to $n$ credentials by proving equality across all $n$ commitments.
+    
+    The position-binding property of our commitment scheme (Section \ref{sec:commitment}) ensures this equality relation can't be forged - an adversary can't make two commitments appear to share the same $\id$ when they actually don't.
+    
+\end{enumerate}
+
+\section{Adversarial Model and Attack Taxonomy}
+\label{sec:attack-taxonomy}
+
+We classify potential attacks against MIMC-ABC systems into three categories based on the adversarial goals and security properties being violated:
+
+\subsection{Credential Forgery Attacks}
+\begin{itemize}
+    \item \textbf{Definition:} Unauthorized creation or modification of credentials
+    \item \textbf{Threat model:} External adversaries or corrupt users without legitimate access
+    \item \textbf{Security property violated:} Unforgeability of signature scheme
+\end{itemize}
+
+\noindent\textbf{Type-1 Forgery (Credential Forgery):} An adversary produces a credential $\mathsf{cred} = (\sigma, \mathsf{cm})$ that verifies without being legitimately issued, breaking the signature scheme's EUF-CMA security.
+
+\begin{example}
+An adversary attempts to forge a credential that appears to be issued by a legitimate authority. This attack targets the underlying signature scheme, attempting to create a signature that will verify against the issuer's public key.
+\end{example}
+
+\subsection{Predicate Manipulation Attacks}
+\begin{itemize}
+    \item \textbf{Definition:} Attempts to satisfy unauthorized predicates with legitimate credentials
+    \item \textbf{Subtypes:}
+    \begin{itemize}
+        \item Simple predicate misuse (falsifying a single credential predicate)
+        \item Cross-credential predicate manipulation (falsely claiming relationships)
+    \end{itemize}
+    \item \textbf{Security property violated:} Soundness of zero-knowledge proofs
+\end{itemize}
+
+\noindent\textbf{Type-2 Forgery (Predicate Misuse):} A corrupt user with a valid credential for $\mathsf{age} = 17$ attempts to satisfy $\phi = (\mathsf{age} \geq 18)$ by creating a false proof, breaking ZKP soundness.
+
+\begin{example}[Mixed Predicate Misuse]
+A corrupt user with a master credential claiming $\mathsf{age} = 25$ and a context credential claiming $\mathsf{drivingClass} = \mathsf{"motorcycle"}$ attempts to satisfy the predicate $\phi = (\mathsf{age} \geq 21 \land \mathsf{drivingClass} = \mathsf{"car"})$ by forging an incorrect zero-knowledge proof.
+\end{example}
+
+\subsection{Identity Binding Attacks}
+\begin{itemize}
+    \item \textbf{Definition:} Breaking the binding between credentials that should share identity
+    \item \textbf{Subtypes:}
+    \begin{itemize}
+        \item Mix-and-match attacks (combining credentials from different identities)
+        \item Issuer collusion attacks (issuers collaborating to break binding)
+    \end{itemize}
+    \item \textbf{Security property violated:} Position-binding of commitment scheme
+\end{itemize}
+
+\begin{example}[Credential Binding Attack]
+A corrupt user possesses legitimate credentials $\mathsf{cred}_{m,A}$ with $\mathsf{id} = 123$ and $\mathsf{cred}_{c,B}$ with $\mathsf{id} = 456$. They attempt to present these together with a forged zero-knowledge proof $\pi^*$ falsely claiming that both credentials share the same identity.
+\end{example}
+
+\begin{example}[Issuer Collusion Attack]
+A corrupt user possesses a master credential from issuer $j_1$ with $\mathsf{id} = 123$ and another master credential from issuer $j_2$ with $\mathsf{id} = 456$. The adversary colludes with issuer $j_2$ to create a credential that appears to share the same identity as the credential from $j_1$, attempting to break the identity binding property.
+\end{example}
+
+\section{Security Analysis}
+\label{sec:security-analysis}
+
+\subsection{Security Scaling Analysis}
+We analyze how the security of our MIMC-ABC system scales with increasing numbers of issuers and credentials. Through a reduction to the underlying cryptographic primitives, we show that:
+
+\begin{theorem}
+\label{thm:security-scaling}
+For a MIMC-ABC system with $n$ issuers and $m$ credentials per user, the probability of an adversary successfully mounting an identity binding attack is bounded by:
+\begin{align*}
+\mathsf{Adv}^{\mathsf{bind}}_{\mathcal{A}}(\lambda) \leq n \cdot m \cdot \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{B}}(\lambda) + \varepsilon(\lambda)
+\end{align*}
+where $\mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{B}}(\lambda)$ represents the advantage against the position-binding property of our commitment scheme, and $\varepsilon(\lambda)$ is a negligible function in the security parameter.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+We construct a reduction $\mathcal{B}$ that uses an adversary $\mathcal{A}$ against identity binding to break the position-binding property of our commitment scheme. Given access to oracles for $\mathsf{Obtain}$ and $\mathsf{Show}$, $\mathcal{A}$ outputs credentials $\{\mathsf{cred}_i'\}$, a predicate $\phi^*$ requiring identity binding, and a proof $\pi^*$ that verifies but violates the identity binding property.
+
+Since $\mathcal{A}$ produces a valid proof for credentials with different identities, $\mathcal{B}$ can extract (by the special soundness property of our $\Sigma$-protocols) the witnesses used in generating $\pi^*$. These witnesses must include two different identity values for at least one pair of credentials. 
+
+$\mathcal{B}$ selects a random issuer $j \in [1,n]$ and credential $k \in [1,m]$ and uses the extracted witness to output a position-binding break for the commitment scheme. With probability at least $\frac{1}{n \cdot m}$, this corresponds to the credentials where identity binding was broken.
+
+The full reduction includes careful handling of oracle queries and extraction steps, but this captures the essential security relationship.
+\end{proof}
+
+This theorem demonstrates that the security of our identity binding mechanism degrades gracefully as the number of issuers and credentials increases, with only a linear security loss in these parameters.
+
+\subsection{Unforgeability Analysis}
+We reduce the unforgeability of our MIMC-ABC system to three underlying properties: EUF-CMA security of the signature scheme, position binding of the commitment scheme, and the soundness of the $\Sigma$-protocol.
+
+\begin{theorem}[Unforgeability]
+The MIMC-ABC system is unforgeable if the rerandomizable signature scheme is EUF-CMA secure, the commitment scheme satisfies position binding, and the $\Sigma$-protocol is sound.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+We construct a reduction algorithm $\mathcal{B}$ that leverages an adversary $\mathcal{A}$ against MIMC-ABC unforgeability to break one of the underlying security properties.
+
+$\mathcal{B}$ receives a challenge verification key $\mathsf{vk}$ and embeds it in the MIMC-ABC public parameters given to $\mathcal{A}$. For $\mathsf{Obtain}$ queries, $\mathcal{B}$ forwards the commitment to the EUF-CMA signing oracle and returns the signature to $\mathcal{A}$.
+
+When $\mathcal{A}$ outputs a forgery $(\{\mathsf{cred}_i^*\}, \phi^*, \pi^*)$, $\mathcal{B}$ analyzes it according to the following cases:
+
+\begin{enumerate}
+    \item \textbf{Case 1:} If any credential in $\{\mathsf{cred}_i^*\}$ contains a signature on a commitment not previously queried, $\mathcal{B}$ outputs this as an EUF-CMA forgery.
+
+    \item \textbf{Case 2:} If all credentials are legitimate but the proof $\pi^*$ demonstrates a predicate $\phi^*$ that the original attributes don't satisfy:
+    \begin{itemize}
+        \item By the special soundness of the $\Sigma$-protocol, $\mathcal{B}$ extracts a valid witness from $\pi^*$
+        \item This witness must include attribute values that satisfy $\phi^*$
+        \item Since the original attributes don't satisfy $\phi^*$, the extracted witness must differ from the original commitment opening
+        \item This gives two different openings for the same commitment, breaking position binding
+    \end{itemize}
+
+    \item \textbf{Case 3:} If the proof $\pi^*$ verifies but neither Case 1 nor Case 2 applies, this directly contradicts the soundness of the $\Sigma$-protocol.
+\end{enumerate}
+
+Since any successful forgery falls into one of these categories, and each category leads to breaking an underlying security assumption, the MIMC-ABC system inherits the security of these primitives.
+\end{proof}
+
+\subsection{Anonymity Analysis}
+\begin{theorem}[Anonymity]
+The MIMC-ABC system is anonymous even with malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment scheme is hiding, and the $\Sigma$-protocol is zero-knowledge.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+We prove anonymity using a hybrid argument to show the adversary's advantage is negligible:
+
+\begin{description}
+    \item[\textbf{Hybrid 0} (Real Game):] The challenger follows the anonymity game exactly. For a randomly chosen $b \in \{0,1\}$, the challenger uses user $i_b$'s credentials to generate $(\mathsf{cred}', \mathsf{cm}', \pi)$ via the real $\mathsf{Show}$ protocol. 
+    
+    \item[\textbf{Hybrid 1} (Simulated Proof):] The challenger generates $\mathsf{cred}'$ and $\mathsf{cm}'$ by rerandomizing user $i_b$'s credentials, but uses a zero-knowledge simulator $\mathcal{S}$ to produce the proof $\pi$ without using the witness:
+    \begin{align*}
+        \mathsf{cred}' &\gets \mathsf{RS.Rerand}(\mathsf{cred}_{i_b}, \Delta_r, \Delta_u)\\
+        \mathsf{cm}' &\gets \mathsf{CM.Rerand}(\mathsf{cm}_{i_b}, \Delta_r)\\
+        \pi &\gets \mathcal{S}(\mathsf{cred}', \mathsf{cm}', \mathsf{opk}, \phi)
+    \end{align*}
+\end{description}
+
+By the zero-knowledge property of our $\Sigma$-protocol, $\mathsf{Hybrid\:0}$ and $\mathsf{Hybrid\:1}$ are computationally indistinguishable. In $\mathsf{Hybrid\:1}$, the adversary's view is independent of bit $b$ due to:
+
+\begin{enumerate}
+    \item The perfect hiding of Pedersen commitments ensures $\mathsf{cm}'$ has a uniform distribution
+    \item The rerandomized signature $\mathsf{cred}'$ is computationally indistinguishable from a fresh signature
+    \item The simulated proof $\pi$ depends only on public parameters, not on the witness
+    \item Our verkey proof mechanism ($\pi_{\mathsf{verkey}}$) ensures issuers cannot embed malicious structures in keys
+\end{enumerate}
+
+Therefore, the adversary's total advantage is bounded by the advantage in distinguishing between $\mathsf{Hybrid\:0}$ and $\mathsf{Hybrid\:1}$, which is negligible.
+\end{proof}
+
+\section{Performance Evaluation}
+We implement our MIMC-ABC system and conduct a comprehensive performance evaluation to quantify the overhead of privacy-preserving identity binding across multiple issuers.
+
+\subsection{Benchmark Methodology}
+We evaluate four scenarios:
+\begin{enumerate}
+    \item \textbf{Non-private Single-Issuer}: Multiple credentials from the same issuer, identity revealed in clear
+    \item \textbf{Non-private Multi-Issuer}: Multiple credentials from different issuers, identity revealed in clear
+    \item \textbf{Private Single-Issuer}: Multiple credentials from the same issuer with zero-knowledge identity binding
+    \item \textbf{Private Multi-Issuer}: Multiple credentials from different issuers with zero-knowledge identity binding
+\end{enumerate}
+
+\subsection{Experimental Results}
+[Performance evaluation data would be presented here...]
+
+\section{Summary and Future Directions}
+This chapter has introduced MIMC-ABC, a multi-issuer multi-credential anonymous credential system with formal identity binding guarantees. We have demonstrated how our system enables users to privately combine credentials from multiple, mutually distrusting issuers while proving they belong to the same identity.
+
+Our security analysis provides formal guarantees that the system remains secure even as the number of issuers and credentials increases, with security reductions to well-established cryptographic assumptions. Our performance evaluation quantifies the overhead of privacy-preserving identity binding and demonstrates the feasibility of our approach for real-world applications.
+
+Future work includes extending the system with hierarchical credential models to enhance accountability while maintaining privacy guarantees, which we will explore in the next chapter.
 
 
-Chapter 3: Multi-Issuer Multi-Credential System: How can users privately combine credentials from multiple, mutually distrusting issuers (e.g., government IDs and bank statements) to prove they belong to the same identity? Non-private systems easily verify credential consistency, but privacy-preserving approaches struggle to bind credentials securely without
-a trusted party, aggregate signatures [MBG+23] have trouble with revoking individual credentials from an aggregate.
-Technical Challenges
-1. Defining and achieving identity binding across credentials without revealing the user’s identity.
-2. Preventing attacks where users mix credentials from different identities (e.g., credential swapping).
-3. Maintaining efficiency as the number of issuers and credentials scales
 
-Some notes
-- There are many credential oracles, ZK TLS, DECO, etc, ZK Login, all these products bring solid credentials or others into the web e.g. bank account details, statements, etc. We need a way to attach them to a users identifier and allow a user to use them AND prove that they belong to them. 
-- I thought identity binding is a good way to do that, during the issuance process, the user gives a commitment to the identity, the issuer fills it in with their private information? or something like that, I'm not sure how ZK TLS or attested information oracles work.
-- Also for different digital identity issuers
+
 
 
 
@@ -311,35 +587,6 @@ A MIMC-ABC system provides anonymity if, for all PPT adversaries $\adv$, the adv
 \subsubsection{Example}
 Consider a user holding credentials from three issuers, denoted $j = 1, 2, 3$, each providing one credential $k = 1$. The user rerandomizes each credential’s commitment and signature as follows: $\cm_{j,1}' \gets \CMRand(\cm_{j,1}, \Delta_{r_{j,1}})$ and $\sigma_{j,1}' \gets \RSRand(\sigma_{j,1}, \Delta_{r_{j,1}}, \Delta_{u_{j,1}})$. These rerandomized pairs $(\cm_{j,1}', \sigma_{j,1}')$ are indistinguishable from their original issuance. In the $\Show$ protocol, the verifier confirms their validity: $\RSVer(\sigma_{j,1}', \cm_{j,1}', \vk_j) = 1$ for all $j \in \{1, 2, 3\}$.
 
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Passport}{%
-                \id: 12345, \\
-                \ctx: "passport", \\
-                \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                 \id: 12345, \\
-                \ctx: "dmv", \\
-                 \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{University Degree}{%
-                 \id: 12345, \\
-                \ctx: "usyd{-}bcompsc", \\
-                \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Three Example Credentials, $\attrs$ holds arbitrary number of attributes such as expiry}
-    \label{fig:three-creds}
-\end{figure}
 
 Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials satisfy a predicate $\phi$. 
 \[
@@ -663,311 +910,4 @@ Identity Binding (Private) Show + Verify & 25.08 & 102.27 & 199.87 \\
 \section{Second Attempt}
 
 \newpage
-\section{Introduction}
-Anonymous credential systems enable users to selectively disclose attributes about themselves while preserving privacy. While significant advances have been made in single-issuer scenarios, modern digital identity ecosystems increasingly require users to present credentials from multiple, mutually distrusting issuers. This chapter addresses the fundamental challenge of how users can privately combine credentials from multiple issuers while proving they belong to the same identity, without revealing that identity.
 
-\subsection{Motivation}
-Consider a user who needs to prove they are (1) a resident of a specific jurisdiction from a government-issued ID, (2) employed with sufficient income from an employer credential, and (3) have completed required training from an educational institution. Traditional approaches either compromise privacy by revealing the same identifier across credentials or offer insufficient guarantees that credentials belong to the same individual. Our MIMC-ABC system addresses this gap by providing formal security guarantees for identity binding across credentials from multiple issuers.
-
-\subsection{Contributions}
-This chapter makes the following contributions:
-\begin{itemize}
-    \item Formalization of a security model for multi-issuer credential systems with identity binding
-    \item Definition and analysis of the identity binding property for anonymous credentials
-    \item Comprehensive attack taxonomy covering credential forgery, predicate manipulation, and identity binding attacks
-    \item Security proofs demonstrating how our construction maintains security guarantees as the number of issuers and credentials increases
-    \item Performance evaluation methodology comparing private vs. non-private approaches across single and multi-issuer scenarios
-\end{itemize}
-
-\section{System Model and Definitions}
-\subsection{MIMC-ABC System}
-A Multi-Issuer Multi-Credential Attribute-based Anonymous Credential system consists of the following PPT algorithms:
-
-\begin{definition}[MIMC-ABC System]
-\begin{itemize}
-    \item $\mathsf{Setup}(1^\lambda) \to \mathsf{pp}$: Takes security parameter $\lambda$ in unary, outputs public parameters $\mathsf{pp}$.
-    
-    \item $\mathsf{OrgKeyGen}(\mathsf{pp}, \ell) \to (\mathsf{osk}, \mathsf{opk})$: Takes public parameters $\mathsf{pp}$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\mathsf{osk}, \mathsf{opk})$.
-       
-    \item $(\mathsf{Obtain}(\vec{m}, \mathsf{opk}, \mathsf{aux}), \mathsf{Issue}(\mathsf{osk}, \mathsf{cm}, \mathsf{aux})) \rightarrow (\mathsf{cred}, \bot)$: An interactive protocol between a user and an issuing organization. The user inputs their message vector $\vec{m} = [\mathsf{id}, \mathsf{ctx}, \mathsf{attrs}]$ containing a unique identifier $\mathsf{id}$ and context $\mathsf{ctx}$. User generates $\mathsf{usk} \stackrel{\$}{\leftarrow} \mathbb{Z}_p$, commits to their messages $\mathsf{cm} \gets \mathsf{CM.Com}(\vec{m}; \mathsf{usk})$. The issuer inputs their secret key $\mathsf{osk}$. The protocol outputs a credential $\mathsf{cred}$ containing $(\sigma, \mathsf{cm})$ to the user and $\bot$ to the issuer.    
-    
-    \item $(\mathsf{Show}(\{\mathsf{cred}_i\}, \{\mathsf{usk}_i\}, \phi), \mathsf{Verify}(\{\mathsf{cred}_i'\}, \pi)) \rightarrow \{0,1\}$: An interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
-    $\mathsf{Verify}$ is run by the verifier, which takes input from the randomized credentials $\mathsf{cred}_i'$, randomized commitments $\mathsf{cm}_i'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
-\end{itemize}
-\end{definition}
-
-\subsection{Security Properties}
-Our MIMC-ABC system offers three critical security properties:
-
-\begin{itemize}
-    \item \textbf{Correctness}: Ensures an honest user with valid credentials can always generate a proof for any predicate their credentials satisfy, which will verify with overwhelming probability.
-
-    \item \textbf{Unforgeability}: Prevents a malicious user, or colluding users, from creating valid proof for new forged credentials, misuse of legitimately issued ones, or unauthorized combination of credentials they don't own.
-
-    \item \textbf{Anonymity}: Protects user privacy, ensuring proofs reveal only that the predicate is satisfied, even if adversaries control the issuers or define predicates.
-\end{itemize}
-
-\subsection{Identity Binding Property}
-We introduce the identity binding property as a critical component of unforgeability in multi-issuer credential systems:
-
-\begin{definition}[Identity Binding]
-A MIMC-ABC system satisfies identity binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
-\begin{align*}
-\Pr\left[\begin{array}{l}
-    \mathsf{pp} \gets \mathsf{Setup}(1^\lambda) \\
-    \{(\mathsf{osk}_j, \mathsf{opk}_j)\}_j \gets \mathsf{OrgKeyGen}(\mathsf{pp}) \\
-    (\{\mathsf{cred}_i'\}, \phi^*, \pi^*) \gets \mathcal{A}^{\mathcal{O}}(\{\mathsf{opk}_j\}_j)
-\end{array}
-: \begin{array}{l}
-    \mathsf{Verify}(\{\mathsf{cred}_i'\}, \phi^*, \pi^*) = 1 \land \\
-    \phi^* \text{ requires identity binding} \land \\
-    \nexists \mathsf{id} : \forall i, \mathsf{cred}_i \text{ belongs to } \mathsf{id}
-\end{array}\right] \leq \mathsf{negl}(\lambda)
-\end{align*}
-where $\mathcal{O}$ represents the oracles available to the adversary.
-\end{definition}
-
-Informally, identity binding ensures that when a predicate requires multiple credentials to belong to the same identity, it is computationally infeasible to produce a valid proof unless all credentials genuinely belong to the same identity.
-
-\section{MIMC-ABC Construction}
-Our construction builds upon the foundational primitives established in Chapter 2, specifically leveraging position-binding commitments and rerandomizable signatures.
-
-\subsection{Intuition of Construction}
-
-\subsubsection{Example}
-Consider a user holding credentials from three issuers, denoted $j = 1, 2, 3$, each providing one credential $k = 1$. The user rerandomizes each credential’s commitment and signature as follows: $\cm_{j,1}' \gets \CMRand(\cm_{j,1}, \Delta_{r_{j,1}})$ and $\sigma_{j,1}' \gets \RSRand(\sigma_{j,1}, \Delta_{r_{j,1}}, \Delta_{u_{j,1}})$. These rerandomized pairs $(\cm_{j,1}', \sigma_{j,1}')$ are indistinguishable from their original issuance. In the $\Show$ protocol, the verifier confirms their validity: $\RSVer(\sigma_{j,1}', \cm_{j,1}', \vk_j) = 1$ for all $j \in \{1, 2, 3\}$.
-
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Passport}{%
-                \id: 12345, \\
-                \ctx: "passport", \\
-                \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                 \id: 12345, \\
-                \ctx: "dmv", \\
-                 \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{University Degree}{%
-                 \id: 12345, \\
-                \ctx: "usyd{-}bcompsc", \\
-                \attrs: \mathsf{values}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Three Example Credentials, $\attrs$ holds arbitrary number of attributes such as expiry}
-    \label{fig:three-creds}
-\end{figure}
-
-Next, the user proves a relation $\mathcal{R}_\phi$ that ensures the credentials satisfy a predicate $\phi$. 
-\[
-\mathcal{R}_\phi = \left\{ 
-\begin{array}{l} 
-\forall j, k: \RSVer(\sigma_{j,k}', \cm_{j,k}', \vk_j) = 1 \\ 
-\forall j, k: \cm_{j,k}' = \CMRand(\CMCom([\id, \ctx_{j,k}, \attrs_{j,k}]; \usk_{j,k}), \Delta_{r_{j,k}}) \\ 
-\phi(\{\ctx_{j,k}, \attrs_{j,k}\}) = 1 
-\end{array} 
-\right\}
-\]
-
-For instance, if $\phi$ requires a valid passport, driver’s license, and university degree, $\mathcal{R}_\phi$ might enforce $\ctx_{1,1} = \text{''passport''}$, $\attrs_{1,1}.\exp > \text{today}$, $\ctx_{2,1} = \text{''dmv''}$, and $\ctx_{3,1} \in \mathcal{D}$ (a set of accredited universities), with all commitments sharing the same $\id$.
-
-\subsection{Sigma-protocol and core relations}
-
-Our MIMC-ABC system relies on five core relations proven via $\Sigma$-protocols:
-\begin{enumerate}
-  
-
-    \item \textbf{Identity Binding:} For two credentials with commitments $\cm_1$ and $\cm_2$:
-
-    \[
-    \rid = \zkpok \left\{ 
-    \begin{array}{l} 
-    (\cm_1, \cm_2, (\id, \usk_1, \usk_2, \ctx_1, \ctx_2, \attrs_1, \attrs_2)) \\
-    \end{array} 
-    \middle|
-    \begin{array}{l}
-    \cm_1 = g^{\usk_1} \cdot g_1^{\id} \cdot g_2^{\ctx_1} \cdot \prod g_i^{\attrs_{1,i}} \wedge \\
-     \cm_2 = g^{\usk_2} \cdot g_1^{\id} \cdot g_2^{\ctx_2} \cdot \prod g_i^{\attrs_{2,i}} \\
-    \end{array} 
-    \right\}
-    \]
-    
-    This proves both credentials share the same $\id$ without revealing the $\id$ value. This generalizes to $n$ credentials by proving equality across all $n$ commitments.
-    
-    The position-binding property of our commitment scheme (Section \ref{sec:commitment}) ensures this equality relation can't be forged - an adversary can't make two commitments appear to share the same $\id$ when they actually don't.
-    
-\end{enumerate}
-
-\section{Adversarial Model and Attack Taxonomy}
-\label{sec:attack-taxonomy}
-
-We classify potential attacks against MIMC-ABC systems into three categories based on the adversarial goals and security properties being violated:
-
-\subsection{Credential Forgery Attacks}
-\begin{itemize}
-    \item \textbf{Definition:} Unauthorized creation or modification of credentials
-    \item \textbf{Threat model:} External adversaries or corrupt users without legitimate access
-    \item \textbf{Security property violated:} Unforgeability of signature scheme
-\end{itemize}
-
-\noindent\textbf{Type-1 Forgery (Credential Forgery):} An adversary produces a credential $\mathsf{cred} = (\sigma, \mathsf{cm})$ that verifies without being legitimately issued, breaking the signature scheme's EUF-CMA security.
-
-\begin{example}
-An adversary attempts to forge a credential that appears to be issued by a legitimate authority. This attack targets the underlying signature scheme, attempting to create a signature that will verify against the issuer's public key.
-\end{example}
-
-\subsection{Predicate Manipulation Attacks}
-\begin{itemize}
-    \item \textbf{Definition:} Attempts to satisfy unauthorized predicates with legitimate credentials
-    \item \textbf{Subtypes:}
-    \begin{itemize}
-        \item Simple predicate misuse (falsifying a single credential predicate)
-        \item Cross-credential predicate manipulation (falsely claiming relationships)
-    \end{itemize}
-    \item \textbf{Security property violated:} Soundness of zero-knowledge proofs
-\end{itemize}
-
-\noindent\textbf{Type-2 Forgery (Predicate Misuse):} A corrupt user with a valid credential for $\mathsf{age} = 17$ attempts to satisfy $\phi = (\mathsf{age} \geq 18)$ by creating a false proof, breaking ZKP soundness.
-
-\begin{example}[Mixed Predicate Misuse]
-A corrupt user with a master credential claiming $\mathsf{age} = 25$ and a context credential claiming $\mathsf{drivingClass} = \mathsf{"motorcycle"}$ attempts to satisfy the predicate $\phi = (\mathsf{age} \geq 21 \land \mathsf{drivingClass} = \mathsf{"car"})$ by forging an incorrect zero-knowledge proof.
-\end{example}
-
-\subsection{Identity Binding Attacks}
-\begin{itemize}
-    \item \textbf{Definition:} Breaking the binding between credentials that should share identity
-    \item \textbf{Subtypes:}
-    \begin{itemize}
-        \item Mix-and-match attacks (combining credentials from different identities)
-        \item Issuer collusion attacks (issuers collaborating to break binding)
-    \end{itemize}
-    \item \textbf{Security property violated:} Position-binding of commitment scheme
-\end{itemize}
-
-\begin{example}[Credential Binding Attack]
-A corrupt user possesses legitimate credentials $\mathsf{cred}_{m,A}$ with $\mathsf{id} = 123$ and $\mathsf{cred}_{c,B}$ with $\mathsf{id} = 456$. They attempt to present these together with a forged zero-knowledge proof $\pi^*$ falsely claiming that both credentials share the same identity.
-\end{example}
-
-\begin{example}[Issuer Collusion Attack]
-A corrupt user possesses a master credential from issuer $j_1$ with $\mathsf{id} = 123$ and another master credential from issuer $j_2$ with $\mathsf{id} = 456$. The adversary colludes with issuer $j_2$ to create a credential that appears to share the same identity as the credential from $j_1$, attempting to break the identity binding property.
-\end{example}
-
-\section{Security Analysis}
-\label{sec:security-analysis}
-
-\subsection{Security Scaling Analysis}
-We analyze how the security of our MIMC-ABC system scales with increasing numbers of issuers and credentials. Through a reduction to the underlying cryptographic primitives, we show that:
-
-\begin{theorem}
-\label{thm:security-scaling}
-For a MIMC-ABC system with $n$ issuers and $m$ credentials per user, the probability of an adversary successfully mounting an identity binding attack is bounded by:
-\begin{align*}
-\mathsf{Adv}^{\mathsf{bind}}_{\mathcal{A}}(\lambda) \leq n \cdot m \cdot \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{B}}(\lambda) + \varepsilon(\lambda)
-\end{align*}
-where $\mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{B}}(\lambda)$ represents the advantage against the position-binding property of our commitment scheme, and $\varepsilon(\lambda)$ is a negligible function in the security parameter.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-We construct a reduction $\mathcal{B}$ that uses an adversary $\mathcal{A}$ against identity binding to break the position-binding property of our commitment scheme. Given access to oracles for $\mathsf{Obtain}$ and $\mathsf{Show}$, $\mathcal{A}$ outputs credentials $\{\mathsf{cred}_i'\}$, a predicate $\phi^*$ requiring identity binding, and a proof $\pi^*$ that verifies but violates the identity binding property.
-
-Since $\mathcal{A}$ produces a valid proof for credentials with different identities, $\mathcal{B}$ can extract (by the special soundness property of our $\Sigma$-protocols) the witnesses used in generating $\pi^*$. These witnesses must include two different identity values for at least one pair of credentials. 
-
-$\mathcal{B}$ selects a random issuer $j \in [1,n]$ and credential $k \in [1,m]$ and uses the extracted witness to output a position-binding break for the commitment scheme. With probability at least $\frac{1}{n \cdot m}$, this corresponds to the credentials where identity binding was broken.
-
-The full reduction includes careful handling of oracle queries and extraction steps, but this captures the essential security relationship.
-\end{proof}
-
-This theorem demonstrates that the security of our identity binding mechanism degrades gracefully as the number of issuers and credentials increases, with only a linear security loss in these parameters.
-
-\subsection{Unforgeability Analysis}
-We reduce the unforgeability of our MIMC-ABC system to three underlying properties: EUF-CMA security of the signature scheme, position binding of the commitment scheme, and the soundness of the $\Sigma$-protocol.
-
-\begin{theorem}[Unforgeability]
-The MIMC-ABC system is unforgeable if the rerandomizable signature scheme is EUF-CMA secure, the commitment scheme satisfies position binding, and the $\Sigma$-protocol is sound.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-We construct a reduction algorithm $\mathcal{B}$ that leverages an adversary $\mathcal{A}$ against MIMC-ABC unforgeability to break one of the underlying security properties.
-
-$\mathcal{B}$ receives a challenge verification key $\mathsf{vk}$ and embeds it in the MIMC-ABC public parameters given to $\mathcal{A}$. For $\mathsf{Obtain}$ queries, $\mathcal{B}$ forwards the commitment to the EUF-CMA signing oracle and returns the signature to $\mathcal{A}$.
-
-When $\mathcal{A}$ outputs a forgery $(\{\mathsf{cred}_i^*\}, \phi^*, \pi^*)$, $\mathcal{B}$ analyzes it according to the following cases:
-
-\begin{enumerate}
-    \item \textbf{Case 1:} If any credential in $\{\mathsf{cred}_i^*\}$ contains a signature on a commitment not previously queried, $\mathcal{B}$ outputs this as an EUF-CMA forgery.
-
-    \item \textbf{Case 2:} If all credentials are legitimate but the proof $\pi^*$ demonstrates a predicate $\phi^*$ that the original attributes don't satisfy:
-    \begin{itemize}
-        \item By the special soundness of the $\Sigma$-protocol, $\mathcal{B}$ extracts a valid witness from $\pi^*$
-        \item This witness must include attribute values that satisfy $\phi^*$
-        \item Since the original attributes don't satisfy $\phi^*$, the extracted witness must differ from the original commitment opening
-        \item This gives two different openings for the same commitment, breaking position binding
-    \end{itemize}
-
-    \item \textbf{Case 3:} If the proof $\pi^*$ verifies but neither Case 1 nor Case 2 applies, this directly contradicts the soundness of the $\Sigma$-protocol.
-\end{enumerate}
-
-Since any successful forgery falls into one of these categories, and each category leads to breaking an underlying security assumption, the MIMC-ABC system inherits the security of these primitives.
-\end{proof}
-
-\subsection{Anonymity Analysis}
-\begin{theorem}[Anonymity]
-The MIMC-ABC system is anonymous even with malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment scheme is hiding, and the $\Sigma$-protocol is zero-knowledge.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-We prove anonymity using a hybrid argument to show the adversary's advantage is negligible:
-
-\begin{description}
-    \item[\textbf{Hybrid 0} (Real Game):] The challenger follows the anonymity game exactly. For a randomly chosen $b \in \{0,1\}$, the challenger uses user $i_b$'s credentials to generate $(\mathsf{cred}', \mathsf{cm}', \pi)$ via the real $\mathsf{Show}$ protocol. 
-    
-    \item[\textbf{Hybrid 1} (Simulated Proof):] The challenger generates $\mathsf{cred}'$ and $\mathsf{cm}'$ by rerandomizing user $i_b$'s credentials, but uses a zero-knowledge simulator $\mathcal{S}$ to produce the proof $\pi$ without using the witness:
-    \begin{align*}
-        \mathsf{cred}' &\gets \mathsf{RS.Rerand}(\mathsf{cred}_{i_b}, \Delta_r, \Delta_u)\\
-        \mathsf{cm}' &\gets \mathsf{CM.Rerand}(\mathsf{cm}_{i_b}, \Delta_r)\\
-        \pi &\gets \mathcal{S}(\mathsf{cred}', \mathsf{cm}', \mathsf{opk}, \phi)
-    \end{align*}
-\end{description}
-
-By the zero-knowledge property of our $\Sigma$-protocol, $\mathsf{Hybrid\:0}$ and $\mathsf{Hybrid\:1}$ are computationally indistinguishable. In $\mathsf{Hybrid\:1}$, the adversary's view is independent of bit $b$ due to:
-
-\begin{enumerate}
-    \item The perfect hiding of Pedersen commitments ensures $\mathsf{cm}'$ has a uniform distribution
-    \item The rerandomized signature $\mathsf{cred}'$ is computationally indistinguishable from a fresh signature
-    \item The simulated proof $\pi$ depends only on public parameters, not on the witness
-    \item Our verkey proof mechanism ($\pi_{\mathsf{verkey}}$) ensures issuers cannot embed malicious structures in keys
-\end{enumerate}
-
-Therefore, the adversary's total advantage is bounded by the advantage in distinguishing between $\mathsf{Hybrid\:0}$ and $\mathsf{Hybrid\:1}$, which is negligible.
-\end{proof}
-
-\section{Performance Evaluation}
-We implement our MIMC-ABC system and conduct a comprehensive performance evaluation to quantify the overhead of privacy-preserving identity binding across multiple issuers.
-
-\subsection{Benchmark Methodology}
-We evaluate four scenarios:
-\begin{enumerate}
-    \item \textbf{Non-private Single-Issuer}: Multiple credentials from the same issuer, identity revealed in clear
-    \item \textbf{Non-private Multi-Issuer}: Multiple credentials from different issuers, identity revealed in clear
-    \item \textbf{Private Single-Issuer}: Multiple credentials from the same issuer with zero-knowledge identity binding
-    \item \textbf{Private Multi-Issuer}: Multiple credentials from different issuers with zero-knowledge identity binding
-\end{enumerate}
-
-\subsection{Experimental Results}
-[Performance evaluation data would be presented here...]
-
-\section{Summary and Future Directions}
-This chapter has introduced MIMC-ABC, a multi-issuer multi-credential anonymous credential system with formal identity binding guarantees. We have demonstrated how our system enables users to privately combine credentials from multiple, mutually distrusting issuers while proving they belong to the same identity.
-
-Our security analysis provides formal guarantees that the system remains secure even as the number of issuers and credentials increases, with security reductions to well-established cryptographic assumptions. Our performance evaluation quantifies the overhead of privacy-preserving identity binding and demonstrates the feasibility of our approach for real-world applications.
-
-Future work includes extending the system with hierarchical credential models to enhance accountability while maintaining privacy guarantees, which we will explore in the next chapter.
