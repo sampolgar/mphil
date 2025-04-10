@@ -1,37 +1,37 @@
 \mychapter{Expressive Proof Predicates for Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}
 
 
-\begin{table}
-\begin{center}
-\caption{Comparison of our construction over previous work.}
-\label{tab:comparison-chap2}
-\begin{tabular}{l|cccccc}
-Features    									& Multi Issuer & Sybil Resistance  & Revocation & Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$   & Anonymity$\footnotemark[3]$   \\
-\hline
+% \begin{table}
+% \begin{center}
+% \caption{Comparison of our construction over previous work.}
+% \label{tab:comparison-chap2}
+% \begin{tabular}{l|cccccc}
+% Features    									& Multi Issuer & Sybil Resistance  & Revocation & Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$   & Anonymity$\footnotemark[3]$   \\
+% \hline
 
-CanDID \cite{maram2021candid}     				& \ding{51}     & \ding{51} 	& \ding{51}  &  \ding{55}     & \ding{55}                     & \ding{55}		\\
-SyRA \cite{crites_syra_2024}     				& \ding{55}     & \ding{51}    	& \ding{55}  &  \ding{55}     & \ding{55}                     & \ding{51}		\\
-S3ID \cite{rabaninejad_attribute-based_2024}  & \ding{51}     & \ding{51}    	& \ding{55}  &  \ding{51}     & \ding{55}\footnotemark[4]     & \ding{51}		\\
-Our Work  										& \ding{51}     & \ding{51}    	& \ding{51}  &  \ding{51}     & \ding{51}                     & \ding{51}		\\
-\end{tabular}
-\end{center}
+% CanDID \cite{maram2021candid}     				& \ding{51}     & \ding{51} 	& \ding{51}  &  \ding{55}     & \ding{55}                     & \ding{55}		\\
+% SyRA \cite{crites_syra_2024}     				& \ding{55}     & \ding{51}    	& \ding{55}  &  \ding{55}     & \ding{55}                     & \ding{51}		\\
+% S3ID \cite{rabaninejad_attribute-based_2024}  & \ding{51}     & \ding{51}    	& \ding{55}  &  \ding{51}     & \ding{55}\footnotemark[4]     & \ding{51}		\\
+% Our Work  										& \ding{51}     & \ding{51}    	& \ding{51}  &  \ding{51}     & \ding{51}                     & \ding{51}		\\
+% \end{tabular}
+% \end{center}
 
-\vspace{1em}
-\footnotesize
-$\footnotemark[1]$ Credential Chaining is a user presenting multiple credentials to be verified together for a complex identity statement.
+% \vspace{1em}
+% \footnotesize
+% $\footnotemark[1]$ Credential Chaining is a user presenting multiple credentials to be verified together for a complex identity statement.
 
-\footnotesize
-$\footnotemark[2]$ M-ABC is a Multi-Show Attribute Based Credential, allowing a user to satisfy rich, attribute-based identity statements 
+% \footnotesize
+% $\footnotemark[2]$ M-ABC is a Multi-Show Attribute Based Credential, allowing a user to satisfy rich, attribute-based identity statements 
 
-\footnotesize
-$\footnotemark[3]$ Anonymity is defined in the Anonymous Credential model, no verifier and issuer (collaborating together) may learn more about the user or their credentials other than what the user discloses and what their credentials verify. Multiple credential verifications are unlinkable.
+% \footnotesize
+% $\footnotemark[3]$ Anonymity is defined in the Anonymous Credential model, no verifier and issuer (collaborating together) may learn more about the user or their credentials other than what the user discloses and what their credentials verify. Multiple credential verifications are unlinkable.
 
-\footnotesize
-$\footnotemark[4]$ While possible in S3ID, they mention 
+% \footnotesize
+% $\footnotemark[4]$ While possible in S3ID, they mention 
 
-\footnotesize
-$\footnotemark[5]$ Multi-issuer means supporting credentials from different authorities that can be cryptographically linked while preserving privacy
-\end{table}
+% \footnotesize
+% $\footnotemark[5]$ Multi-issuer means supporting credentials from different authorities that can be cryptographically linked while preserving privacy
+% \end{table}
 
 
 % How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.

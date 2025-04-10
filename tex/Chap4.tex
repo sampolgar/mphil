@@ -203,6 +203,117 @@ A $\VRF$ must satisfy three properties
 
 
 \section{Construction}
+In this section, we develop a novel Verifiable Random Function (VRF) construction from committed attributes tailored for anonymous credential systems, specifically designed to support hierarchical credential binding and sybil resistance without needing bilinear pairings. Our construction includes a novel zero-knowledge proof protocol to prove two committed attributes are multiplicative inverse of each other which is of independent interest. 
+We start with the classical Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005} and introduce step-changes to adapt it for privacy and efficiency. 
+
+\subsection*{Notation}
+
+
+\subsection*{Roadmap}
+Our construction proceeds as follows:
+\begin{enumerate}
+    \item \textbf{Dodis-Yampolskiy VRF with Bilinear Pairings}: We begin with revisiting the classical Dodis-Yampolskiy VRF using bilinear pairings where 
+    $pk = g^\k$ is public, $\ctx$ is public, $\k$ is secret. $\VRFEval$ outputs the nullifier $\nul = g^{1/(\k+\ctx)}$ and proof $\pi = e(g_1, g_2)^{1/(\k + \ctx)}$
+    
+    \item \textbf{Prime-Order Group VRF}: We then adapt the VRF to a prime-order group setting while retaining the security properties under $q$-DHI. We run a $\Sigma$-protocol to generate the proof $\pi$ attesting to the relation, noting that $\pk$ and $\ctx$ are public and used in verification
+
+    \[
+    \Rel = \zkpok \left\{ (\k)(pk, \ctx, \nul, \n) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \n =  pk \cdot g^x  \right\}
+    \]
+    
+    \item \textbf{VRF with Committed Inputs}: Next, we hide the secret key $\k$ and context identifier $\ctx$ in a commitment $\cm = \CMCom([\k, \ctx]; \usk)$ and show the proof $\pi$ attesting to the relation, noting the commitment is public but $\ctx$ is hidden
+
+    \[
+    \Rel = \zkpok \left\{ (\k, \ctx)(\nul, \cm) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \cm = g_1^\k g_2^{\ctx}g^r  \right\}
+    \]
+
+    \item \textbf{Sigma Protocol for MIMC-ABC}: Finally, we extend the $\Sigma$-protocol to incorporate our Anonymous Credential requirements. We derive the nullifier from two separate commitments, $\cmm = \CMCom([\id, \ctx_m, \exp_m, \k_m]; \usk_m)$ from the master credential $\credm$ and $\cmc = \CMCom([\id, \ctx_c, \exp_c]; \usk_c)$ from the context credential. The relation proves the following 
+    \begin{enumerate}
+        \item prover can open $\cmm$ and its from a Master Credential and contains the $\k_m$ we're using %$\ctx=\texttt{master}$
+        \item prover can open $\cmc$ and its from a Context Credential
+        \item The derived nullifier is correct $\nul = g^{1/(\k_m + \ctx_c)}$ and $\ctx$ is from the correct commitment
+    \end{enumerate}
+    
+    
+    
+    
+    
+    we integrate the VRF into the Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system. We present a complete Sigma protocol that allows users to prove the correctness of a nullifier derived from committed attributes, ensuring hierarchical binding and sybil resistance in a privacy-preserving manner.
+\end{enumerate}
+
+This structured approach not only enhances the efficiency of VRF-based nullifiers but also ensures compatibility with the privacy requirements of anonymous credential systems. Each step builds upon the previous one, culminating in a robust and practical solution for real-world applications.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Algebraic Analysis of Dodis Yampolskiy VRF}
+We first recall the classical Dodis Yampolskiy VRF construction with bilinear pairings, we demonstrate with Type-3 pairings as they are generally used in practice. Let $\G_1, \G_2, \G_T$ be groups of a bilinear map with prime order $p$ where $g_1, g_2$ are generators for $\G_1, \G_2$ respectively and $e$ is an efficient map from $\G_1 \times \G_2 \to \G_T$:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(\secparam)$: Samples $k \sample \Z_p$, set $pk = g^k$ 
+    
+    \item $\mathsf{VRF.Eval}(k, \textsf{ctx}) \to $(\mathsf{N}, \pi)$: $\pi = e(g_1, g_2)^{1/(k + \textsf{ctx})}$, $\mathsf{N} = g_2^{1/(k + \textsf{ctx})}$ 
+    
+    \item $\mathsf{VRF.Vfy}(pk, \textsf{ctx}, \mathsf{N}, \pi) \to \bit$: assert $\quad$ $e(g^{\textsf{ctx}} \cdot pk, \mathsf{N})  \stackrel{?}{=} e(g_1, g_2) \quad \wedge \quad \pi  \stackrel{?}{=} e(g_1, \mathsf{N})$
+\end{itemize}
+
+$\mathsf{Eval}$ computes the nullifier $\textsf{N}$ and generates a proof $\pi$ to prove that anyone in possession of $pk$ and the input $\textsf{ctx}$ can verify $\textsf{N}$ was computed correctly. $\mathsf{Vfy}$ resembles a signature verification as it binds  the public key $pk$, input $\textsf{ctx}$, and nullifier output together. 
+
+The first pairing binds the public input $pk, \mathsf{ctx}$ with $\mathsf{N}$
+\begin{align*}
+    e(g_1^\mathsf{ctx} \cdot pk, \mathsf{N})  \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1^\mathsf{ctx}, g_2^{1/(k + \mathsf{ctx})}) \cdot  e(pk, g_2^{1/(k + \mathsf{ctx})}) \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1^\mathsf{ctx}, g_2)^{1/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{1/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1, g_2)^{\mathsf{ctx}/(k + \mathsf{ctx})} \cdot  e(g_1^k, g_2)^{k/(k + \mathsf{ctx})} \quad  \stackrel{?}{=}& \quad  e(g_1, g_2) \\
+    e(g_1, g_2)^{\mathsf{ctx} + k/(k + \mathsf{ctx})}  \quad =& \quad e(g_1, g_2) \\
+\end{align*}
+
+\begin{align*}
+     \pi  \quad  \stackrel{?}{=}& \quad e(g_1, \mathsf{N}) \\
+     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2^{1/(k + \mathsf{ctx})}) \\
+     e(g_1, g_2)^{1/(k + \textsf{ctx})}  \stackrel{?}{=}& \quad  e(g_1, g_2)^{1/(k + \textsf{ctx})} \\
+\end{align*}
+
+And the second pairing binds the proof $\pi$ to \mathsf{N}$
+
+\subsubsection{Informal Security analysis of Bilinear Pairing VRF}
+\begin{itemize}
+    \item \textbf{Correctness:} Follows directly from pairing properties. The algebraic structure ensures verification equations hold when computed honestly.
+    
+    \item \textbf{Unique Provability:} Each nullifier $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ is uniquely determined by the pairing equation $e(g_1^{k + \textsf{ctx}}, \mathsf{N}) = e(g_1, g_2)$. A forgery requires solving DLOG to create  $g_2^{1/(k+\textsf{ctx}')} = \mathsf{N}$.
+    
+    \item \textbf{Pseudorandomness:} Relies on the $q$-DHI assumption in bilinear groups. Given $g_1, g_1^k, g_1^{k^2}, \ldots$, distinguishing $\mathsf{N} = g_2^{1/(k+\textsf{ctx})}$ from random reduces to computing $g_2^{1/k}$ (a $q$-DHI instance).
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Construction 1. VRF in prime-order group}
 Our Verifiable Random Function (VRF) works in a prime-order group $\G$ with generator $g$, where the evaluation outputs $y = g^{1/(sk + x)}$ for an input $x$ and secret key $sk$, and the verification protocol shows that $y^{sk + x} = g$.
 
 \subsection{VRF Construction}
@@ -223,7 +334,7 @@ Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator
         g^z = T_1 \cdot C^c \quad \wedge \quad y^z = T_2 \cdot g^c
     \]
 \end{itemize}
-This construction satisfies the VRF properties under the $q$-DHI assumption.
+This construction satisfies the VRF properties - correctness, uniqueness, and pseudorandomness under the under the $q$-DHI assumption. Note that we use a public key $pk$ and VRF input $x$ which are both public. 
 
 \subsubsection{Comparison to Dodis-Yampolskiy VRF}
 The Dodis-Yampolskiy VRF also evaluates $y = g^{1/(sk + x)}$, but relies on a bilinear group for the proof $\pi$ using a pairing check: $e(y, pk \cdot g^x) = e(g, g)$, which is computationally heavy. Our construction sticks to the prime-order group, proves $y^{sk + x} = g$ with a $\Sigma$-protocol.
@@ -231,6 +342,12 @@ The Dodis-Yampolskiy VRF also evaluates $y = g^{1/(sk + x)}$, but relies on a bi
 
 
 
+
+
+\section{Construction 2. VRF from commitment exponents}
+
+Let's show that a commitment $cm = g_1^sk g_2^x g^r$ can in privacy produce the VRF.
+Such that $y = g^{1/x + sk}$ and $\pi$ proves that  $y^{sk + x} = g$.
 
 
 
