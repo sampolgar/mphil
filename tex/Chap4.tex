@@ -206,85 +206,128 @@ A $\VRF$ must satisfy three properties
 We develop a novel Verifiable Random Function (VRF) construction from committed attributes and show how it supports our anonymous credential hierarchy requirements. At the core is our novel zero-knowledge proof protocol to prove two committed attributes are multiplicative inverse of each other which is of independent interest. 
 
 \subsection*{Notation}
-Inline with our Anonymous Credential scheme built and prior chapters, the secret key is $\k$, the VRF input is $\ctx$, the VRF output is $\nul$ and the proof $\pi$ proves the correctness of $\nul$ such that $(\nul, \pi) \gets \mathsf{VRF.Eval}(\k, \ctx)$. $\cm = \CMCom([\id,\ldots];\usk)$ is a commitment shorthand for commitment $g_1^\id \ldots g^\usk$
+Inline with our Anonymous Credential scheme built and prior chapters, the secret key is $\k$, the VRF input is $\ctx$, the VRF output is $\nul$ and the proof $\pi$ proves the correctness of $\nul$ such that $(\nul, \pi) \gets \mathsf{VRF.Eval}(\k, \ctx)$. $\cm = \CMCom([\id,\ldots];\usk)$ is a commitment shorthand for commitment $g_1^\id \ldots g^\usk$. We use Type-3 Bilinear Pairings. Let $\G_1$, $\G_2$, and $\G_T$ be groups of prime order $p$, with generators $g \in \G_1$, $\tilde{g} \in \G_2$, and a bilinear map $e: \G_1 \times \G_2 \to \G_T$.
 
 \subsection*{Roadmap}
-We start with the classical Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005} and introduce step-changes to adapt it for privacy and efficiency. The nullifier format $\nul = g^{1/(\k+\ctx)}$ remains the same throughout as the proof $\pi$ changes shape.
+We start with the classical Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005} and introduce systematic adaptations to achieve privacy and efficiency. While the nullifier format $\nul = g^{1/(\k+\ctx)}$ remains consistent, the proof $\pi$ evolves at each step:
+
 \begin{enumerate}
-    \item \textbf{Dodis-Yampolskiy VRF with Bilinear Pairings}: We begin with revisiting the classical Dodis-Yampolskiy VRF using bilinear pairings where 
-    $pk = g^\k$ is public, $\ctx$ is public, $\k$ is secret. $\VRFEval$ outputs $\nul$ and proof $\pi = e(g_1, g_2)^{1/(\k + \ctx)}$
+    \item \textbf{Dodis-Yampolskiy VRF with Bilinear Pairings}: The original construction where $pk = g^\k$ and $\ctx$ are public, with proof $\pi = e(g, \tilde{g})^{1/(\k + \ctx)}$ verified via pairing equations.
     
-    \item \textbf{Prime-Order Group VRF}: We then adapt the VRF to a prime-order group setting while retaining the security properties under $q$-DHI. We run a $\Sigma$-protocol to generate the proof $\pi$ attesting to the relation, noting that $\pk$ and $\ctx$ are public and used in verification
-
-    \[
-    \Rel = \zkpok \left\{(pk, \ctx, \nul, \n) (\k) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \n =  pk \cdot g^x  \right\}
-    \]
+    \item \textbf{Prime-Order Group VRF}: We eliminate pairings by replacing the proof mechanism with a $\Sigma$-protocol that directly proves knowledge of $\k$ such that $\nul^{\k+\ctx} = g$, maintaining security under $q$-DHI.
     
-    \item \textbf{VRF with Committed Inputs}: Next, we hide the secret key $\k$ and context identifier $\ctx$ in a commitment $\cm = \CMCom([\k, \ctx]; \usk)$ and show the proof $\pi$ attesting to the relation, noting the commitment is public but $\ctx$ is hidden
-
-    \[
-    \Rel = \zkpok \left\{ (\nul, \cm)(\k, \ctx) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \cm = g_1^\k g_2^{\ctx}g^r  \right\}
-    \]
-
-    \item \textbf{VRF from (multiple) Committed Inputs for $\MIMCABC$}: Finally, we extend the $\Sigma$-protocol to incorporate our Anonymous Credential requirements. We derive the nullifier from two separate commitments, $\cmm = \CMCom([\id, \ctx_m, \exp_m, \k_m]; \usk_m)$ from the master credential and $\cmc = \CMCom([\id, \ctx_c, \exp_c]; \usk_c)$ from the context credential. The relation proves the following 
-    \begin{enumerate}
-        \item prover can open $\cmm$ and its from a Master Credential and contains the $\k_m$ we're using %$\ctx=\texttt{master}$
-        \item prover can open $\cmc$ and its from a Context Credential
-        \item The derived nullifier is correct $\nul = g^{1/(\k_m + \ctx_c)}$ 
-    \end{enumerate}
+    \item \textbf{VRF with Committed Inputs}: The proof $\pi$ now demonstrates that $\nul$ is correctly formed from values hidden in a commitment $\cm = \CMCom([\k, \ctx]; \usk)$, adding privacy while preserving verifiability.
     
-    \[
-        \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
-        \begin{array}{l} 
-        (\cmm, \cmc, \mathsf{N}), (\id, \ctx, , \exp, \k, r_1, r_2) \\
-        \end{array} 
-        \middle|
-        \begin{array}{l}
-            \cmm = g_1^{\id}g_2^{\ctx_m}g_3^{\exp_m}g_4^{\k_m}g^{r_m}  \wedge \ctx=\texttt{master} \\
-            \cmc = g_1^{\id}g_2^{\ctx_c}g_3^{\exp_c}g^{r_c} \wedge \ctx=\texttt{dmv} \\
-            \nul = g^{1/(k_m + \ctx_c)}
-        \end{array} 
-        \right\}
-    \]
-
+    \item \textbf{VRF from Multiple Commitments}: Our full construction transforms the proof to establish that $\nul = g^{1/(\k_m + \ctx_c)}$ where $\k_m$ comes from a master credential commitment $\cmm$ and $\ctx_c$ from a context credential commitment $\cmc$.
 \end{enumerate}
 
+The evolution of the proof $\pi$ enables us to transition from a pairing-based public input VRF to a pairing-free, privacy-preserving nullifier scheme.
 
 
 
-\subsection{Dodis-Yampolskiy VRF with Bilinear Pairings}
-We begin by revisiting the Dodis-Yampolskiy VRF, defined in a bilinear group setting (we use Type-3 pairings). Let $\G_1$, $\G_2$, and $\G_T$ be groups of prime order $p$, with generators $g \in \G_1$, $\tilde{g} \in \G_2$, and a bilinear map $e: \G_1 \times \G_2 \to \G_T$.
 
-The VRF is specified as:
+
+
+
+\section{Technical Approach}
+
+\subsection{Starting Point: Dodis-Yampolskiy VRF}
+We begin with the Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005}, which evaluates $\nul = \tilde{g}^{1/(\k + \ctx)}$ for input $\ctx$ and secret key $\k$. This construction uses bilinear pairings for verification:
+
 \begin{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda)$: Sample $\k \sample \mathbb{Z}_p^*$ and compute $pk = g_1^\k$. Output $(\k, pk)$.
-    \item $\mathsf{VRF.Eval}(\k, \ctx) \to (\nul, \pi)$: compute: $\nul = \tilde{g}^{1/(\k + \ctx)}$, $\pi = e(g, \tilde{g})^{1/(\k + \ctx)}$ for $\ctx \in \Z_p$
-    \item $\mathsf{VRF.Vfy}(pk, \ctx, \nul, \pi) \to \{0, 1\}$: Assert: $e(g^\ctx \cdot pk, \nul) \stackrel{?}{=} e(g, \tilde{g}) \quad $ and $\quad \pi \stackrel{?}{=} e(g, \nul)$
+    \item $\mathsf{VRF.Gen}(1^\lambda)$: Sample $\k \sample \mathbb{Z}_p^*$, compute $pk = g^\k$. Output $(\k, pk)$.
+    \item $\mathsf{VRF.Eval}(\k, \ctx) \to (\nul, \pi)$: Compute $\nul = \tilde{g}^{1/(\k + \ctx)}$ and proof $\pi = e(g, \tilde{g})^{1/(\k + \ctx)}$.
+    \item $\mathsf{VRF.Vfy}(pk, \ctx, \nul, \pi) \to \{0, 1\}$: Check if $e(g^{\ctx} \cdot pk, \nul) \stackrel{?}{=} e(g, \tilde{g})$ and $\pi \stackrel{?}{=} e(g, \nul)$.
 \end{itemize}
-
-The $\mathsf{Eval}$ function generates a nullifier $\mathsf{N}$ and a proof $\pi$, enabling anyone with $pk$ and $\textsf{ctx}$ to verify that $\mathsf{N}$ was computed correctly. The verification mimics a signature check, binding $pk$, $\textsf{ctx}$, and $\mathsf{N}$.
-
-\textbf{Verification Details:}
-
-1. \textbf{First Pairing Equation:}
-   \[
-   e(g_1^{\textsf{ctx}} \cdot pk, \mathsf{N}) = e(g_1^{\textsf{ctx}} \cdot g_1^k, g_2^{1/(k + \textsf{ctx})}) = e(g_1^{\textsf{ctx} + k}, g_2^{1/(k + \textsf{ctx})}) = e(g_1, g_2)^{(\textsf{ctx} + k)/(k + \textsf{ctx})} = e(g_1, g_2)^1 = e(g_1, g_2).
-   \]
-   This confirms $\mathsf{N}$'s consistency with $pk$ and $\textsf{ctx}$.
-
-2. \textbf{Second Pairing Equation:}
-   \[
-   \pi = e(g_1, g_2)^{1/(k + \textsf{ctx})}, \quad e(g_1, \mathsf{N}) = e(g_1, g_2^{1/(k + \textsf{ctx})}) = e(g_1, g_2)^{1/(k + \textsf{ctx})},
-   \]
-   so $\pi = e(g_1, \mathsf{N})$, binding the proof to $\mathsf{N}$.
 
 \subsubsection{Informal Security Analysis}
 \begin{itemize}
-    \item \textbf{Correctness}: The pairing properties ensure that honestly computed $\mathsf{N}$ and $\pi$ satisfy the verification equations.
-    \item \textbf{Unique Provability}: For each $\textsf{ctx}$, only $\mathsf{N} = g_2^{1/(k + \textsf{ctx})}$ satisfies $e(g_1^{\textsf{ctx}} \cdot pk, \mathsf{N}) = e(g_1, g_2)$. Forging a different $\mathsf{N}'$ requires solving the discrete logarithm problem, which is intractable.
-    \item \textbf{Pseudorandomness}: The output $\mathsf{N}$ appears random under the $q$-Diffie-Hellman Inversion ($q$-DHI) assumption. Given $g_1, g_1^k, \ldots, g_1^{k^q}$, distinguishing $\mathsf{N} = g_2^{1/(k + \textsf{ctx})}$ from a random $\mathbb{G}_2$ element reduces to computing $g_2^{1/k}$, a hard $q$-DHI instance.
+    \item \textbf{Correctness}: The pairing properties ensure that honestly computed $\nul$ and $\pi$ satisfy the verification equations.
+    \item \textbf{Uniqueness}: For each $\ctx$, only $\nul = \tilde{g}^{1/(\k + \ctx)}$ satisfies $e(g^{\ctx} \cdot pk, \nul) = e(g, \tilde{g})$.
+    \item \textbf{Pseudorandomness}: Under the $q$-DHI assumption, the output $\nul$ appears random to adversaries without knowledge of $\k$.
 \end{itemize}
 
+\subsubsection{Limitations}
+\begin{enumerate}
+    \item It relies on (computationally expensive) bilinear pairings
+    \item It operates on public inputs $pk, \ctx$, not allowing for private inputs from commitments
+\end{enumerate}
+
+\subsection{Our First Modification: Pairing-Free VRF in Prime-Order Groups}
+We adapt the Dodis-Yampolskiy approach to work efficiently in standard prime-order groups without pairings, while maintaining security under the $q$-DHI assumption:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda) \to (\k, pk)$: Sample $\k \sample \mathbb{Z}_p^*$, compute $pk = g^{\k}$. Output $(\k, pk)$.
+    \item $\mathsf{VRF.Eval}(\k, \ctx) \to (\nul, \pi)$: Compute $\nul = g^{1/(\k + \ctx)}$ and generate proof $\pi$ using a $\Sigma$-protocol that proves the relation:
+    \[
+    \mathcal{R} = \zkpok \left\{(pk, \ctx, \nul) (\k) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad pk = g^{\k}  \right\}
+    \]
+    \item $\mathsf{VRF.Vfy}(pk, \ctx, \nul, \pi) \to \{0,1\}$: Verify the $\Sigma$-protocol proof that $\nul^{\k+\ctx} = g$.
+\end{itemize}
+
+\subsubsection{Informal Security Analysis}
+\begin{itemize}
+    \item \textbf{Correctness}: The $\Sigma$-protocol's completeness ensures that honest provers can convince verifiers.
+    \item \textbf{Uniqueness}: The algebraic constraint $\nul^{\k+\ctx} = g$ ensures a unique $\nul$ for each $(\k,\ctx)$ pair.
+    \item \textbf{Pseudorandomness}: The $q$-DHI assumption ensures that $g^{1/(\k+\ctx)}$ appears random without knowledge of $\k$.
+\end{itemize}
+
+\subsubsection{Limitation}
+This modification eliminates pairings but still requires public inputs $(pk, \ctx)$.
+
+\subsection{Our Second Modification: VRF from Committed Inputs}
+To support privacy, we extend our construction to operate on committed inputs, hiding both the secret key $\k$ and context identifier $\ctx$:
+
+\begin{itemize}
+    \item Input: Commitment $\cm = \CMCom([\k, \ctx]; \usk)$
+    \item Output: Nullifier $\nul = g^{1/(\k + \ctx)}$ with zero-knowledge proof $\pi$ for relation:
+    \[
+    \mathcal{R} = \zkpok \left\{ (\nul, \cm)(\k, \ctx, \usk) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \cm = g_1^{\k} g_2^{\ctx}g^{\usk}  \right\}
+    \]
+    \item Verification: The verifier checks the proof $\pi$ without learning $\k$ or $\ctx$.
+\end{itemize}
+
+\subsubsection{Informal Security Analysis}
+\begin{itemize}
+    \item \textbf{Correctness}: The $\Sigma$-protocol's completeness ensures correct nullifiers verify.
+    \item \textbf{Uniqueness}: The algebraic structure maintains uniqueness of $\nul$ for each committed $(\k,\ctx)$ pair.
+    \item \textbf{Pseudorandomness}: Without knowledge of $\k$, the nullifier remains indistinguishable from random under $q$-DHI.
+    \item \textbf{Zero-Knowledge}: The $\Sigma$-protocol reveals nothing about $\k$ or $\ctx$ beyond the fact that $\nul$ is correctly formed.
+\end{itemize}
+
+\subsection{Final Construction: VRF from Multiple Committed Inputs}
+Our complete construction derives the nullifier from two separate commitments, critical for our anonymous credential system:
+
+\begin{itemize}
+    \item Master Credential: $\cmm = \CMCom([\id, \ctx_m, \exp_m, \k]; \usk_m)$ 
+    \item Context Credential: $\cmc = \CMCom([\id, \ctx_c, \exp_c]; \usk_c)$
+    \item Nullifier: $\nul = g^{1/(\k + \ctx_c)}$
+    \item Verification: Zero-knowledge proof for relation:
+    \[
+    \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
+    \begin{array}{l} 
+    (\cmm, \cmc, \nul), \\
+    (\id, \ctx_m, \exp_m, \k, \usk_m, \ctx_c, \exp_c, \usk_c) \\
+    \end{array} 
+    \middle|
+    \begin{array}{l}
+        \cmm = g_1^{\id}g_2^{\ctx_m}g_3^{\exp_m}g_4^{\k}g^{\usk_m}  \wedge \ctx_m=\texttt{master} \\
+        \cmc = g_1^{\id}g_2^{\ctx_c}g_3^{\exp_c}g^{\usk_c} \wedge \ctx_c=\texttt{dmv} \\
+        \nul = g^{1/(\k + \ctx_c)}
+    \end{array} 
+    \right\}
+    \]
+\end{itemize}
+
+\subsubsection{Informal Security Analysis}
+\begin{itemize}
+    \item \textbf{Correctness}: Honest provers with valid master and context credentials can generate valid nullifiers.
+    \item \textbf{Uniqueness}: Each $(\k,\ctx_c)$ pair produces exactly one nullifier, preventing Sybil attacks.
+    \item \textbf{Unlinkability}: Nullifiers for different contexts are unlinkable without knowledge of $\k$.
+    \item \textbf{Zero-Knowledge}: The $\Sigma$-protocol reveals nothing about $\id$, $\k$, or any other attributes.
+\end{itemize}
+
+This construction enables Sybil resistance while maintaining privacy, as the nullifier deterministically binds a context credential to a master credential without revealing the underlying identity.
 
 
 
@@ -297,7 +340,51 @@ The $\mathsf{Eval}$ function generates a nullifier $\mathsf{N}$ and a proof $\pi
 
 
 
-Notes below! 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+
+
+
+
 
 
 
@@ -334,17 +421,206 @@ The Dodis-Yampolskiy VRF also evaluates $y = g^{1/(sk + x)}$, but relies on a bi
 
 
 
-\section{Construction 2. VRF from commitment exponents}
 
-Let's show that a commitment $cm = g_1^sk g_2^x g^r$ can in privacy produce the VRF.
-Such that $y = g^{1/x + sk}$ and $\pi$ proves that  $y^{sk + x} = g$.
 
 
 
+\section{Construction 2.0. Proving Committed Multiplicative Inverse}
+Let $G$ be a cyclic group of prime order $q$, with generators $g_1, g \in G$. Assume the discrete logarithm problem (DLP) is hard in $G$, and the discrete log of $g_1$ with respect to $g$ is unknown.
+The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q^*$ such that $m \cdot x = 1 \mod q$, where $x = \frac{1}{m}$, given commitments to $m$ and $x$.
+
+
+\begin{protocol}{Proving Committed Multiplicative Inverse}{committed-multiplicative-inverse}\label{pok-committed-multiplicative-inverse}
+\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, and commitments $\cm_1, \cm_2, \cm_3, \cm_4 \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(m, x, \usk_1, \usk_2, \usk_3, \usk_4)$ such that:
+    \begin{align*}
+        \cm_1 &= g_1^m g^{\usk_1}     &    \cm_2 &= g_1^x g^{\usk_2}  &   \cm_3 &= \cm_2^m g^{\usk_3} & \cm_4 &= g^{\usk_4}\\
+         x &= \frac{1}{m}     &   \usk_4 &= \usk_3 + m \usk_2 & \frac{\cm_3}{\cm_4} &= g_1
+    \end{align*}
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples random blinding factors from $\Z_q$:
+       \[
+        a_x \quad \text{ for } \quad x \in \{\ m, x, \usk_1, \usk_2, \usk_3, \usk_4\} \in \Z_q
+        \]
+    \textbf{Computes}:
+    \begin{align*}
+        T_1 &\gets g_1^{a_m} g^{a_{\usk_1}}  &   T_2 &\gets g_1^{a_x} g^{a_{\usk_2}}     &   T_3 &\gets \cm_2^{a_m} g^{a_{\usk_3}} & T_4 &\gets g^{a_{\usk_4}}
+    \end{align*}
+    Sends $(T_1, T_2, T_3, T_4)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_x = a_x + c \cdot x \quad \text{ for } \quad x \in \{\ m, x, \usk_1, \usk_2, \usk_3, \usk_4\} 
+    \]
+    Sends $(z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+         T_1 \cdot \cm_1^c &\stackrel{?}{=}  g_1^{z_1} g^{z_2}
+        & 
+         T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_1^{z_3} g^{z_4}\\
+        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_1} g^{z_5}
+        &
+        T_4 \cdot \cm_4^c &\stackrel{?}{=}  g^{z_6} 
+        &
+        \frac{\cm_3}{\cm_4} &\stackrel{?}{=} g_1
+    \end{align*}
+\end{enumerate}
+\end{protocol}
+
+
+
+\subsubsection*{Completeness}:
+We show that if the prover follows the protocol honestly, all verification equations will be satisfied.
+
+\begin{enumerate}
+    \item The first two verification equations ($T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_m} g^{z_{\usk_1}}$, $T_2 \cdot \cm_2^c \stackrel{?}{=} g_1^{z_x} g^{z_{\usk_2}}$) are simple Schnorr proofs of exponents which we will not expand 
+        
+    \item Third verification equation: $T_3 \cdot \cm_3^c \stackrel{?}{=} \cm_2^{z_m} g^{z_{\usk_3}}$
+    \begin{align*}
+        T_3 \cdot \cm_3^c &= \cm_2^{a_m} g^{a_{\usk_3}} \cdot (\cm_2^m g^{\usk_3})^c \\
+        &= \cm_2^{a_m} g^{a_{\usk_3}} \cdot \cm_2^{m \cdot c} g^{\usk_3 \cdot c} \\
+        &= \cm_2^{a_m + m \cdot c} g^{a_{\usk_3} + \usk_3 \cdot c} \\
+        &= \cm_2^{z_m} g^{z_{\usk_3}}
+    \end{align*}
+    
+    \item Fourth verification equation: $T_4 \cdot \cm_4^c \stackrel{?}{=} g^{z_{\usk_4}}$
+    \begin{align*}
+        T_4 \cdot \cm_4^c &= g^{a_{\usk_4}} \cdot (g^{\usk_4})^c \\
+        &= g^{a_{\usk_4}} \cdot g^{\usk_4 \cdot c} \\
+        &= g^{a_{\usk_4} + \usk_4 \cdot c} \\
+        &= g^{z_{\usk_4}}
+    \end{align*}
+    
+    \item Fifth verification equation: $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g_1$
+    
+    Using the relations $x = \frac{1}{m}$ and $\usk_4 = \usk_3 + m \cdot \usk_2$:
+    \begin{align*}
+        \cm_3 &= \cm_2^m g^{\usk_3} \\
+        &= (g_1^x g^{\usk_2})^m g^{\usk_3} \\
+        &= g_1^{x \cdot m} g^{\usk_2 \cdot m} g^{\usk_3} \\
+        &= g_1^{\frac{1}{m} \cdot m} g^{\usk_2 \cdot m + \usk_3} \\
+        &= g_1 g^{\usk_3 + m \cdot \usk_2} \\
+        &= g_1 g^{\usk_4} \\
+        &= g_1 \cdot \cm_4
+    \end{align*}
+    
+    Therefore:
+    \begin{align*}
+        \frac{\cm_3}{\cm_4} = \frac{g_1 \cdot \cm_4}{\cm_4} = g_1
+    \end{align*}
+\end{enumerate}
+
+Since all verification equations are satisfied when the prover follows the protocol, we conclude that our sigma protocol satisfies the completeness property.
+
+
+\subsubsection*{Soundness}
+We prove the special soundness property by demonstrating that given two accepting transcripts with identical first messages but different challenges, we can extract a valid witness satisfying all relations required by the protocol.
+
+Let $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ and $(T_1, T_2, T_3, T_4, c', z'_m, z'_x, z'_{\usk_1}, z'_{\usk_2}, z'_{\usk_3}, z'_{\usk_4})$ be two accepting transcripts with $c \neq c'$.
+
+\begin{enumerate}
+    \item \textbf{Witness extraction:}
+    
+    Following the standard extraction technique for sigma protocols, we compute each witness component:
+    \begin{align}
+    m &= \frac{z_m - z'_m}{c - c'} & x &= \frac{z_x - z'_x}{c - c'} \\
+    \usk_1 &= \frac{z_{\usk_1} - z'_{\usk_1}}{c - c'} & \usk_2 &= \frac{z_{\usk_2} - z'_{\usk_2}}{c - c'} \\
+    \usk_3 &= \frac{z_{\usk_3} - z'_{\usk_3}}{c - c'} & \usk_4 &= \frac{z_{\usk_4} - z'_{\usk_4}}{c - c'}
+    \end{align}
+    
+    These extracted values are guaranteed to be consistent with the protocol's verification equations precisely because both transcripts are accepting.
+    
+    \item \textbf{Verification of commitment relations:}
+    
+    We first show that the extracted witness satisfies $\cm_1 = g_1^m g^{\usk_1}$. From the acceptance of both transcripts, we have:
+    \begin{align}
+        T_1 \cdot \cm_1^c &= g_1^{z_m} g^{z_{\usk_1}} \\
+        T_1 \cdot \cm_1^{c'} &= g_1^{z'_m} g^{z'_{\usk_1}}
+    \end{align}
+    
+    Dividing these equations and substituting our extracted values:
+    \begin{align}
+        \cm_1^{c-c'} &= g_1^{z_m-z'_m} g^{z_{\usk_1}-z'_{\usk_1}} \\
+        &= g_1^{m(c-c')} g^{\usk_1(c-c')} \\
+        \Rightarrow \cm_1 &= g_1^m g^{\usk_1}
+    \end{align}
+    
+    Using identical extraction and verification techniques with the corresponding verification equations, we establish that:
+    \begin{align}
+        \cm_2 &= g_1^x g^{\usk_2} \\
+        \cm_3 &= \cm_2^m g^{\usk_3} \\
+        \cm_4 &= g^{\usk_4}
+    \end{align}
+    
+    \item \textbf{Verification of the multiplicative inverse relation ($x = \frac{1}{m}$):}
+    
+    The core cryptographic property enforced by our protocol is the multiplicative inverse relationship between $m$ and $x$. This is where the protocol's security guarantee is ultimately derived from. We verify this relationship using the final verification equation $\frac{\cm_3}{\cm_4} = g_1$.
+    
+    Substituting our extracted witness values:
+    \begin{align}
+        \frac{\cm_3}{\cm_4} &= g_1 \\
+        \frac{\cm_2^m g^{\usk_3}}{g^{\usk_4}} &= g_1 \\
+        \cm_2^m g^{\usk_3 - \usk_4} &= g_1
+    \end{align}
+    
+    Further substituting $\cm_2 = g_1^x g^{\usk_2}$:
+    \begin{align}
+        (g_1^x g^{\usk_2})^m g^{\usk_3 - \usk_4} &= g_1 \\
+        g_1^{x \cdot m} g^{m \cdot \usk_2 + \usk_3 - \usk_4} &= g_1
+    \end{align}
+    
+    In the generic group model, this equation can only hold if:
+    \begin{align}
+        x \cdot m &= 1 \\
+        m \cdot \usk_2 + \usk_3 - \usk_4 &= 0
+    \end{align}
+    
+    These equations immediately give us the two critical relations:
+    \begin{align}
+        x &= \frac{1}{m} \\
+        \usk_4 &= \usk_3 + m\usk_2
+    \end{align}
+    
+    The first relation confirms that our protocol successfully enforces the multiplicative inverse relationship between $m$ and $x$. The second relation verifies the consistency of the randomizers across the commitments, ensuring that no malicious prover can construct valid-looking commitments without knowing values that satisfy all required relations.
+\end{enumerate}
 
+We have thus demonstrated that our extractor obtains a complete and valid witness $(m, x, \usk_1, \usk_2, \usk_3, \usk_4)$ satisfying all relations in the statement, establishing the special soundness property of our sigma protocol. This ensures that no prover can successfully convince a verifier without knowledge of values satisfying the multiplicative inverse relationship $x = \frac{1}{m}$ and the associated consistency requirements.
 
+\subsubsection*{Zero-Knowledge}
+We prove the honest-verifier zero-knowledge property by presenting a simulator that produces transcripts indistinguishable from real protocol executions without knowing any witness.
 
+\begin{enumerate}
+    \item \textbf{Simulator Construction:}
+    
+    Given public input $(g_1, g, \cm_1, \cm_2, \cm_3, \cm_4)$ and any challenge $c \in \mathbb{Z}_q$, our simulator:
+    
+    \begin{itemize}
+        \item Samples $z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4} \sample \mathbb{Z}_q$ uniformly at random
+        
+        \item Computes the first message by working backwards from the verification equations:
+        \begin{align}
+            T_1 &\gets g_1^{z_m} g^{z_{\usk_1}} \cdot \cm_1^{-c} \\
+            T_2 &\gets g_1^{z_x} g^{z_{\usk_2}} \cdot \cm_2^{-c} \\
+            T_3 &\gets \cm_2^{z_m} g^{z_{\usk_3}} \cdot \cm_3^{-c} \\
+            T_4 &\gets g^{z_{\usk_4}} \cdot \cm_4^{-c}
+        \end{align}
+        
+        \item Outputs the transcript $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$
+    \end{itemize}
+    
+    \item \textbf{Perfect Indistinguishability:}
+    
+    In a real protocol execution with an honest prover, the responses have the form $z_x = a_x + c \cdot x$ where $a_x$ are uniformly random values. Since $a_x \sample \mathbb{Z}_q$ and addition with $c \cdot x$ is a permutation over $\mathbb{Z}_q$, the distribution of real responses is uniform over $\mathbb{Z}_q$.
+    
+    The simulator directly samples responses uniformly from $\mathbb{Z}_q$, matching this distribution exactly. Given these responses and the challenge $c$, the first message components $T_i$ are uniquely determined by the verification equations in both real and simulated cases.
+    
+    Consequently, the joint distribution of $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ is identical for both the simulator and the honest protocol.
+\end{enumerate}
 
+This construction demonstrates that our protocol satisfies perfect honest-verifier zero-knowledge. Notably, the simulator succeeds without requiring knowledge of the critical multiplicative inverse relationship $x = \frac{1}{m}$ or any other witness values, confirming that the protocol reveals no information about these secret values beyond what is already implied by the statement being proven.
 
 
 
@@ -386,101 +662,7 @@ Such that $y = g^{1/x + sk}$ and $\pi$ proves that  $y^{sk + x} = g$.
 
 
 
-
-
-% Introduce Pedersen commitments, VRFs, $\Sigma$-protocols
-
-\subsection{Notation}
-% Define $\mathbb{G}$, $p$, $g$, $\mathsf{CM.Com}$, etc.
-
-\section{Nullifier Construction}
-\subsection{Intuition}
-% High-level overview: purpose, why pairing-free matters
-% 
-
-\subsection{Formal Definition}
-% Define $\nul = g^{1/(\k + \ctx)} \in \mathbb{G}$
-
-\subsection{Algorithms}
-% Nullifier generation: how $\nul$ is computed
-% Verification: sketch of zero-knowledge check
-
-\subsection{Properties}
-% List $Uniqueness$, $Pseudorandomness$, $Zero-Knowledge$
-
-\section{Protocol for Nullifier Verification}
-\subsection{Overview}
-% Goal: prove $\nul$ correctness without revealing $\k$, $\ctx$
-
-\subsection{Commitment Structure}
-% Master: $\cmm = g_1^\id g_2^{\ctx_m} g_3^{\exp_m} g_4^\k g^{r_m}$
-% Context: $\cmc = g_1^\id g_2^{\ctx_c} g_3^{\exp_c} g^{r_c}$
-
-\subsection{$\Sigma$-Protocol}
-% Define $\mathcal{R}_{\mathsf{vrf}} = \{ ... | \nul = g^{1/(\k + \ctx_c)} \}$
-
-
-\subsection{Efficiency}
-% Highlight pairing-free advantage
-
-
-
-
-
-
-\section{Integration into MIMC-ABC}
-\subsection{Modified Algorithms}
-% Issuance: Master/Context credential setup
-% Presentation: $\nul$ proof with MIMC-ABC
-
-\subsection{Revocation and Sybil Resistance}
-% Revocation: $\cmm$ or $\k$ invalidation
-% Sybil Resistance: nullifier registry
-
-\subsection{Example}
-% Passport and driver’s license with $\nul$
-
-\section{Security Analysis}
-\subsection{Security Model}
-% Adversary definition, security games
-
-\subsection{Theorems}
-% $Uniqueness$, $Pseudorandomness$, $Zero-Knowledge$ proofs
-
-\subsection{Sybil Resistance}
-% Nullifier prevents multiple credentials per context
-
-\section{Performance Evaluation}
-\subsection{Benchmarks}
-% Compare to pairing-based VRFs: 33\%/60\% speedup
-
-\subsection{Scalability}
-% Overhead with increasing credentials
-
-\subsection{Implementation}
-% Rust/arkworks details
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+OLD WORK AND NOTES
 
 
 
@@ -571,8 +753,8 @@ Our $\Sigma$-protocol for this relation works as follows:
 \textbf{Prover Input:} Witness $(\id, \k, \ctx, r_1, r_2, r_3, r_4, r_5, \textsf{n}, r_6)$ such that:
     \begin{align*}
         \cm_1 &= g_1^{\id} g_2^{\k} g^{r_1}     &    \cm_2 &= g_1^{\id} g_3^{\ctx} g^{r_2}  &   \cm_3 &= g_4^{\k + \ctx} g^{r_3}\\
-        \cm_4 &= g_5^{\textsf{n}} g^{r_4}   &   \cm_5 &= \cm_3^{\textsf{n}} g^{r_5}     &   \cm_6 &= g^{r_6} \\
-        \textsf{n} &= \frac{1}{\k + \ctx}   &   r_6 &= r_3 \cdot \textsf{n} + r_5    &   \frac{\cm_5}{\cm_6} &= g_4
+        \cm_4 &= g_5^{1/(\k + \ctx)} g^{r_4}   &   \cm_5 &= \cm_3^{1/(\k + \ctx)} g^{r_5}     &   \cm_6 &= g^{r_6} \\
+       r_6 &= r_3 \cdot \frac{1}{\k + \ctx} + r_5    &   \frac{\cm_5}{\cm_6} &= g_4
     \end{align*}
 
 \begin{enumerate}
@@ -723,3 +905,46 @@ Verify & 6.37 & 2.52 & 60.42 \\
 
 % This construction leverages MIMC-ABC’s efficient $\Sigma$-protocols and avoids pairings, using only standard group operations in $\G$. The nullifier $\nul$ enforces hierarchical binding and sybil resistance, computed deterministically from $\k$ and $\ctx_c$.
 
+
+
+
+\subsection*{Roadmap}
+We start with the classical Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005} and introduce step-changes to adapt it for privacy and efficiency. The nullifier format $\nul = g^{1/(\k+\ctx)}$ remains the same throughout as the proof $\pi$ changes shape.
+\begin{enumerate}
+    \item \textbf{Dodis-Yampolskiy VRF with Bilinear Pairings}: We begin with revisiting the classical Dodis-Yampolskiy VRF using bilinear pairings where 
+    $pk = g^\k$ is public, $\ctx$ is public, $\k$ is secret. $\VRFEval$ outputs $\nul$ and proof $\pi = e(g_1, g_2)^{1/(\k + \ctx)}$
+    
+    \item \textbf{Prime-Order Group VRF}: We then adapt the VRF to a prime-order group setting while retaining the security properties under $q$-DHI. We run a $\Sigma$-protocol to generate the proof $\pi$ attesting to the relation, noting that $\pk$ and $\ctx$ are public and used in verification
+
+    \[
+    \Rel = \zkpok \left\{(pk, \ctx, \nul, \n) (\k) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \n =  pk \cdot g^x  \right\}
+    \]
+    
+    \item \textbf{VRF with Committed Inputs}: Next, we hide the secret key $\k$ and context identifier $\ctx$ in a commitment $\cm = \CMCom([\k, \ctx]; \usk)$ and show the proof $\pi$ attesting to the relation, noting the commitment is public but $\ctx$ is hidden
+
+    \[
+    \Rel = \zkpok \left\{ (\nul, \cm)(\k, \ctx) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \cm = g_1^\k g_2^{\ctx}g^r  \right\}
+    \]
+
+    \item \textbf{VRF from (multiple) Committed Inputs for $\MIMCABC$}: Finally, we extend the $\Sigma$-protocol to incorporate our Anonymous Credential requirements. We derive the nullifier from two separate commitments, $\cmm = \CMCom([\id, \ctx_m, \exp_m, \k_m]; \usk_m)$ from the master credential and $\cmc = \CMCom([\id, \ctx_c, \exp_c]; \usk_c)$ from the context credential. The relation proves the following 
+    \begin{enumerate}
+        \item prover can open $\cmm$ and its from a Master Credential and contains the $\k_m$ we're using %$\ctx=\texttt{master}$
+        \item prover can open $\cmc$ and its from a Context Credential
+        \item The derived nullifier is correct $\nul = g^{1/(\k_m + \ctx_c)}$ 
+    \end{enumerate}
+    
+    \[
+        \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
+        \begin{array}{l} 
+        (\cmm, \cmc, \mathsf{N}), (\id, \ctx, , \exp, \k, r_1, r_2) \\
+        \end{array} 
+        \middle|
+        \begin{array}{l}
+            \cmm = g_1^{\id}g_2^{\ctx_m}g_3^{\exp_m}g_4^{\k_m}g^{r_m}  \wedge \ctx=\texttt{master} \\
+            \cmc = g_1^{\id}g_2^{\ctx_c}g_3^{\exp_c}g^{r_c} \wedge \ctx=\texttt{dmv} \\
+            \nul = g^{1/(k_m + \ctx_c)}
+        \end{array} 
+        \right\}
+    \]
+
+\end{enumerate}
