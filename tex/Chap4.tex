@@ -79,7 +79,7 @@ The remainder of this chapter is organized as follows: Section 4.3 introduces ou
 
 
 Pick apart dodis yampolskiy vrf
-- the q-BDHHI ensures security of the output which means it must be in a GT element as per the definition $y = e(g,g)^{1/(x+sk)}$ and $\pi = g^{1/(s+sk)}$
+- the q-BDDHI ensures security of the output which means it must be in a GT element as per the definition $y = e(g,g)^{1/(x+sk)}$ and $\pi = g^{1/(s+sk)}$
 - The owner of the function $f$ publishes a public key PK, which can be viewed as a commitment to the function $f$. Something must bind the owner to the function to prove the statement $f(x) = y$. 
 - Verify checks $e(g^x \cdot pk, \pi) = e(g,g)$
 
@@ -101,11 +101,6 @@ Goal:
 
 Technical Problems: 
 q-DHI is not pseudorandom
-
-
-First Step
-Redefine VRF like Bitansky with 4 algorithms
-
 
 
 
@@ -192,7 +187,7 @@ Redefine VRF like Bitansky with 4 algorithms
 \subsection{Cryptographic Assumptions}
 
 \begin{definition}[q-DHI Assumption]
-Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Diffie-Hellman Inversion ($q$-DHI) assumption \cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Decisional-Diffie-Hellman Inversion ($q$-DDHI) assumption\cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
 \Pr\left[ x \sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x} \right] \leq \negl(\lambda)
 \]
@@ -219,49 +214,84 @@ where the probability is taken over the random choice of $x$ and the random coin
 \subsection{Building Blocks}
 We use the Pedersen Commitments from chapter 2, committing to a vector of messages $\cm = \CMCom([\id, \ctx, \exp, \k];\usk) = g_1^\id g_2^\ctx g_3^\exp g_4^\k g^\usk$. Pedersen Commitments are hiding, binding, and position-binding which enforces their position in the vector of messages such that the exponent at one position can't be swapped with another position. 
 
-We use the three-move $\Sigma$-protocols \ref{preliminaries-sigmaprotocol} to prove relations of exponents which we represent as $\mathcal{R}_{\mathsf{VRF}} = \left\{(w)(x) \mid x = g^w \right\}$ proving knowledge of secret witness $w$ with public statement $x$. 
+
+
+
 
 
 \begin{definition}[Verifiable Random Function]
-A Verifiable Random Function (VRF) is a tuple of probabilistic polynomial-time algorithms $(\PPT)$ $(\mathsf{VRF.Gen}, \mathsf{VRF.Eval}, \mathsf{VRF.Vfy})$ with an associated message space $\setX$, output space $\setY$ and proof space $\Pi$ defined as:
+We use the definition by \cite{bitansky_verifiable_2020} A Verifiable Random Function (VRF) is a tuple of probabilistic polynomial-time algorithms $(\VRFGen, \VRFEval, \VRFProve, \VRFVerify)$ with an associated message space $\mathcal{X}$, output space $\mathcal{Y}$ and proof space $\Pi$ defined as:
 \begin{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk)$: Takes a security parameter $\lambda$ and outputs a secret key $sk$ and a public key $pk$.
+    \item $\VRFGen(1^\lambda) \to (sk, pk)$: Takes a security parameter $\lambda$ and outputs a secret key $sk$ and a public key $pk$.
     
-    \item $\mathsf{VRF.Eval}(sk, x) \to (y, \pi)$: On input $x \in \setX$ and secret key $sk$, outputs a value $y \in \setY$ and a proof $\pi \in \Pi$.
+    \item $\VRFEval(sk,x) \to y$: On input $x \in \mathcal{X}$ and secret key $sk$, outputs a value $y \in \mathcal{Y}$.
     
-    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \to \{0,1\}$: Using the public key $pk$, verifies that $y$ is the correct output for input $x$ with proof $\pi$, returning 1 if valid, 0 otherwise.
+    \item $\VRFProve(sk,x) \to \pi$: On input $x \in \mathcal{X}$ and secret key $sk$, produces a proof $\pi$ that $y$ is consistent with the public key $pk$.
+    
+    \item $\VRFVerify(pk,x, y, \pi) \to \{0,1\}$: Using the public key $pk$, verifies that $y$ is the correct output for input $x$ with proof $\pi$, returning 1 if valid, 0 otherwise.
 \end{itemize}
     
 \end{definition}
-A $\VRF$ must satisfy three properties
+
+A $\mathrm{VRF}$ must satisfy three properties:
 \begin{itemize}
-    \item \textbf{Correctness:} For all $(sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda)$ and all $x \in \setX$:
+    \item \textbf{Completeness:} For every security parameter $\lambda \in \mathbb{N}$ and input $x \in \{0,1\}^{n(\lambda)}$:
     \[
-    \Pr\left[\begin{aligned}
-        (y, \pi) &\gets \mathsf{VRF.Eval}(sk, x) \\
-        1 &\gets \mathsf{VRF.Vfy}(pk, x, y, \pi)
-    \end{aligned}\right] = 1
+    \Pr\left[ \VRFVerify(pk,x, y, \pi) = 1 \ \middle| \ 
+    \begin{array}{l}
+        (sk, pk) \leftarrow \VRFGen(1^\lambda) \\
+        y = \VRFEval(sk,x) \\
+        \pi \leftarrow \VRFProve(sk,x)
+    \end{array}
+    \right] = 1
     \]
-
-    \item \textbf{Unique Provability:} For any $pk$ (possibly malicious) and $x \in \setX$, no $\PPT$ adversary $\AdvA$ can find two distinct pairs of outputs $(y_0, \pi_0) \neq (y_1, \pi_1)$ such that:
+    
+    \item \textbf{Uniqueness:} For every security parameter $\lambda \in \mathbb{N}$, input $x \in \{0,1\}^{n(\lambda)}$, and arbitrary public key $pk^* \in \{0,1\}^{k(\lambda)}$, there exists at most a single $y \in \{0,1\}^{m(\lambda)}$ for which there exists an accepting proof $\pi$. That is,
     \[
-    \mathsf{VRF.Vfy}(pk, x, y_0, \pi_0) = \mathsf{VRF.Vfy}(pk, x, y_1, \pi_1) = 1
+    \text{if} \quad \VRFVerify(pk^*, \pi_0, x, y_0) = \VRFVerify(pk^*, \pi_1, x, y_1) = 1 \quad \text{then} \quad y_0 = y_1
     \]
-
-    \item \textbf{Pseudorandomness:} Informally, this property ensures that without the secret key, the output of the VRF for an unqueried input is indistinguishable from a random value, even when the adversary can see other input-output pairs.
-    Formally, For any PPT adversary $\mathcal{A}$, the advantage in the following experiment is negligible:
+    
+    \item \textbf{Adaptive Indistinguishability:} For any adversary $\mathcal{A}(1^\lambda)$, consider the following game $\mathcal{G}_{\mathcal{A}}^{\text{vrf}}$:
+    \begin{enumerate}
+        \item The VRF challenger samples $(sk, pk) \leftarrow \VRFGen(1^\lambda)$, and sends $pk$ to $\mathcal{A}$.
+        \item $\mathcal{A}$ submits to a challenger evaluation queries $x_1, \ldots, x_Q$, and gets back from the challenger $(y_i, \pi_i), \ldots, (y_Q, \pi_Q)$, where $y_i = \VRFEval(sk, x_i)$, $\pi_i \leftarrow \VRFProve(x_i, sk)$.
+        \item At any point, including between evaluation queries, $\mathcal{A}$ may submit a challenge input $x_* \in \{0,1\}^{n(\lambda)}$. The challenger then sets $y_0^* = \VRFEval(sk, x_*)$, $y_1^* \leftarrow \{0,1\}^{m(\lambda)}$, samples $b \leftarrow \{0,1\}$, and sends $y_b^*$ to $\mathcal{A}$. (The adversary $\mathcal{A}$ may then make additional evaluation queries.)
+        \item At the end, $\mathcal{A}$ outputs a guess $b'$. The result of the game $\mathcal{G}_{\mathcal{A}}^{\text{vrf}}(\lambda)$ is 1 if $b' = b$, and 0 otherwise.
+    \end{enumerate}
+    
+    We say that $\mathcal{A}$ is \textit{admissible} if in the above game it is always the case that $x_* \not\in \{x_i | i \in [Q]\}$. We require that any polynomial-size admissible adversary wins the game with negligible advantage:
     \[
-    \left|\Pr\left[\begin{array}{l}
-        (sk, pk) \gets \mathsf{VRF.Gen}(1^\lambda) \\
-        x^* \gets \mathcal{A}^{\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}}(pk) \\
-        (y^*, \pi^*) \gets \mathsf{VRF.Eval}(sk, x^*) \\
-        y_0 \gets y^*; \, y_1 \sample \mathcal{Y} \\
-        b \sample \{0,1\} \\
-        b' \gets \mathcal{A}^{\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}}(pk, y_b)
-    \end{array} : b' = b \wedge x^* \notin \mathcal{Q}\right] - \frac{1}{2}\right| \leq \negl(\lambda)
+    \text{Adv}_{\mathcal{A}}^{\text{vrf}} := \left|\Pr\left[\mathcal{G}_{\mathcal{A}}^{\text{vrf}}(\lambda) = 1\right] - \frac{1}{2}\right| \leq \text{negl}(\lambda)
     \]
-    where the oracle $\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}$ takes input $x \in \mathcal{X}$ (where $x \neq x^*$) and outputs $(y, \pi) \gets \mathsf{VRF.Eval}(sk, x)$. $\mathcal{Q}$ is the set of oracle queries made to $\mathcal{O}_{\mathsf{VRF.Eval}(sk, \cdot)}$  
+    
+    We say that the VRF satisfies \textit{Selective Indistinguishability} (rather than adaptive) if $\mathcal{A}$ submits the challenge query $x_*$ at the beginning of the game, before getting $pk$ and making any evaluation query.
 \end{itemize}
+
+\subsubsection{Zero-Knowledge Proofs}
+A zero-knowledge proof (ZKP) enables a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ that a statement $x \in L$ holds for a language $L$, without revealing any witness $w$. Formally, an interactive proof system $(\mathcal{P}, \mathcal{V})$ for $L$ satisfies:
+\begin{itemize}
+    \item \textbf{Completeness}: If $x \in L$, then $\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] \geq 1 - \negl(\lambda)$.
+    \item \textbf{Soundness}: If $x \notin L$, then for any $\mathcal{P}^*$, $\Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] \leq \negl(\lambda)$.
+    \item \textbf{Zero-Knowledge}: There exists a simulator $\mathcal{S}$ such that for all $x \in L$, the view of any $\mathcal{V}^*$ is computationally indistinguishable from $\mathcal{S}(x)$.
+\end{itemize}
+
+
+\subsubsection{Sigma-Protocols}
+A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment $a$, (2) $\mathcal{V}$ sends a random challenge $e$, and (3) $\mathcal{P}$ responds with $z$. It satisfies:
+\begin{itemize}
+    \item \textbf{Completeness}: Honest execution accepts with probability 1.
+    \item \textbf{Special Soundness}: From two accepting transcripts $(a, e, z)$ and $(a, e', z')$ with $e \neq e'$, a witness $w$ can be extracted.
+    \item \textbf{Special Honest-Verifier Zero-Knowledge (SHVZK)}: A simulator can generate transcripts $(a, e, z)$ indistinguishable from real ones for any $e$.
+\end{itemize}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -271,6 +301,8 @@ A $\VRF$ must satisfy three properties
 
 
 \section{Technical Approach}
+
+\subsection{Starting Point: Dodis-Yampolskiy VRF}
 
 \subsection{Starting Point: Dodis-Yampolskiy VRF}
 We begin with the Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005}, which evaluates $\nul = \tilde{g}^{1/(\k + \ctx)}$ for input $\ctx$ and secret key $\k$. This construction uses bilinear pairings for verification:
@@ -315,6 +347,17 @@ We adapt the Dodis-Yampolskiy approach to work efficiently in standard prime-ord
 
 \subsubsection{Limitation}
 This modification eliminates pairings but still requires public inputs $(pk, \ctx)$.
+
+
+
+
+
+
+
+
+
+
+
 
 \subsection{Our Second Modification: VRF from Committed Inputs}
 To support privacy, we extend our construction to operate on committed inputs, hiding both the secret key $\k$ and context identifier $\ctx$:
@@ -1365,5 +1408,8 @@ A VRF must satisfy three core properties: \textbf{correctness}, \textbf{uniquene
 The zero-knowledge property ensures $sk$ remains secret, but the simulator can only generate valid proofs for \textbf{true statements}, e.g., $y = f_{sk}(x)$. It cannot produce a proof for a false statement, like $y' \neq f_{sk}(x)$, that passes verification, due to the \textbf{soundness} property. Soundness ensures that only proofs for the correct $y$ are accepted, preventing an adversary from forging a proof for an incorrect output. Thus, the uniqueness of $y$ is preserved, as false proofs are rejected with overwhelming probability.
 
 \textbf{Concrete Example:} Consider a VRF where $y = g^{1/(sk + x)}$ in a group of prime order $p$, and the $\Sigma$-protocol proves $y^{sk + x} = g$. Here, $y$ is uniquely determined by $sk$ and $x$ (since exponentiation is injective for $sk + x \neq 0 \mod p$). The $\Sigma$-protocol ensures that only the correct $y$ satisfies the equation, and a proof for an incorrect $y'$ (where $y'^{sk + x} \neq g$) fails verification. Despite zero-knowledge allowing simulation for the true $y$, soundness prevents valid proofs for false $y'$, reinforcing uniqueness.
+
+A potential concern with using zero-knowledge proofs for VRFs is that proof simulatability might conflict with output uniqueness. In general NIZKs, the simulation property could potentially allow valid proofs for multiple outputs of the same input, e.g. $y_1, y_2$ for the same input $x$, violating the VRF uniqueness requirement. Our construction resolves this tension by leveraging a $\Sigma$-protocol to prove the statement $y^{sk + x} = g$ where $y = g^{1/(sk + x)}$. This equation has exactly one solution for $y$ given fixed values of $sk$ and $x$ (when $sk + x \neq 0 \mod p$). While the protocol's zero-knowledge property conceals $sk$, its soundness guarantees that only proofs for the correct $y$ will verify, thereby enforcing rather than compromising uniqueness.
+
 
 In conclusion, the zero-knowledge property of $\Sigma$-protocols does not weaken the VRF's verifiable uniqueness, as simulation is limited to true statements. Meanwhile, soundness upholds the integrity of the proof, ensuring only the correct $y$ verifies.
