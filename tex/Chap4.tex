@@ -77,6 +77,21 @@ The remainder of this chapter is organized as follows: Section 4.3 introduces ou
 
 
 
+
+Pick apart dodis yampolskiy vrf
+- the q-BDHHI ensures security of the output which means it must be in a GT element as per the definition $y = e(g,g)^{1/(x+sk)}$ and $\pi = g^{1/(s+sk)}$
+- The owner of the function $f$ publishes a public key PK, which can be viewed as a commitment to the function $f$. Something must bind the owner to the function to prove the statement $f(x) = y$. 
+- Verify checks $e(g^x \cdot pk, \pi) = e(g,g)$
+
+
+
+
+
+
+
+
+
+
 Redefine Dodis Yampolskiy VRF
 1. the assumption (pseudorandomness is indistinguishability coming from the q-DBDHI)
 
@@ -96,7 +111,7 @@ Redefine VRF like Bitansky with 4 algorithms
 
 
 
-The owner of the function $f$ publish a public key PK which can be viewed as a commitment to the function $f$. Something must bind the owner to the function to prove the statement $f(x) = y$. 
+
 
 
 
@@ -1280,61 +1295,75 @@ Try to benchmark it against a VRF from the standardisation
 
 
 
-\begin{table}
-\begin{center}
-\caption{Comparison of our construction over previous work.}
-\label{tab:comparison-chap4}
-\begin{tabular}{l|ccccc}
-Features    									& 
-Sybil Resist.  & 
-Hierarchy & 
-Private & 
-Pairing-Free & 
-Predicate Proofs \\
-\hline
-CanDID \cite{maram2021candid}     				&
-\ding{51}     & 
-\ding{51} 	& 
-\ding{55}  &  
--     & 
-\ding{55}		\\
-SyRA \cite{crites_syra_2024}     				& 
-\ding{51}    	& 
-\ding{51}     & 
-\ding{51}  &  
-\ding{51}     & 
-\ding{55}		\\
-S3ID \cite{rabaninejad_attribute-based_2024}  & 
-\ding{51}     & 
-\ding{51}    	& 
-\ding{55}  &  
-\ding{55}     & 
-\ding{55}		\\
-UTT               & 
-\ding{51}     & 
-\ding{51}    	& 
-\ding{51}  &  
-\ding{55}     & 
-\ding{51}		\\
-Chap3             & 
-\ding{55}     & 
-\ding{55}    	& 
-\ding{51}  &  
-\ding{55}     & 
-\ding{51}		\\
-Ours  										& 
-\ding{51}     & 
-\ding{51}    	& 
-\ding{51}  &  
-\ding{51}     & 
-\ding{51}		\\
-\end{tabular}
-\end{center}
-\vspace{1em}
-\footnotetext[1]{Predicate Proofs allow users to prove statements about their credentials privately}
-\footnotetext[2]{Efficient Token refers to optimization of token verification}
-\end{table}
+% \begin{table}
+% \begin{center}
+% \caption{Comparison of our construction over previous work.}
+% \label{tab:comparison-chap4}
+% \begin{tabular}{l|ccccc}
+% Features    									& 
+% Sybil Resist.  & 
+% Hierarchy & 
+% Private & 
+% Pairing-Free & 
+% Predicate Proofs \\
+% \hline
+% CanDID \cite{maram2021candid}     				&
+% \ding{51}     & 
+% \ding{51} 	& 
+% \ding{55}  &  
+% -     & 
+% \ding{55}		\\
+% SyRA \cite{crites_syra_2024}     				& 
+% \ding{51}    	& 
+% \ding{51}     & 
+% \ding{51}  &  
+% \ding{51}     & 
+% \ding{55}		\\
+% S3ID \cite{rabaninejad_attribute-based_2024}  & 
+% \ding{51}     & 
+% \ding{51}    	& 
+% \ding{55}  &  
+% \ding{55}     & 
+% \ding{55}		\\
+% UTT               & 
+% \ding{51}     & 
+% \ding{51}    	& 
+% \ding{51}  &  
+% \ding{55}     & 
+% \ding{51}		\\
+% Chap3             & 
+% \ding{55}     & 
+% \ding{55}    	& 
+% \ding{51}  &  
+% \ding{55}     & 
+% \ding{51}		\\
+% Ours  										& 
+% \ding{51}     & 
+% \ding{51}    	& 
+% \ding{51}  &  
+% \ding{51}     & 
+% \ding{51}		\\
+% \end{tabular}
+% \end{center}
+% \vspace{1em}
+% \footnotetext[1]{Predicate Proofs allow users to prove statements about their credentials privately}
+% \footnotetext[2]{Efficient Token refers to optimization of token verification}
+% \end{table}
 
 
 \subsection*{Notation}
 Inline with our Anonymous Credential scheme built and prior chapters, the secret key is $\k$, the VRF input is $\ctx$, the VRF output is $\nul$ and the proof $\pi$ proves the correctness of $\nul$ such that $(\nul, \pi) \gets \mathsf{VRF.Eval}(\k, \ctx)$. $\cm = \CMCom([\id,\ldots];\usk)$ is a commitment shorthand for commitment $g_1^\id \ldots g^\usk$. We use Type-3 Bilinear Pairings. Let $\G_1$, $\G_2$, and $\G_T$ be groups of prime order $p$, with generators $g \in \G_1$, $\tilde{g} \in \G_2$, and a bilinear map $e: \G_1 \times \G_2 \to \G_T$.
+
+
+\section{On the possibility of Sigma protocols for VRF Construction}
+Why $\Sigma$-Protocols Suit Our VRF Construction
+
+In our Verifiable Random Function (VRF) construction, we employ a $\Sigma$-protocol to generate the proof $\pi$ for the output $y = f_{sk}(x)$, where $sk$ is the secret key and $x$ is the input. A potential concern is whether the zero-knowledge property of $\Sigma$-protocols, which allows proof simulation, compromises the \textbf{verifiable uniqueness} property of the VRF—i.e., the guarantee that only one $y$ can be verified for a given $x$. Here, we explain why this concern is unfounded and how $\Sigma$-protocols align with VRF security requirements.
+
+A VRF must satisfy three core properties: \textbf{correctness}, \textbf{uniqueness}, and \textbf{pseudorandomness}. \textbf{Correctness} ensures that an honestly computed output $y = f_{sk}(x)$ and its proof $\pi$ will always pass verification. \textbf{Uniqueness} guarantees that for each $x$, only one $y$ can be successfully verified with a proof $\pi$. \textbf{Pseudorandomness} ensures that without $sk$, $y$ is indistinguishable from random, even after seeing other $(x, y, \pi)$ triples. The $\Sigma$-protocol, an interactive proof system, offers three key properties: \textbf{completeness} (an honest prover with $sk$ convinces the verifier), \textbf{soundness} (a dishonest prover cannot prove a false statement), and \textbf{zero-knowledge} (the proof reveals nothing about $sk$, and a simulator can mimic it for true statements). These align perfectly with the VRF's needs: completeness supports correctness, soundness enforces uniqueness, and zero-knowledge preserves pseudorandomness by hiding $sk$.
+
+The zero-knowledge property ensures $sk$ remains secret, but the simulator can only generate valid proofs for \textbf{true statements}, e.g., $y = f_{sk}(x)$. It cannot produce a proof for a false statement, like $y' \neq f_{sk}(x)$, that passes verification, due to the \textbf{soundness} property. Soundness ensures that only proofs for the correct $y$ are accepted, preventing an adversary from forging a proof for an incorrect output. Thus, the uniqueness of $y$ is preserved, as false proofs are rejected with overwhelming probability.
+
+\textbf{Concrete Example:} Consider a VRF where $y = g^{1/(sk + x)}$ in a group of prime order $p$, and the $\Sigma$-protocol proves $y^{sk + x} = g$. Here, $y$ is uniquely determined by $sk$ and $x$ (since exponentiation is injective for $sk + x \neq 0 \mod p$). The $\Sigma$-protocol ensures that only the correct $y$ satisfies the equation, and a proof for an incorrect $y'$ (where $y'^{sk + x} \neq g$) fails verification. Despite zero-knowledge allowing simulation for the true $y$, soundness prevents valid proofs for false $y'$, reinforcing uniqueness.
+
+In conclusion, the zero-knowledge property of $\Sigma$-protocols does not weaken the VRF's verifiable uniqueness, as simulation is limited to true statements. Meanwhile, soundness upholds the integrity of the proof, ensuring only the correct $y$ verifies.
