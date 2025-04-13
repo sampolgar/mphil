@@ -198,6 +198,14 @@ where the probability is taken over the random choice of $x$ and the random coin
 The $q$-DHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption (GDH) as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This equivalence provides a solid theoretical foundation for the security of our VRF construction.
 \end{remark}
 
+\begin{definition}[$q$-DBDHI Assumption]
+Let $\mathbb{G}$ and $\mathbb{G}_T$ be cyclic groups of prime order $p$ with a bilinear pairing $e: \mathbb{G} \times \mathbb{G} \times \G_2 \to \mathbb{G}_T$, and let $g$ be a generator of $\mathbb{G}$. The $q$-Decisional-Bilinear Diffie-Hellman Inversion ( $q$-DBDHI) assumption states that for any probabilistic polynomial-time (PPT) adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\[
+\left| \Pr\left[ x \stackrel{\$}{\leftarrow} \mathbb{Z}_p^*, \, \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}, e(g, g)^{1/x}) = 1 \right] - \Pr\left[ x \stackrel{\$}{\leftarrow} \mathbb{Z}_p^*, \, r \stackrel{\$}{\leftarrow} \mathbb{G}_T, \, \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}, r) = 1 \right] \right| \leq \negl
+\]
+where the probabilities are taken over the random choices of $x \in \mathbb{Z}_p^*$, $r \in \mathbb{G}_T$, and the random coins of $\mathcal{A}$. In other words, no PPT adversary can distinguish between $e(g, g)^{1/x}$ and a random element $r$ in $\mathbb{G}_T$ given the tuple $(g, g^x, g^{x^2}, \ldots, g^{x^q})$.
+\end{definition}
+
 
 
 \begin{definition}[$q$-BDHI Assumption]
@@ -283,6 +291,100 @@ A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment
     \item \textbf{Special Soundness}: From two accepting transcripts $(a, e, z)$ and $(a, e', z')$ with $e \neq e'$, a witness $w$ can be extracted.
     \item \textbf{Special Honest-Verifier Zero-Knowledge (SHVZK)}: A simulator can generate transcripts $(a, e, z)$ indistinguishable from real ones for any $e$.
 \end{itemize}
+
+
+
+
+
+
+
+
+
+\section{Technical Journey and Contributions}
+
+\subsection{Dodis-Yampolskiy VRF: Core Structure and Security Properties}
+
+The Dodis-Yampolskiy VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with prime-order groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, with a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The construction is as follows:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk)$: Sample $sk \sample \mathbb{Z}_p^*$, compute $pk = g^{sk} \in \mathbb{G}_1$. Output $(sk, pk)$.
+    
+    \item $\mathsf{VRF.Eval}(sk, x) \to (y, \pi)$: Compute $y = \tilde{g}^{1/(sk + x)} \in \mathbb{G}_2$ and proof $\pi = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T$.
+    
+    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \to \{0, 1\}$: Verify two equations:
+    \begin{align}
+        e(g^{x} \cdot pk, y) &\stackrel{?}{=} e(g, \tilde{g}) \quad \text{(Equation 1)}\\
+        \pi &\stackrel{?}{=} e(g, y) \quad \text{(Equation 2)}
+    \end{align}
+\end{itemize}
+
+The security of this VRF rests upon the $q$-Decisional Bilinear Diffie-Hellman Inversion ($q$-DBDHI) assumption, which states that given $(g, g^{sk}, g^{(sk)^2}, \ldots, g^{(sk)^q})$ and $\tilde{g}$, the value $e(g, \tilde{g})^{1/(sk+x)}$ is computationally indistinguishable from a random element in $\mathbb{G}_T$.
+
+\subsubsection{Analysis of Security Properties}
+
+To understand the security of the Dodis-Yampolskiy VRF, we analyze how its construction achieves the three essential VRF properties:
+
+\paragraph{Pseudorandomness}
+The output $y = \tilde{g}^{1/(sk + x)}$ appears random to any observer without knowledge of $sk$. This is guaranteed by the $q$-DBDHI assumption. Importantly, while the VRF output is in $\mathbb{G}_2$ (as $\tilde{g}^{1/(sk+x)}$), the pseudorandomness property is fundamentally about the unpredictability of the exponent $1/(sk+x)$ when only given elements with exponents that are polynomials in $sk$.
+
+\paragraph{Uniqueness}
+Verification Equation 1 enforces that only one valid output can exist for each input. This equation verifies the algebraic relationship $y^{sk+x} = \tilde{g}$ without revealing $sk$:
+\begin{align}
+    e(g^{x} \cdot pk, y) &= e(g^{x} \cdot g^{sk}, \tilde{g}^{1/(sk + x)}) \\
+    &= e(g^{sk + x}, \tilde{g}^{1/(sk + x)}) \\
+    &= e(g, \tilde{g})^{(sk + x) \cdot 1/(sk + x)} \\
+    &= e(g, \tilde{g})
+\end{align}
+
+This uniqueness guarantee is crucial: for each $(sk,x)$ pair, only one value $y = \tilde{g}^{1/(sk+x)}$ can satisfy this equation. Any other value would violate the relationship $y^{sk+x} = \tilde{g}$, which is enforced through the pairing check.
+
+\paragraph{Correctness}
+The combination of both verification equations ensures that honestly generated outputs and proofs will always verify:
+
+1. Equation 1 ensures output correctness by verifying that $y = \tilde{g}^{1/(sk+x)}$.
+
+2. Equation 2 ensures proof consistency:
+\begin{align}
+    \pi &= e(g, \tilde{g})^{1/(sk + x)} \\
+    &= e(g, \tilde{g}^{1/(sk + x)}) \\
+    &= e(g, y)
+\end{align}
+
+Together, these equations guarantee that an honest evaluator with knowledge of $sk$ will always produce outputs and proofs that pass verification.
+
+\subsubsection{Role of Pairings in the Construction}
+
+The pairing operations in the Dodis-Yampolskiy VRF serve a critical verification role. Specifically:
+
+\begin{itemize}
+    \item The pairing allows verification of an exponentiation relationship between elements in different groups ($\mathbb{G}_1$ and $\mathbb{G}_2$)
+    \item It enables checking that $y^{sk+x} = \tilde{g}$ without requiring knowledge of $sk$
+    \item It provides a mechanism to verify the consistency between $y$ and $\pi$
+\end{itemize}
+
+However, these pairings introduce significant computational overhead. A bilinear pairing operation typically requires 5-10$\times$ more computational resources than standard group operations. This leads to an important question: Can we achieve the same security properties without relying on expensive pairing operations?
+
+\subsubsection{Essential Requirements for Transformation}
+
+Based on our analysis, any transformation of the Dodis-Yampolskiy VRF must preserve:
+
+\begin{enumerate}
+    \item The output structure $y = g^{1/(sk+x)}$ to maintain pseudorandomness under an appropriate hardness assumption
+    
+    \item A verification mechanism that confirms $y^{sk+x} = g$ without revealing $sk$ to ensure uniqueness
+    
+    \item A means to verify proof consistency with outputs to guarantee correctness
+\end{enumerate}
+
+In the next section, we introduce our pairing-free VRF construction that maintains these essential properties while eliminating the need for bilinear pairings.
+
+
+
+
+
+
+
+
 
 
 
