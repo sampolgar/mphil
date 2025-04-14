@@ -1,0 +1,31 @@
+\section{Proof Protocols}
+\subsection{Proof of Linear Relations}
+
+\begin{protocol}{$\pi$ for VRF Prime Order Group}{}\label{pok-linear-relation}
+\textbf{Relation: }
+\[
+\mathcal{R} = \{(\cm), (sk, x, \usk) \mid \cm = g_1^{sk}g_2^{x}g_3^{sk + x}g^{\usk}\}
+\]
+\textbf{Common Input:} Generator $g_1,g_2,g_3, g \in \G$, public elements $\cm \G$\\
+\textbf{Prover Input:} Witness $(sk, x, \usk)$
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples $a_{sk}, a_{x}, a_{\usk} \sample \Z_q$, computes 
+    \[
+    T = g_1^{a_{sk}}g_2^{a_x} g_3^{(a_{sk} + a_x)} 
+    \]
+    Sends $T$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_{x} = a_x + c \cdot x \qquad z_{sk} = a_{sk} + c \cdot sk \qquad z_r = a_r + c \cdot \usk
+    \]
+    Sends $z_{x}, z_{sk}, z_{r}$ to verifier
+    
+    \item \textbf{Verification:} Verifier checks:
+    \[
+    \cm^c \cdot T \stackrel{?}{=} g_1^{z_{x}} g_2^{z_{sk}} g_3^{(z_x + z_{sk}}) g^{z_r}
+    \]
+\end{enumerate}
+\end{protocol}

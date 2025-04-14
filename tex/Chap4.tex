@@ -427,29 +427,29 @@ In the reduction, the challenger, given a $q$-DDHI instance, simulates VRF evalu
 
 
 \section{Step 2. Privacy}
-Our VRF builds upon the $q$-DDHI assumption and this is where we start our zero knowledge proof protocol. Specifically, we want to prove (in zero knowledge) that we know $m$ such that $g^{1/m}$ 
+Our VRF builds upon the $q$-DDHI assumption and this is where we start our zero knowledge proof protocol. Specifically, we want to prove (in zero knowledge) that we know $\alpha$ such that $g^{1/\alpha}$ 
 
 Let $G$ be a cyclic group of prime order $q$, with generators $g_1, g \in G$. Assume the discrete logarithm problem (DLP) is hard in $G$, and the discrete log of $g_1$ with respect to $g$ is unknown.
-The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q^*$ such that $m \cdot x = 1 \mod q$, where $x = \frac{1}{m}$, given commitments to $m$ and $x$.
+The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q^*$ such that $\alpha \cdot \beta = 1 \mod q$, where $\beta = \frac{1}{\alpha}$, given commitments to $\alpha$ and $\beta$.
 
 Challenges
 Sigma protocols prove knowledge of exponents, proving knowledge of an inverse exponent. 
 
 \begin{protocol}{Proving Inverse Exponent}{committed-multiplicative-inverse}\label{pok-committed-multiplicative-inverse}
 \textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, and commitments $\cm_1, \cm_2, \cm_3, \cm_4 \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(m, x, \usk_1, \usk_2, \usk_3, \usk_4)$ such that:
+\textbf{Prover Input:} Witness $(\alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4)$ such that:
     \begin{align*}
-        \cm_1 &= g_1^m g^{\usk_1}     &    \cm_2 &= g_1^x g^{\usk_2}  &   \cm_3 &= \cm_2^m g^{\usk_3} & \cm_4 &= g^{\usk_4}\\
-         x &= \frac{1}{m}     &   \usk_4 &= \usk_3 + m \usk_2 & \frac{\cm_3}{\cm_4} &= g_1
+        \cm_1 &= g_1^\alpha g^{\usk_1}     &    \cm_2 &= g_1^\beta g^{\usk_2}  &   \cm_3 &= \cm_2^\alpha g^{\usk_3} & \cm_4 &= g^{\usk_4}\\
+         \beta &= \frac{1}{\alpha}     &   \usk_4 &= \usk_3 + \alpha \usk_2 & \frac{\cm_3}{\cm_4} &= g_1
     \end{align*}
 \begin{enumerate}
     \item \textbf{Commitment:} Prover samples random blinding factors from $\Z_q$:
        \[
-        a_x \quad \text{ for } \quad x \in \{\ m, x, \usk_1, \usk_2, \usk_3, \usk_4\} \in \Z_q
+        a_x \quad \text{ for } \quad x \in \{\ \alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4\} \in \Z_q
         \]
     \textbf{Computes}:
     \begin{align*}
-        T_1 &\gets g_1^{a_m} g^{a_{\usk_1}}  &   T_2 &\gets g_1^{a_x} g^{a_{\usk_2}}     &   T_3 &\gets \cm_2^{a_m} g^{a_{\usk_3}} & T_4 &\gets g^{a_{\usk_4}}
+        T_1 &\gets g_1^{a_\alpha} g^{a_{\usk_1}}  &   T_2 &\gets g_1^{a_\beta} g^{a_{\usk_2}}     &   T_3 &\gets \cm_2^{a_\alpha} g^{a_{\usk_3}} & T_4 &\gets g^{a_{\usk_4}}
     \end{align*}
     Sends $(T_1, T_2, T_3, T_4)$ to verifier.
     
@@ -457,18 +457,19 @@ Sigma protocols prove knowledge of exponents, proving knowledge of an inverse ex
     
     \item \textbf{Response:} Prover computes:
     \[
-    z_x = a_x + c \cdot x \quad \text{ for } \quad x \in \{\ m, x, \usk_1, \usk_2, \usk_3, \usk_4\} 
+    z_x = a_x + c \cdot x \quad \text{ for } \quad x \in \{\ \alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4\} 
     \]
-    Sends $(z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ to verifier.
+    Sends $(z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ to verifier.
     
     \item \textbf{Verification:} Verifier checks:
     \begin{align*}
-         T_1 \cdot \cm_1^c &\stackrel{?}{=}  g_1^{z_1} g^{z_2}
+         T_1 \cdot \cm_1^c &\stackrel{?}{=}  g_1^{z_\alpha} g^{z_{\usk_1}}
         & 
-         T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_1^{z_3} g^{z_4}\\
-        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_1} g^{z_5}
+         T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_1^{z_\beta} g^{z_{\usk_2}}
+         \\
+        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_\alpha} g^{z_{\usk_3}}
         &
-        T_4 \cdot \cm_4^c &\stackrel{?}{=}  g^{z_6} 
+        T_4 \cdot \cm_4^c &\stackrel{?}{=}  g^{z_{\usk_4}} 
         &
         \frac{\cm_3}{\cm_4} &\stackrel{?}{=} g_1
     \end{align*}
@@ -479,14 +480,14 @@ Sigma protocols prove knowledge of exponents, proving knowledge of an inverse ex
 We show that if the prover follows the protocol honestly, all verification equations will be satisfied.
 
 \begin{enumerate}
-    \item The first two verification equations ($T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_m} g^{z_{\usk_1}}$, $T_2 \cdot \cm_2^c \stackrel{?}{=} g_1^{z_x} g^{z_{\usk_2}}$) are simple Schnorr proofs of exponents which we will not expand 
+    \item The first two verification equations ($T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_\alpha} g^{z_{\usk_1}}$, $T_2 \cdot \cm_2^c \stackrel{?}{=} g_1^{z_\beta} g^{z_{\usk_2}}$) are simple Schnorr proofs of exponents which we will not expand 
         
-    \item Third verification equation: $T_3 \cdot \cm_3^c \stackrel{?}{=} \cm_2^{z_m} g^{z_{\usk_3}}$
+    \item Third verification equation: $T_3 \cdot \cm_3^c \stackrel{?}{=} \cm_2^{z_\alpha} g^{z_{\usk_3}}$
     \begin{align*}
-        T_3 \cdot \cm_3^c &= \cm_2^{a_m} g^{a_{\usk_3}} \cdot (\cm_2^m g^{\usk_3})^c \\
-        &= \cm_2^{a_m} g^{a_{\usk_3}} \cdot \cm_2^{m \cdot c} g^{\usk_3 \cdot c} \\
-        &= \cm_2^{a_m + m \cdot c} g^{a_{\usk_3} + \usk_3 \cdot c} \\
-        &= \cm_2^{z_m} g^{z_{\usk_3}}
+        T_3 \cdot \cm_3^c &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot (\cm_2^\alpha g^{\usk_3})^c \\
+        &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot \cm_2^{\alpha \cdot c} g^{\usk_3 \cdot c} \\
+        &= \cm_2^{a_\alpha + \alpha \cdot c} g^{a_{\usk_3} + \usk_3 \cdot c} \\
+        &= \cm_2^{z_\alpha} g^{z_{\usk_3}}
     \end{align*}
     
     \item Fourth verification equation: $T_4 \cdot \cm_4^c \stackrel{?}{=} g^{z_{\usk_4}}$
@@ -499,13 +500,13 @@ We show that if the prover follows the protocol honestly, all verification equat
     
     \item Fifth verification equation: $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g_1$
     
-    Using the relations $x = \frac{1}{m}$ and $\usk_4 = \usk_3 + m \cdot \usk_2$:
+    Using the relations $\beta = \frac{1}{\alpha}$ and $\usk_4 = \usk_3 + \alpha \cdot \usk_2$:
     \begin{align*}
-        \cm_3 &= \cm_2^m g^{\usk_3} \\
-        &= (g_1^x g^{\usk_2})^m g^{\usk_3} \\
-        &= g_1^{x \cdot m} g^{\usk_2 \cdot m} g^{\usk_3} \\
-        &= g_1^{\frac{1}{m} \cdot m} g^{\usk_2 \cdot m + \usk_3} \\
-        &= g_1 g^{\usk_3 + m \cdot \usk_2} \\
+        \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
+        &= (g_1^\beta g^{\usk_2})^\alpha g^{\usk_3} \\
+        &= g_1^{\beta \cdot \alpha} g^{\usk_2 \cdot \alpha} g^{\usk_3} \\
+        &= g_1^{\frac{1}{\alpha} \cdot \alpha} g^{\usk_2 \cdot \alpha + \usk_3} \\
+        &= g_1 g^{\usk_3 + \alpha \cdot \usk_2} \\
         &= g_1 g^{\usk_4} \\
         &= g_1 \cdot \cm_4
     \end{align*}
@@ -522,14 +523,14 @@ Since all verification equations are satisfied when the prover follows the proto
 \subsubsection*{Soundness}
 We prove the special soundness property by demonstrating that given two accepting transcripts with identical first messages but different challenges, we can extract a valid witness satisfying all relations required by the protocol.
 
-Let $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ and $(T_1, T_2, T_3, T_4, c', z'_m, z'_x, z'_{\usk_1}, z'_{\usk_2}, z'_{\usk_3}, z'_{\usk_4})$ be two accepting transcripts with $c \neq c'$.
+Let $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ and $(T_1, T_2, T_3, T_4, c', z'_\alpha, z'_\beta, z'_{\usk_1}, z'_{\usk_2}, z'_{\usk_3}, z'_{\usk_4})$ be two accepting transcripts with $c \neq c'$.
 
 \begin{enumerate}
     \item \textbf{Witness extraction:}
     
     Following the standard extraction technique for sigma protocols, we compute each witness component:
     \begin{align}
-    m &= \frac{z_m - z'_m}{c - c'} & x &= \frac{z_x - z'_x}{c - c'} \\
+    \alpha &= \frac{z_\alpha - z'_\alpha}{c - c'} & x &= \frac{z_\beta - z'_\beta}{c - c'} \\
     \usk_1 &= \frac{z_{\usk_1} - z'_{\usk_1}}{c - c'} & \usk_2 &= \frac{z_{\usk_2} - z'_{\usk_2}}{c - c'} \\
     \usk_3 &= \frac{z_{\usk_3} - z'_{\usk_3}}{c - c'} & \usk_4 &= \frac{z_{\usk_4} - z'_{\usk_4}}{c - c'}
     \end{align}
@@ -540,57 +541,57 @@ Let $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\u
     
     We first show that the extracted witness satisfies $\cm_1 = g_1^m g^{\usk_1}$. From the acceptance of both transcripts, we have:
     \begin{align}
-        T_1 \cdot \cm_1^c &= g_1^{z_m} g^{z_{\usk_1}} \\
-        T_1 \cdot \cm_1^{c'} &= g_1^{z'_m} g^{z'_{\usk_1}}
+        T_1 \cdot \cm_1^c &= g_1^{z_\alpha} g^{z_{\usk_1}} \\
+        T_1 \cdot \cm_1^{c'} &= g_1^{z'_\alpha} g^{z'_{\usk_1}}
     \end{align}
     
     Dividing these equations and substituting our extracted values:
     \begin{align}
-        \cm_1^{c-c'} &= g_1^{z_m-z'_m} g^{z_{\usk_1}-z'_{\usk_1}} \\
-        &= g_1^{m(c-c')} g^{\usk_1(c-c')} \\
-        \Rightarrow \cm_1 &= g_1^m g^{\usk_1}
+        \cm_1^{c-c'} &= g_1^{z_\alpha-z'_\alpha} g^{z_{\usk_1}-z'_{\usk_1}} \\
+        &= g_1^{\alpha(c-c')} g^{\usk_1(c-c')} \\
+        \Rightarrow \cm_1 &= g_1^\alpha g^{\usk_1}
     \end{align}
     
     Using identical extraction and verification techniques with the corresponding verification equations, we establish that:
     \begin{align}
-        \cm_2 &= g_1^x g^{\usk_2} \\
-        \cm_3 &= \cm_2^m g^{\usk_3} \\
+        \cm_2 &= g_1^\beta g^{\usk_2} \\
+        \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
         \cm_4 &= g^{\usk_4}
     \end{align}
     
-    \item \textbf{Verification of the multiplicative inverse relation ($x = \frac{1}{m}$):}
+    \item \textbf{Verification of the multiplicative inverse relation ($\beta = \frac{1}{\alpha}$):}
     
     The core cryptographic property enforced by our protocol is the multiplicative inverse relationship between $m$ and $x$. This is where the protocol's security guarantee is ultimately derived from. We verify this relationship using the final verification equation $\frac{\cm_3}{\cm_4} = g_1$.
     
     Substituting our extracted witness values:
     \begin{align}
         \frac{\cm_3}{\cm_4} &= g_1 \\
-        \frac{\cm_2^m g^{\usk_3}}{g^{\usk_4}} &= g_1 \\
-        \cm_2^m g^{\usk_3 - \usk_4} &= g_1
+        \frac{\cm_2^\alpha g^{\usk_3}}{g^{\usk_4}} &= g_1 \\
+        \cm_2^\alpha g^{\usk_3 - \usk_4} &= g_1
     \end{align}
     
     Further substituting $\cm_2 = g_1^x g^{\usk_2}$:
     \begin{align}
-        (g_1^x g^{\usk_2})^m g^{\usk_3 - \usk_4} &= g_1 \\
-        g_1^{x \cdot m} g^{m \cdot \usk_2 + \usk_3 - \usk_4} &= g_1
+        (g_1^x g^{\usk_2})^\alpha g^{\usk_3 - \usk_4} &= g_1 \\
+        g_1^{x \cdot \alpha} g^{\alpha \cdot \usk_2 + \usk_3 - \usk_4} &= g_1
     \end{align}
     
     In the generic group model, this equation can only hold if:
     \begin{align}
-        x \cdot m &= 1 \\
-        m \cdot \usk_2 + \usk_3 - \usk_4 &= 0
+        \beta \cdot \alpha &= 1 \\
+        \alpha \cdot \usk_2 + \usk_3 - \usk_4 &= 0
     \end{align}
     
     These equations immediately give us the two critical relations:
     \begin{align}
-        x &= \frac{1}{m} \\
-        \usk_4 &= \usk_3 + m\usk_2
+        \beta &= \frac{1}{\alpha} \\
+        \usk_4 &= \usk_3 + \alpha \usk_2
     \end{align}
     
-    The first relation confirms that our protocol successfully enforces the multiplicative inverse relationship between $m$ and $x$. The second relation verifies the consistency of the randomizers across the commitments, ensuring that no malicious prover can construct valid-looking commitments without knowing values that satisfy all required relations.
+    The first relation confirms that our protocol successfully enforces the multiplicative inverse relationship between $\alpha$ and $\beta$. The second relation verifies the consistency of the randomizers across the commitments, ensuring that no malicious prover can construct valid-looking commitments without knowing values that satisfy all required relations.
 \end{enumerate}
 
-We have thus demonstrated that our extractor obtains a complete and valid witness $(m, x, \usk_1, \usk_2, \usk_3, \usk_4)$ satisfying all relations in the statement, establishing the special soundness property of our sigma protocol. This ensures that no prover can successfully convince a verifier without knowledge of values satisfying the multiplicative inverse relationship $x = \frac{1}{m}$ and the associated consistency requirements.
+We have thus demonstrated that our extractor obtains a complete and valid witness $(\alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4)$ satisfying all relations in the statement, establishing the special soundness property of our sigma protocol. This ensures that no prover can successfully convince a verifier without knowledge of values satisfying the multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ and the associated consistency requirements.
 
 \subsubsection*{Zero-Knowledge}
 We prove the honest-verifier zero-knowledge property by presenting a simulator that produces transcripts indistinguishable from real protocol executions without knowing any witness.
@@ -601,37 +602,37 @@ We prove the honest-verifier zero-knowledge property by presenting a simulator t
     Given public input $(g_1, g, \cm_1, \cm_2, \cm_3, \cm_4)$ and any challenge $c \in \mathbb{Z}_q$, our simulator:
     
     \begin{itemize}
-        \item Samples $z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4} \sample \mathbb{Z}_q$ uniformly at random
+        \item Samples $z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4} \sample \mathbb{Z}_q$ uniformly at random
         
         \item Computes the first message by working backwards from the verification equations:
         \begin{align}
-            T_1 &\gets g_1^{z_m} g^{z_{\usk_1}} \cdot \cm_1^{-c} \\
-            T_2 &\gets g_1^{z_x} g^{z_{\usk_2}} \cdot \cm_2^{-c} \\
-            T_3 &\gets \cm_2^{z_m} g^{z_{\usk_3}} \cdot \cm_3^{-c} \\
+            T_1 &\gets g_1^{z_\alpha} g^{z_{\usk_1}} \cdot \cm_1^{-c} \\
+            T_2 &\gets g_1^{z_\beta} g^{z_{\usk_2}} \cdot \cm_2^{-c} \\
+            T_3 &\gets \cm_2^{z_\alpha} g^{z_{\usk_3}} \cdot \cm_3^{-c} \\
             T_4 &\gets g^{z_{\usk_4}} \cdot \cm_4^{-c}
         \end{align}
         
-        \item Outputs the transcript $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$
+        \item Outputs the transcript $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$
     \end{itemize}
     
     \item \textbf{Perfect Indistinguishability:}
     
-    In a real protocol execution with an honest prover, the responses have the form $z_x = a_x + c \cdot x$ where $a_x$ are uniformly random values. Since $a_x \sample \mathbb{Z}_q$ and addition with $c \cdot x$ is a permutation over $\mathbb{Z}_q$, the distribution of real responses is uniform over $\mathbb{Z}_q$.
+    In a real protocol execution with an honest prover, the responses have the form $z_\alpha = a_\alpha + c \cdot \alpha$ where $a_\alpha$ are uniformly random values. Since $a_\alpha \sample \mathbb{Z}_q$ and addition with $c \cdot \alpha$ is a permutation over $\mathbb{Z}_q$, the distribution of real responses is uniform over $\mathbb{Z}_q$.
     
     The simulator directly samples responses uniformly from $\mathbb{Z}_q$, matching this distribution exactly. Given these responses and the challenge $c$, the first message components $T_i$ are uniquely determined by the verification equations in both real and simulated cases.
     
-    Consequently, the joint distribution of $(T_1, T_2, T_3, T_4, c, z_m, z_x, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ is identical for both the simulator and the honest protocol.
+    Consequently, the joint distribution of $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ is identical for both the simulator and the honest protocol.
 \end{enumerate}
 
-This construction demonstrates that our protocol satisfies perfect honest-verifier zero-knowledge. Notably, the simulator succeeds without requiring knowledge of the critical multiplicative inverse relationship $x = \frac{1}{m}$ or any other witness values, confirming that the protocol reveals no information about these secret values beyond what is already implied by the statement being proven.
+This construction demonstrates that our protocol satisfies perfect honest-verifier zero-knowledge. Notably, the simulator succeeds without requiring knowledge of the critical multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ or any other witness values, confirming that the protocol reveals no information about these secret values beyond what is already implied by the statement being proven.
 
 
 
 
 \section{Extending Our Sigma Protocol for our PF-DY VRF from Committed Inputs}
-We now show how we prove in zero-knowledge the output of the PF-DY VRF by combining  the following $\Sigma$-protocols
+We now show how we prove in zero-knowledge the output of the PF-DY VRF $y = g^{1/(sk + x)}$ by combining  the following $\Sigma$-protocols
 \begin{enumerate}
-    \item Inverse Exponents to prove knowledge of $m$ for $g^{1/m}$
+    \item Inverse Exponents to prove knowledge of $(sk + x)$ for $g^{1/(sk + x)}$
     \item Linear relation of discrete logarithms to prove knowledge of $g^{(x+sk)}$
 \end{enumerate}
 
@@ -640,24 +641,37 @@ We now show how we prove in zero-knowledge the output of the PF-DY VRF by combin
 \begin{protocol}{Proving Commiteed Inverse Linear Relation}{}\label{pok-committed-inverse-relation}
 \textbf{Relation: }
 \[
-\mathcal{R} = \{(), (sk, x) \mid  \wedge \frac{\cm_4}{\cm_5} &= g_3\}
+\mathcal{R} = \{(\cm_1, y), (sk, x, \usk) \mid  \cm_1 = g_1^{sk}g_2^x g^{\usk_1} \quad \wedge \quad  y = g^{1/(sk + x)}\}
 \]
-\textbf{Common Input:} Group generators $g_1, \ldots, g_3, g \in \mathbb{G}$, and commitments $\cm_1, \ldots, \cm_4 \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(x, sk, \usk_1, \usk_2, \usk_3, \usk_4)$ such that:
+\textbf{Common Input:} Group generators $g_1, \ldots, g_3, g \in \mathbb{G}$, and commitments $\cm_1, y \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(sk, x, \usk_1, \ldots, \usk_5)$ such that:
+\[
+\cm_1 = g_1^{sk}g_2^{x} g^{\usk_1} \qquad y = g^{1/(sk + x)}
+\]
+Prover creates interim elements
     \begin{align*}
-        \cm_1 &= g_1^xg_2^{sk} g^{\usk_1}     &    \cm_2 &= g_3^{(x+sk)} g^{\usk_2}  & \cm_3 &= g_3^{1/(x+sk)} g^{\usk_3} \\
-        \cm_4 &= \cm_3^{(x+sk)} g^{\usk_4} & \cm_5 &= g^{\usk_5} & \frac{\cm_4}{\cm_5} &= g_3 \\ 
-        \usk_4 &= \usk_5 + (x+sk) \usk_3         
+        \\
+        \cm_2 &= g_3^{(sk+x)} g^{\usk_2}
+        &
+        \cm_3 &= g_3^{1/(sk+x)} g^{\usk_3}
+        &
+        \cm_4 &= \cm_3^{(sk+x)} g^{\usk_4}
+        \\
+        \cm_5 &= g^{\usk_5}
+        &
+        \frac{\cm_4}{\cm_5} &= g_3
+        &
+        \usk_5 &= \usk_3(sk+x) + \usk_4
     \end{align*}
 \begin{enumerate}
     \item \textbf{Commitment:} Prover samples random blinding factors from $\Z_q$:
        \[
-        a_y \quad \text{ for } \quad y \in \{\ x, sk, (x+sk), \frac{1}{(x+sk)}, \usk_1, \ldots, \usk_5\} \in \Z_q
+        a_y \quad \text{ for } \quad y \in \{\ sk,x, 1/(x+sk), \usk_1, \ldots, \usk_5\} \in \Z_q
         \]
     \textbf{Computes}:
     \begin{align*}
-        T_1 &\gets g_1^{a_x}g_2^{a_{sk}} g^{a_{\usk_1}}  &   T_2 &\gets g_3^{a_{(x + sk)}} g^{a_{\usk_2}}     &   T_3 &\gets g_3^{a_{1/(x + sk)}} g^{a_{\usk_3}} \\
-        T_4 &\gets \cm_3^{a_{(x + sk)}} g^{a_{\usk_4}} & 
+        T_1 &\gets g_1^{a_x}g_2^{a_{sk}} g^{a_{\usk_1}}  &   T_2 &\gets g_3^{(a_{sk} + x)} g^{a_{\usk_2}}     &   T_3 &\gets g_3^{a_{1/(sk + x)}} g^{a_{\usk_3}} \\
+        T_4 &\gets \cm_3^{(a_{sk} + a_x)} g^{a_{\usk_4}} & 
         T_5 &\gets g^{a_{\usk_5}}
     \end{align*}
     Sends $(T_1, \ldots, T_5)$ to verifier.
@@ -666,19 +680,21 @@ We now show how we prove in zero-knowledge the output of the PF-DY VRF by combin
     
     \item \textbf{Response:} Prover computes:
     \[
-    z_y = a_y + c \cdot y \quad \text{ for } \quad y \in \{\ x, sk, (x+sk), \frac{1}{(x+sk)}, \usk_1, \ldots, \usk_5\} 
+    z_y = a_y + c \cdot y \quad \text{ for } \quad y \in \{\ sk, x, 1/(sk + x), \usk_1, \ldots, \usk_5\} 
     \]
-    Sends $(z_x, z_{sk}, z_{(x+sk)}, z_{1/(x+sk)}, z_{\usk_1}, \ldots,  z_{\usk_5})$ to verifier.
+    Sends $(z_{sk},z_x, z_{1/(sk + x)}, z_{\usk_1}, \ldots,  z_{\usk_5})$ to verifier.
     
     \item \textbf{Verification:} Verifier checks:
     \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=}  g_1^{z_x}g_2^{z_{sk}} g^{z_{\usk_1}}
+        T_1 \cdot \cm_1^c &\stackrel{?}{=}  g_1^{z_{sk}}g_2^{z_x} g^{z_{\usk_1}}
         & 
-        T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_1^{z_3} g^{z_4}
-         \\
-        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_1} g^{z_5}
+        T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_3^{z_{sk} + x} g^{z_{\usk_2}}
         &
-        T_4 \cdot \cm_4^c &\stackrel{?}{=}  g^{z_6} 
+        T_3 \cdot \cm_3^c &\stackrel{?}{=}  g_3^{z_{1/(sk + x)}}  g^{z_{\usk_3}}
+         \\
+        T_4 \cdot \cm_3^c &\stackrel{?}{=} \cm_3^{(z_{sk} + x)} g^{z_{\usk_4}}
+        &
+        T_5 \cdot \cm_5^c &\stackrel{?}{=}  g^{z_{\usk_5}}
         &
         \frac{\cm_4}{\cm_5} &\stackrel{?}{=} g_3
     \end{align*}
@@ -688,14 +704,35 @@ We now show how we prove in zero-knowledge the output of the PF-DY VRF by combin
 
 
 
-\begin{itemize}
-    \item Input: Commitment $\cm = \CMCom([\k, \ctx]; \usk)$
-    \item Output: Nullifier $\nul = g^{1/(\k + \ctx)}$ with zero-knowledge proof $\pi$ for relation:
-    \[
-    \mathcal{R} = \zkpok \left\{ (\nul, \cm)(\k, \ctx, \usk) \mid \nul = g^{1/(\k + \ctx)} \quad \wedge \quad \cm = g_1^{\k} g_2^{\ctx}g^{\usk}  \right\}
-    \]
-    \item Verification: The verifier checks the proof $\pi$ without learning $\k$ or $\ctx$.
-\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsubsection{Informal Security Analysis}
 \begin{itemize}
