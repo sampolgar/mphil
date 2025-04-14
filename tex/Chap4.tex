@@ -188,6 +188,22 @@ A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment
 
 \section{Technical Journey and Contributions}
 
+
+\begin{table}
+    \centering
+    \begin{tabular}{cccccc}
+       Scheme  & VRF?     & No Pairings  & 2 Exponents (x + sk)  & Private pk & Private (x) \\
+       DY      & Yes     & Yes           & Yes                   & No         & No \\
+       PRF      & Yes     & Yes           & Yes                   & No         & No \\
+       VOPRF      & Yes     & Yes           & Yes                   & No         & No \\
+       Sec 2   & No     & No            & Yes                   & No         & No \\
+       Sec 3   & No     & Yes           & No                    & Yes        & No \\
+       Sec 4   & Yes     & Yes           & Yes                   & Yes        & Yes\\
+    \end{tabular}
+    \caption{Caption}
+    \label{tab:my_label}
+\end{table}
+
 \subsection{Motivation and Design Approach}
 Verifiable Random Functions (VRFs) provide verifiable, deterministic, pseudorandom outputs. The Dodis-Yampolskiy (DY) VRF \cite{hutchison_verifiable_2005} is particularly well-suited for our credential binding application due to its output formation $y = e(g,\tilde{g})^{1/(sk+x)}$. As bilinear pairings add overhead to verification  6ms on modern hardware \cite{polgar_anonymous_2025}, we aim to remove pairings and retain security properties. 
 
@@ -419,7 +435,7 @@ The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q
 Challenges
 Sigma protocols prove knowledge of exponents, proving knowledge of an inverse exponent. 
 
-\begin{protocol}{Proving Committed Multiplicative Inverse}{committed-multiplicative-inverse}\label{pok-committed-multiplicative-inverse}
+\begin{protocol}{Proving Inverse Exponent}{committed-multiplicative-inverse}\label{pok-committed-multiplicative-inverse}
 \textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, and commitments $\cm_1, \cm_2, \cm_3, \cm_4 \in \mathbb{G}$\\
 \textbf{Prover Input:} Witness $(m, x, \usk_1, \usk_2, \usk_3, \usk_4)$ such that:
     \begin{align*}
@@ -612,8 +628,65 @@ This construction demonstrates that our protocol satisfies perfect honest-verifi
 
 
 
-\section{Our Second Modification: VRF from Committed Inputs}
-To support privacy, we extend our construction to operate on committed inputs, hiding both the secret key $\k$ and context identifier $\ctx$:
+\section{Extending Our Sigma Protocol for our PF-DY VRF from Committed Inputs}
+We now show how we prove in zero-knowledge the output of the PF-DY VRF by combining  the following $\Sigma$-protocols
+\begin{enumerate}
+    \item Inverse Exponents to prove knowledge of $m$ for $g^{1/m}$
+    \item Linear relation of discrete logarithms to prove knowledge of $g^{(x+sk)}$
+\end{enumerate}
+
+
+
+\begin{protocol}{Proving Commiteed Inverse Linear Relation}{}\label{pok-committed-inverse-relation}
+\textbf{Relation: }
+\[
+\mathcal{R} = \{(), (sk, x) \mid  \wedge \frac{\cm_4}{\cm_5} &= g_3\}
+\]
+\textbf{Common Input:} Group generators $g_1, \ldots, g_3, g \in \mathbb{G}$, and commitments $\cm_1, \ldots, \cm_4 \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(x, sk, \usk_1, \usk_2, \usk_3, \usk_4)$ such that:
+    \begin{align*}
+        \cm_1 &= g_1^xg_2^{sk} g^{\usk_1}     &    \cm_2 &= g_3^{(x+sk)} g^{\usk_2}  & \cm_3 &= g_3^{1/(x+sk)} g^{\usk_3} \\
+        \cm_4 &= \cm_3^{(x+sk)} g^{\usk_4} & \cm_5 &= g^{\usk_5} & \frac{\cm_4}{\cm_5} &= g_3 \\ 
+        \usk_4 &= \usk_5 + (x+sk) \usk_3         
+    \end{align*}
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples random blinding factors from $\Z_q$:
+       \[
+        a_y \quad \text{ for } \quad y \in \{\ x, sk, (x+sk), \frac{1}{(x+sk)}, \usk_1, \ldots, \usk_5\} \in \Z_q
+        \]
+    \textbf{Computes}:
+    \begin{align*}
+        T_1 &\gets g_1^{a_x}g_2^{a_{sk}} g^{a_{\usk_1}}  &   T_2 &\gets g_3^{a_{(x + sk)}} g^{a_{\usk_2}}     &   T_3 &\gets g_3^{a_{1/(x + sk)}} g^{a_{\usk_3}} \\
+        T_4 &\gets \cm_3^{a_{(x + sk)}} g^{a_{\usk_4}} & 
+        T_5 &\gets g^{a_{\usk_5}}
+    \end{align*}
+    Sends $(T_1, \ldots, T_5)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_y = a_y + c \cdot y \quad \text{ for } \quad y \in \{\ x, sk, (x+sk), \frac{1}{(x+sk)}, \usk_1, \ldots, \usk_5\} 
+    \]
+    Sends $(z_x, z_{sk}, z_{(x+sk)}, z_{1/(x+sk)}, z_{\usk_1}, \ldots,  z_{\usk_5})$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        T_1 \cdot \cm_1^c &\stackrel{?}{=}  g_1^{z_x}g_2^{z_{sk}} g^{z_{\usk_1}}
+        & 
+        T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_1^{z_3} g^{z_4}
+         \\
+        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_1} g^{z_5}
+        &
+        T_4 \cdot \cm_4^c &\stackrel{?}{=}  g^{z_6} 
+        &
+        \frac{\cm_4}{\cm_5} &\stackrel{?}{=} g_3
+    \end{align*}
+\end{enumerate}
+\end{protocol}
+
+
+
 
 \begin{itemize}
     \item Input: Commitment $\cm = \CMCom([\k, \ctx]; \usk)$
