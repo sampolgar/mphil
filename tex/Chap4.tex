@@ -395,14 +395,13 @@ The P-DY VRF, relies on a public key $pk = g^{sk}$ for verification. This expose
 
 We begin with a simplified relation: given a commitment $\cm = g_1^x g^r$ and an element $y = g^{1/x}$, the prover demonstrates knowledge of $x$ and $r$ satisfying both equations, without revealing them. This is linked to the Decisional Diffie-Hellman Inversion (DDHI) assumption—where distinguishing $g^{1/x}$ from a random element given $g, g^x$ is computationally hard—making it a secure and essential starting point for our privacy-preserving construction.
 
-The relation is formally defined as:
+\begin{protocol}{Proving Knowledge of Inverse Exponent}{committed-inverse-exponent}\label{pok-committed-inverse-exponent}
+\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, commitment $\cm \in \mathbb{G}$, and element $y \in \mathbb{G}$ \\
+\textbf{Prover Input:} Witness $(x, r)$ such that $\cm = g_1^x g^r$ and $y = g^{1/x}$ \\
+\textbf{Relation:} 
 \[
 \mathcal{R} = \left\{ (\cm, y), (x, r) \ \middle|\ \cm = g_1^x g^r \ \land\ y = g^{1/x} \right\}
 \]
-
-\begin{protocol}{Proving Knowledge of Inverse Exponent}{committed-inverse-exponent}\label{pok-committed-inverse-exponent}
-\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, commitment $\cm \in \mathbb{G}$, and element $y \in \mathbb{G}$ \\
-\textbf{Prover Input:} Witness $(x, r)$ such that $\cm = g_1^x g^r$ and $y = g^{1/x}$
 \begin{enumerate}
     \item \textbf{Commitment:} Prover samples $a_x, a_r \sample \mathbb{Z}_q$ and computes:
     \[
@@ -443,82 +442,40 @@ Having established a zero-knowledge proof for a committed exponent tied to an in
 
 
 \begin{protocol}{Proving Committed Inverse Linear Relation}{committed-inverse-linear-relation}\label{pok-committed-inverse-linear-relation}
+\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, \cm_2, y \in \mathbb{G}$ \\
+\textbf{Prover Input:} Witness $(sk, x, \usk_1, \usk_2)$ such that $\cm_1 = g_1^{sk} g^{\usk_1}$, $\cm_2 = g_2^{x}g^{\usk_2}$ and $ y = g^{1/(sk + x)}$ \\
 \textbf{Relation: }
 \[
-\mathcal{R} = \{(\cm_1, y), (sk, x, r) \mid \cm_1 = g_1^{sk} g_2^{x} g^{r} \wedge y = g^{1/(sk + x)}\}
+\mathcal{R} = \{(\cm_1,\cm_2, y), (sk, x, \usk_1, \usk_2) \mid \cm_1 = g_1^{sk} g^{\usk} \wedge \cm_2 = g_2^{x}g^{\usk_2} \wedge y = g^{1/(sk + x)}\}
 \]
-\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, y \in \mathbb{G}$ \\
-\textbf{Prover Input:} Witness $(sk, x, r)$ such that $\cm_1 = g_1^{sk} g_2^{x} g^{r}$ and $ y = g^{1/(sk + x)}$
 \begin{enumerate}
     \item \textbf{Commitment:} Prover computes:
     \begin{align*}
-        a_{sk}, a_x, a_r &\sample \Z_q & T_1 &\gets g_1^{a_{sk}} g_2^{a_x} g^{a_r} & T_y &\gets y^{a_{sk} + a_x}
-    \end{align*}
-    Sends $(T_1, T_y)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-     \begin{align*}
-        z_{sk} &= a_{sk} + c \cdot sk & z_x &= a_x + c \cdot x & z_r &= a_r + c \cdot r & z_m &= (a_{sk} + a_x) + c \cdot (sk + x)
-    \end{align*}
-    Sends $(z_{sk}, z_x, z_r, z_m)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g_2^{z_x} g^{z_r} &
-        T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
-        z_m &\stackrel{?}{=} z_{sk} + z_x
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-
-
-
-\section{Using Multiple Commitments}
-\begin{protocol}{Proving Committed Inverse Linear Relation from Two Commitments}{committed-inverse-linear-relation-two-commitments}\label{pok-committed-inverse-linear-relation-two-commitments}
-\textbf{Relation: }
-\[
-\mathcal{R} = \{(\cm_1, \cm_2, y), (sk, x, r_1, r_2) \mid \cm_1 = g_1^{sk} g^{r_1} \wedge \cm_2 = g_2^{x} g^{r_2} \wedge y = g^{1/(sk + x)}\}
-\]
-\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, commitments $\cm_1, \cm_2 \in \mathbb{G}$, and output $y \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(sk, x, r_1, r_2)$ such that:
-    \begin{align*}
-        \cm_1 &= g_1^{sk} g^{r_1} & \cm_2 &= g_2^{x} g^{r_2} & y &= g^{1/(sk + x)}
-    \end{align*}
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
-       \[
-        a_x \quad \text{for} \quad x \in \{ sk, x, r_1, r_2 \} \in \mathbb{Z}_q
-       \]
-    \textbf{Computes}:
-    \begin{align*}
-        T_1 &\gets g_1^{a_{sk}} g^{a_{r_1}} & T_2 &\gets g_2^{a_x} g^{a_{r_2}} & T_y &\gets y^{a_{sk} + a_x}
+        a_{sk}, a_x, a_{r_1}, a_{r_2} &\sample \Z_q & T_1 &\gets g_1^{a_{sk}} g^{a_{r_1}} & T_2 &\gets g_2^{a_x} g^{a_{r_2}} & T_y &\gets y^{a_{sk} + a_x}
     \end{align*}
     Sends $(T_1, T_2, T_y)$ to verifier.
     
     \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
     
     \item \textbf{Response:} Prover computes:
-    \[
-    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ sk, x, r_1, r_2 \}
-    \]
-    \[
-    z_m = (a_{sk} + a_x) + c \cdot (sk + x)
-    \]
-    Sends $(z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$ to verifier.
+     \begin{align*}
+        z_{sk} &= a_{sk} + c \cdot sk & z_x &= a_x + c \cdot x &  z_m &= (a_{sk} + a_x) + c \cdot (sk + x)\\   
+        z_{r_1} &= a_{r_1} + c \cdot r_1 & z_{r_2} &= a_{r_2} + c \cdot r_2
+    \end{align*}
+    Sends $(z_{sk}, z_x, z_{r_1} z_{r_2}, z_m)$ to verifier.
     
     \item \textbf{Verification:} Verifier checks:
     \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}} &
-        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_2^{z_x} g^{z_{r_2}} &
+        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}}g^{z_{r_1}} 
+        &
+        T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_2^{z_x} g^{z_{r_2}} 
+        &
         T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
         z_m &\stackrel{?}{=} z_{sk} + z_x
     \end{align*}
 \end{enumerate}
 \end{protocol}
+
 
 
 
@@ -628,7 +585,67 @@ The relation being proven is:
 
 
 
-
+\begin{protocol}{Proving VRF for Input and Output Commitments}{committed-exponent-inverse-separate}
+\textbf{Common Input:} Group generators $g_1,\ldots, g_4, g, \cm_1, \ldots, \cm_5 \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(sk, x, m, r_1, r_2, r_3, r_4, r_5)$ \\
+\textbf{Relation: }
+\[
+\mathcal{R} = \left\{ 
+\begin{array}{l} (\cm_1, \cm_2, \cm_3, \cm_4, \cm_5),\\
+(sk, x, m, r_1, r_2, r_3, r_4, r_5) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+\cm_3 = g_3^{1/(sk + x)} g^{r_3} \\
+\cm_4 = g_4^{m} g^{r_4} \\
+\cm_5 = \cm_3^{m} g^{r_5} = g_3 g^{r_3 m + r_5} \\
+m = sk + x
+\end{array} \right\}
+\]
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
+       \[
+       a_{sk}, a_x, a_m, a_\beta, a_{r_1}, \ldots, a_{r_5} \qquad \text{where $\beta = 1/(sk + x)$}
+       \]
+       Computes:
+       \begin{align*}
+       T_1 &= g_1^{a_{sk}} g^{a_{r_1}} 
+       &
+       T_2 &= g_2^{a_x} g^{a_{r_2}} 
+       &       
+       T_3 &= g_3^{a_\beta} g^{a_{r_3}} 
+       \\
+       T_4 &= g_4^{a_m} g^{a_{r_4}} 
+       &
+       T_5 &= \cm_3^{a_m} g^{a_{r_5}}
+       \end{align*}
+       Sends $(T_1, \ldots, T_5)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+     \[
+    z_i \in \Z_p = a_i + c \cdot x \quad \text{for} \quad i \in \{ sk, x, m, \beta, r_1, r_2, r_3, r_4, r_5\}
+    \]
+       Sends $(z_{sk}, z_x,  z_m, z_\beta, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4}, z_{r_5})$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+       \begin{align*}
+       T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}} 
+       &
+       T_2 \cdot \cm_2^c &\stackrel{?}{=} g_2^{z_x} g^{z_{r_2}} &
+       T_3 \cdot \cm_3^c &\stackrel{?}{=} g_3^{z_\beta} g^{z_{r_3}} 
+       \\
+       T_4 \cdot \cm_4^c &\stackrel{?}{=} g_4^{z_m} g^{z_{r_4}} 
+       &
+       T_5 \cdot \cm_5^c &\stackrel{?}{=} \cm_3^{z_m} g^{z_{r_5}} 
+       &
+       z_m &\stackrel{?}{=} z_{sk} + z_x
+       \end{align*}
+\end{enumerate}
+\end{protocol}
 
 
 
@@ -850,71 +867,6 @@ The relation being proven is:
 
 
 
-\section{On the possibility of Sigma protocols for VRF Construction}
-Why $\Sigma$-Protocols Suit Our VRF Construction
-
-In our Verifiable Random Function (VRF) construction, we employ a $\Sigma$-protocol to generate the proof $\pi$ for the output $y = f_{sk}(x)$, where $sk$ is the secret key and $x$ is the input. A potential concern is whether the zero-knowledge property of $\Sigma$-protocols, which allows proof simulation, compromises the \textbf{verifiable uniqueness} property of the VRF—i.e., the guarantee that only one $y$ can be verified for a given $x$. Here, we explain why this concern is unfounded and how $\Sigma$-protocols align with VRF security requirements.
-
-A VRF must satisfy three core properties: \textbf{correctness}, \textbf{uniqueness}, and \textbf{pseudorandomness}. \textbf{Correctness} ensures that an honestly computed output $y = f_{sk}(x)$ and its proof $\pi$ will always pass verification. \textbf{Uniqueness} guarantees that for each $x$, only one $y$ can be successfully verified with a proof $\pi$. \textbf{Pseudorandomness} ensures that without $sk$, $y$ is indistinguishable from random, even after seeing other $(x, y, \pi)$ triples. The $\Sigma$-protocol, an interactive proof system, offers three key properties: \textbf{completeness} (an honest prover with $sk$ convinces the verifier), \textbf{soundness} (a dishonest prover cannot prove a false statement), and \textbf{zero-knowledge} (the proof reveals nothing about $sk$, and a simulator can mimic it for true statements). These align perfectly with the VRF's needs: completeness supports correctness, soundness enforces uniqueness, and zero-knowledge preserves pseudorandomness by hiding $sk$.
-
-The zero-knowledge property ensures $sk$ remains secret, but the simulator can only generate valid proofs for \textbf{true statements}, e.g., $y = f_{sk}(x)$. It cannot produce a proof for a false statement, like $y' \neq f_{sk}(x)$, that passes verification, due to the \textbf{soundness} property. Soundness ensures that only proofs for the correct $y$ are accepted, preventing an adversary from forging a proof for an incorrect output. Thus, the uniqueness of $y$ is preserved, as false proofs are rejected with overwhelming probability.
-
-\textbf{Concrete Example:} Consider a VRF where $y = g^{1/(sk + x)}$ in a group of prime order $p$, and the $\Sigma$-protocol proves $y^{sk + x} = g$. Here, $y$ is uniquely determined by $sk$ and $x$ (since exponentiation is injective for $sk + x \neq 0 \mod p$). The $\Sigma$-protocol ensures that only the correct $y$ satisfies the equation, and a proof for an incorrect $y'$ (where $y'^{sk + x} \neq g$) fails verification. Despite zero-knowledge allowing simulation for the true $y$, soundness prevents valid proofs for false $y'$, reinforcing uniqueness.
-
-A potential concern with using zero-knowledge proofs for VRFs is that proof simulatability might conflict with output uniqueness. In general NIZKs, the simulation property could potentially allow valid proofs for multiple outputs of the same input, e.g. $y_1, y_2$ for the same input $x$, violating the VRF uniqueness requirement. Our construction resolves this tension by leveraging a $\Sigma$-protocol to prove the statement $y^{sk + x} = g$ where $y = g^{1/(sk + x)}$. This equation has exactly one solution for $y$ given fixed values of $sk$ and $x$ (when $sk + x \neq 0 \mod p$). While the protocol's zero-knowledge property conceals $sk$, its soundness guarantees that only proofs for the correct $y$ will verify, thereby enforcing rather than compromising uniqueness.
-
-
-In conclusion, the zero-knowledge property of $\Sigma$-protocols does not weaken the VRF's verifiable uniqueness, as simulation is limited to true statements. Meanwhile, soundness upholds the integrity of the proof, ensuring only the correct $y$ verifies.
-
-\paragraph{Information-Theoretic vs. Computational Uniqueness} 
-For Pseudorandomness: We move from q-DBDHI in bilinear groups to q-DDHI in prime-order groups. This change is related to eliminating the pairing operation while maintaining the pseudorandomness property.
-For Uniqueness: We move from information-theoretic uniqueness (enforced by the algebraic properties of pairings) to computational uniqueness (enforced by the soundness of the Sigma protocol). The latter relies on the discrete logarithm assumption, which is a separate assumption from q-DDHI.
-
-
-Our pairing-free VRF construction makes a fundamental tradeoff between efficiency and the nature of its uniqueness guarantee. The original Dodis-Yampolskiy VRF achieves \emph{information-theoretic uniqueness} through its bilinear pairing verification equation $e(g^x \cdot pk, \pi) = e(g, \tilde{g})$, which creates an algebraic constraint that cannot be violated even with unlimited computational power. In contrast, our $\Sigma$-protocol approach provides \emph{computational uniqueness}, where the guarantee depends on the soundness property of the proof system and the underlying hardness of the discrete logarithm problem. While theoretically a weaker property, computational uniqueness still provides robust security against all polynomial-time adversaries, making it a reasonable tradeoff for eliminating expensive pairing operations.
-
-
-\subsection{On the Impossibility of Dodis-Yampolskiy VRF in Prime Order Groups without Pairings}
-
-After careful analysis of the Dodis-Yampolskiy VRF construction and the formal requirements established by Micali and Vadhan, we have identified fundamental obstacles to implementing this VRF in a standard prime order group without bilinear pairings.
-
-The original Dodis-Yampolskiy construction relies on bilinear pairings for a crucial reason: to enable verification of the inverse relationship between $g^{sk+x}$ and $\tilde{g}^{1/(sk+x)}$ without revealing the secret key $sk$. As shown in the screenshot, their construction provides:
-
-\begin{itemize}
-    \item A binding public key $PK = g^s$ that commits the owner to the function
-    \item A VRF output with embedded proof $\textsf{SIGN}_{SK}(x) = g^{1/(s+SK)}$
-    \item A verification equation $e(g^x \cdot PK, y) = e(g, g)$ that enforces uniqueness
-\end{itemize}
-
-Our investigation revealed three insurmountable challenges when attempting to adapt this construction to standard prime order groups:
-
-\paragraph{Challenge 1: Verification of Inverse Relationships} Without pairings, a verifier cannot efficiently confirm that $y = g^{1/(sk+x)}$ given only $pk = g^{sk}$ and input $x$. This is because verifying the equation $y^{sk+x} = g$ requires either knowledge of $sk$ (which the verifier does not have) or a bilinear pairing.
-
-\paragraph{Challenge 2: Information-Theoretic vs. Computational Uniqueness} The Dodis-Yampolskiy construction provides information-theoretic uniqueness through its pairing-based verification. Any attempt to replace this with a $\Sigma$-protocol would downgrade this to computational uniqueness based on the soundness of the proof system.
-
-\paragraph{Challenge 3: Binding Commitment with Public Verification} Micali and Vadhan emphasize that "For any public key PK, even an improperly chosen one, a unique value $v$ is provable as the value of $f_s(x)$." This property is difficult to achieve without pairings when dealing with inverse relationships.
-
-While we could construct a protocol where:
-\begin{itemize}
-    \item The public key remains $pk = g^{sk}$
-    \item The output is $y = g^{1/(sk+x)}$
-    \item A $\Sigma$-protocol proves knowledge of $sk$ where $pk = g^{sk}$ and $y^{sk+x} = g$
-\end{itemize}
-
-Such a construction would deviate from the strict VRF definition in important ways:
-
-\begin{enumerate}
-    \item The uniqueness property would rely on computational assumptions rather than being information-theoretic
-    \item The verification process would fundamentally change from checking algebraic relationships to verifying zero-knowledge proofs
-    \item The non-interactive requirement would necessitate applying the Fiat-Shamir heuristic, introducing additional security assumptions
-\end{enumerate}
-
-These findings highlight that the bilinear pairing in Dodis-Yampolskiy's construction is not merely an implementation choice but a fundamental component that enables the mathematical properties required for a true VRF according to Micali and Vadhan's definition.
-
-This impossibility result motivates our alternative approach in subsequent sections, where we develop a different technique for our credential binding application that preserves the desired security properties without requiring pairings, albeit under a slightly different security model.
-
-
-
 
 
 
@@ -956,6 +908,46 @@ Verify & 6.37 & 2.52 & 60.42 \\
 Include benchmark of my construction on a different curve e.g. secpk251
 Try to benchmark it against a VRF from the standardisation
 
+
+\begin{table}[ht]
+\centering
+\caption{Verification Time for 4 Credentials with Varying Attributes (time in ms)}
+\label{tab:performance-vrf}
+\begin{tabular}{l@{\hspace{1em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{1em}}r}
+\toprule
+\textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} & \textbf{Notes} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} & \\
+\midrule
+Dodis Yampolskiy    & 1.27 &        & 2.2   &       & using optimized pairing checks \\
+Our P-DY            & 0.41 & 3.1x   & 0.70  & 3.1x  &  \\
+\midrule
+Non-Private Multi-Issuer & 6.79 & 6.77 & 6.81 & 1.0× & Cleartext, distinct issuers \\
+Private Multi-Issuer & 17.65 & 18.67 & 19.89 & 1.1× & Worst-case, distinct issuers \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\begin{table}[ht]
+\centering
+\caption{Verification Time for 4 Credentials with Varying Attributes (time in ms)}
+\label{tab:performance-vrf}
+\begin{tabular}{l@{\hspace{1em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{1em}}r}
+\toprule
+\textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} & \textbf{Notes} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{(Speedup)} & \\
+\midrule
+Dodis Yampolskiy    & 1.27 &        & 2.2   &       & using optimized pairing checks \\
+Our P-DY            & 0.41 & 3.1x   & 0.70  & 3.1x  &  \\
+\midrule
+Non-Private Multi-Issuer & 6.79 & 6.77 & 6.81 & 1.0× & Cleartext, distinct issuers \\
+Private Multi-Issuer & 17.65 & 18.67 & 19.89 & 1.1× & Worst-case, distinct issuers \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 
 
