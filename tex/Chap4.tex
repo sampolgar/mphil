@@ -24,6 +24,37 @@ Our main challenge is:
 \emph{How do we efficiently generate a verifiable nullifier that proves the binding relationship between two separate credentials without leaking any additional information}
 \end{center}
 
+E.g.
+\begin{figure}
+        \begin{pchstack}[boxed, center, space=4em]
+            \begin{pcvstack}
+                \procedure[space=auto]{Passport}{%
+                \id: 12345, \\
+                \ctx: "master", \\
+                \exp: "10/11/2026" \\
+                \k: 54321
+                }
+            \end{pcvstack}
+            \pcvspace
+            \begin{pcvstack}
+                \procedure[space=auto]{Driver License}{%
+                 \id: 12345, \\
+                 \ctx: "DMV", \\
+                 \exp: "10/11/2028"
+                }
+            \end{pcvstack}
+            \begin{pcvstack}
+                \procedure[space=auto]{Nullifier}{%
+                 \textsf{n} = 1/(\k + "DMV") \\
+                 \nul = g^{\textsf{n}}
+                }
+            \end{pcvstack}
+        \end{pchstack}
+    \caption{Example Credential and Nullifier for context DMV}
+    \label{fig:two-creds}
+\end{figure}
+
+
 
 \subsection{Background Work}
 
@@ -283,7 +314,7 @@ The VRF output $ y = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T $ is pseudora
 
 
 
-\section{P-DY: Pairing-Free VRF in Prime-Order Groups}
+\section{Step 1. Pairing-Free VRF in Prime-Order Groups (P-DY)}
 
 In this section, we present our pairing-free verifiable random function (VRF), P-DY, which operates in a prime-order group and eliminates the computational overhead of bilinear pairings found in the Dodis-Yampolskiy (DY) VRF. We detail the construction, including a $\Sigma$-protocol for proof generation, and demonstrate that it satisfies correctness, uniqueness, and pseudorandomness. Notably, P-DY trades the information-theoretic uniqueness of DY for computational uniqueness, a shift we justify through the security analysis.
 
@@ -303,19 +334,18 @@ Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator
 \end{remark}
 
 \subsection{Proof Protocol}
-The protocol proves knowledge of $sk$ such that $pk = g^{sk}$ and $y^{sk + x} = g$, without revealing $sk$:
-
 \begin{protocol}{P-DY Proof Protocol}{}\label{protocol-pdy-protocol1}
 \textbf{Common Input:} $g, pk, y \in \mathbb{G}$, $x \in \mathbb{Z}_p$ \\
-\textbf{Prover Input:} $sk \in \mathbb{Z}_p^*$ with $pk = g^{sk}$, $y = g^{1/(sk + x)}$
+\textbf{Prover Input:} $sk \in \mathbb{Z}_p^*$ with $pk = g^{sk}$, $y = g^{1/(sk + x)}$ \\
+\textbf{Relation: }
+\[
+\mathcal{R} = \left\{ (\pk, x, y), (sk) \ \middle| pk = g^{sk} \land y^{sk + x} = g \right\}
+\]
 \begin{enumerate}
     \item \textbf{Commitment:} Prover samples $r \sample  \mathbb{Z}_p$, computes $T_1 = g^r$, $T_2 = y^r$, sends $(T_1, T_2)$.
     \item \textbf{Challenge:} Verifier samples $c \sample  \mathbb{Z}_p$, sends $c$.
     \item \textbf{Response:} Prover computes $z = r + c \cdot (sk + x)$, sends $z$.
-    \item \textbf{Verification:} Verifier checks:
-    \[
-    g^z \stackrel{?}{=} T_1 \cdot (pk \cdot g^x)^c \quad \text{and} \quad y^z \stackrel{?}{=} T_2 \cdot g^c
-    \]
+    \item \textbf{Verification:} Verifier checks: $g^z \stackrel{?}{=} T_1 \cdot (pk \cdot g^x)^c$ and $y^z \stackrel{?}{=} T_2 \cdot g^c$
 \end{enumerate}
 \end{protocol}
 
@@ -356,189 +386,468 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 
 
 
+\newpage
+\section{Step 2: Privacy-Preserving VRF}
 
+The P-DY VRF, relies on a public key $pk = g^{sk}$ for verification. This exposes $pk$, potentially compromising user privacy in applications like anonymous credential systems. To preserve privacy, we use committed attributes and zero-knowledge proofs, proving the VRF output $y = g^{1/(sk + x)}$ is correctly computed without revealing $sk$ or $x$. We build this up by first solving for the $q$-DDHI challenge before applying the linear relation proof for additive exponents. 
 
+\subsection{Step 2.1: Proving Committed Exponent and DDHI Challenge}
 
+We begin with a simplified relation: given a commitment $\cm = g_1^x g^r$ and an element $y = g^{1/x}$, the prover demonstrates knowledge of $x$ and $r$ satisfying both equations, without revealing them. This is linked to the Decisional Diffie-Hellman Inversion (DDHI) assumption—where distinguishing $g^{1/x}$ from a random element given $g, g^x$ is computationally hard—making it a secure and essential starting point for our privacy-preserving construction.
 
+The relation is formally defined as:
+\[
+\mathcal{R} = \left\{ (\cm, y), (x, r) \ \middle|\ \cm = g_1^x g^r \ \land\ y = g^{1/x} \right\}
+\]
 
-
-
-
-
-
-
-
-
-\section{Step 2. Privacy}
-Our VRF builds upon the $q$-DDHI assumption and this is where we start our zero knowledge proof protocol. Specifically, we want to prove (in zero knowledge) that we know $\alpha$ such that $g^{1/\alpha}$ 
-
-Let $G$ be a cyclic group of prime order $q$, with generators $g_1, g \in G$. Assume the discrete logarithm problem (DLP) is hard in $G$, and the discrete log of $g_1$ with respect to $g$ is unknown.
-The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q^*$ such that $\alpha \cdot \beta = 1 \mod q$, where $\beta = \frac{1}{\alpha}$, given commitments to $\alpha$ and $\beta$.
-
-Challenges
-Sigma protocols prove knowledge of exponents, proving knowledge of an inverse exponent. 
-
-INSERT PROOF PROTOCOL FOR DDHI Challenge
-
-\subsubsection*{Completeness}:
-We show that if the prover follows the protocol honestly, all verification equations will be satisfied.
-
+\begin{protocol}{Proving Knowledge of Inverse Exponent}{committed-inverse-exponent}\label{pok-committed-inverse-exponent}
+\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, commitment $\cm \in \mathbb{G}$, and element $y \in \mathbb{G}$ \\
+\textbf{Prover Input:} Witness $(x, r)$ such that $\cm = g_1^x g^r$ and $y = g^{1/x}$
 \begin{enumerate}
-    \item The first two verification equations ($T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_\alpha} g^{z_{\usk_1}}$, $T_2 \cdot \cm_2^c \stackrel{?}{=} g_1^{z_\beta} g^{z_{\usk_2}}$) are simple Schnorr proofs of exponents which we will not expand 
-        
-    \item Third verification equation: $T_3 \cdot \cm_3^c \stackrel{?}{=} \cm_2^{z_\alpha} g^{z_{\usk_3}}$
-    \begin{align*}
-        T_3 \cdot \cm_3^c &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot (\cm_2^\alpha g^{\usk_3})^c \\
-        &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot \cm_2^{\alpha \cdot c} g^{\usk_3 \cdot c} \\
-        &= \cm_2^{a_\alpha + \alpha \cdot c} g^{a_{\usk_3} + \usk_3 \cdot c} \\
-        &= \cm_2^{z_\alpha} g^{z_{\usk_3}}
-    \end{align*}
-    
-    \item Fourth verification equation: $T_4 \cdot \cm_4^c \stackrel{?}{=} g^{z_{\usk_4}}$
-    \begin{align*}
-        T_4 \cdot \cm_4^c &= g^{a_{\usk_4}} \cdot (g^{\usk_4})^c \\
-        &= g^{a_{\usk_4}} \cdot g^{\usk_4 \cdot c} \\
-        &= g^{a_{\usk_4} + \usk_4 \cdot c} \\
-        &= g^{z_{\usk_4}}
-    \end{align*}
-    
-    \item Fifth verification equation: $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g_1$
-    
-    Using the relations $\beta = \frac{1}{\alpha}$ and $\usk_4 = \usk_3 + \alpha \cdot \usk_2$:
-    \begin{align*}
-        \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
-        &= (g_1^\beta g^{\usk_2})^\alpha g^{\usk_3} \\
-        &= g_1^{\beta \cdot \alpha} g^{\usk_2 \cdot \alpha} g^{\usk_3} \\
-        &= g_1^{\frac{1}{\alpha} \cdot \alpha} g^{\usk_2 \cdot \alpha + \usk_3} \\
-        &= g_1 g^{\usk_3 + \alpha \cdot \usk_2} \\
-        &= g_1 g^{\usk_4} \\
-        &= g_1 \cdot \cm_4
-    \end{align*}
-    
-    Therefore:
-    \begin{align*}
-        \frac{\cm_3}{\cm_4} = \frac{g_1 \cdot \cm_4}{\cm_4} = g_1
-    \end{align*}
+    \item \textbf{Commitment:} Prover samples $a_x, a_r \sample \mathbb{Z}_q$ and computes:
+    \[
+    T_1 = g_1^{a_x} g^{a_r}, \quad T_y = y^{a_x}
+    \]
+    Sends $(T_1, T_y)$ to the verifier.
+
+    \item \textbf{Challenge:} Verifier samples $c  \sample  \mathbb{Z}_q$ and sends $c$ to the prover.
+
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_x = a_x + c \cdot x, \quad z_r = a_r + c \cdot r
+    \]
+    Sends $(z_x, z_r)$ to the verifier.
+
+    \item \textbf{Verification:} Verifier checks:
+    \[
+    T_1 \cdot \cm^c \stackrel{?}{=} g_1^{z_x} g^{z_r}, \quad T_y \cdot g^c \stackrel{?}{=} y^{z_x}
+    \]
+\end{enumerate}
+\end{protocol}
+
+This protocol achieves two goals:
+\begin{enumerate}
+    \item Commitment Opening: The equation $T_1 \cdot \cm^c = g_1^{z_x} g^{z_r}$ proves the prover knows $x$, $r$ satisfying the commitment opening.
+    \item The equation $T_y \cdot g^c = y^{z_x}$ holds because $y^{a_x} \cdot g^c = y^{a_x} \cdot y^{c \cdot x} = y^{a_x + c \cdot x} = y^{z_x}$ if $y^x = g$, proving $y = g^{1/x}$ links to the same $x$ in $\cm$.
 \end{enumerate}
 
-Since all verification equations are satisfied when the prover follows the protocol, we conclude that our sigma protocol satisfies the completeness property.
 
 
-\subsubsection*{Soundness}
-We prove the special soundness property by demonstrating that given two accepting transcripts with identical first messages but different challenges, we can extract a valid witness satisfying all relations required by the protocol.
 
-Let $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ and $(T_1, T_2, T_3, T_4, c', z'_\alpha, z'_\beta, z'_{\usk_1}, z'_{\usk_2}, z'_{\usk_3}, z'_{\usk_4})$ be two accepting transcripts with $c \neq c'$.
 
+
+\newpage
+\subsection{Step 2.2: Proving Committed Exponents with Linear Relation}
+
+Having established a zero-knowledge proof for a committed exponent tied to an inverse, we now extend this to handle two committed values, $sk$ and $x$, such that $y = g^{1/(sk + x)}$. This step introduces a linear relation between $sk$ and $x$, which is essential for the VRF output. The prover demonstrates knowledge of $sk$, $x$, and their respective randomness values, proving the relation without revealing the values themselves.
+
+
+\begin{protocol}{Proving Committed Inverse Linear Relation}{committed-inverse-linear-relation}\label{pok-committed-inverse-linear-relation}
+\textbf{Relation: }
+\[
+\mathcal{R} = \{(\cm_1, y), (sk, x, r) \mid \cm_1 = g_1^{sk} g_2^{x} g^{r} \wedge y = g^{1/(sk + x)}\}
+\]
+\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, y \in \mathbb{G}$ \\
+\textbf{Prover Input:} Witness $(sk, x, r)$ such that $\cm_1 = g_1^{sk} g_2^{x} g^{r}$ and $ y = g^{1/(sk + x)}$
 \begin{enumerate}
-    \item \textbf{Witness extraction:}
+    \item \textbf{Commitment:} Prover computes:
+    \begin{align*}
+        a_{sk}, a_x, a_r &\sample \Z_q & T_1 &\gets g_1^{a_{sk}} g_2^{a_x} g^{a_r} & T_y &\gets y^{a_{sk} + a_x}
+    \end{align*}
+    Sends $(T_1, T_y)$ to verifier.
     
-    Following the standard extraction technique for sigma protocols, we compute each witness component:
-    \begin{align}
-    \alpha &= \frac{z_\alpha - z'_\alpha}{c - c'} & x &= \frac{z_\beta - z'_\beta}{c - c'} \\
-    \usk_1 &= \frac{z_{\usk_1} - z'_{\usk_1}}{c - c'} & \usk_2 &= \frac{z_{\usk_2} - z'_{\usk_2}}{c - c'} \\
-    \usk_3 &= \frac{z_{\usk_3} - z'_{\usk_3}}{c - c'} & \usk_4 &= \frac{z_{\usk_4} - z'_{\usk_4}}{c - c'}
-    \end{align}
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
     
-    These extracted values are guaranteed to be consistent with the protocol's verification equations precisely because both transcripts are accepting.
+    \item \textbf{Response:} Prover computes:
+     \begin{align*}
+        z_{sk} &= a_{sk} + c \cdot sk & z_x &= a_x + c \cdot x & z_r &= a_r + c \cdot r & z_m &= (a_{sk} + a_x) + c \cdot (sk + x)
+    \end{align*}
+    Sends $(z_{sk}, z_x, z_r, z_m)$ to verifier.
     
-    \item \textbf{Verification of commitment relations:}
-    
-    We first show that the extracted witness satisfies $\cm_1 = g_1^m g^{\usk_1}$. From the acceptance of both transcripts, we have:
-    \begin{align}
-        T_1 \cdot \cm_1^c &= g_1^{z_\alpha} g^{z_{\usk_1}} \\
-        T_1 \cdot \cm_1^{c'} &= g_1^{z'_\alpha} g^{z'_{\usk_1}}
-    \end{align}
-    
-    Dividing these equations and substituting our extracted values:
-    \begin{align}
-        \cm_1^{c-c'} &= g_1^{z_\alpha-z'_\alpha} g^{z_{\usk_1}-z'_{\usk_1}} \\
-        &= g_1^{\alpha(c-c')} g^{\usk_1(c-c')} \\
-        \Rightarrow \cm_1 &= g_1^\alpha g^{\usk_1}
-    \end{align}
-    
-    Using identical extraction and verification techniques with the corresponding verification equations, we establish that:
-    \begin{align}
-        \cm_2 &= g_1^\beta g^{\usk_2} \\
-        \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
-        \cm_4 &= g^{\usk_4}
-    \end{align}
-    
-    \item \textbf{Verification of the multiplicative inverse relation ($\beta = \frac{1}{\alpha}$):}
-    
-    The core cryptographic property enforced by our protocol is the multiplicative inverse relationship between $m$ and $x$. This is where the protocol's security guarantee is ultimately derived from. We verify this relationship using the final verification equation $\frac{\cm_3}{\cm_4} = g_1$.
-    
-    Substituting our extracted witness values:
-    \begin{align}
-        \frac{\cm_3}{\cm_4} &= g_1 \\
-        \frac{\cm_2^\alpha g^{\usk_3}}{g^{\usk_4}} &= g_1 \\
-        \cm_2^\alpha g^{\usk_3 - \usk_4} &= g_1
-    \end{align}
-    
-    Further substituting $\cm_2 = g_1^x g^{\usk_2}$:
-    \begin{align}
-        (g_1^x g^{\usk_2})^\alpha g^{\usk_3 - \usk_4} &= g_1 \\
-        g_1^{x \cdot \alpha} g^{\alpha \cdot \usk_2 + \usk_3 - \usk_4} &= g_1
-    \end{align}
-    
-    In the generic group model, this equation can only hold if:
-    \begin{align}
-        \beta \cdot \alpha &= 1 \\
-        \alpha \cdot \usk_2 + \usk_3 - \usk_4 &= 0
-    \end{align}
-    
-    These equations immediately give us the two critical relations:
-    \begin{align}
-        \beta &= \frac{1}{\alpha} \\
-        \usk_4 &= \usk_3 + \alpha \usk_2
-    \end{align}
-    
-    The first relation confirms that our protocol successfully enforces the multiplicative inverse relationship between $\alpha$ and $\beta$. The second relation verifies the consistency of the randomizers across the commitments, ensuring that no malicious prover can construct valid-looking commitments without knowing values that satisfy all required relations.
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g_2^{z_x} g^{z_r} &
+        T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
+        z_m &\stackrel{?}{=} z_{sk} + z_x
+    \end{align*}
 \end{enumerate}
+\end{protocol}
 
-We have thus demonstrated that our extractor obtains a complete and valid witness $(\alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4)$ satisfying all relations in the statement, establishing the special soundness property of our sigma protocol. This ensures that no prover can successfully convince a verifier without knowledge of values satisfying the multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ and the associated consistency requirements.
 
-\subsubsection*{Zero-Knowledge}
-We prove the honest-verifier zero-knowledge property by presenting a simulator that produces transcripts indistinguishable from real protocol executions without knowing any witness.
 
+
+
+\section{Using Multiple Commitments}
+\begin{protocol}{Proving Committed Inverse Linear Relation from Two Commitments}{committed-inverse-linear-relation-two-commitments}\label{pok-committed-inverse-linear-relation-two-commitments}
+\textbf{Relation: }
+\[
+\mathcal{R} = \{(\cm_1, \cm_2, y), (sk, x, r_1, r_2) \mid \cm_1 = g_1^{sk} g^{r_1} \wedge \cm_2 = g_2^{x} g^{r_2} \wedge y = g^{1/(sk + x)}\}
+\]
+\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, commitments $\cm_1, \cm_2 \in \mathbb{G}$, and output $y \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(sk, x, r_1, r_2)$ such that:
+    \begin{align*}
+        \cm_1 &= g_1^{sk} g^{r_1} & \cm_2 &= g_2^{x} g^{r_2} & y &= g^{1/(sk + x)}
+    \end{align*}
 \begin{enumerate}
-    \item \textbf{Simulator Construction:}
+    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
+       \[
+        a_x \quad \text{for} \quad x \in \{ sk, x, r_1, r_2 \} \in \mathbb{Z}_q
+       \]
+    \textbf{Computes}:
+    \begin{align*}
+        T_1 &\gets g_1^{a_{sk}} g^{a_{r_1}} & T_2 &\gets g_2^{a_x} g^{a_{r_2}} & T_y &\gets y^{a_{sk} + a_x}
+    \end{align*}
+    Sends $(T_1, T_2, T_y)$ to verifier.
     
-    Given public input $(g_1, g, \cm_1, \cm_2, \cm_3, \cm_4)$ and any challenge $c \in \mathbb{Z}_q$, our simulator:
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
     
-    \begin{itemize}
-        \item Samples $z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4} \sample \mathbb{Z}_q$ uniformly at random
-        
-        \item Computes the first message by working backwards from the verification equations:
-        \begin{align}
-            T_1 &\gets g_1^{z_\alpha} g^{z_{\usk_1}} \cdot \cm_1^{-c} \\
-            T_2 &\gets g_1^{z_\beta} g^{z_{\usk_2}} \cdot \cm_2^{-c} \\
-            T_3 &\gets \cm_2^{z_\alpha} g^{z_{\usk_3}} \cdot \cm_3^{-c} \\
-            T_4 &\gets g^{z_{\usk_4}} \cdot \cm_4^{-c}
-        \end{align}
-        
-        \item Outputs the transcript $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$
-    \end{itemize}
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ sk, x, r_1, r_2 \}
+    \]
+    \[
+    z_m = (a_{sk} + a_x) + c \cdot (sk + x)
+    \]
+    Sends $(z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$ to verifier.
     
-    \item \textbf{Perfect Indistinguishability:}
-    
-    In a real protocol execution with an honest prover, the responses have the form $z_\alpha = a_\alpha + c \cdot \alpha$ where $a_\alpha$ are uniformly random values. Since $a_\alpha \sample \mathbb{Z}_q$ and addition with $c \cdot \alpha$ is a permutation over $\mathbb{Z}_q$, the distribution of real responses is uniform over $\mathbb{Z}_q$.
-    
-    The simulator directly samples responses uniformly from $\mathbb{Z}_q$, matching this distribution exactly. Given these responses and the challenge $c$, the first message components $T_i$ are uniquely determined by the verification equations in both real and simulated cases.
-    
-    Consequently, the joint distribution of $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ is identical for both the simulator and the honest protocol.
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}} &
+        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_2^{z_x} g^{z_{r_2}} &
+        T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
+        z_m &\stackrel{?}{=} z_{sk} + z_x
+    \end{align*}
 \end{enumerate}
-
-This construction demonstrates that our protocol satisfies perfect honest-verifier zero-knowledge. Notably, the simulator succeeds without requiring knowledge of the critical multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ or any other witness values, confirming that the protocol reveals no information about these secret values beyond what is already implied by the statement being proven.
-
+\end{protocol}
 
 
 
 
 
 
+\newpage
+\subsection{Step 2.3: Proving Committed Input, Committed Ouptut, Inverse Exponent}
 
-\subsection*{Notation}
-Inline with our Anonymous Credential scheme built and prior chapters, the secret key is $\k$, the VRF input is $\ctx$, the VRF output is $\nul$ and the proof $\pi$ proves the correctness of $\nul$ such that $(\nul, \pi) \gets \mathsf{VRF.Eval}(\k, \ctx)$. $\cm = \CMCom([\id,\ldots];\usk)$ is a commitment shorthand for commitment $g_1^\id \ldots g^\usk$. We use Type-3 Bilinear Pairings. Let $\G_1$, $\G_2$, and $\G_T$ be groups of prime order $p$, with generators $g \in \G_1$, $\tilde{g} \in \G_2$, and a bilinear map $e: \G_1 \times \G_2 \to \G_T$.
+\subsection*{Protocol 2: Proving Inverse Attributes in Commitments}
+This protocol enables a prover to prove, in zero-knowledge, that the attribute $\beta$ in one commitment $\cm_2 = g_1^\beta g^{\usk_2}$ is the multiplicative inverse of the attribute $m$ in another commitment $\cm_1 = g_1^m g^{\usk_1}$, i.e., $\beta = \frac{1}{m}$, using an additional commitment $\cm_3 = \cm_2^m g^{\usk_3}$ to encode this relationship. Unlike the DDHI challenge in Protocol 1, here the inverse is committed with randomness $\usk_2$, not directly exposed. This would be applied in applications where a prover has multiple commitments e.g. credentials and needs to prove such relation exists.
+
+The relation being proven is:
+\[
+\mathcal{R} = \left\{ (\cm_1, \cm_2, \cm_3), (m, \beta, \usk_1, \usk_2, \usk_3) \ \middle|\ \cm_1 = g_1^m g^{\usk_1} \ \land\ \cm_2 = g_1^\beta g^{\usk_2} \ \land\ \cm_3 = \cm_2^m g^{\usk_3} \ \land\ \beta = \frac{1}{m} \right\}
+\]
+
+\begin{protocol}{Proving Inverse Exponent}{committed-multiplicative-inverse}\label{pok-committed-multiplicative-inverse}
+\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, and commitments $\cm_1, \cm_2, \cm_3 \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(m, \beta, \usk_1, \usk_2, \usk_3)$ such that:
+    \begin{align*}
+        \cm_1 &= g_1^m g^{\usk_1}     &    \cm_2 &= g_1^\beta g^{\usk_2}  &   \cm_3 &= \cm_2^m g^{\usk_3} \\
+        \beta &= \frac{1}{m}     &   \cm_3 &= g_1 g^{\usk_2 m + \usk_3}
+    \end{align*}
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
+       \[
+        a_x \quad \text{for} \quad x \in \{ m, \beta, \usk_1, \usk_2, \usk_3 \} \in \mathbb{Z}_q
+       \]
+    \textbf{Computes}:
+    \begin{align*}
+        T_1 &\gets g_1^{a_m} g^{a_{\usk_1}}  &   T_2 &\gets g_1^{a_\beta} g^{a_{\usk_2}}     &   T_3 &\gets \cm_2^{a_m} g^{a_{\usk_3}}
+    \end{align*}
+    Sends $(T_1, T_2, T_3)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ m, \beta, \usk_1, \usk_2, \usk_3 \}
+    \]
+    \[
+    z_r = a_{\usk_3} + c \cdot (\usk_2 m + \usk_3)
+    \]
+    Sends $(z_m, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_r)$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_m} g^{z_{\usk_1}}  &
+        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_1^{z_\beta} g^{z_{\usk_2}} \\
+        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_m} g^{z_{\usk_3}} &
+        \cm_3^c &\stackrel{?}{=} g_1^c g^{z_r}
+    \end{align*}
+\end{enumerate}
+\end{protocol}
+
+
+\newpage
+\subsection{Step 2.4: Proving Committed Input, Committed Output, Inverse Linear Relation}
+
+\begin{protocol}{Proving Committed Exponent and Committed Inverse Exponent}{committed-exponent-inverse}\label{pok-committed-exponent-inverse}
+\textbf{Relation: }
+\[
+\mathcal{R} = \left\{ (\cm_1, \cm_2), (sk, x, r_1, r_2) \ \middle|\ \cm_1 = g_1^{sk} g_2^{x} g^{r_1} \ \land\ \cm_2 = g_3^{1/(sk + x)} g^{r_2} \right\}
+\]
+\textbf{Common Input:} Group generators $g_1, g_2, g_3, g \in \mathbb{G}$, commitments $\cm_1, \cm_2 \in \mathbb{G}$, and auxiliary commitments $\cm_m, \cm_3 \in \mathbb{G}$\\
+\textbf{Prover Input:} Witness $(sk, x, r_1, r_2, m, r_m, r_3)$ such that:
+    \begin{align*}
+        \cm_1 &= g_1^{sk} g_2^{x} g^{r_1} & \cm_2 &= g_3^{1/(sk + x)} g^{r_2} \\
+        m &= sk + x & \cm_m &= g_4^{m} g^{r_m} & \cm_3 &= \cm_2^{m} g^{r_3} = g_3 g^{r_2 m + r_3}
+    \end{align*}
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
+       \[
+        a_x \quad \text{for} \quad x \in \{ sk, x, r_1, m, r_m, \beta, r_2, r_3 \} \in \mathbb{Z}_q \quad \text{where} \quad \beta = \frac{1}{sk + x}
+       \]
+    \textbf{Computes}:
+    \begin{align*}
+        T_1 &\gets g_1^{a_{sk}} g_2^{a_x} g^{a_{r_1}} & T_m &\gets g_4^{a_m} g^{a_{r_m}} \\
+        T_2 &\gets g_3^{a_\beta} g^{a_{r_2}} & T_3 &\gets \cm_2^{a_m} g^{a_{r_3}}
+    \end{align*}
+    Sends $(T_1, T_m, T_2, T_3)$ to verifier.
+    
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ sk, x, r_1, m, r_m, \beta, r_2, r_3 \}
+    \]
+    Sends $(z_{sk}, z_x, z_{r_1}, z_m, z_{r_m}, z_\beta, z_{r_2}, z_{r_3})$ to verifier.
+    
+    \item \textbf{Verification:} Verifier checks:
+    \begin{align*}
+        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g_2^{z_x} g^{z_{r_1}} &
+        T_m \cdot \cm_m^c &\stackrel{?}{=} g_4^{z_m} g^{z_{r_m}} \\
+        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_3^{z_\beta} g^{z_{r_2}} &
+        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_m} g^{z_{r_3}} \\
+        z_m &\stackrel{?}{=} z_{sk} + z_x &
+        \cm_3 &\stackrel{?}{=} g_3 g^{s} \quad \text{for some } s \in \mathbb{Z}_q
+    \end{align*}
+\end{enumerate}
+\end{protocol}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \section{Step 2. Privacy}
+% Our VRF builds upon the $q$-DDHI assumption and this is where we start our zero knowledge proof protocol. Specifically, we want to prove (in zero knowledge) that we know $\alpha$ such that $g^{1/\alpha}$ 
+
+% Let $G$ be a cyclic group of prime order $q$, with generators $g_1, g \in G$. Assume the discrete logarithm problem (DLP) is hard in $G$, and the discrete log of $g_1$ with respect to $g$ is unknown.
+% The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q^*$ such that $\alpha \cdot \beta = 1 \mod q$, where $\beta = \frac{1}{\alpha}$, given commitments to $\alpha$ and $\beta$.
+
+% Challenges
+% Sigma protocols prove knowledge of exponents, proving knowledge of an inverse exponent. 
+
+% INSERT PROOF PROTOCOL FOR DDHI Challenge
+
+% \subsubsection*{Completeness}:
+% We show that if the prover follows the protocol honestly, all verification equations will be satisfied.
+
+% \begin{enumerate}
+%     \item The first two verification equations ($T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_\alpha} g^{z_{\usk_1}}$, $T_2 \cdot \cm_2^c \stackrel{?}{=} g_1^{z_\beta} g^{z_{\usk_2}}$) are simple Schnorr proofs of exponents which we will not expand 
+        
+%     \item Third verification equation: $T_3 \cdot \cm_3^c \stackrel{?}{=} \cm_2^{z_\alpha} g^{z_{\usk_3}}$
+%     \begin{align*}
+%         T_3 \cdot \cm_3^c &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot (\cm_2^\alpha g^{\usk_3})^c \\
+%         &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot \cm_2^{\alpha \cdot c} g^{\usk_3 \cdot c} \\
+%         &= \cm_2^{a_\alpha + \alpha \cdot c} g^{a_{\usk_3} + \usk_3 \cdot c} \\
+%         &= \cm_2^{z_\alpha} g^{z_{\usk_3}}
+%     \end{align*}
+    
+%     \item Fourth verification equation: $T_4 \cdot \cm_4^c \stackrel{?}{=} g^{z_{\usk_4}}$
+%     \begin{align*}
+%         T_4 \cdot \cm_4^c &= g^{a_{\usk_4}} \cdot (g^{\usk_4})^c \\
+%         &= g^{a_{\usk_4}} \cdot g^{\usk_4 \cdot c} \\
+%         &= g^{a_{\usk_4} + \usk_4 \cdot c} \\
+%         &= g^{z_{\usk_4}}
+%     \end{align*}
+    
+%     \item Fifth verification equation: $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g_1$
+    
+%     Using the relations $\beta = \frac{1}{\alpha}$ and $\usk_4 = \usk_3 + \alpha \cdot \usk_2$:
+%     \begin{align*}
+%         \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
+%         &= (g_1^\beta g^{\usk_2})^\alpha g^{\usk_3} \\
+%         &= g_1^{\beta \cdot \alpha} g^{\usk_2 \cdot \alpha} g^{\usk_3} \\
+%         &= g_1^{\frac{1}{\alpha} \cdot \alpha} g^{\usk_2 \cdot \alpha + \usk_3} \\
+%         &= g_1 g^{\usk_3 + \alpha \cdot \usk_2} \\
+%         &= g_1 g^{\usk_4} \\
+%         &= g_1 \cdot \cm_4
+%     \end{align*}
+    
+%     Therefore:
+%     \begin{align*}
+%         \frac{\cm_3}{\cm_4} = \frac{g_1 \cdot \cm_4}{\cm_4} = g_1
+%     \end{align*}
+% \end{enumerate}
+
+% Since all verification equations are satisfied when the prover follows the protocol, we conclude that our sigma protocol satisfies the completeness property.
+
+
+% \subsubsection*{Soundness}
+% We prove the special soundness property by demonstrating that given two accepting transcripts with identical first messages but different challenges, we can extract a valid witness satisfying all relations required by the protocol.
+
+% Let $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ and $(T_1, T_2, T_3, T_4, c', z'_\alpha, z'_\beta, z'_{\usk_1}, z'_{\usk_2}, z'_{\usk_3}, z'_{\usk_4})$ be two accepting transcripts with $c \neq c'$.
+
+% \begin{enumerate}
+%     \item \textbf{Witness extraction:}
+    
+%     Following the standard extraction technique for sigma protocols, we compute each witness component:
+%     \begin{align}
+%     \alpha &= \frac{z_\alpha - z'_\alpha}{c - c'} & x &= \frac{z_\beta - z'_\beta}{c - c'} \\
+%     \usk_1 &= \frac{z_{\usk_1} - z'_{\usk_1}}{c - c'} & \usk_2 &= \frac{z_{\usk_2} - z'_{\usk_2}}{c - c'} \\
+%     \usk_3 &= \frac{z_{\usk_3} - z'_{\usk_3}}{c - c'} & \usk_4 &= \frac{z_{\usk_4} - z'_{\usk_4}}{c - c'}
+%     \end{align}
+    
+%     These extracted values are guaranteed to be consistent with the protocol's verification equations precisely because both transcripts are accepting.
+    
+%     \item \textbf{Verification of commitment relations:}
+    
+%     We first show that the extracted witness satisfies $\cm_1 = g_1^m g^{\usk_1}$. From the acceptance of both transcripts, we have:
+%     \begin{align}
+%         T_1 \cdot \cm_1^c &= g_1^{z_\alpha} g^{z_{\usk_1}} \\
+%         T_1 \cdot \cm_1^{c'} &= g_1^{z'_\alpha} g^{z'_{\usk_1}}
+%     \end{align}
+    
+%     Dividing these equations and substituting our extracted values:
+%     \begin{align}
+%         \cm_1^{c-c'} &= g_1^{z_\alpha-z'_\alpha} g^{z_{\usk_1}-z'_{\usk_1}} \\
+%         &= g_1^{\alpha(c-c')} g^{\usk_1(c-c')} \\
+%         \Rightarrow \cm_1 &= g_1^\alpha g^{\usk_1}
+%     \end{align}
+    
+%     Using identical extraction and verification techniques with the corresponding verification equations, we establish that:
+%     \begin{align}
+%         \cm_2 &= g_1^\beta g^{\usk_2} \\
+%         \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
+%         \cm_4 &= g^{\usk_4}
+%     \end{align}
+    
+%     \item \textbf{Verification of the multiplicative inverse relation ($\beta = \frac{1}{\alpha}$):}
+    
+%     The core cryptographic property enforced by our protocol is the multiplicative inverse relationship between $m$ and $x$. This is where the protocol's security guarantee is ultimately derived from. We verify this relationship using the final verification equation $\frac{\cm_3}{\cm_4} = g_1$.
+    
+%     Substituting our extracted witness values:
+%     \begin{align}
+%         \frac{\cm_3}{\cm_4} &= g_1 \\
+%         \frac{\cm_2^\alpha g^{\usk_3}}{g^{\usk_4}} &= g_1 \\
+%         \cm_2^\alpha g^{\usk_3 - \usk_4} &= g_1
+%     \end{align}
+    
+%     Further substituting $\cm_2 = g_1^x g^{\usk_2}$:
+%     \begin{align}
+%         (g_1^x g^{\usk_2})^\alpha g^{\usk_3 - \usk_4} &= g_1 \\
+%         g_1^{x \cdot \alpha} g^{\alpha \cdot \usk_2 + \usk_3 - \usk_4} &= g_1
+%     \end{align}
+    
+%     In the generic group model, this equation can only hold if:
+%     \begin{align}
+%         \beta \cdot \alpha &= 1 \\
+%         \alpha \cdot \usk_2 + \usk_3 - \usk_4 &= 0
+%     \end{align}
+    
+%     These equations immediately give us the two critical relations:
+%     \begin{align}
+%         \beta &= \frac{1}{\alpha} \\
+%         \usk_4 &= \usk_3 + \alpha \usk_2
+%     \end{align}
+    
+%     The first relation confirms that our protocol successfully enforces the multiplicative inverse relationship between $\alpha$ and $\beta$. The second relation verifies the consistency of the randomizers across the commitments, ensuring that no malicious prover can construct valid-looking commitments without knowing values that satisfy all required relations.
+% \end{enumerate}
+
+% We have thus demonstrated that our extractor obtains a complete and valid witness $(\alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4)$ satisfying all relations in the statement, establishing the special soundness property of our sigma protocol. This ensures that no prover can successfully convince a verifier without knowledge of values satisfying the multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ and the associated consistency requirements.
+
+% \subsubsection*{Zero-Knowledge}
+% We prove the honest-verifier zero-knowledge property by presenting a simulator that produces transcripts indistinguishable from real protocol executions without knowing any witness.
+
+% \begin{enumerate}
+%     \item \textbf{Simulator Construction:}
+    
+%     Given public input $(g_1, g, \cm_1, \cm_2, \cm_3, \cm_4)$ and any challenge $c \in \mathbb{Z}_q$, our simulator:
+    
+%     \begin{itemize}
+%         \item Samples $z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4} \sample \mathbb{Z}_q$ uniformly at random
+        
+%         \item Computes the first message by working backwards from the verification equations:
+%         \begin{align}
+%             T_1 &\gets g_1^{z_\alpha} g^{z_{\usk_1}} \cdot \cm_1^{-c} \\
+%             T_2 &\gets g_1^{z_\beta} g^{z_{\usk_2}} \cdot \cm_2^{-c} \\
+%             T_3 &\gets \cm_2^{z_\alpha} g^{z_{\usk_3}} \cdot \cm_3^{-c} \\
+%             T_4 &\gets g^{z_{\usk_4}} \cdot \cm_4^{-c}
+%         \end{align}
+        
+%         \item Outputs the transcript $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$
+%     \end{itemize}
+    
+%     \item \textbf{Perfect Indistinguishability:}
+    
+%     In a real protocol execution with an honest prover, the responses have the form $z_\alpha = a_\alpha + c \cdot \alpha$ where $a_\alpha$ are uniformly random values. Since $a_\alpha \sample \mathbb{Z}_q$ and addition with $c \cdot \alpha$ is a permutation over $\mathbb{Z}_q$, the distribution of real responses is uniform over $\mathbb{Z}_q$.
+    
+%     The simulator directly samples responses uniformly from $\mathbb{Z}_q$, matching this distribution exactly. Given these responses and the challenge $c$, the first message components $T_i$ are uniquely determined by the verification equations in both real and simulated cases.
+    
+%     Consequently, the joint distribution of $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ is identical for both the simulator and the honest protocol.
+% \end{enumerate}
+
+% This construction demonstrates that our protocol satisfies perfect honest-verifier zero-knowledge. Notably, the simulator succeeds without requiring knowledge of the critical multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ or any other witness values, confirming that the protocol reveals no information about these secret values beyond what is already implied by the statement being proven.
+
+
+
+
+
+
+
 
 
 \section{On the possibility of Sigma protocols for VRF Construction}
@@ -608,482 +917,14 @@ This impossibility result motivates our alternative approach in subsequent secti
 
 
 
-\section{Background}
 
 
-Verifiable Random Function
-\begin{itemize}
-    \item $Gen(1^\secparam):$ Choses $sk \sample \Z_p^*$, $pk \gets g^{sk}$
-    \item $Eval(sk, x):$ output $y = e(g, \tilde{g})^{1/(x + sk)}$
-    \item $Prove(sk, x):$ output $\pi = \tilde{g}^{1/(x + sk)}$
-    \item $Verify(pk, x, y, \pi)$: 
-        \begin{itemize}
-            \item $e(g^x \cdot pk, \tilde{y}) = e(g, \tilde{g})$ 
-            \item $y = e(g, \pi)$
-        \end{itemize}
-\end{itemize}
 
-VRF achieves pseudorandomness because:
-\begin{itemize}
-    \item Output $ y = e(g, \tilde{g})^{1/(x + sk)} $ in $ \mathbb{G}_T $ looks random.
-    \item Proof $ \pi = \tilde{g}^{1/(x + sk)} $ in $ \mathbb{G}_2 $ looks random and independent.
-    \item No detectable relation between $ y $ and $ \pi $ across inputs, due to distinct groups and bilinear pairing.
-\end{itemize}
-This ensures $ y $ appears fully random, unlike VUF's unpredictable but relatable outputs.
 
 
 
-\section{Verifiable Random Functions vs Verifiable Unpredictable Functions}
 
-\subsection{Definitions and Security Goals}
 
-\begin{itemize}
-    \item \textbf{Verifiable Random Function (VRF)}: A function $F_{sk}(x)$ where the owner publishes a public key $pk$ as a commitment to $F$. VRFs produce outputs that are computationally indistinguishable from random.
-    
-    \item \textbf{Verifiable Unpredictable Function (VUF)}: Similar to VRF but with weaker security guarantees. Outputs are unpredictable but not necessarily pseudorandom.
-    
-    \item \textbf{Security Distinction}: Pseudorandomness (VRF) means outputs are indistinguishable from random. Unpredictability (VUF) means outputs are computationally infeasible to predict without the secret key.
-    
-    \item \textbf{Comparison to Signatures}: A signature scheme $\text{Sig}(x)$ is unpredictable but not pseudorandom. There may be many valid signatures for a given input $x$.
-\end{itemize}
-
-\subsection{Constructions}
-
-\subsubsection{Verifiable Unpredictable Function}
-\begin{itemize}
-    \item $\text{Gen}(1^\lambda):$ Choose $sk \stackrel{\$}{\leftarrow} \mathbb{Z}_p^*$, set $pk \leftarrow g^{sk}$
-    \item $\text{Eval}(sk, x):$ Output $y = g^{1/(x + sk)}$
-    \item $\text{Verify}(pk, x, y):$ Output 1 if $e(g^x \cdot pk, y) = e(g, \tilde{g})$
-\end{itemize}
-
-\subsubsection{Verifiable Random Function}
-\begin{itemize}
-    \item $\text{Gen}(1^\lambda):$ Choose $sk \stackrel{\$}{\leftarrow} \mathbb{Z}_p^*$, set $pk \leftarrow g^{sk}$
-    \item $\text{Eval}(sk, x):$ Output $y = e(g, \tilde{g})^{1/(x + sk)}$
-    \item $\text{Prove}(sk, x):$ Output $\pi = \tilde{g}^{1/(x + sk)}$
-    \item $\text{Verify}(pk, x, y, \pi):$ Verify:
-    \begin{itemize}
-        \item $e(g^x \cdot pk, \pi) = e(g, \tilde{g})$ 
-        \item $y = e(g, \pi)$
-    \end{itemize}
-\end{itemize}
-
-\subsection{Input-Output Structures and Security Implications}
-
-\subsubsection{VUF Structure}
-\begin{itemize}
-    \item Operates entirely within one group: $y = g^{1/(x + sk)} \in \mathbb{G}_1$
-    \item For different inputs $x_1, x_2$, the outputs $y_1, y_2$ reside in the same group
-    \item Relationships between outputs can be computed: $y_1/y_2 = g^{1/(x_1 + sk) - 1/(x_2 + sk)}$
-    \item These relationships may reveal patterns, making outputs unpredictable but not pseudorandom
-\end{itemize}
-
-\subsubsection{VRF Structure}
-\begin{itemize}
-    \item Splits its output across different groups:
-    \begin{itemize}
-        \item Output $y = e(g, \tilde{g})^{1/(x + sk)} \in \mathbb{G}_T$
-        \item Proof $\pi = \tilde{g}^{1/(x + sk)} \in \mathbb{G}_2$
-    \end{itemize}
-    \item For different inputs $x_1, x_2$:
-    \begin{itemize}
-        \item Outputs $y_1, y_2 \in \mathbb{G}_T$ and proofs $\pi_1, \pi_2 \in \mathbb{G}_2$
-        \item No direct operations possible between groups to correlate outputs
-        \item The bilinear pairing $e(g, \pi) = y$ ties each output to its proof
-    \end{itemize}
-    \item Group separation enforces independence across outputs
-\end{itemize}
-
-\subsection{Why VRFs Achieve Pseudorandomness}
-\begin{itemize}
-    \item \textbf{Group Separation}: Outputs $y \in \mathbb{G}_T$ and proofs $\pi \in \mathbb{G}_2$ exist in different groups
-    \item \textbf{Pairing Constraint}: The relation $e(g, \pi) = y$ connects individual outputs to proofs but doesn't reveal relationships between different input-output pairs
-    \item \textbf{No Detectable Patterns}: Unlike VUFs, outputs appear independent and random across different inputs
-    \item \textbf{Bilinear Mapping}: The use of a bilinear pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ creates outputs in a target group with stronger randomness properties
-\end{itemize}
-
-\subsection{Summary}
-VRFs provide stronger security guarantees than VUFs due to their sophisticated input-output structure that leverages multiple groups and bilinear pairings. This structure ensures outputs are not just unpredictable (as in VUFs) but truly pseudorandom, making VRFs suitable for applications requiring stronger notions of randomness and independence.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\section{Step 1. Efficiency DY > PF-DY (Prime Order VRF)}
-\[
-\mathcal{R} = \{(pk, x, y), (sk) \mid pk = g^{sk} \quad \wedge \quad y^{sk+x} = g\}
-\]
-
-
-\subsection{Proof Protocol}
-To prove that $y = g^{1/(sk+x)}$ without revealing $sk$, we use a $\Sigma$-protocol that demonstrates knowledge of $sk$ such that $pk = g^{sk}$ and $y^{sk+x} = g$. The protocol operates as follows:
-
-\begin{protocol}{$\pi$ for VRF Prime Order Group}{}\label{pok-vrf-prime-order-group}
-\textbf{Common Input:} Generator $g \in \G$, public elements $pk, y \in \G$ and VRF input $x \in \Z_q$\\
-\textbf{Prover Input:} Witness $(sk)$ such that: $y = g^{1/(sk + x)}$
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples $r \sample \Z_q$, computes 
-    \[
-    T_1 = g^r \qquad T_2 = y^r
-    \]
-    Sends $(T_1, T_2)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \[
-    z = r + c \cdot (sk + x)
-    \]
-    Sends $z$ to verifier
-    
-    \item \textbf{Verification:} Verifier checks:
-    \[
-    T_1 \cdot (pk \cdot g^x)^c \stackrel{?}{=} g^z \qquad T_2 \cdot g^c \stackrel{?}{=} y^z
-    \]
- 
-\end{enumerate}
-\end{protocol}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Our goal is to prove this relation in zero knowledge $y^{sk+x} = g$. We start small and work our way up. 
-
-We start by prove knowledge of a DDHI challenge
-
-
-\section{Step 2.1 Proving Committed Exponent and DDHI Challenge}
-
-\subsection*{Proving Knowledge of Inverse Exponent}
-This protocol allows a prover to demonstrate, in zero-knowledge, that they know a secret $x$ and randomness $r$ such that a commitment $\cm = g_1^x g^r$ and a Decisional Diffie-Hellman Inversion (DDHI) challenge $y = g^{1/x}$ are consistently formed. It proves the prover knows the $x$ linking both $\cm$ and $y$ without revealing $x$. This is vital in cryptographic systems relying on the DDHI assumption—where distinguishing $g^{1/x}$ from random given $g, g^x$ is hard—ensuring secure, privacy-preserving proofs of secret knowledge tied to intractable problems.
-
-The relation being proven is:
-\[
-\mathcal{R} = \left\{ (\cm, y), (x, r) \ \middle|\ \cm = g_1^x g^r \ \land\ y = g^{1/x} \right\}
-\]
-
-
-\begin{protocol}{Proving Knowledge of Inverse Exponent}{committed-inverse-exponent}\label{pok-committed-inverse-exponent}
-\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, commitment $\cm \in \mathbb{G}$, and element $y \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(x, r)$ such that:
-    \begin{align*}
-        \cm &= g_1^x g^r     &    y &= g^{1/x}
-    \end{align*}
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples $a_x, a_r \in \Z_q$ and computes \\
-    \begin{align*}
-        T_1 &\gets g_1^{a_x} g^{a_r}  &   T_y &\gets y^{a_x}
-    \end{align*}
-    Sends $(T_1, T_y)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \[
-        z_x = a_x + c \cdot x \qquad z_r = a_r + c \cdot r
-    \]
-    Sends $(z_x, z_r)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        T_1 \cdot \cm^c &\stackrel{?}{=} g_1^{z_x} g^{z_r}  &
-        T_y \cdot g^c &\stackrel{?}{=} y^{z_x}
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-\newpage
-\section{Step 2.2}
-
-\begin{protocol}{Proving Committed Inverse Linear Relation}{committed-inverse-linear-relation}\label{pok-committed-inverse-linear-relation}
-\textbf{Relation: }
-\[
-\mathcal{R} = \{(\cm_1, y), (sk, x, r) \mid \cm_1 = g_1^{sk} g_2^{x} g^{r} \wedge y = g^{1/(sk + x)}\}
-\]
-\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, commitment $\cm_1 \in \mathbb{G}$, and output $y \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(sk, x, r)$ such that:
-    \begin{align*}
-        \cm_1 &= g_1^{sk} g_2^{x} g^{r} & y &= g^{1/(sk + x)}
-    \end{align*}
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
-       \[
-        a_x \quad \text{for} \quad x \in \{ sk, x, r \} \in \mathbb{Z}_q
-       \]
-    \textbf{Computes}:
-    \begin{align*}
-        T_1 &\gets g_1^{a_{sk}} g_2^{a_x} g^{a_r} & T_y &\gets y^{a_{sk} + a_x}
-    \end{align*}
-    Sends $(T_1, T_y)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \[
-    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ sk, x, r \}
-    \]
-    \[
-    z_m = (a_{sk} + a_x) + c \cdot (sk + x)
-    \]
-    Sends $(z_{sk}, z_x, z_r, z_m)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g_2^{z_x} g^{z_r} &
-        T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
-        z_m &\stackrel{?}{=} z_{sk} + z_x
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-
-
-
-
-
-
-
-\newpage
-\section{Integration to Identity System}
-
-\begin{protocol}{Proving Committed Inverse Linear Relation from Two Commitments}{committed-inverse-linear-relation-two-commitments}\label{pok-committed-inverse-linear-relation-two-commitments}
-\textbf{Relation: }
-\[
-\mathcal{R} = \{(\cm_1, \cm_2, y), (sk, x, r_1, r_2) \mid \cm_1 = g_1^{sk} g^{r_1} \wedge \cm_2 = g_2^{x} g^{r_2} \wedge y = g^{1/(sk + x)}\}
-\]
-\textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, commitments $\cm_1, \cm_2 \in \mathbb{G}$, and output $y \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(sk, x, r_1, r_2)$ such that:
-    \begin{align*}
-        \cm_1 &= g_1^{sk} g^{r_1} & \cm_2 &= g_2^{x} g^{r_2} & y &= g^{1/(sk + x)}
-    \end{align*}
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
-       \[
-        a_x \quad \text{for} \quad x \in \{ sk, x, r_1, r_2 \} \in \mathbb{Z}_q
-       \]
-    \textbf{Computes}:
-    \begin{align*}
-        T_1 &\gets g_1^{a_{sk}} g^{a_{r_1}} & T_2 &\gets g_2^{a_x} g^{a_{r_2}} & T_y &\gets y^{a_{sk} + a_x}
-    \end{align*}
-    Sends $(T_1, T_2, T_y)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \[
-    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ sk, x, r_1, r_2 \}
-    \]
-    \[
-    z_m = (a_{sk} + a_x) + c \cdot (sk + x)
-    \]
-    Sends $(z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}} &
-        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_2^{z_x} g^{z_{r_2}} &
-        T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
-        z_m &\stackrel{?}{=} z_{sk} + z_x
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-
-
-
-
-\newpage
-\section{Committed $y$ extensions - probably in the appendix}
-
-\section{Proving Committed Exponent and Committed Inverse Exponent}
-
-\subsection*{Protocol 2: Proving Inverse Attributes in Commitments}
-This protocol enables a prover to prove, in zero-knowledge, that the attribute $\beta$ in one commitment $\cm_2 = g_1^\beta g^{\usk_2}$ is the multiplicative inverse of the attribute $m$ in another commitment $\cm_1 = g_1^m g^{\usk_1}$, i.e., $\beta = \frac{1}{m}$, using an additional commitment $\cm_3 = \cm_2^m g^{\usk_3}$ to encode this relationship. Unlike the DDHI challenge in Protocol 1, here the inverse is committed with randomness $\usk_2$, not directly exposed. This would be applied in applications where a prover has multiple commitments e.g. credentials and needs to prove such relation exists.
-
-The relation being proven is:
-\[
-\mathcal{R} = \left\{ (\cm_1, \cm_2, \cm_3), (m, \beta, \usk_1, \usk_2, \usk_3) \ \middle|\ \cm_1 = g_1^m g^{\usk_1} \ \land\ \cm_2 = g_1^\beta g^{\usk_2} \ \land\ \cm_3 = \cm_2^m g^{\usk_3} \ \land\ \beta = \frac{1}{m} \right\}
-\]
-
-\begin{protocol}{Proving Inverse Exponent}{committed-multiplicative-inverse}\label{pok-committed-multiplicative-inverse}
-\textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, and commitments $\cm_1, \cm_2, \cm_3 \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(m, \beta, \usk_1, \usk_2, \usk_3)$ such that:
-    \begin{align*}
-        \cm_1 &= g_1^m g^{\usk_1}     &    \cm_2 &= g_1^\beta g^{\usk_2}  &   \cm_3 &= \cm_2^m g^{\usk_3} \\
-        \beta &= \frac{1}{m}     &   \cm_3 &= g_1 g^{\usk_2 m + \usk_3}
-    \end{align*}
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
-       \[
-        a_x \quad \text{for} \quad x \in \{ m, \beta, \usk_1, \usk_2, \usk_3 \} \in \mathbb{Z}_q
-       \]
-    \textbf{Computes}:
-    \begin{align*}
-        T_1 &\gets g_1^{a_m} g^{a_{\usk_1}}  &   T_2 &\gets g_1^{a_\beta} g^{a_{\usk_2}}     &   T_3 &\gets \cm_2^{a_m} g^{a_{\usk_3}}
-    \end{align*}
-    Sends $(T_1, T_2, T_3)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \[
-    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ m, \beta, \usk_1, \usk_2, \usk_3 \}
-    \]
-    \[
-    z_r = a_{\usk_3} + c \cdot (\usk_2 m + \usk_3)
-    \]
-    Sends $(z_m, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_r)$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_m} g^{z_{\usk_1}}  &
-        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_1^{z_\beta} g^{z_{\usk_2}} \\
-        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_m} g^{z_{\usk_3}} &
-        \cm_3^c &\stackrel{?}{=} g_1^c g^{z_r}
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-
-
-\newpage
-\section{Committed}
-
-\begin{protocol}{Proving Committed Exponent and Committed Inverse Exponent}{committed-exponent-inverse}\label{pok-committed-exponent-inverse}
-\textbf{Relation: }
-\[
-\mathcal{R} = \left\{ (\cm_1, \cm_2), (sk, x, r_1, r_2) \ \middle|\ \cm_1 = g_1^{sk} g_2^{x} g^{r_1} \ \land\ \cm_2 = g_3^{1/(sk + x)} g^{r_2} \right\}
-\]
-\textbf{Common Input:} Group generators $g_1, g_2, g_3, g \in \mathbb{G}$, commitments $\cm_1, \cm_2 \in \mathbb{G}$, and auxiliary commitments $\cm_m, \cm_3 \in \mathbb{G}$\\
-\textbf{Prover Input:} Witness $(sk, x, r_1, r_2, m, r_m, r_3)$ such that:
-    \begin{align*}
-        \cm_1 &= g_1^{sk} g_2^{x} g^{r_1} & \cm_2 &= g_3^{1/(sk + x)} g^{r_2} \\
-        m &= sk + x & \cm_m &= g_4^{m} g^{r_m} & \cm_3 &= \cm_2^{m} g^{r_3} = g_3 g^{r_2 m + r_3}
-    \end{align*}
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples random blinding factors from $\mathbb{Z}_q$:
-       \[
-        a_x \quad \text{for} \quad x \in \{ sk, x, r_1, m, r_m, \beta, r_2, r_3 \} \in \mathbb{Z}_q \quad \text{where} \quad \beta = \frac{1}{sk + x}
-       \]
-    \textbf{Computes}:
-    \begin{align*}
-        T_1 &\gets g_1^{a_{sk}} g_2^{a_x} g^{a_{r_1}} & T_m &\gets g_4^{a_m} g^{a_{r_m}} \\
-        T_2 &\gets g_3^{a_\beta} g^{a_{r_2}} & T_3 &\gets \cm_2^{a_m} g^{a_{r_3}}
-    \end{align*}
-    Sends $(T_1, T_m, T_2, T_3)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-    \[
-    z_x = a_x + c \cdot x \quad \text{for} \quad x \in \{ sk, x, r_1, m, r_m, \beta, r_2, r_3 \}
-    \]
-    Sends $(z_{sk}, z_x, z_{r_1}, z_m, z_{r_m}, z_\beta, z_{r_2}, z_{r_3})$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-    \begin{align*}
-        T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}} g_2^{z_x} g^{z_{r_1}} &
-        T_m \cdot \cm_m^c &\stackrel{?}{=} g_4^{z_m} g^{z_{r_m}} \\
-        T_2 \cdot \cm_2^c &\stackrel{?}{=} g_3^{z_\beta} g^{z_{r_2}} &
-        T_3 \cdot \cm_3^c &\stackrel{?}{=} \cm_2^{z_m} g^{z_{r_3}} \\
-        z_m &\stackrel{?}{=} z_{sk} + z_x &
-        \cm_3 &\stackrel{?}{=} g_3 g^{s} \quad \text{for some } s \in \mathbb{Z}_q
-    \end{align*}
-\end{enumerate}
-\end{protocol}
-
-
-
-
-\section{old}
-
-
-\subsection{Construction}
-During verification, the user proves in zero-knowledge that they possess a valid master credential with VRF key $\k$, a context credential with a specific $\ctx$ value and the nullifier $\nul$ is correctly formed by using a secret $\k$ in $\credm$ and $\ctx$ in $\credc$. 
-
-\begin{equation}
-\nul = g^{1/(\k + \ctx)} \in \G
-\end{equation}
-
-\subsection{Integration with Identity System}
-
-
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Passport}{%
-                \id: 12345, \\
-                \ctx: "master", \\
-                \exp: "10/11/2026" \\
-                \k: 54321
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                 \id: 12345, \\
-                 \ctx: "DMV", \\
-                 \exp: "10/11/2028"
-                }
-            \end{pcvstack}
-            \begin{pcvstack}
-                \procedure[space=auto]{Nullifier}{%
-                 \textsf{n} = 1/(\k + "DMV") \\
-                 \nul = g^{\textsf{n}}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Example Credential and Nullifier for context DMV}
-    \label{fig:two-creds}
-\end{figure}
-
-
-\[
-    \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
-    \begin{array}{l} 
-    (\cmm, \cmc, \mathsf{N}), (\id, \ctx, , \exp, \k, r_1, r_2) \\
-    \end{array} 
-    \middle|
-    \begin{array}{l}
-        \cmm = g_1^{\id}g_2^{\ctx}g_3^{\exp}g_4^{\k}g^{r_1}  \wedge \ctx="master" \\
-        \cmc = g_1^{\id}g_2^{\ctx}g_3^{\exp}g^{r_2} \wedge \ctx="DMV" \\
-        \nul = g^{1/(k + \ctx)}
-    \end{array} 
-    \right\}
-\]
-    
 
 
 
