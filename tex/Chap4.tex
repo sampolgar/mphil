@@ -49,11 +49,12 @@ Our MIMC-ABC system (Chapter 3) binds identities efficiently and anonymously but
 We advance anonymous credential systems by developing a lightweight, pairing-free Verifiable Random Function (VRF) construction optimized for our use-case of hierarchical credential binding and sybil resistance. Our contributions are threefold:
 
 \begin{enumerate}
-        \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure for standard prime-order groups by replacing the proof mechnaism and prove our construction retains the security properties - \emph{pseudorandomness, uniqueness, verifiability} - under the $q$-DHI assumption. (We show the efficiency speedup of this change)
+        \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure for standard prime-order groups by replacing the proof mechnaism and prove our construction retains the security properties - \emph{pseudorandomness, uniqueness, verifiability} - under the $q$-DDHI assumption. (We show the efficiency speedup of this change)
 
-        \item \textbf{Novel $\Sigma$-protocol for Inverse Exponents} We develop a novel zero-knowledge proof protocol to prove knowledge of an inverse exponent We use this protocol to prove the correctness of the $q$-DDHI structure used in our Pairing-Free DY VRF VRF, the technique is a new general technique for $\Sigma$-protocols.
+        \item \textbf{Novel $\Sigma$-protocols for Inverse Exponents and Committed Inverse Exponents} We develop novel zero-knowledge proof protocols to prove knowledge of an inverse exponent and committed inverse exponent.        
+        We use these protocols to prove the correctness of the Diffie Hellman Inversion (DHI) structure used in our Pairing-Free DY VRF VRF. Both techniques are new general techniques for $\Sigma$-protocols.
         
-        \item \textbf{Credential Relationship Binding Nullifier } We combine our efficient Dodis-Yampolskiy VRF for standard prime-order groups with our Novel $\Sigma$-protocol for multiplicative inverse in addition to a $\Sigma$-proof of additive relation between discrete logarithms to compute our nullifier and show it's 33\% faster for evaluation and 60\% faster for verification than previous constructions while retaining security properties.
+        \item \textbf{Credential Relationship Binding Nullifier } We combine our VRF improvement with our novel $\Sigma$-protocols to compute a nullifier in the $\MIMCABC$ model and show it's 33\% faster for evaluation and 60\% faster for verification than previous constructions while retaining security properties.
 
 \end{enumerate}
 
@@ -186,9 +187,29 @@ A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment
 
 
 
-\section{Technical Journey and Contributions}
+\subsection{Technical Contributions}
 
+\subsubsection{Foundation: The Dodis-Yampolskiy VRF}
+The Dodis-Yampolskiy (DY) Verifiable Random Function (VRF) \cite{hutchison_verifiable_2005} provides an algebraic foundation for our credential binding system. For a secret key $sk$ and input $x$, the DY VRF computes $y = e(g, \tilde{g})^{1/(sk + x)}$ in a bilinear group, with a proof $\pi = \tilde{g}^{1/(sk + x)}$. It ensures \emph{correctness}, \emph{uniqueness}, and \emph{pseudorandomness} under the $q$-DBDHI assumption, making it suitable for generating verifiable nullifiers.
 
+\subsubsection{Efficiency Limitations of DY VRF}
+The DY VRF’s reliance on bilinear pairings introduces computational overhead of approx 2ms for verification \cite{polgar_anonymous_2025}, limiting scalability in scenarios where multiple nullifiers are needed. 
+
+\subsubsection{Privacy Limitations of DY VRF}
+Verification in the DY VRF uses the public key $pk = g^{sk}$, potentially linking outputs to identities and compromising anonymity. Additionally, the input $x$ may leak sensitive context if exposed. A private verification method is thus required to protect $sk$ and $x$.
+
+\subsubsection{Our Contributions}
+We propose two key advancements:
+
+\begin{itemize}
+    \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We redesign the DY VRF for prime-order groups, which we call $P{-}DY$ removing bilinear pairings. Using a $\Sigma$-protocol, we prove the relation $y^{sk + x} = g$ holds, we prove our VRF satisfies the classic VRF security properties  \cite{micali_verifiable_1999} correctness, uniqueness, pseudorandomness under the $q$-DDHI assumption and show our construction is XXX more efficient than DY. 
+    
+    \item \textbf{Zero-Knowledge Privacy Enhancement:} We introduce zero-knowledge $\Sigma$-protocols to verify $y = g^{1/(sk + x)}$ without disclosing $sk$ or $x$, enabling private verification that preserves anonymity and input confidentiality.
+\end{itemize}
+
+These innovations yield the \emph{Credential Relationship Binding Nullifier} (CRBN), integrating our efficient, private VRF into the MIMC-ABC system for scalable, privacy-preserving hierarchical credential binding and sybil resistance.
+
+(This will be a table showing the difference between constructions, it's incomplete and will be completed at the end)
 \begin{table}
     \centering
     \begin{tabular}{cccccc}
@@ -204,8 +225,16 @@ A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment
     \label{tab:my_label}
 \end{table}
 
-\subsection{Motivation and Design Approach}
-Verifiable Random Functions (VRFs) provide verifiable, deterministic, pseudorandom outputs. The Dodis-Yampolskiy (DY) VRF \cite{hutchison_verifiable_2005} is particularly well-suited for our credential binding application due to its output formation $y = e(g,\tilde{g})^{1/(sk+x)}$. As bilinear pairings add overhead to verification  6ms on modern hardware \cite{polgar_anonymous_2025}, we aim to remove pairings and retain security properties. 
+
+
+
+
+
+
+
+
+
+
 
 \section{Dodis-Yampolskiy VRF: Core Structure and Security Properties}
 
@@ -231,10 +260,7 @@ The security of this VRF rests upon the $q$-Decisional Bilinear Diffie-Hellman I
 
 To understand the security of the Dodis-Yampolskiy VRF, we analyze how its construction achieves the three essential VRF properties:
 
-\paragraph{Pseudorandomness}
-The VRF output $y = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T$ appears random based on the $q$-DBDHI assumption.
-
-\paragraph{Uniqueness}
+\subsubsection*{Uniqueness}
 Information-theoretic uniqueness is enforced by the algebraic properties of the pairing. 
 Verification Equation 1 enforces that only one valid proof $\pi$ can exist for each input, which in turn determines a unique output $y$ through Equation 2. The first equation verifies the algebraic relationship $y^{sk+x} = e(g, \tilde{g})$ without revealing $sk$:
 \begin{align}
@@ -246,144 +272,85 @@ Verification Equation 1 enforces that only one valid proof $\pi$ can exist for e
 
 This uniqueness guarantee is crucial: for each $(sk,x)$ pair, only one value $\pi = \tilde{g}^{1/(sk+x)}$ can satisfy Equation 1. Consequently, only one output value $y = e(g, \pi) = e(g, \tilde{g})^{1/(sk+x)}$ can satisfy Equation 2.
 
-\paragraph{Correctness}
-The combination of both verification equations ensures that honestly generated outputs and proofs will always verify:
 
-1. Equation 1 ensures proof correctness by verifying that $\pi = \tilde{g}^{1/(sk+x)}$.
+\subsubsection*{Pseudorandomness}
+The VRF output $ y = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T $ is pseudorandom under the $ $-DBDHI assumption, which implies that $ e(g, \tilde{g})^{1/(sk + x)} $ is computationally indistinguishable from a random element in $ \mathbb{G}_T $ given $ (g, g^{sk}, \ldots, g^{(sk)^q}) $ and $ \tilde{g} $. Unlike a Verifiable Unpredictable Function (VUF) which has weaker security assumptions allowing some structural relationship leakage for repeated queries, the DY VRF places $ y $ in $ \mathbb{G}_T $ and the proof $ \pi = \tilde{g}^{1/(sk + x)} $ in $ \mathbb{G}_2 $. This separation, combined with the one-way bilinear pairing $ e(g, \pi) = y $, ensures outputs appear fully random and independent across inputs, achieving pseudorandomness rather than mere unpredictability.
 
-2. Equation 2 ensures output consistency:
-\begin{align}
-    y &= e(g, \tilde{g})^{1/(sk + x)} \\
-    &= e(g, \tilde{g}^{1/(sk + x)}) \\
-    &= e(g, \pi)
-\end{align}
 
-Together, these equations guarantee that an honest evaluator with knowledge of $sk$ will always produce outputs and proofs that pass verification.
-
-\subsubsection{Role of Pairings in the Construction}
-
-The pairing operations in the Dodis-Yampolskiy VRF serve a critical verification role. Specifically:
-
-\begin{itemize}
-    \item The pairing allows verification of the inverse exponent relationship: given $g^{sk+x}$ and $\tilde{g}^{1/(sk+x)}$, the pairing enables efficient verification of their mathematical relationship without knowing $sk$
-    
-    \item Without pairings, verifying that an element equals $g^{1/(sk+x)}$ given only $g^{sk+x}$ would be computationally infeasible
-    
-    \item The bilinear property bridges the gap between regular exponentiation and inverse exponentiation, which is fundamental to the VRF's security
-\end{itemize}
-
-However, these pairings introduce significant computational overhead. A bilinear pairing operation typically requires 5-10$\times$ more computational resources than standard group operations. This leads to an important question: Can we achieve the same security properties without relying on expensive pairing operations?
-
-\subsubsection{Essential Requirements for Transformation}
-
-Based on our analysis, any transformation of the Dodis-Yampolskiy VRF must preserve:
-
-\begin{enumerate}
-    \item The output structure involving the inverse exponent $1/(sk+x)$ to maintain pseudorandomness under an appropriate hardness assumption
-    
-    \item A verification mechanism that confirms the relationship between $sk+x$ and $1/(sk+x)$ without revealing $sk$
-    
-    \item A means to verify consistency between the output and proof
-\end{enumerate}
-
-In the next section, we introduce our pairing-free VRF construction that maintains these essential properties while eliminating the need for bilinear pairings.
-
-% The pairing operation is critical here - it allows verification of inverse exponent relationships that would otherwise be difficult to prove non-interactively without revealing the secret key.
-% Changing the pseudorandomness assumption from q-DBDHI to q-DDHI
-% Changing the nature of the uniqueness guarantee from information-theoretic to computational
+\subsubsection*{Correctness} holds with honest protocol run
 
 
 
 
 
+\section{P-DY: Pairing-Free VRF in Prime-Order Groups}
 
-\section{Step 1. Efficient, Verifiable Pseudorandomness. VRF in Prime-Order Group}
-we're making two changes to the security model:
-Changing the pseudorandomness assumption from q-DBDHI to q-DDHI
-Changing the nature of the uniqueness guarantee from information-theoretic to computational
+In this section, we present our pairing-free verifiable random function (VRF), P-DY, which operates in a prime-order group and eliminates the computational overhead of bilinear pairings found in the Dodis-Yampolskiy (DY) VRF. We detail the construction, including a $\Sigma$-protocol for proof generation, and demonstrate that it satisfies correctness, uniqueness, and pseudorandomness. Notably, P-DY trades the information-theoretic uniqueness of DY for computational uniqueness, a shift we justify through the security analysis.
 
-Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. Define the message space $\setX = \mathbb{Z}_p$, output space $\setY = \mathbb{G}$, and proof space $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. 
+\subsection{Construction}
 
-
-Challenges
-
-Speak about why the naive method creates a VUF and not a VRF. Explain why we need to add a sigma protocol
-
-
-
-- mention the benefit of the pairing here - it effectively multiplies the two together which isn't possible with standard group elements - that's the challenge we had to get through.
-
-
+Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. The message space is $\mathcal{X} = \mathbb{Z}_p$, the output space is $\mathcal{Y} = \mathbb{G}$, and the proof space is $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. The algorithms are defined as follows:
 
 \begin{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk)$: Sample $sk \sample \mathbb{Z}_p^*$. compute $pk = g^{sk}$, and output $(sk, pk)$.
-    
-    \item $\mathsf{VRF.Eval}(sk, x) \to y$: Compute $g^{1/(sk + x)} \in \mathbb{G}$.
-    
-    \item $\mathsf{VRF.Prove}(sk, x) \to \pi$: Compute proof $\pi$ using the $\Sigma$-protocol described below.
-    
-    \item $\mathsf{VRF.Verify}(y, \pi) \to \{0, 1\}$: Verify $y$ is correctly formed $\ZKVerify(\pi, y, x, pk) = 1$ for success, 0 for failure.
-    % Verify two equations:
-    % \begin{align}
-    %     e(g^{x} \cdot pk, \pi) &\stackrel{?}{=} e(g, \tilde{g}) \quad \text{(Equation 1)}\\
-    %     y &\stackrel{?}{=} e(g, \pi) \quad \text{(Equation 2)}
-    % \end{align}
+    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk)$: Sample $sk \sample \mathbb{Z}_p^*$, compute $pk = g^{sk}$, and output $(sk, pk)$.
+    \item $\mathsf{VRF.Eval}(sk, x) \to y$: Compute $y = g^{1/(sk + x)} \in \mathbb{G}$.
+    \item $\mathsf{VRF.Prove}(sk, x) \to \pi$: Generate proof $\pi$ using the $\Sigma$-protocol described below.
+    \item $\mathsf{VRF.Verify}(pk, x, y, \pi) \to \{0, 1\}$: Output 1 if $\pi$ verifies $y$ correctly per the $\Sigma$-protocol, else 0.
 \end{itemize}
 
+\begin{remark}
+    Verifying $\VRFVerify(pk, x, \VRFEval(sk, x) \to y) \to 1$ is a naive verification approach without a proof which yeilds a Verifiable Unpredictable Function (VUF), not a VRF because it lacks the mechanism to prove pseudorandomness to a verifier. DY uses pairings to bridge the gap, we replace pairings with a $\Sigma$-protocol. 
+\end{remark}
 
 \subsection{Proof Protocol}
-To prove that $y = g^{1/(sk+x)}$ without revealing $sk$, we use a $\Sigma$-protocol that demonstrates knowledge of $sk$ such that $pk = g^{sk}$ and $y^{sk+x} = g$. The protocol operates as follows:
+The protocol proves knowledge of $sk$ such that $pk = g^{sk}$ and $y^{sk + x} = g$, without revealing $sk$:
 
-
-INSERT PROOF PROTOCOL FOR PRIME ORDER GROUP
-
-
-
+\begin{protocol}{P-DY Proof Protocol}{}\label{protocol-pdy-protocol1}
+\textbf{Common Input:} $g, pk, y \in \mathbb{G}$, $x \in \mathbb{Z}_p$ \\
+\textbf{Prover Input:} $sk \in \mathbb{Z}_p^*$ with $pk = g^{sk}$, $y = g^{1/(sk + x)}$
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples $r \sample  \mathbb{Z}_p$, computes $T_1 = g^r$, $T_2 = y^r$, sends $(T_1, T_2)$.
+    \item \textbf{Challenge:} Verifier samples $c \sample  \mathbb{Z}_p$, sends $c$.
+    \item \textbf{Response:} Prover computes $z = r + c \cdot (sk + x)$, sends $z$.
+    \item \textbf{Verification:} Verifier checks:
+    \[
+    g^z \stackrel{?}{=} T_1 \cdot (pk \cdot g^x)^c \quad \text{and} \quad y^z \stackrel{?}{=} T_2 \cdot g^c
+    \]
+\end{enumerate}
+\end{protocol}
 
 \subsection{Security Analysis}
 
-Our pairing-free VRF construction in prime-order groups preserves all three essential VRF properties—correctness, uniqueness, and pseudorandomness—while eliminating the computational overhead of bilinear pairings found in the original Dodis-Yampolskiy VRF.
-
-\subsubsection{Comparison to Dodis-Yampolskiy VRF}
-The Dodis-Yampolskiy VRF also evaluates $y = g^{1/(sk + x)}$, but relies on a bilinear group for verification, using a pairing check: $e(y, pk \cdot g^x) = e(g, g)$. Our construction operates entirely in a standard prime-order group, replacing the pairing verification with an efficient $\Sigma$-protocol that proves the algebraic relation $y^{sk+x} = g$. This substitution preserves all security guarantees while significantly reducing computational costs.
+\begin{remark}
+P-DY trades the \emph{information-theoretic uniqueness} of the DY VRF, enforced by pairings, for \emph{computational uniqueness} via the soundness of the $\Sigma$-protocol and the discrete logarithm assumption. This eliminates pairings while maintaining security against polynomial-time adversaries.
+\end{remark}
 
 \subsubsection{Correctness}
-An honest prover computing $y = g^{1/(sk+x)}$ can always convince the verifier by executing the $\Sigma$-protocol. Let $pk = g^{sk}$ be the public key. For commitment values $T_1 = g^r$ and $T_2 = y^r$, and response $z = r + c(sk+x)$, verification succeeds because:
 
-\begin{align}
-g^z &= g^{r + c(sk+x)} = g^r \cdot g^{c(sk+x)} = g^r \cdot (g^{sk} \cdot g^x)^c = g^r \cdot (pk \cdot g^x)^c = T_1 \cdot (pk \cdot g^x)^c \\
-y^z &= y^{r + c(sk+x)} = y^r \cdot y^{c(sk+x)} = y^r \cdot (y^{sk+x})^c = y^r \cdot g^c = T_2 \cdot g^c
-\end{align}
+Correctness requires that an honest prover’s output $y$ and proof $\pi$ always pass verification. For $pk = g^{sk}$, $y = g^{1/(sk + x)}$, $T_1 = g^r$, $T_2 = y^r$, and $z = r + c(sk + x)$, the verification equations hold:
+\begin{align*}
+g^z &= g^{r + c(sk + x)} = g^r \cdot g^{c(sk + x)} = g^r \cdot (g^{sk} \cdot g^x)^c = T_1 \cdot (pk \cdot g^x)^c \\
+y^z &= y^{r + c(sk + x)} = y^r \cdot y^{c(sk + x)} = y^r \cdot (y^{sk + x})^c = y^r \cdot g^c = T_2 \cdot g^c
+\end{align*}
 
-This demonstrates that honest execution of our protocol always results in successful verification, satisfying the VRF correctness property.
-
-
+Since $y^{sk + x} = g^{1/(sk + x) \cdot (sk + x)} = g$, both checks pass, confirming correctness.
 
 \subsubsection{Uniqueness}
-The uniqueness property requires that for any input $x$ and public key $pk$, at most one output $y$ can be verified. Our construction satisfies computational uniqueness based on the hardness of the discrete logarithm problem in a prime-order group $\mathbb{G}$.
 
-For any valid output $y$, the verification equations ensure that $y^{sk+x} = g$, which has exactly one solution: $y = g^{1/(sk+x)}$. Suppose an adversary produces a different valid output $y' \neq y$ with a valid proof $\pi'$. Then:
+Uniqueness ensures that, for a fixed $pk$ and $x$, only one $y$ can be successfully verified. In DY, pairings enforce this information theoretically. In P-DY, uniqueness is computational, relying on the discrete logarithm problem.
 
-\begin{enumerate}
-    \item $y'^{sk+x} = g$ (from verification of $y'$)
-    \item $y^{sk+x} = g$ (from honest evaluation)
-\end{enumerate}
+For a valid $y$, $y^{sk + x} = g$, so $y = g^{1/(sk + x)}$ is unique in $\mathbb{G}$. Suppose an adversary produces $y' \neq y$ with a valid proof $\pi'$. Then $y'^{sk + x} = g$ and $y^{sk + x} = g$, implying $(y'/y)^{sk + x} = 1$. In a prime-order group, $y'/y = g^k$ for some $k \neq 0$, so $y' = y \cdot g^k$. But $y'^{sk + x} = (y \cdot g^k)^{sk + x} = g \cdot g^{k(sk + x)} = g$ requires $g^{k(sk + x)} = 1$, which holds only if $k(sk + x) = 0 \pmod{p}$. For random $sk$ and $x$, $sk + x = 0$ is negligible. Alternatively, if $y'$ corresponds to a different $sk'$ where $pk = g^{sk'}$, finding $sk' \neq sk$ breaks the discrete logarithm assumption.
 
-This implies $(y')^{sk+x} = y^{sk+x}$, so $(y'/y)^{sk+x} = 1$. Since $\mathbb{G}$ is a prime-order group, if $y' \neq y$, then $y'/y = g^k$ for some $k \neq 0$. Thus, $y' = y \cdot g^k$. However, for $y'$ to be valid, it must satisfy $y'^{sk+x} = (y \cdot g^k)^{sk+x} = y^{sk+x} \cdot g^{k(sk+x)} = g$, which requires $g^{k(sk+x)} = 1$. Since $k \neq 0$ and $\mathbb{G}$ has prime order, this holds only if $sk + x = 0 \pmod{p}$, where $p$ is the group order—an event with negligible probability for random $sk$ and $x$. Alternatively, finding a different $sk'$ such that $pk = g^{sk'}$ and $y'^{sk'+x} = g$ contradicts the discrete logarithm assumption unless $sk' = sk$.
-
-Thus, producing a distinct $y'$ with a valid proof is infeasible, ensuring uniqueness.
+Thus, producing a distinct verifiable $y'$ is computationally infeasible, ensuring uniqueness.
 
 \subsubsection{Pseudorandomness}
-The pseudorandomness property requires that VRF outputs appear random to any observer without knowledge of $sk$, even after seeing other input-output pairs. Our construction inherits this property from the algebraic structure of the output $y = g^{1/(sk+x)}$.
 
-Under the $q$-DDHI (Decisional Diffie-Hellman Inversion) assumption, given $(g, g^{sk}, g^{(sk)^2}, ..., g^{(sk)^q})$ for any polynomial $q$, the value $g^{1/(sk+x)}$ is computationally indistinguishable from a random group element in $\mathbb{G}$ for any $x$ not previously queried. This assumption directly supports the pseudorandomness required by VRFs.
+Pseudorandomness requires that $y = g^{1/(sk + x)}$ appears random in $\mathbb{G}$ without knowledge of $sk$, even given other input-output pairs. We rely on the $q$-DDHI assumption, which states that $g^{1/(sk + x)}$ is indistinguishable from random given $(g, g^{sk}, \ldots, g^{(sk)^q})$ for polynomial $q$. 
+The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyond $pk$.
 
-The $\Sigma$-protocol's zero-knowledge property ensures that proofs reveal no additional information about $sk$ beyond what is available from $pk = g^{sk}$, preserving the indistinguishability of $y$ from a random element. A formal reduction demonstrates that any adversary breaking pseudorandomness can be transformed into one that distinguishes $g^{1/(sk+x)}$ from a random group element, contradicting the $q$-DDHI assumption.
-
-In the reduction, the challenger, given a $q$-DDHI instance, simulates VRF evaluations and proofs for up to $q$ distinct inputs using the provided powers of $sk$. For a challenge input $x^*$ (distinct from prior queries), the challenger provides either the real VRF output $g^{1/(sk+x^*)}$ or a random group element. If the adversary distinguishes these with non-negligible advantage, it solves the $q$-DDHI problem, which is assumed hard.
-
-
-
+\begin{proof}[Sketch]
+    Assume an adversary can distinguish $y$ from random, solving $q$-DDHI. The challenger simulates proofs for $q$ inputs using $g^{sk^i}$ for challenge $x^*$, provides $y^* = g^{a/(sk + x^*)}$ or a random element. A successful distinguished implies a $q$-DDHI solver which is assumed to be a hard problem.
+\end{proof}
 
 
 
@@ -568,254 +535,6 @@ This construction demonstrates that our protocol satisfies perfect honest-verifi
 
 
 
-
-
-
-
-
-
-
-
-\section{Pairing-Free VRF in Prime-Order Groups}
-
-\subsection{From Pairings to Sigma Protocols: A Transformation}
-
-The Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005} evaluates $y = g^{1/(sk+x)}$ and verifies correctness through a bilinear pairing check:
-\begin{equation}
-e(y, pk \cdot g^x) = e(g, g)
-\end{equation}
-
-This equation verifies that $y^{sk+x} = g$ without revealing $sk$, as we can expand:
-\begin{align}
-e(g^{1/(sk+x)}, g^{sk} \cdot g^x) &= e(g, g)\\
-e(g^{1/(sk+x)}, g^{sk+x}) &= e(g, g)\\
-e(g, g)^{1/(sk+x) \cdot (sk+x)} &= e(g, g)\\
-e(g, g)^1 &= e(g, g)
-\end{align}
-
-Our key insight is that we can directly prove the relationship $y^{sk+x} = g$ using a $\Sigma$-protocol without relying on pairings. This provides the same security guarantees while significantly reducing computational costs, as pairing operations are typically 5-10× more expensive than standard group operations.
-
-\subsection{Construction}
-[Include your VRF construction as before]
-
-\subsection{Proof Protocol}
-Our $\Sigma$-protocol proves exactly the same relation that the pairing check verifies in Dodis-Yampolskiy: namely, that the prover knows $sk$ such that $pk = g^{sk}$ and $y^{sk+x} = g$.
-
-[Include your protocol steps as before]
-
-\subsection{Security Analysis}
-
-\subsubsection{Equivalence to Dodis-Yampolskiy Verification}
-We first establish that our verification mechanism is equivalent to the pairing-based check in Dodis-Yampolskiy. Both approaches verify that $y = g^{1/(sk+x)}$:
-
-\begin{itemize}
-    \item \textbf{Dodis-Yampolskiy}: Verifies through $e(y, pk \cdot g^x) = e(g, g)$, which holds if and only if $y = g^{1/(sk+x)}$.
-    
-    \item \textbf{Our approach}: The $\Sigma$-protocol verification equations $g^z = T_1 \cdot C^c$ and $y^z = T_2 \cdot g^c$ together ensure that $y^{sk+x} = g$, which holds if and only if $y = g^{1/(sk+x)}$.
-\end{itemize}
-
-This equivalence ensures that our construction preserves all security properties of the original VRF while eliminating pairing operations.
-
-\subsubsection{$\Sigma$-Protocol Security}
-Our protocol satisfies the three required properties of a secure $\Sigma$-protocol:
-
-\textbf{Completeness:} An honest prover with knowledge of $sk$ always succeeds. For $z = r + c(sk+x)$:
-\begin{align}
-g^z &= g^{r + c(sk+x)} = g^r \cdot (g^{sk} \cdot g^x)^c = T_1 \cdot C^c\\
-y^z &= y^{r + c(sk+x)} = y^r \cdot (y^{sk+x}) = y^r \cdot g = T_2 \cdot g^c
-\end{align}
-
-\textbf{Special Soundness:} Given two accepting transcripts $(T_1, T_2, c, z)$ and $(T_1, T_2, c', z')$ where $c \neq c'$, we can extract $sk$ as follows:
-\begin{align}
-g^z &= T_1 \cdot C^c \quad \text{and} \quad g^{z'} = T_1 \cdot C^{c'}\\
-\Rightarrow g^{z-z'} &= C^{c-c'} = (pk \cdot g^x)^{c-c'}\\
-\Rightarrow g^{z-z'} &= g^{(sk+x)(c-c')}\\
-\Rightarrow z-z' &= (sk+x)(c-c')\\
-\Rightarrow sk &= \frac{z-z'}{c-c'} - x
-\end{align}
-
-Thus, we can extract the secret key $sk$, confirming that the prover must know $sk$ to convince the verifier.
-
-\textbf{Zero-Knowledge:} We can simulate accepting transcripts without knowing $sk$:
-\begin{enumerate}
-    \item Sample $z \sample \mathbb{Z}_p$ and $c \sample \mathbb{Z}_p$ uniformly
-    \item Compute $T_1 = g^z \cdot (pk \cdot g^x)^{-c}$ and $T_2 = y^z \cdot g^{-c}$
-    \item Output $(T_1, T_2, c, z)$
-\end{enumerate}
-This simulation is perfectly indistinguishable from real protocol transcripts.
-
-\subsubsection{VRF Security Properties}
-Building on this $\Sigma$-protocol foundation, our VRF preserves all three essential properties:
-
-\textbf{Correctness:} [As before]
-
-\textbf{Uniqueness:} [As before]
-
-\textbf{Pseudorandomness:} The security reduction to the $q$-DHI assumption follows exactly as in Dodis-Yampolskiy. An adversary distinguishing VRF outputs from random would solve the $q$-DHI problem. Our verification mechanism reveals exactly the same information as the pairing check, maintaining the same pseudorandomness guarantee.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\clearpage
-OLD WORK AND NOTES
-
-
-\subsection{Construction}
-During verification, the user proves in zero-knowledge that they possess a valid master credential with VRF key $\k$, a context credential with a specific $\ctx$ value and the nullifier $\nul$ is correctly formed by using a secret $\k$ in $\credm$ and $\ctx$ in $\credc$. 
-
-\begin{equation}
-\nul = g^{1/(\k + \ctx)} \in \G
-\end{equation}
-
-\subsection{Integration with Identity System}
-
-
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Passport}{%
-                \id: 12345, \\
-                \ctx: "master", \\
-                \exp: "10/11/2026" \\
-                \k: 54321
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                 \id: 12345, \\
-                 \ctx: "DMV", \\
-                 \exp: "10/11/2028"
-                }
-            \end{pcvstack}
-            \begin{pcvstack}
-                \procedure[space=auto]{Nullifier}{%
-                 \textsf{n} = 1/(\k + "DMV") \\
-                 \nul = g^{\textsf{n}}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Example Credential and Nullifier for context DMV}
-    \label{fig:two-creds}
-\end{figure}
-
-
-\[
-    \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
-    \begin{array}{l} 
-    (\cmm, \cmc, \mathsf{N}), (\id, \ctx, , \exp, \k, r_1, r_2) \\
-    \end{array} 
-    \middle|
-    \begin{array}{l}
-        \cmm = g_1^{\id}g_2^{\ctx}g_3^{\exp}g_4^{\k}g^{r_1}  \wedge \ctx="master" \\
-        \cmc = g_1^{\id}g_2^{\ctx}g_3^{\exp}g^{r_2} \wedge \ctx="DMV" \\
-        \nul = g^{1/(k + \ctx)}
-    \end{array} 
-    \right\}
-\]
-    
-
-
-
-\subsection{Performance Analysis}
-Benchmarks were performed on MacBook Air M2 16GB RAM using our Rust implementation with the arkworks library \cite{arkworks_contributors_arkworks_2022}. Compared to the state-of-the-art nullifier scheme from \cite{tomescu2022utt}, our scheme removes a pairing with a speedup of 33\% for VRF evaluation and 60\% for Verify.
-
-\begin{table}[h!]
-\centering
-\label{tab:cred-rel-binding-nullifier-table}
-\begin{tabular}{l@{\hspace{1.5em}}r@{\hspace{1.5em}}r@{\hspace{1.5em}}r}
-\toprule
-Operation & Pairing (ms) & Us (ms) & Our Speedup (\%)) \\
-\midrule
-Evaluate & 5.83 & 3.89 & 33.26 \\
-Verify & 6.37 & 2.52 & 60.42 \\
-\bottomrule
-\end{tabular}
-\caption{Credential Relationship Binding Nullifier Scheme Comparison}
-\end{table}
-\vspace{-1cm}
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.75\linewidth]{figures/vrf-benchmark.png}
-    \caption{VRF Benchmark}
-    \label{fig:vrf-benchmark}
-\end{figure}
-
-
-Include benchmark of my construction on a different curve e.g. secpk251
-Try to benchmark it against a VRF from the standardisation
-
-
-
-
-
-% \begin{table}
-% \begin{center}
-% \caption{Comparison of our construction over previous work.}
-% \label{tab:comparison-chap4}
-% \begin{tabular}{l|ccccc}
-% Features    									& 
-% Sybil Resist.  & 
-% Hierarchy & 
-% Private & 
-% Pairing-Free & 
-% Predicate Proofs \\
-% \hline
-% CanDID \cite{maram2021candid}     				&
-% \ding{51}     & 
-% \ding{51} 	& 
-% \ding{55}  &  
-% -     & 
-% \ding{55}		\\
-% SyRA \cite{crites_syra_2024}     				& 
-% \ding{51}    	& 
-% \ding{51}     & 
-% \ding{51}  &  
-% \ding{51}     & 
-% \ding{55}		\\
-% S3ID \cite{rabaninejad_attribute-based_2024}  & 
-% \ding{51}     & 
-% \ding{51}    	& 
-% \ding{55}  &  
-% \ding{55}     & 
-% \ding{55}		\\
-% UTT               & 
-% \ding{51}     & 
-% \ding{51}    	& 
-% \ding{51}  &  
-% \ding{55}     & 
-% \ding{51}		\\
-% Chap3             & 
-% \ding{55}     & 
-% \ding{55}    	& 
-% \ding{51}  &  
-% \ding{55}     & 
-% \ding{51}		\\
-% Ours  										& 
-% \ding{51}     & 
-% \ding{51}    	& 
-% \ding{51}  &  
-% \ding{51}     & 
-% \ding{51}		\\
-% \end{tabular}
-% \end{center}
-% \vspace{1em}
-% \footnotetext[1]{Predicate Proofs allow users to prove statements about their credentials privately}
-% \footnotetext[2]{Efficient Token refers to optimization of token verification}
-% \end{table}
 
 
 \subsection*{Notation}
@@ -1047,8 +766,15 @@ To prove that $y = g^{1/(sk+x)}$ without revealing $sk$, we use a $\Sigma$-proto
 
 
 
-\newpage
-\section{Step 2. Privacy}
+
+
+
+
+
+
+
+
+
 Our goal is to prove this relation in zero knowledge $y^{sk+x} = g$. We start small and work our way up. 
 
 We start by prove knowledge of a DDHI challenge
@@ -1297,3 +1023,153 @@ The relation being proven is:
     \end{align*}
 \end{enumerate}
 \end{protocol}
+
+
+
+
+\section{old}
+
+
+\subsection{Construction}
+During verification, the user proves in zero-knowledge that they possess a valid master credential with VRF key $\k$, a context credential with a specific $\ctx$ value and the nullifier $\nul$ is correctly formed by using a secret $\k$ in $\credm$ and $\ctx$ in $\credc$. 
+
+\begin{equation}
+\nul = g^{1/(\k + \ctx)} \in \G
+\end{equation}
+
+\subsection{Integration with Identity System}
+
+
+\begin{figure}
+        \begin{pchstack}[boxed, center, space=4em]
+            \begin{pcvstack}
+                \procedure[space=auto]{Passport}{%
+                \id: 12345, \\
+                \ctx: "master", \\
+                \exp: "10/11/2026" \\
+                \k: 54321
+                }
+            \end{pcvstack}
+            \pcvspace
+            \begin{pcvstack}
+                \procedure[space=auto]{Driver License}{%
+                 \id: 12345, \\
+                 \ctx: "DMV", \\
+                 \exp: "10/11/2028"
+                }
+            \end{pcvstack}
+            \begin{pcvstack}
+                \procedure[space=auto]{Nullifier}{%
+                 \textsf{n} = 1/(\k + "DMV") \\
+                 \nul = g^{\textsf{n}}
+                }
+            \end{pcvstack}
+        \end{pchstack}
+    \caption{Example Credential and Nullifier for context DMV}
+    \label{fig:two-creds}
+\end{figure}
+
+
+\[
+    \mathcal{R}_{\mathsf{vrf}} = \zkpok \left\{ 
+    \begin{array}{l} 
+    (\cmm, \cmc, \mathsf{N}), (\id, \ctx, , \exp, \k, r_1, r_2) \\
+    \end{array} 
+    \middle|
+    \begin{array}{l}
+        \cmm = g_1^{\id}g_2^{\ctx}g_3^{\exp}g_4^{\k}g^{r_1}  \wedge \ctx="master" \\
+        \cmc = g_1^{\id}g_2^{\ctx}g_3^{\exp}g^{r_2} \wedge \ctx="DMV" \\
+        \nul = g^{1/(k + \ctx)}
+    \end{array} 
+    \right\}
+\]
+    
+
+
+
+\subsection{Performance Analysis}
+Benchmarks were performed on MacBook Air M2 16GB RAM using our Rust implementation with the arkworks library \cite{arkworks_contributors_arkworks_2022}. Compared to the state-of-the-art nullifier scheme from \cite{tomescu2022utt}, our scheme removes a pairing with a speedup of 33\% for VRF evaluation and 60\% for Verify.
+
+\begin{table}[h!]
+\centering
+\label{tab:cred-rel-binding-nullifier-table}
+\begin{tabular}{l@{\hspace{1.5em}}r@{\hspace{1.5em}}r@{\hspace{1.5em}}r}
+\toprule
+Operation & Pairing (ms) & Us (ms) & Our Speedup (\%)) \\
+\midrule
+Evaluate & 5.83 & 3.89 & 33.26 \\
+Verify & 6.37 & 2.52 & 60.42 \\
+\bottomrule
+\end{tabular}
+\caption{Credential Relationship Binding Nullifier Scheme Comparison}
+\end{table}
+\vspace{-1cm}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\linewidth]{figures/vrf-benchmark.png}
+    \caption{VRF Benchmark}
+    \label{fig:vrf-benchmark}
+\end{figure}
+
+
+Include benchmark of my construction on a different curve e.g. secpk251
+Try to benchmark it against a VRF from the standardisation
+
+
+
+
+
+% \begin{table}
+% \begin{center}
+% \caption{Comparison of our construction over previous work.}
+% \label{tab:comparison-chap4}
+% \begin{tabular}{l|ccccc}
+% Features    									& 
+% Sybil Resist.  & 
+% Hierarchy & 
+% Private & 
+% Pairing-Free & 
+% Predicate Proofs \\
+% \hline
+% CanDID \cite{maram2021candid}     				&
+% \ding{51}     & 
+% \ding{51} 	& 
+% \ding{55}  &  
+% -     & 
+% \ding{55}		\\
+% SyRA \cite{crites_syra_2024}     				& 
+% \ding{51}    	& 
+% \ding{51}     & 
+% \ding{51}  &  
+% \ding{51}     & 
+% \ding{55}		\\
+% S3ID \cite{rabaninejad_attribute-based_2024}  & 
+% \ding{51}     & 
+% \ding{51}    	& 
+% \ding{55}  &  
+% \ding{55}     & 
+% \ding{55}		\\
+% UTT               & 
+% \ding{51}     & 
+% \ding{51}    	& 
+% \ding{51}  &  
+% \ding{55}     & 
+% \ding{51}		\\
+% Chap3             & 
+% \ding{55}     & 
+% \ding{55}    	& 
+% \ding{51}  &  
+% \ding{55}     & 
+% \ding{51}		\\
+% Ours  										& 
+% \ding{51}     & 
+% \ding{51}    	& 
+% \ding{51}  &  
+% \ding{51}     & 
+% \ding{51}		\\
+% \end{tabular}
+% \end{center}
+% \vspace{1em}
+% \footnotetext[1]{Predicate Proofs allow users to prove statements about their credentials privately}
+% \footnotetext[2]{Efficient Token refers to optimization of token verification}
+% \end{table}
