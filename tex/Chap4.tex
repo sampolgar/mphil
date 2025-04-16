@@ -240,31 +240,72 @@ We propose two key advancements:
 
 These innovations yield the \emph{Credential Relationship Binding Nullifier} (CRBN), integrating our efficient, private VRF into the MIMC-ABC system for scalable, privacy-preserving hierarchical credential binding and sybil resistance.
 
-(This will be a table showing the difference between constructions, it's incomplete and will be completed at the end)
-\begin{table}
-    \centering
-    \begin{tabular}{cccccc}
-       Scheme  & VRF?     & No Pairings  & 2 Exponents (x + sk)  & Private pk & Private (x) \\
-       DY      & Yes     & Yes           & Yes                   & No         & No \\
-       PRF      & Yes     & Yes           & Yes                   & No         & No \\
-       VOPRF      & Yes     & Yes           & Yes                   & No         & No \\
-       Sec 2   & No     & No            & Yes                   & No         & No \\
-       Sec 3   & No     & Yes           & No                    & Yes        & No \\
-       Sec 4   & Yes     & Yes           & Yes                   & Yes        & Yes\\
-    \end{tabular}
-    \caption{Caption}
-    \label{tab:my_label}
-\end{table}
+% (This will be a table showing the difference between constructions, it's incomplete and will be completed at the end)
+% \begin{table}
+%     \centering
+%     \begin{tabular}{cccccc}
+%        Scheme  & VRF?     & No Pairings  & 2 Exponents (x + sk)  & Private pk & Private (x) \\
+%        DY      & Yes     & Yes           & Yes                   & No         & No \\
+%        PRF      & Yes     & Yes           & Yes                   & No         & No \\
+%        VOPRF      & Yes     & Yes           & Yes                   & No         & No \\
+%        Sec 2   & No     & No            & Yes                   & No         & No \\
+%        Sec 3   & No     & Yes           & No                    & Yes        & No \\
+%        Sec 4   & Yes     & Yes           & Yes                   & Yes        & Yes\\
+%     \end{tabular}
+%     \caption{Caption}
+%     \label{tab:my_label}
+% \end{table}
 
 
 
 
 
 \section{Use-Case Scenario}
-We want to execute the DY without bilinear pairings the challenge comes from verification. 
-We do the DY PF protocol and show how that's done. 
+
+The prover has $y = e(g,\tilde{g})^{1/(sk+x)}$ and proof of correctness $\pi = \tilde{g}^{1/(sk+x)}$ and public key $pk = g^{sk}$ and input $x$. We begin by illustrating DY and its necessary use of the Bilinearity property from the pairings.
+
+In DY, Pairings enable public verifiability, prime-order group operations don't have this capability. The Bilinearity property of pairings, $e(g^a,\tilde{g}^b)^c = e(g,\tilde{g})^{abc}$, allows exponents to be "multiplied" across groups, which isn't possible with prime order groups. 
+
+DY requires verification of the output $y$ and proof of its correctness $\pi$ to uphold the pseudorandomness property. 
+
+$\pi$ is verified by $e(g^x \cdot pk, \pi) \stackrel{?}{=} e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) \stackrel{?}{=} e(g, \tilde{g})^{(sk+x)/(sk+x)} \stackrel{?}{=} e(g, \tilde{g}) $ 
+$y = e(g, \tilde{g})^{1/(sk+x)}$ is verified by $y \stackrel{?}{=} e(g, \pi)  \stackrel{?}{=} e(g,\tilde{g}^{1/(sk+x)}) \stackrel{?}{=} e(g, \tilde{g})^{1/(sk+x)}$
+
+If we want to compute the nullifier in the $q$-DDHI format $g^{1/(sk+x)}$ we must have an algorithm that takes in $pk = g^{sk}$ and $x$ and enables both verification and proof of correctness. (verification only creates a VUF, a much weaker security).
+
+We show the difficulty by illustrating the prime order group operations. 
+Let us try with the first verification step. 
+Given $pk = g^{sk}$, $x$, and $y = g^{1/(sk+x)}$, how might a verifier check this?
+Here are a few attempts:
+\begin{enumerate}
+    \item additive homomorphism: $g^{sk} \cdot g^x = g^{sk+x}$. However, unlike with pairings, we have no mechanism to equate $g^{sk+x}$ with $g^{1/(sk+x)}$. For example, 
+    \begin{enumerate}
+        \item $g^{sk+x} \cdot g^{1/(sk+x)} = g^{sk+x + 1/(sk+x)}$ which doesn't equate. 
+        \item $g^{sk+x}/g^{1/(sk+x)} = g^{(sk+x) \cdot (sk+x)}$ which doesn't equate. 
+    \end{enumerate}
+
+\end{enumerate}
 
 
+inverse additive homomorphism: $g^{1/a} \cdot g^{1/b} = g^{\frac{1}{a}+\frac{1}{b}} = g^{\frac{a\cdot b}{a + b}}$
+multiplicative homomorphism: $(g^{1/a})^{1/b} = (g^{1/a \cdot b})$
+
+
+Our challenge moving to a prime-order group is to enable both verifiability and proof of correctness. 
+
+
+\[
+\mathcal{R}_{\mathsf{DY PF}} = \left\{ 
+\begin{array}{l} 
+(\pk, x, y),\\
+(sk) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+pk = g^{sk} \\
+y^{sk + x} = g  \\
+\end{array} \right\}
+\]
 
 
 Challenge 2. 
