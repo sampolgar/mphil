@@ -4,7 +4,7 @@
 
 In Chapters 2 and 3, we developed a robust foundation for anonymous credentials, evolving from single-issuer Attribute-Based Anonymous Credentials $(\ABC)$ to the Multi-Issuer Multi-Credential ABC $(\MIMCABC)$ system with identity binding security. $\MIMCABC$ enables users to privately prove that credentials from multiple, mutually distrusting issuers belong to the same identity, a significant advance for applications like federated identity proofs or content credentialing. However, real-world identity systems impose additional requirements that $\MIMCABC$ does not fully address: hierarchical structure and sybil resistance for context-specific credentials.
 
-In practice, credentials often form a natural hierarchy, with foundational identities—such as government-issued IDs or passports—serving as Master Credentials, and dependent credentials—like driver’s licenses, professional certificates, or access rights—acting as Context Credentials. This structure enables efficient revocation: invalidating a Master Credential (e.g., upon employment termination) implicitly revokes all dependent Context Credentials, avoiding the need to track and revoke each individually. Furthermore, regulatory frameworks like KYC/AML demand accountability, requiring systems to prevent sybil attacks where users illegitimately obtain multiple credentials for the same context (e.g., multiple driver’s licenses). 
+In practice, credentials often form a natural hierarchy, with foundational identities—such as government-issued IDs or passports—serving as Master Credentials, and dependent credentials—like driver’s licenses, professional certificates, or access rights—acting as Context Credentials. Furthermore, regulatory frameworks like KYC/AML demand accountability, requiring systems to prevent sybil attacks where users illegitimately obtain multiple credentials for the same context (e.g., multiple driver’s licenses). Furthermore, nullifiers can enable efficient revocation. 
 
 While MIMC-ABC ensures credentials share a single identity, it lacks mechanisms to enforce this hierarchical dependency or prevent sybil attacks in a privacy-preserving manner, as its identity binding operates agnostically across all credentials without distinguishing their roles or contexts. To meet these practical and regulatory needs, we must extend MIMC-ABC with a cryptographic framework that organizes credentials hierarchically and ensures context-specific uniqueness, all while preserving user anonymity and computational efficiency
 
@@ -218,84 +218,48 @@ A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment
 
 
 
-\subsection{Technical Contributions}
 
-\subsubsection{Foundation: The Dodis-Yampolskiy VRF}
-The Dodis-Yampolskiy (DY) Verifiable Random Function (VRF) \cite{hutchison_verifiable_2005} provides an algebraic foundation for our credential binding system. For a secret key $sk$ and input $x$, the DY VRF computes $y = e(g, \tilde{g})^{1/(sk + x)}$ in a bilinear group, with a proof $\pi = \tilde{g}^{1/(sk + x)}$. It ensures \emph{correctness}, \emph{uniqueness}, and \emph{pseudorandomness} under the $q$-DBDHI assumption, making it suitable for generating verifiable nullifiers.
+\section{Technical Challenges in Credential Relationship Binding}
 
-\subsubsection{Efficiency Limitations of DY VRF}
-The DY VRF’s reliance on bilinear pairings introduces computational overhead of approx 2ms for verification \cite{polgar_anonymous_2025}, limiting scalability in scenarios where multiple nullifiers are needed. 
+To understand our contributions, we examine the core technical challenges in creating an efficient, privacy-preserving nullifier mechanism for hierarchical credential systems. Consider a user with a master credential (containing secret key $\k$, denoted as $sk$ below) who needs to prove possession of a context credential (with identifier $\ctx = \text{"DMV"}$, denoted as $x$) without revealing their identity or allowing them to obtain multiple DMV credentials.
 
-\subsubsection{Privacy Limitations of DY VRF}
-Verification in the DY VRF uses the public key $pk = g^{sk}$, potentially linking outputs to identities and compromising anonymity. Additionally, the input $x$ may leak sensitive context if exposed. A private verification method is thus required to protect $sk$ and $x$.
+\subsection{Challenge 1: Creating a Pairing-Free Nullifier}
 
-\subsubsection{Our Contributions}
-We propose two key advancements:
+The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF provides an elegant solution for generating unique, pseudorandom nullifiers using $y = e(g, \tilde{g})^{1/(sk+x)}$ in bilinear groups. We wish to improve on the efficiency and privacy. 
+
+\subsubsection{Can we remove Bilinear Pairings from DY VRF?}
+
+We start with the challenge of removing pairings from the DY VRF. DY VRF achieves verifiability:
 
 \begin{itemize}
-    \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We redesign the DY VRF for prime-order groups, which we call $P{-}DY$ removing bilinear pairings. Using a $\Sigma$-protocol, we prove the relation $y^{sk + x} = g$ holds, we prove our VRF satisfies the classic VRF security properties  \cite{micali_verifiable_1999} correctness, uniqueness, pseudorandomness under the $q$-DDHI assumption and show our construction is XXX more efficient than DY. 
-    
-    \item \textbf{Zero-Knowledge Privacy Enhancement:} We introduce zero-knowledge $\Sigma$-protocols to verify $y = g^{1/(sk + x)}$ without disclosing $sk$ or $x$, enabling private verification that preserves anonymity and input confidentiality.
+    \item The verifier confirms $\pi = \tilde{g}^{1/(sk+x)}$ is valid via $e(g^x \cdot pk, \pi) = e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) = e(g, \tilde{g})$
+    \item Then checks $y = e(g, \pi) = e(g, \tilde{g})^{1/(sk+x)}$
 \end{itemize}
 
-These innovations yield the \emph{Credential Relationship Binding Nullifier} (CRBN), integrating our efficient, private VRF into the MIMC-ABC system for scalable, privacy-preserving hierarchical credential binding and sybil resistance.
+Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \tilde{g})^{abc}$, which enables "exponent multiplication" across groups, allowing the transformations
+\[
+e(g^x \cdot pk, \pi) \quad \stackrel{?}{=} \quad e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) \quad \stackrel{?}{=} \quad 
+ e(g, \tilde{g})^{(sk+x)/(sk+x)} \quad  \stackrel{}{=} \quad e(g, \tilde{g})
+\]
+\[
+y \quad \stackrel{?}{=} \quad e(g, \pi) \quad \stackrel{?}{=} \quad e(g,\tilde{g}^{1/(sk+x)}) \quad \stackrel{}{=} \quad e(g, \tilde{g})^{1/(sk+x)}
+\]
 
-% (This will be a table showing the difference between constructions, it's incomplete and will be completed at the end)
-% \begin{table}
-%     \centering
-%     \begin{tabular}{cccccc}
-%        Scheme  & VRF?     & No Pairings  & 2 Exponents (x + sk)  & Private pk & Private (x) \\
-%        DY      & Yes     & Yes           & Yes                   & No         & No \\
-%        PRF      & Yes     & Yes           & Yes                   & No         & No \\
-%        VOPRF      & Yes     & Yes           & Yes                   & No         & No \\
-%        Sec 2   & No     & No            & Yes                   & No         & No \\
-%        Sec 3   & No     & Yes           & No                    & Yes        & No \\
-%        Sec 4   & Yes     & Yes           & Yes                   & Yes        & Yes\\
-%     \end{tabular}
-%     \caption{Caption}
-%     \label{tab:my_label}
-% \end{table}
+Security relies on the $q$-DBDHI problem which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g})$, no $\PPT$ adversary can distinguish between $e(g,\tilde{g})^{1/x}$ and a uniform element in $\G_T$ with non-negligible advantage , ensuring the VRF outputs maintain pseudorandomness after the adversary has observed $(x',y',\pi')$ pairs.
 
+\subsubsection{The Prime-Order Group Challenge}
 
+Prime-order groups without pairings don't have the bilinearity property, given $pk = g^{sk}$, $x$, and $y = g^{1/(sk+x)}$, standard group operations cannot directly verify the relationship. For example, given $pk  \cdot g^x = g^{sk+x}$, attempts fail to equate or cancel out:
 
-
-
-\section{Use-Case Scenario}
-
-The prover has $y = e(g,\tilde{g})^{1/(sk+x)}$ and proof of correctness $\pi = \tilde{g}^{1/(sk+x)}$ and public key $pk = g^{sk}$ and input $x$. We begin by illustrating DY and its necessary use of the Bilinearity property from the pairings.
-
-In DY, Pairings enable public verifiability, prime-order group operations don't have this capability. The Bilinearity property of pairings, $e(g^a,\tilde{g}^b)^c = e(g,\tilde{g})^{abc}$, allows exponents to be "multiplied" across groups, which isn't possible with prime order groups. 
-
-DY requires verification of the output $y$ and proof of its correctness $\pi$ to uphold the pseudorandomness property. 
-
-$\pi$ is verified by $e(g^x \cdot pk, \pi) \stackrel{?}{=} e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) \stackrel{?}{=} e(g, \tilde{g})^{(sk+x)/(sk+x)} \stackrel{?}{=} e(g, \tilde{g}) $ 
-$y = e(g, \tilde{g})^{1/(sk+x)}$ is verified by $y \stackrel{?}{=} e(g, \pi)  \stackrel{?}{=} e(g,\tilde{g}^{1/(sk+x)}) \stackrel{?}{=} e(g, \tilde{g})^{1/(sk+x)}$
-
-If we want to compute the nullifier in the $q$-DDHI format $g^{1/(sk+x)}$ we must have an algorithm that takes in $pk = g^{sk}$ and $x$ and enables both verification and proof of correctness. (verification only creates a VUF, a much weaker security).
-
-We show the difficulty by illustrating the prime order group operations. 
-Let us try with the first verification step. 
-Given $pk = g^{sk}$, $x$, and $y = g^{1/(sk+x)}$, how might a verifier check this?
-Here are a few attempts:
 \begin{enumerate}
-    \item additive homomorphism: $g^{sk} \cdot g^x = g^{sk+x}$. However, unlike with pairings, we have no mechanism to equate $g^{sk+x}$ with $g^{1/(sk+x)}$. For example, 
-    \begin{enumerate}
-        \item $g^{sk+x} \cdot g^{1/(sk+x)} = g^{sk+x + 1/(sk+x)}$ which doesn't equate. 
-        \item $g^{sk+x}/g^{1/(sk+x)} = g^{(sk+x) \cdot (sk+x)}$ which doesn't equate. 
-    \end{enumerate}
-
+    \item $g^{sk+x} \cdot g^{1/(sk+x)} = g^{sk+x+1/(sk+x)}$
+    \item $g^{sk+x}/g^{1/(sk+x)} = g^{(sk+x)^2-1/(sk+x)}$
 \end{enumerate}
 
-
-inverse additive homomorphism: $g^{1/a} \cdot g^{1/b} = g^{\frac{1}{a}+\frac{1}{b}} = g^{\frac{a\cdot b}{a + b}}$
-multiplicative homomorphism: $(g^{1/a})^{1/b} = (g^{1/a \cdot b})$
-
-
-Our challenge moving to a prime-order group is to enable both verifiability and proof of correctness. 
-
+Our insight is to reverse the verification approach. Instead of trying to derive $g^{1/(sk+x)}$ from $g^{sk+x}$ or cancel with a reciprocal, we use a zero knowledge proof $\Sigma$-protocol to verify that $y$ raised to the power $(sk+x)$ equals $g$. In doing so, our pairing-free construction shifts from the $q$-DBDHI assumption to the $q$-DDHI assumption. This gives us the relation:
 
 \[
-\mathcal{R}_{\mathsf{DY PF}} = \left\{ 
+\mathcal{R}_{\mathsf{DY-PF}} = \left\{ 
 \begin{array}{l} 
 (\pk, x, y),\\
 (sk) 
@@ -307,9 +271,30 @@ y^{sk + x} = g  \\
 \end{array} \right\}
 \]
 
+\subsection{Challenge 2: Privacy-Preserving Credential Binding}
 
-Challenge 2. 
-We want to derive a deterministic nullifier $y$ from $sk$ and $x$ during issuance of credential $x$ in the form of the DY VRF, using the Decisional (optionally Bilinear) Diffie-Hellman Inversion Assumption i.e. $g^{1/(sk + x)} \in \G$ or $\G_T$ . $sk$ and $x$ are committed attributes in different commitments, representing the commitments inside credentials. The relation we want to prove in zero-knowledge is
+Even with a pairing-free solution, standard VRFs reveal the public key $pk = g^{sk}$ and the input $x$,  compromising credential anonymity. In our hierarchical credential system, $sk$ and $x$ are committed attributes in different credentials that must remain private. We solve this through a two-step approach: first, addressing the simpler case of a single committed exponent, then extending to linear combinations.
+
+\subsubsection*{Step 1. Proving Knowledge of a Committed Inverse}
+Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent which is congruent to proving a DDHI challenge $g^{1/x}$
+\[
+\mathcal{R}_{\mathsf{DDHI}} = \left\{ 
+\begin{array}{l} (\cm, y),\\
+(x, r) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm = g_1^{x} g^r \\
+y = g^{1/x} \\
+\end{array} \right\}
+\]
+
+We use a $\Sigma$-protocol to prove knowledge of the exponents $x, r$; during the protocol, we use the same random coin and response from $x$ to show the relation $y^x (=g)$ holds, and therefore $y$ must commit to $x$. We show the full protocol \ref{pok-committed-inverse-exponent}. 
+
+\subsubsection*{Step 2. Proving Knowledge of a Committed Inverse Linear Relation}
+
+We then extend this to prove a linear relation of inverse exponents $y = g^{1/(sk+x)}$ where $sk$ and $x$ come from different commitments, enforcing a relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}. 
+
 \[
 \mathcal{R}_{\mathsf{nullifier}} = \left\{ 
 \begin{array}{l} (\cm_1, \cm_2, y),\\
@@ -323,57 +308,55 @@ y = g^{1/(sk + x)} \\
 \end{array} \right\}
 \]
 
-The challenge is using an efficient zero-knowledge proof protocol to prove the relation of inverse exponents, specifically, a linear relation of inverse exponents $\frac{1}{(sk + x)}$. Proving a (standard) linear relation of exponents is a familiar $\Sigma$-protocol that we can use to prove some commitment $\cm$ commits to $sk$ from $\cm_1$ and $x$ from $\cm_2$ $\cm = g_3^{sk+x}g^{r_3}$, we present this in the appendix \ref{pok-linear-relation}. 
 
-We first reduce this problem to the problem of proving knowledge of a (committed) inverse exponent which is congruent to proving a DDHI challenge $g^{1/x}$
+\subsection{Challenge 3: Unlinkable Credential Presentations}
+
+A deterministic nullifier $y = g^{1/(sk+x)}$ is necessary for Sybil resistance ensuring a unique, verifiable value for each $(sk,x)$ pair. However, deterministic algorithms create privacy problems with linkability. There are many use-cases for the verifiable connection of $(sk, x)$, such as revocation accumulators, which a user would need to interact with frequently, requiring a probabilistic output that can verify the $(sk+x)$ connection. 
+
+Our solution is to commit to the nullifier rather than revealing it directly:
 \[
-\mathcal{R}_{\mathsf{DDHI}} = \left\{ 
-\begin{array}{l} (\cm, y),\\
-(x, r) 
+\cm_{\mathsf{null}} = g_3^{1/(sk+x)} g^{r_3}
+\]
+
+We must now prove that the committed value represents the nullifiers $(sk+x)$, we do so with the following relation:
+
+
+\[
+\mathcal{R}_{\mathsf{CommittedNull}} = \left\{ 
+\begin{array}{l} 
+(\cm_1, \cm_2, \cm_3, \cm_4), \\
+(sk, x, r_1, r_2, r_3, r_4) 
 \end{array}
-\ \middle|
-\ \begin{array}{l}
-\cm = g_1^{x} g^r \\
-y = g^{1/x} \\
+\ \middle| \
+\begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{The Committed Nullifier}}\\
+\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
 \end{array} \right\}
 \]
 
+The auxiliary commitment $\cm_4$ enables verification analogous to our approach in Challenge 1: instead of verifying $y^{sk+x} = g$ directly, we prove that $\cm_3^{sk+x} = g_3$ (modulo some randomness $g^{r_4}$). This algebraic relationship can only hold if $\cm_3$ commits to $g_3^{1/(sk+x)}$, thus verifying the correctness of the committed nullifier without revealing it.
 
-We use a $\Sigma$-protocol to prove knowledge of the exponents $x, r$; during the protocol, we use the same random coin and response from $x$ to show the relation $y^x (=g)$ holds, and therefore $y$ must commit to $x$. We show the full protocol \ref{pok-committed-inverse-exponent}. We then combine this protocol with the linear relation of exponents protocol mentioned above to prove the relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}.
-
-Challenge 3. 
-Our next challenge is an extension of challenge 2. The system wants to use the nullifier in set membership and requires the user to prove the nullifier's membership or non-membership in a private list or accumulator. Using a deterministic nullifier such as that produced by the above solution is linkable for each usage, therefore, we need to create an unlinkable, reusable form. We refer to $1/(sk + x)$ as $\mathsf{inv.exp}$ for brevity:
-\[
-    \cm_{\mathsf{DDHI}} = \CMCom([\mathsf{inv.exp}];r) = g_1^{\mathsf{inv.exp}} g^r
-\]
-
-
-Unlike challenge 2, we must produce a commitment to the inverse exponent 
+This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
 
 
 
 
+\subsection{Our Approach}
 
+To address these challenges, we develop a series of progressively more sophisticated cryptographic constructions:
 
+\begin{enumerate}
+    \item \textbf{Pairing-Free VRF (DY-PF):} We design a $\Sigma$-protocol that enables verification of $y = g^{1/(sk+x)}$ without pairings by proving the relation $y^{sk+x} = g$, preserving the security properties of the original DY VRF but with significantly improved efficiency.
+    
+    \item \textbf{Privacy-Preserving VRF:} We extend our technique to verify nullifiers computed from committed attributes, creating novel $\Sigma$-protocols for proving inverse exponent relations between commitments.
+    
+    \item \textbf{Committed Nullifier:} We further develop our framework to commit the nullifier itself, enabling unlinkable credential presentations while maintaining Sybil resistance.
+\end{enumerate}
 
+Each construction builds upon the previous one, culminating in the Credential Relationship Binding Nullifier (CRBN) that satisfies all our requirements for hierarchical, privacy-preserving, and efficient credential systems.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-% \cm_3 = g_3^{1/(sk + x)} g^{r_3} \\
-% \cm_4 = g_4^{m} g^{r_4} \\
-% \cm_5 = \cm_3^{m} g^{r_5} = g_3 g^{r_3 m + r_5} \\
-% m = sk + x
 
 
 
