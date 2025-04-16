@@ -260,6 +260,43 @@ These innovations yield the \emph{Credential Relationship Binding Nullifier} (CR
 
 
 
+\section{Use-Case Scenario}
+We want to execute the DY without bilinear pairings the challenge comes from verification. 
+
+
+
+
+
+We want to derive a deterministic nullifier $y$ from $sk$ and $x$ during issuance of credential $x$ in the form of the DY VRF, using the Decisional (optionally Bilinear) Diffie-Hellman Inversion Assumption i.e. $g^{1/(sk + x)} \in \G$ or $\G_T$ . $sk$ and $x$ are committed attributes in different commitments, representing the commitments inside credentials. The relation we want to prove in zero-knowledge is
+\[
+\mathcal{R}_{\mathsf{nullifier}} = \left\{ 
+\begin{array}{l} (\cm_1, \cm_2, y),\\
+(sk, x, r_1, r_2) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+y = g^{1/(sk + x)} \\
+\end{array} \right\}
+\]
+
+The challenge is using an efficient zero-knowledge proof protocol to prove the relation of inverse exponents, specifically, a linear relation of inverse exponents. Proving a (standard) linear relation of exponents is a familiar $\Sigma$-protocol that we can use to prove $\cm_3$ commits to $sk$ from $\cm_1$ and $x$ from $\cm_2$ $\cm_3 = g_3^{sk+x}g^{r_3}$, we present this in the appendix \ref{pok-linear-relation}. 
+
+We first reduce this problem to the problem of proving knowledge of an inverse exponent.
+\[
+\mathcal{R}_{\mathsf{DHI}} = \left\{ 
+\begin{array}{l} (\cm, y),\\
+(x, r) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm = g_1^{x} g^r \\
+y = g^{1/x} \\
+\end{array} \right\}
+\]
+
+We use the $\Sigma$-protocol to prove knowledge of the exponents $x, r$. Using a Schnorr protocol with randomness $a_x, a_r$, Schnorr commitments $T_{\cm} = g_1^{a_x}g^{a_r}$ and $T_y = y^{a_x}$, challenge $c$ and responses $z_x = a_x + c \cdot x$ and $z_r = a_r + c \cdot r$, we first show $\cm$ commits to $x, r$, then we show $y^x (=g)$ 
 
 
 
@@ -267,6 +304,35 @@ These innovations yield the \emph{Credential Relationship Binding Nullifier} (CR
 
 
 
+
+
+% \cm_3 = g_3^{1/(sk + x)} g^{r_3} \\
+% \cm_4 = g_4^{m} g^{r_4} \\
+% \cm_5 = \cm_3^{m} g^{r_5} = g_3 g^{r_3 m + r_5} \\
+% m = sk + x
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 \section{Dodis-Yampolskiy VRF: Core Structure and Security Properties}
 
 The Dodis-Yampolskiy VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with prime-order groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, with a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The construction is as follows:
@@ -314,7 +380,7 @@ The VRF output $ y = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T $ is pseudora
 
 
 
-\section{Step 1. Pairing-Free VRF in Prime-Order Groups (P-DY)}
+\section{Step 1. Pairing-Free VRF in Prime-Order Groups (DY-PF)}\label{sec-dy-pf}
 
 In this section, we present our pairing-free verifiable random function (VRF), P-DY, which operates in a prime-order group and eliminates the computational overhead of bilinear pairings found in the Dodis-Yampolskiy (DY) VRF. We detail the construction, including a $\Sigma$-protocol for proof generation, and demonstrate that it satisfies correctness, uniqueness, and pseudorandomness. Notably, P-DY trades the information-theoretic uniqueness of DY for computational uniqueness, a shift we justify through the security analysis.
 
@@ -905,49 +971,55 @@ Verify & 6.37 & 2.52 & 60.42 \\
 \end{figure}
 
 
-Include benchmark of my construction on a different curve e.g. secpk251
-Try to benchmark it against a VRF from the standardisation
-
-
-\begin{table}[ht]
-\centering
-\caption{Verification Time for 4 Credentials with Varying Attributes (time in ms)}
-\label{tab:performance-vrf}
-\begin{tabular}{l@{\hspace{1em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{1em}}r}
-\toprule
-\textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} & \textbf{Notes} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-& \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} & \\
-\midrule
-Dodis Yampolskiy    & 1.27 &        & 2.2   &       & using optimized pairing checks \\
-Our P-DY            & 0.41 & 3.1x   & 0.70  & 3.1x  &  \\
-\midrule
-Non-Private Multi-Issuer & 6.79 & 6.77 & 6.81 & 1.0× & Cleartext, distinct issuers \\
-Private Multi-Issuer & 17.65 & 18.67 & 19.89 & 1.1× & Worst-case, distinct issuers \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 
 
 \begin{table}[ht]
-\centering
+\begin{center}
 \caption{Verification Time for 4 Credentials with Varying Attributes (time in ms)}
 \label{tab:performance-vrf}
-\begin{tabular}{l@{\hspace{1em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{1em}}r}
+\begin{tabular}{l@{\hspace{1em}}r@{\hspace{2em}}r@{\hspace{5em}}r@{\hspace{2em}}r}
 \toprule
-\textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} & \textbf{Notes} \\
+\textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval + Prove (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} \\
 \cmidrule(lr){2-3} \cmidrule(lr){4-5}
-& \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{(Speedup)} & \\
+& \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} \\
 \midrule
-Dodis Yampolskiy    & 1.27 &        & 2.2   &       & using optimized pairing checks \\
-Our P-DY            & 0.41 & 3.1x   & 0.70  & 3.1x  &  \\
+DY$^1$ \cite{hutchison_verifiable_2005}                     & 1.27 &        & 2.2   &       \\
+Our DY-PF \ref{sec-dy-pf}                                   & 0.41 & 3.1x   & 0.70  & 3.1x  \\
 \midrule
-Non-Private Multi-Issuer & 6.79 & 6.77 & 6.81 & 1.0× & Cleartext, distinct issuers \\
-Private Multi-Issuer & 17.65 & 18.67 & 19.89 & 1.1× & Worst-case, distinct issuers \\
+DY Private \cite{tomescu2022utt}                            & 5.91 &        & 6.47  &       \\
+Our DY-PF-Private \ref{sec-dy-pf-priv}                      & 1.08 & 5.5x   & 1.41  & 4.6x  \\
+Our DY-PF-Private-ComOut \ref{sec-dy-pf-priv-com-out}       & 2.73 & 2.2x   & 2.07  & 3.1x  \\
 \bottomrule
 \end{tabular}
+\par\medskip
+\raggedright
+\footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
+
+\footnotesize{$^2$[Your second footnote text here]} 
+\end{center}
 \end{table}
+
+
+
+% implementation,operation,mean_ms
+% dy,eval_prove,1.2868182107000956
+% dy,verify_optimized,2.271014145714285
+% dy,verify_standard,2.8528912494117655
+% dy_pf,eval_prove,0.46260737338791946
+% dy_pf,verify,0.7097862318577927
+
+
+% dy_pf_priv,eval_prove,1.0801653887438827
+% dy_pf_priv,Verify,1.4076584868270694
+
+
+
+% dy_pf_priv_commited_output,eval_prove,2.7305393511111116
+% dy_pf_priv_commited_output,verify,2.0714240844000003
+
+% dy_priv,eval_prove,5.911952128888892
+% dy_priv,verify,6.473554282857142
 
 
 
