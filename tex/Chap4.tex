@@ -1,6 +1,162 @@
 \mychapter{Credential Relationship Binding Nullifier}
+Anonymous credential systems enable users to prove statements about their identity while maintaining privacy. In Chapters 2 and 3, we advanced from single-issuer Attribute-Based Anonymous Credentials ($\ABC$) to a Multi-Issuer Multi-Credential system ($\MIMCABC$) that securely binds credentials from different issuers to the same identity. However, practical identity frameworks require two additional capabilities: hierarchical credential organization and sybil resistance.
 
-\section{Introduction}
+Real-world credentials naturally form a hierarchy, this is notable when applying for bank loans or new credentials from the government that require multiple credentials shown together, a naive request without privacy but challenging to implement in a privacy-preserving identity system. Consider a user with both a passport and a driver's license, as shown in Figure~\ref{fig:credential-nullifier}, the passport functions as a foundational Master Credential containing a secret key $\k$, while the driver's license is a Context Credential tied to a specific domain $\ctx$. For privacy and security, we need to cryptographically bind these credentials together and prevent users from obtaining multiple credentials for the same context (e.g., multiple driver's licenses) without compromising anonymity.
+
+\begin{figure}
+        \begin{pchstack}[boxed, center, space=4em]
+            \begin{pcvstack}
+                \procedure[space=auto]{Master Credential (Passport)}{%
+                \id: 12345, \\
+                \ctx: "master", \\
+                \exp: "10/11/2026", \\
+                \k: 54321
+                }
+            \end{pcvstack}
+            \pcvspace
+            \begin{pcvstack}
+                \procedure[space=auto]{Context Credential (Driver's License)}{%
+                 \id: 12345, \\
+                 \ctx: "DMV", \\
+                 \exp: "10/11/2028"
+                }
+            \end{pcvstack}
+        \end{pchstack}
+        \begin{center}
+        \begin{tikzpicture}
+            \draw[->, thick] (-2,0) -- (-1,-1);
+            \draw[->, thick] (2,0) -- (1,-1);
+        \end{tikzpicture}
+        \end{center}
+        \begin{pchstack}[boxed, center]
+            \begin{pcvstack}
+                \procedure[space=auto]{Nullifier}{%
+                 \textsf{n} = 1/(\k + \text{"DMV"}) \\
+                 \nul = g^{\textsf{n}} 
+                }
+            \end{pcvstack}
+        \end{pchstack}
+    \caption{A credential hierarchy with a nullifier that binds a context credential to a master credential. The nullifier combines the master credential's secret key $\k$ with the context identifier "DMV" through a one-way function, creating a unique, verifiable binding that prevents sybil attacks while maintaining privacy.}
+    \label{fig:credential-nullifier}
+\end{figure}
+
+This presents a core technical challenge: \emph{How can we create a nullifier that cryptographically proves the relationship between two separate credentials without revealing the underlying attributes or enabling tracking across verifications?}
+
+
+\subsection{Technical Challenges and Approach}
+
+Creating an efficient, privacy-preserving nullifier for credential binding raises three specific challenges:
+\begin{enumerate}
+    \item \textbf{Efficient Verification}: The nullifier must be verifiable without expensive bilinear pairings while maintaining provable uniqueness and verifiable pseudorandomness.
+    
+    \item \textbf{Privacy Preservation}: Verification must not reveal the master credential's key $\k$ or the context credential's identifier $\ctx$, nor enable credential linking.
+    
+    \item \textbf{Integration with $\MIMCABC$}: The nullifier mechanism must seamlessly extend our existing anonymous credential framework without compromising its security properties.
+\end{enumerate}
+
+Our approach leverages and extends Verifiable Random Functions (VRFs) to address these challenges. Specifically, we:
+
+\begin{enumerate}
+    \item Start with the Dodis-Yampolskiy VRF~\cite{hutchison_verifiable_2005}, which computes $y = e(g, \tilde{g})^{1/(sk+x)}$ in bilinear groups
+    
+    \item Develop a pairing-free variant that operates entirely in prime-order groups
+    
+    \item Create novel $\Sigma$-protocols for proving relationships between committed attributes and nullifiers and of independent interest
+    
+    \item Design a complete credential binding system that prevents sybil attacks while maintaining privacy
+\end{enumerate}
+
+\subsection{Related Work}
+
+\begin{table}
+\begin{center}
+\caption{Comparison of Nullifier/VRF Schemes for Credential Binding}
+\label{tab:nullifier-comparison}
+\begin{tabular}{l|cccccc}
+\toprule
+\textbf{Scheme} & 
+\textbf{Pairing-} & 
+\textbf{Committed} & 
+\textbf{Committed} & 
+\textbf{Deterministic} & 
+\textbf{Proof} & 
+\textbf{Relative} 
+\\
+ & 
+ \textbf{Free} & 
+ \textbf{Inputs} & 
+ \textbf{Outputs} & 
+ \textbf{Outputs} & 
+ \textbf{Type} & 
+ \textbf{Efficiency} \\
+\midrule
+DY VRF \cite{hutchison_verifiable_2005} & \ding{55} & \ding{55} & \ding{55} &  \ding{51} & Pairing & 3x slower \\
+CanDID \cite{maram2021candid} & \ding{51} & \ding{51} & \ding{55} & \ding{55} &MPC & exponentially slow \\
+SyRA's Function \cite{crites_syra_2024} & \ding{51} & \ding{51} & \ding{55} & ?? & ZK proofs & ? \\
+UTT Nullifier \cite{tomescu2022utt} & \ding{55} & \ding{51} & \ding{51} & \ding{51} &Sigma+Pairing & 1.5x slower \\
+\textbf{Our CRBN} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & Sigma only & 1x (baseline) \\
+\bottomrule
+\end{tabular}
+\end{center}
+\vspace{1em}
+\footnotesize{Hidden Inputs: The nullifier doesn't reveal user's secret key or credential attributes}\\
+\footnotesize{Works with Commitments: Can operate on attributes committed in credential structures}\\
+\footnotesize{Efficiency: Approximate comparison of verification costs based on our benchmarks}
+\end{table}
+
+Previous systems have addressed aspects of hierarchical credential binding and sybil resistance, but all have significant limitations:
+
+\begin{itemize}
+    \item \textbf{UTT}~\cite{tomescu2022utt} uses a similar approach to ours for anonymous payments, creating serial numbers (nullifiers) from a registration credential. However, UTT relies on bilinear pairings, introducing substantial computational overhead.
+    
+    \item \textbf{CanDID}~\cite{maram2021candid} clearly defines the master/context credential relationship but compromises privacy by maintaining mappings between credential public keys, enabling linkability across interactions.
+    
+    \item \textbf{Pairing-based systems} like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024} implement hierarchical credentials but suffer from efficiency issues due to their reliance on costly cryptographic primitives.
+    
+    \item \textbf{Standard VRFs}~\cite{hutchison_verifiable_2005} could generate unique nullifiers but reveal the user's public key during verification, compromising anonymity.
+\end{itemize}
+
+While our $\MIMCABC$ system (Chapter 3) provides efficient identity binding across multiple credentials, it doesn't address the hierarchical relationship between credentials or prevent a user from obtaining multiple credentials for the same context. This chapter fills that gap.
+
+\subsection{Contributions}
+
+We advance anonymous credential systems with three key contributions:
+
+\begin{enumerate}
+    \item \textbf{Pairing-Free VRF Construction}: We redesign the Dodis-Yampolskiy VRF for standard prime-order groups, eliminating pairings while maintaining security under the $q$-DDHI assumption. Our construction transforms $y = e(g, \tilde{g})^{1/(sk+x)}$ to $y = g^{1/(sk+x)}$ with a novel verification approach.
+    
+    \item \textbf{Zero-Knowledge Protocols for Inverse Relations}: We develop efficient $\Sigma$-protocols to prove knowledge of committed inverse exponents—a crucial building block for private nullifier verification. These protocols enable statements of the form:
+    \[
+    \zkpok\{(sk, x, r_1, r_2) : \cm_1 = g_1^{sk}g^{r_1} \land \cm_2 = g_2^{x}g^{r_2} \land y = g^{1/(sk+x)}\}
+    \]
+    
+    \item \textbf{Credential Relationship Binding Nullifier (CRBN)}: We integrate these components into a complete system that binds master credentials to context credentials via nullifiers. Our implementation is 33\% faster for nullifier generation and 60\% faster for verification compared to pairing-based alternatives.
+\end{enumerate}
+
+These contributions enable a privacy-preserving credential hierarchy with sybil resistance, addressing a critical gap in existing anonymous credential systems. Our approach maintains the privacy guarantees of $\MIMCABC$ while adding the ability to enforce context-specific uniqueness—balancing privacy with the accountability requirements of real-world identity systems.
+
+\section{Preliminaries}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Introduction OLD}
 
 In Chapters 2 and 3, we developed a robust foundation for anonymous credentials, evolving from single-issuer Attribute-Based Anonymous Credentials $(\ABC)$ to the Multi-Issuer Multi-Credential ABC $(\MIMCABC)$ system with identity binding security. $\MIMCABC$ enables users to privately prove that credentials from multiple, mutually distrusting issuers belong to the same identity, a significant advance for applications like federated identity proofs or content credentialing. However, real-world identity systems impose additional requirements that $\MIMCABC$ does not fully address: hierarchical structure and sybil resistance for context-specific credentials.
 
@@ -893,29 +1049,7 @@ This contribution is crucial for enabling hierarchical, sybil-resistant anonymou
 
 
 \subsection{Performance Analysis}
-Benchmarks were performed on MacBook Air M2 16GB RAM using our Rust implementation with the arkworks library \cite{arkworks_contributors_arkworks_2022}. Compared to the state-of-the-art nullifier scheme from \cite{tomescu2022utt}, our scheme removes a pairing with a speedup of 33\% for VRF evaluation and 60\% for Verify.
-
-\begin{table}[h!]
-\centering
-\label{tab:cred-rel-binding-nullifier-table}
-\begin{tabular}{l@{\hspace{1.5em}}r@{\hspace{1.5em}}r@{\hspace{1.5em}}r}
-\toprule
-Operation & Pairing (ms) & Us (ms) & Our Speedup (\%)) \\
-\midrule
-Evaluate & 5.83 & 3.89 & 33.26 \\
-Verify & 6.37 & 2.52 & 60.42 \\
-\bottomrule
-\end{tabular}
-\caption{Credential Relationship Binding Nullifier Scheme Comparison}
-\end{table}
-\vspace{-1cm}
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.75\linewidth]{figures/vrf-benchmark.png}
-    \caption{VRF Benchmark}
-    \label{fig:vrf-benchmark}
-\end{figure}
-
+Benchmarks were performed on MacBook Air M2 16GB RAM using our Rust implementation with the arkworks library \cite{arkworks_contributors_arkworks_2022}. Compared to the state-of-the-art nullifier scheme from \cite{tomescu2022utt},
 
 
 
@@ -945,27 +1079,6 @@ Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}       & 2.01 & 2.9x  
 \footnotesize{$^2$[Your second footnote text here]} 
 \end{center}
 \end{table}
-
-
-
-% implementation,operation,mean_ms
-% dy,eval_prove,1.2868182107000956
-% dy,verify_optimized,2.271014145714285
-% dy,verify_standard,2.8528912494117655
-% dy_pf,eval_prove,0.46260737338791946
-% dy_pf,verify,0.7097862318577927
-
-
-% dy_pf_priv,eval_prove,1.0801653887438827
-% dy_pf_priv,Verify,1.4076584868270694
-
-
-
-% dy_pf_priv_commited_output,eval_prove,2.7305393511111116
-% dy_pf_priv_commited_output,verify,2.0714240844000003
-
-% dy_priv,eval_prove,5.911952128888892
-% dy_priv,verify,6.473554282857142
 
 
 
