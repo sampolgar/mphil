@@ -258,14 +258,52 @@ These protocols satisfy:
 
 
 
+\section{Technical Overview and Approach}\label{sec:overview}
 
+The three core challenges we solve are: 1) remove pairings from DY's VRF, 2) preserve privacy, and 3) enable unlinkability. This section provides a roadmap of our approach before we detail each construction.
 
-\section{Technical Challenges in Credential Relationship Binding}
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, rounded corners, draw, fill=white, text width=2.5cm, minimum height=1.2cm, align=center, font=\small},
+    arrow/.style={thick,->,>=stealth},
+    improvement/.style={text width=2.2cm, align=center, font=\footnotesize\itshape}
+]
+% Nodes
+\node[box] (dy) {
+    \textbf{Dodis-Yampolskiy VRF}
+};
 
-The three core challenges we solve are 1) remove pairings from DY's VRF. 2) Preserve Privacy. 3) Enable Unlinkability.
+\node[box, right=of dy] (dypf) {
+    \textbf{Ch 1. Pairing-Free VRF (DY-PF)}
+};
 
+\node[box, right=of dypf] (private) {
+    \textbf{Ch 2. Privacy-Preserving VRF}
+};
+
+\node[box, right=of private] (crbn) {
+    \textbf{Ch 3. Privacy-Preserving Unlinkable VRF}
+};
+
+% Arrows 
+\draw[arrow] (dy.east) -- (dypf.west);
+\draw[arrow] (dypf.east) -- (private.west);
+\draw[arrow] (private.east) -- (crbn.west);
+
+% Improvement text below arrows
+\node[improvement, below=1cm of dy.east] (imp1) {Eliminates pairings for 3.1× performance gain};
+\node[improvement, below=1cm of dypf.east] (imp2) {Enables operations on hidden attributes};
+\node[improvement, below=1cm of private.east] (imp3) {Adds unlinkability while maintaining verifiability};
+
+\end{tikzpicture}
+\caption{Overview of our construction approach, progressing from the original Dodis-Yampolskiy VRF to our final Credential Relationship Binding Nullifier (CRBN).}
+\label{fig:vrf-construction-overview}
+\end{figure}
 
 To understand our contributions, we examine the core technical challenges in creating an efficient, privacy-preserving nullifier mechanism for hierarchical credential systems. Consider a user with a master credential (containing secret key $\k$, denoted as $sk$ below) who needs to prove possession of a context credential (with identifier $\ctx = \text{"DMV"}$, denoted as $x$) without revealing their identity or allowing them to obtain multiple DMV credentials.
+
 
 \subsection{Challenge 1: Creating a Pairing-Free Nullifier}
 
