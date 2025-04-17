@@ -81,8 +81,8 @@ Our approach leverages and extends Verifiable Random Functions (VRFs) to address
 \toprule
 \textbf{Scheme} & 
 \textbf{Pairing-} & 
-\textbf{Com. } & 
-\textbf{Com. }  & 
+\textbf{Private} & 
+\textbf{Unlinkable}  & 
 \textbf{Deterministic} & 
 \textbf{Proof} & 
 \textbf{Relative} \\
@@ -96,8 +96,8 @@ Our approach leverages and extends Verifiable Random Functions (VRFs) to address
 \midrule
 DY VRF \cite{hutchison_verifiable_2005} & \ding{55} & \ding{55} & \ding{55} & \ding{51} & Pairing & 3x slower \\
 CanDID \cite{maram2021candid} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & MPC & Very slow \\
-TACT/S3ID \cite{rabaninejad_attribute-based_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Groth Sahai + Pairing & ~1.5-2 slower \\
-SyRA \cite{crites_syra_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Sigma+Pairing & ~1.5-2 slower \\
+TACT/S3ID \cite{rabaninejad_attribute-based_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Groth Sahai + Pairing & ~1.5-2x slower \\
+SyRA \cite{crites_syra_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Sigma+Pairing & ~1.5-2x slower \\
 UTT Nullifier \cite{tomescu2022utt} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & Sigma+Pairing & 1.5x slower \\
 \textbf{Our CRBN} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & Sigma only & 1x (baseline) \\
 \bottomrule
@@ -447,70 +447,8 @@ Each construction builds upon the previous one, culminating in the Credential Re
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\section{Introduction OLD}
-
-
-
-
-
-
-\newpage
-\section{Dodis-Yampolskiy VRF: Core Structure and Security Properties}
+\section{Pairing-Free VRF Construction}\label{sec:pairing-free-vrf}
+In this section, we develop our pairing-free VRF (DY-PF), but first, we review the original DY VRF.
 
 The Dodis-Yampolskiy VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with prime-order groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, with a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The construction is as follows:
 
@@ -530,36 +468,11 @@ The Dodis-Yampolskiy VRF~\cite{hutchison_verifiable_2005} operates in a bilinear
 
 The security of this VRF rests upon the $q$-Decisional Bilinear Diffie-Hellman Inversion ($q$-DBDHI) assumption, which states that given $(g, g^{sk}, g^{(sk)^2}, \ldots, g^{(sk)^q})$ and $\tilde{g}$, the value $e(g, \tilde{g})^{1/(sk+x)}$ is computationally indistinguishable from a random element in $\mathbb{G}_T$.
 
-\subsubsection{Analysis of Security Properties}
+The pairing-based verification provides information-theoretic uniqueness, but at the cost of the pairing. Our goal is to preserve the security properties while eliminating pairings.
 
-To understand the security of the Dodis-Yampolskiy VRF, we analyze how its construction achieves the three essential VRF properties:
+\subsection{Pairing-Free Construction (DY-PF)}\label{sec-dy-pf}
 
-\subsubsection*{Uniqueness}
-Information-theoretic uniqueness is enforced by the algebraic properties of the pairing. 
-Verification Equation 1 enforces that only one valid proof $\pi$ can exist for each input, which in turn determines a unique output $y$ through Equation 2. The first equation verifies the algebraic relationship $y^{sk+x} = e(g, \tilde{g})$ without revealing $sk$:
-\begin{align}
-    e(g^{x} \cdot pk, \pi) &= e(g^{x} \cdot g^{sk}, \tilde{g}^{1/(sk + x)}) \\
-    &= e(g^{sk + x}, \tilde{g}^{1/(sk + x)}) \\
-    &= e(g, \tilde{g})^{(sk + x) \cdot 1/(sk + x)} \\
-    &= e(g, \tilde{g})
-\end{align}
-
-This uniqueness guarantee is crucial: for each $(sk,x)$ pair, only one value $\pi = \tilde{g}^{1/(sk+x)}$ can satisfy Equation 1. Consequently, only one output value $y = e(g, \pi) = e(g, \tilde{g})^{1/(sk+x)}$ can satisfy Equation 2.
-
-
-\subsubsection*{Pseudorandomness}
-The VRF output $ y = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T $ is pseudorandom under the $ $-DBDHI assumption, which implies that $ e(g, \tilde{g})^{1/(sk + x)} $ is computationally indistinguishable from a random element in $ \mathbb{G}_T $ given $ (g, g^{sk}, \ldots, g^{(sk)^q}) $ and $ \tilde{g} $. Unlike a Verifiable Unpredictable Function (VUF) which has weaker security assumptions allowing some structural relationship leakage for repeated queries, the DY VRF places $ y $ in $ \mathbb{G}_T $ and the proof $ \pi = \tilde{g}^{1/(sk + x)} $ in $ \mathbb{G}_2 $. This separation, combined with the one-way bilinear pairing $ e(g, \pi) = y $, ensures outputs appear fully random and independent across inputs, achieving pseudorandomness rather than mere unpredictability.
-
-
-\subsubsection*{Correctness} holds with honest protocol run
-
-
-
-
-
-\section{Step 1. Pairing-Free VRF in Prime-Order Groups (DY-PF)}\label{sec-dy-pf}
-
-In this section, we present our pairing-free verifiable random function (VRF), P-DY, which operates in a prime-order group and eliminates the computational overhead of bilinear pairings found in the Dodis-Yampolskiy (DY) VRF. We detail the construction, including a $\Sigma$-protocol for proof generation, and demonstrate that it satisfies correctness, uniqueness, and pseudorandomness. Notably, P-DY trades the information-theoretic uniqueness of DY for computational uniqueness, a shift we justify through the security analysis.
+Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. The message space is $\mathcal{X} = \mathbb{Z}_p$, the output space is $\mathcal{Y} = \mathbb{G}$, and the proof space is $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$.
 
 \subsection{Construction}
 
@@ -594,9 +507,8 @@ Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator
 
 \subsection{Security Analysis}
 
-\begin{remark}
-P-DY trades the \emph{information-theoretic uniqueness} of the DY VRF, enforced by pairings, for \emph{computational uniqueness} via the soundness of the $\Sigma$-protocol and the discrete logarithm assumption. This eliminates pairings while maintaining security against polynomial-time adversaries.
-\end{remark}
+Our construction replaces the stronger information-theoretic uniqueness of DY VRF with (weaker) computational uniqueness via the $\Sigma$-protocol and discrete logarithm assumption.
+
 
 \subsubsection{Correctness}
 
@@ -629,14 +541,22 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 
 
 
-\newpage
-\section{Step 2: Privacy-Preserving VRF}
 
-The P-DY VRF, relies on a public key $pk = g^{sk}$ for verification. This exposes $pk$, potentially compromising user privacy in applications like anonymous credential systems. To preserve privacy, we use committed attributes and zero-knowledge proofs, proving the VRF output $y = g^{1/(sk + x)}$ is correctly computed without revealing $sk$ or $x$. We build this up by first solving for the $q$-DDHI challenge before applying the linear relation proof for additive exponents. 
+
+
+
+
+\section{Privacy-Preserving Proofs for Inverse Relations}\label{sec:privacy-preserving-vrf}
+
+While our pairing-free VRF construction eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk$ and input $x$ during verification. In anonymous credential systems, both the master credential key $sk$ and the context identifier $x$ must remain private. This section develops zero-knowledge proof techniques for verifying VRF outputs computed from committed attributes, addressing our second technical challenge.
+
+We proceed in two stages: first proving knowledge of a single committed inverse relation, then extending to linear combinations of committed exponents.
+
 
 \subsection{Step 2.1: Proving Committed Exponent and DDHI Challenge}
 
 We begin with a simplified relation: given a commitment $\cm = g_1^x g^r$ and an element $y = g^{1/x}$, the prover demonstrates knowledge of $x$ and $r$ satisfying both equations, without revealing them. This is linked to the Decisional Diffie-Hellman Inversion (DDHI) assumption—where distinguishing $g^{1/x}$ from a random element given $g, g^x$ is computationally hard—making it a secure and essential starting point for our privacy-preserving construction.
+
 
 \begin{protocol}{Proving Knowledge of Inverse Exponent}{committed-inverse-exponent}\label{pok-committed-inverse-exponent}
 \textbf{Common Input:} Group generators $g_1, g \in \mathbb{G}$, commitment $\cm \in \mathbb{G}$, and element $y \in \mathbb{G}$ \\
@@ -667,22 +587,75 @@ We begin with a simplified relation: given a commitment $\cm = g_1^x g^r$ and an
 \end{enumerate}
 \end{protocol}
 
-This protocol achieves two goals:
+
+
+This protocol achieves two objectives simultaneously:
 \begin{enumerate}
-    \item Commitment Opening: The equation $T_1 \cdot \cm^c = g_1^{z_x} g^{z_r}$ proves the prover knows $x$, $r$ satisfying the commitment opening.
-    \item The equation $T_y \cdot g^c = y^{z_x}$ holds because $y^{a_x} \cdot g^c = y^{a_x} \cdot y^{c \cdot x} = y^{a_x + c \cdot x} = y^{z_x}$ if $y^x = g$, proving $y = g^{1/x}$ links to the same $x$ in $\cm$.
+    \item The first verification equation ($T_1 \cdot \cm^c \stackrel{?}{=} g_1^{z_x} g^{z_r}$) proves the prover knows a valid opening $(x, r)$ of the commitment $\cm$. This is a standard Schnorr-type proof for Pedersen commitments.
+    
+    \item The second equation ($T_y \cdot g^c \stackrel{?}{=} y^{z_x}$) verifies that $y^x = g$, which means $y = g^{1/x}$. This is the critical link proving that $y$ is correctly computed as the inverse exponent.
 \end{enumerate}
 
 
+\subsubsection{Security Analysis}
+
+\paragraph{Completeness:} For an honest prover with witness $(x, r)$ satisfying $\cm = g_1^x g^r$ and $y = g^{1/x}$, the verification equations hold:
+\begin{align*}
+T_1 \cdot \cm^c &= g_1^{a_x} g^{a_r} \cdot (g_1^x g^r)^c \\
+&= g_1^{a_x} g^{a_r} \cdot g_1^{x \cdot c} g^{r \cdot c} \\
+&= g_1^{a_x + x \cdot c} g^{a_r + r \cdot c} \\
+&= g_1^{z_x} g^{z_r}
+\end{align*}
+
+And for the second equation:
+\begin{align*}
+T_y \cdot g^c &= y^{a_x} \cdot g^c \\
+&= y^{a_x} \cdot (y^x)^c \quad \text{(since $y^x = g$ when $y = g^{1/x}$)} \\
+&= y^{a_x} \cdot y^{x \cdot c} \\
+&= y^{a_x + x \cdot c} \\
+&= y^{z_x}
+\end{align*}
+
+\paragraph{Special Soundness:} Given two accepting transcripts $(T_1, T_y, c, z_x, z_r)$ and $(T_1, T_y, c', z_x', z_r')$ with $c \neq c'$, we can extract:
+\[
+x = \frac{z_x - z_x'}{c - c'}, \quad r = \frac{z_r - z_r'}{c - c'}
+\]
+
+From the second verification equation, we can confirm that the extracted $x$ satisfies $y^x = g$, proving $y = g^{1/x}$. This demonstrates that no prover can produce an accepting transcript without knowing $(x, r)$ satisfying both $\cm = g_1^x g^r$ and $y = g^{1/x}$.
+
+\paragraph{Honest-Verifier Zero-Knowledge:} A simulator can produce indistinguishable transcripts by:
+\begin{enumerate}
+    \item Sampling $c, z_x, z_r \sample \mathbb{Z}_q$ randomly
+    \item Computing $T_1 = g_1^{z_x} g^{z_r} \cdot \cm^{-c}$ and $T_y = y^{z_x} \cdot g^{-c}$
+    \item Outputting the transcript $(T_1, T_y, c, z_x, z_r)$
+\end{enumerate}
+
+This simulated transcript is perfectly indistinguishable from a real execution, ensuring no information about $(x, r)$ is leaked beyond what is already implied by $\cm$ and $y$.
 
 
 
 
-\newpage
-\subsection{Step 2.1: Proving Committed Exponents with Linear Relation}
 
-Having established a zero-knowledge proof for a committed exponent tied to an inverse, we now extend this to handle two committed values, $sk$ and $x$, such that $y = g^{1/(sk + x)}$. This step introduces a linear relation between $sk$ and $x$, which is essential for the VRF output. The prover demonstrates knowledge of $sk$, $x$, and their respective randomness values, proving the relation without revealing the values themselves.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Extended Protocol: Proving Committed Inverse Linear Relations}
+
+We now extend our approach to handle linear combinations of committed values. Given commitments $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$ to values $sk$ and $x$, we want to prove that $y = g^{1/(sk + x)}$ without revealing $sk$, $x$, or the randomness values.
+
+This extension is essential for the credential binding scenario, where $sk$ is a secret key in a master credential and $x$ is a context identifier in a separate credential. The protocol must verify the correct computation of $y$ from these disparate committed values.
 
 \begin{protocol}{Proving Committed Inverse Linear Relation}{}\label{pok-committed-inverse-linear-relation}
 \textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, \cm_2, y \in \mathbb{G}$ \\
@@ -718,6 +691,67 @@ Having established a zero-knowledge proof for a committed exponent tied to an in
     \end{align*}
 \end{enumerate}
 \end{protocol}
+
+
+This protocol extends our basic approach in two key ways:
+\begin{enumerate}
+    \item It simultaneously proves knowledge of openings for two separate commitments ($\cm_1$ and $\cm_2$).
+    \item It verifies that $y^{sk+x} = g$, proving $y = g^{1/(sk+x)}$, where the exponent $sk+x$ is a linear combination of values from different commitments.
+\end{enumerate}
+
+The additional check $z_m \stackrel{?}{=} z_{sk} + z_x$ ensures consistency between the individual responses and their sum, preventing a malicious prover from using different values in different parts of the proof.
+
+\subsubsection{Security Analysis}
+
+The security analysis follows similar principles to the basic protocol, with the additional complexity of handling two commitments and their linear combination.
+
+\paragraph{Completeness:} For an honest prover, all verification equations hold by similar derivations to the basic case, with the additional consistency check $z_m = z_{sk} + z_x$ holding by construction.
+
+\paragraph{Special Soundness:} Given two accepting transcripts with different challenges, we can extract $sk$, $x$, $r_1$, and $r_2$ satisfying the commitment openings and, crucially, verify through the third equation that $y^{sk+x} = g$, proving $y = g^{1/(sk+x)}$.
+
+\paragraph{Honest-Verifier Zero-Knowledge:} A simulator can generate indistinguishable transcripts by sampling responses randomly and computing commitments that satisfy the verification equations, ensuring no information about the witness is revealed.
+
+This protocol forms the foundation for our credential binding nullifier, allowing us to prove relationships between attributes from different credentials without compromising privacy.
+
+
+
+
+
+
+% \begin{protocol}{Proving Committed Inverse Linear Relation}{}\label{pok-committed-inverse-linear-relation}
+% \textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, \cm_2, y \in \mathbb{G}$ \\
+% \textbf{Prover Input:} Witness $(sk, x, \usk_1, \usk_2)$ such that $\cm_1 = g_1^{sk} g^{\usk_1}$, $\cm_2 = g_2^{x}g^{\usk_2}$ and $ y = g^{1/(sk + x)}$ \\
+% \textbf{Relation: }
+% \[
+% \mathcal{R} = \{(\cm_1,\cm_2, y), (sk, x, \usk_1, \usk_2) \mid \cm_1 = g_1^{sk} g^{\usk} \wedge \cm_2 = g_2^{x}g^{\usk_2} \wedge y = g^{1/(sk + x)}\}
+% \]
+% \begin{enumerate}
+%     \item \textbf{Commitment:} Prover computes:
+%     \begin{align*}
+%         a_{sk}, a_x, a_{r_1}, a_{r_2} &\sample \Z_q & T_1 &\gets g_1^{a_{sk}} g^{a_{r_1}} & T_2 &\gets g_2^{a_x} g^{a_{r_2}} & T_y &\gets y^{a_{sk} + a_x}
+%     \end{align*}
+%     Sends $(T_1, T_2, T_y)$ to verifier.
+    
+%     \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+%     \item \textbf{Response:} Prover computes:
+%      \begin{align*}
+%         z_{sk} &= a_{sk} + c \cdot sk & z_x &= a_x + c \cdot x &  z_m &= (a_{sk} + a_x) + c \cdot (sk + x)\\   
+%         z_{r_1} &= a_{r_1} + c \cdot r_1 & z_{r_2} &= a_{r_2} + c \cdot r_2
+%     \end{align*}
+%     Sends $(z_{sk}, z_x, z_{r_1} z_{r_2}, z_m)$ to verifier.
+    
+%     \item \textbf{Verification:} Verifier checks:
+%     \begin{align*}
+%         T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}}g^{z_{r_1}} 
+%         &
+%         T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_2^{z_x} g^{z_{r_2}} 
+%         &
+%         T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
+%         z_m &\stackrel{?}{=} z_{sk} + z_x
+%     \end{align*}
+% \end{enumerate}
+% \end{protocol}
 
 
 
@@ -801,205 +835,167 @@ This contribution is crucial for enabling hierarchical, sybil-resistant anonymou
 
 
 
+\section{Credential Relationship Binding Nullifier}\label{sec:crbn}
 
+Building on our privacy-preserving VRF constructions, we now present the complete Credential Relationship Binding Nullifier (CRBN) system. This section addresses our third technical challenge: creating a nullifier mechanism that prevents credential reuse (Sybil attacks) while maintaining unlinkability across presentations.
 
+\subsection{Motivation and Design Goals}
 
+In a hierarchical credential system, users obtain both master credentials (containing secret key $sk$) and context credentials (tied to specific domains $x$). The CRBN provides three critical properties:
 
+\begin{enumerate}
+    \item \textbf{Uniqueness:} For each master-context credential pair, only one valid nullifier can exist, preventing users from obtaining multiple credentials for the same context
+    \item \textbf{Privacy:} The nullifier reveals nothing about the underlying credentials or user identity
+    \item \textbf{Unlinkability:} Multiple uses of the same credential relationship cannot be linked across different verifications
+\end{enumerate}
 
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, rounded corners, draw, minimum width=4.5cm, minimum height=2cm, align=center},
+    nullifier/.style={rectangle, rounded corners, draw, fill=gray!10, minimum width=5cm, minimum height=1.5cm, align=center},
+    arrow/.style={thick,->,>=stealth},
+    label/.style={font=\small\itshape}
+]
 
+% Credential boxes
+\node[box] (master) at (0,0) {
+    \textbf{Master Credential}\\
+    $\cm_1 = g_1^{sk} g^{r_1}$\\
+    \small{(e.g., Passport)}
+};
 
+\node[box] (context) at (8,0) {
+    \textbf{Context Credential}\\
+    $\cm_2 = g_2^{x} g^{r_2}$\\
+    \small{(e.g., Driver's License)}
+};
 
+% Nullifier box
+\node[nullifier] (nullifier) at (4,-3) {
+    \textbf{Committed Nullifier}\\
+    $\cm_3 = g_3^{1/(sk+x)} g^{r_3}$\\
+    $\cm_4 = \cm_3^{sk+x} g^{r_4} = g_3 g^{r_3(sk+x)+r_4}$
+};
 
+% Arrows and labels
+\draw[arrow] (master) -- (nullifier) node[midway, left, label, text width=3cm] {Secret key $sk$ from master credential};
+\draw[arrow] (context) -- (nullifier) node[midway, right, label, text width=3cm] {Context identifier $x$ from context credential};
 
+% Sybil resistance note
+\node[draw, rounded corners, fill=gray!5, text width=8cm, align=center] at (4,-5.5) {
+    \small \textbf{Sybil Resistance}: For fixed $(sk,x)$, only one valid nullifier exists\\
+    \small \textbf{Unlinkability}: $\cm_3$ and $\cm_4$ appear random for each presentation
+};
 
+\end{tikzpicture}
+\caption{Credential Relationship Binding Nullifier connecting master and context credentials}
+\label{fig:credential-nullifier-system}
+\end{figure}
 
+While our pairing-free VRF with privacy-preserving extensions addresses uniqueness and privacy, the deterministic nature of $y = g^{1/(sk+x)}$ would make presentations linkable. Our solution is to commit to the nullifier value itself, producing randomized commitments that can be verified without revealing the underlying deterministic nullifier.
 
+\subsection{Construction}
 
+We present two variants: a deterministic nullifier ensuring strict uniqueness, and a committed nullifier enabling unlinkable presentations while maintaining sybil resistance.
 
+\subsubsection{Deterministic CRBN}
 
+The deterministic CRBN directly applies our privacy-preserving VRF from Section \ref{sec:privacy-preserving-vrf}:
 
+\begin{itemize}
+    \item \textbf{Setup}: Generate group parameters and commitment bases $g_1, g_2, g \in \mathbb{G}$
+    \item \textbf{MasterCredential}: Commit to master credential attributes including the secret key $sk$: $\cm_1 = g_1^{sk} g^{r_1}$
+    \item \textbf{ContextCredential}: Commit to context credential attributes including the identifier $x$: $\cm_2 = g_2^{x} g^{r_2}$
+    \item \textbf{NullifierEval}: Compute $y = g^{1/(sk+x)}$
+    \item \textbf{NullifierProve}: Generate proof $\pi$ using Protocol~\ref{pok-committed-inverse-linear-relation}
+    \item \textbf{NullifierVerify}: Verify proof $\pi$ against commitments $\cm_1, \cm_2$ and nullifier $y$
+\end{itemize}
 
+This construction ensures uniqueness but lacks unlinkability since $y$ is deterministic for each $(sk,x)$ pair.
 
+\subsubsection{Committed CRBN}
 
+To achieve unlinkability, we extend the construction to commit the nullifier itself:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% \section{Step 2. Privacy}
-% Our VRF builds upon the $q$-DDHI assumption and this is where we start our zero knowledge proof protocol. Specifically, we want to prove (in zero knowledge) that we know $\alpha$ such that $g^{1/\alpha}$ 
-
-% Let $G$ be a cyclic group of prime order $q$, with generators $g_1, g \in G$. Assume the discrete logarithm problem (DLP) is hard in $G$, and the discrete log of $g_1$ with respect to $g$ is unknown.
-% The prover aims to prove in zero-knowledge that there exists $m \in \mathbb{Z}_q^*$ such that $\alpha \cdot \beta = 1 \mod q$, where $\beta = \frac{1}{\alpha}$, given commitments to $\alpha$ and $\beta$.
-
-% Challenges
-% Sigma protocols prove knowledge of exponents, proving knowledge of an inverse exponent. 
-
-% INSERT PROOF PROTOCOL FOR DDHI Challenge
-
-% \subsubsection*{Completeness}:
-% We show that if the prover follows the protocol honestly, all verification equations will be satisfied.
-
-% \begin{enumerate}
-%     \item The first two verification equations ($T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_\alpha} g^{z_{\usk_1}}$, $T_2 \cdot \cm_2^c \stackrel{?}{=} g_1^{z_\beta} g^{z_{\usk_2}}$) are simple Schnorr proofs of exponents which we will not expand 
-        
-%     \item Third verification equation: $T_3 \cdot \cm_3^c \stackrel{?}{=} \cm_2^{z_\alpha} g^{z_{\usk_3}}$
-%     \begin{align*}
-%         T_3 \cdot \cm_3^c &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot (\cm_2^\alpha g^{\usk_3})^c \\
-%         &= \cm_2^{a_\alpha} g^{a_{\usk_3}} \cdot \cm_2^{\alpha \cdot c} g^{\usk_3 \cdot c} \\
-%         &= \cm_2^{a_\alpha + \alpha \cdot c} g^{a_{\usk_3} + \usk_3 \cdot c} \\
-%         &= \cm_2^{z_\alpha} g^{z_{\usk_3}}
-%     \end{align*}
+\begin{protocol}{Proving Committed Nullifier for VRF}{committed-nullifier-vrf}\label{pok-committed-nullifier-vrf}
+\textbf{Common Input:} Group generators $g_1, g_2, g_3, g \in \mathbb{G}$, commitments $\cm_1, \cm_2, \cm_3, \cm_4 \in \mathbb{G}$ \\
+\textbf{Prover Input:} Witness $(sk, x, r_1, r_2, r_3, r_4)$ such that:
+    \[
+    \cm_1 = g_1^{sk} g^{r_1}, \quad \cm_2 = g_2^{x} g^{r_2}, \quad \cm_3 = g_3^{1/(sk + x)} g^{r_3}, \quad \cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
+    \]
+\textbf{Relation:}
+\[
+\mathcal{R} = \left\{ 
+\begin{array}{l} 
+(\cm_1, \cm_2, \cm_3, \cm_4), \\
+(sk, x, r_1, r_2, r_3, r_4) 
+\end{array}
+\ \middle| \
+\begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+\cm_3 = g_3^{1/(sk + x)} g^{r_3} \\
+\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
+\end{array} \right\}
+\]
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples $a_{sk}, a_x, a_{r_1}, a_{r_2}, a_{r_3}, a_{r_4} \sample \mathbb{Z}_q$ and computes:
+       \[
+       T_1 = g_1^{a_{sk}} g^{a_{r_1}}, \quad T_2 = g_2^{a_x} g^{a_{r_2}}, \quad T_3 = g_3^{a_{\beta}} g^{a_{r_3}}, \quad T_4 = \cm_3^{a_{sk} + a_x} g^{a_{r_4}}
+       \]
+       where $a_{\beta} = -a_{\beta}/(a_{sk} + a_x)$ uses a technique similar to our inverse proofs. Sends $(T_1, T_2, T_3, T_4)$ to verifier.
     
-%     \item Fourth verification equation: $T_4 \cdot \cm_4^c \stackrel{?}{=} g^{z_{\usk_4}}$
-%     \begin{align*}
-%         T_4 \cdot \cm_4^c &= g^{a_{\usk_4}} \cdot (g^{\usk_4})^c \\
-%         &= g^{a_{\usk_4}} \cdot g^{\usk_4 \cdot c} \\
-%         &= g^{a_{\usk_4} + \usk_4 \cdot c} \\
-%         &= g^{z_{\usk_4}}
-%     \end{align*}
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
     
-%     \item Fifth verification equation: $\frac{\cm_3}{\cm_4} \stackrel{?}{=} g_1$
+    \item \textbf{Response:} Prover computes:
+       \[
+       z_{sk} = a_{sk} + c \cdot sk, \quad z_x = a_x + c \cdot x, \quad z_{r_1} = a_{r_1} + c \cdot r_1, \quad z_{r_2} = a_{r_2} + c \cdot r_2
+       \]
+       \[
+       z_{r_3} = a_{r_3} + c \cdot r_3, \quad z_{r_4} = a_{r_4} + c \cdot r_4, \quad z_{\beta} = a_{\beta} + c \cdot \frac{1}{sk + x}
+       \]
+       Sends $(z_{sk}, z_x, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4}, z_{\beta})$ to verifier.
     
-%     Using the relations $\beta = \frac{1}{\alpha}$ and $\usk_4 = \usk_3 + \alpha \cdot \usk_2$:
-%     \begin{align*}
-%         \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
-%         &= (g_1^\beta g^{\usk_2})^\alpha g^{\usk_3} \\
-%         &= g_1^{\beta \cdot \alpha} g^{\usk_2 \cdot \alpha} g^{\usk_3} \\
-%         &= g_1^{\frac{1}{\alpha} \cdot \alpha} g^{\usk_2 \cdot \alpha + \usk_3} \\
-%         &= g_1 g^{\usk_3 + \alpha \cdot \usk_2} \\
-%         &= g_1 g^{\usk_4} \\
-%         &= g_1 \cdot \cm_4
-%     \end{align*}
-    
-%     Therefore:
-%     \begin{align*}
-%         \frac{\cm_3}{\cm_4} = \frac{g_1 \cdot \cm_4}{\cm_4} = g_1
-%     \end{align*}
-% \end{enumerate}
+    \item \textbf{Verification:} Verifier checks:
+       \[
+       T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}, \quad T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}, \quad T_3 \cdot \cm_3^c \stackrel{?}{=} g_3^{z_{\beta}} g^{z_{r_3}}
+       \]
+       \[
+       T_4 \cdot \cm_4^c \stackrel{?}{=} \cm_3^{z_{sk} + z_x} g^{z_{r_4}}
+       \]
+       
+       Additionally verifies that $\cm_4 / g_3$ represents a valid randomization term (i.e., it's of the form $g^s$ for some $s \in \mathbb{Z}_q$).
+\end{enumerate}
+\end{protocol}
 
-% Since all verification equations are satisfied when the prover follows the protocol, we conclude that our sigma protocol satisfies the completeness property.
+This protocol extends our previous approaches with two key innovations:
+\begin{enumerate}
+    \item The nullifier $g^{1/(sk+x)}$ is now embedded in commitment $\cm_3$ rather than revealed directly
+    \item The auxiliary commitment $\cm_4$ enables verification that $\cm_3$ correctly commits to $g_3^{1/(sk+x)}$ by proving $\cm_3^{sk+x} = g_3 g^s$ for some randomization $s$
+\end{enumerate}
 
+The construction creates a cryptographic binding between the deterministic nullifier and the committed values, while the randomization ensures presentations remain unlinkable.
 
-% \subsubsection*{Soundness}
-% We prove the special soundness property by demonstrating that given two accepting transcripts with identical first messages but different challenges, we can extract a valid witness satisfying all relations required by the protocol.
+\subsection{Security Analysis}
 
-% Let $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ and $(T_1, T_2, T_3, T_4, c', z'_\alpha, z'_\beta, z'_{\usk_1}, z'_{\usk_2}, z'_{\usk_3}, z'_{\usk_4})$ be two accepting transcripts with $c \neq c'$.
+\subsubsection{Sybil Resistance}
 
-% \begin{enumerate}
-%     \item \textbf{Witness extraction:}
-    
-%     Following the standard extraction technique for sigma protocols, we compute each witness component:
-%     \begin{align}
-%     \alpha &= \frac{z_\alpha - z'_\alpha}{c - c'} & x &= \frac{z_\beta - z'_\beta}{c - c'} \\
-%     \usk_1 &= \frac{z_{\usk_1} - z'_{\usk_1}}{c - c'} & \usk_2 &= \frac{z_{\usk_2} - z'_{\usk_2}}{c - c'} \\
-%     \usk_3 &= \frac{z_{\usk_3} - z'_{\usk_3}}{c - c'} & \usk_4 &= \frac{z_{\usk_4} - z'_{\usk_4}}{c - c'}
-%     \end{align}
-    
-%     These extracted values are guaranteed to be consistent with the protocol's verification equations precisely because both transcripts are accepting.
-    
-%     \item \textbf{Verification of commitment relations:}
-    
-%     We first show that the extracted witness satisfies $\cm_1 = g_1^m g^{\usk_1}$. From the acceptance of both transcripts, we have:
-%     \begin{align}
-%         T_1 \cdot \cm_1^c &= g_1^{z_\alpha} g^{z_{\usk_1}} \\
-%         T_1 \cdot \cm_1^{c'} &= g_1^{z'_\alpha} g^{z'_{\usk_1}}
-%     \end{align}
-    
-%     Dividing these equations and substituting our extracted values:
-%     \begin{align}
-%         \cm_1^{c-c'} &= g_1^{z_\alpha-z'_\alpha} g^{z_{\usk_1}-z'_{\usk_1}} \\
-%         &= g_1^{\alpha(c-c')} g^{\usk_1(c-c')} \\
-%         \Rightarrow \cm_1 &= g_1^\alpha g^{\usk_1}
-%     \end{align}
-    
-%     Using identical extraction and verification techniques with the corresponding verification equations, we establish that:
-%     \begin{align}
-%         \cm_2 &= g_1^\beta g^{\usk_2} \\
-%         \cm_3 &= \cm_2^\alpha g^{\usk_3} \\
-%         \cm_4 &= g^{\usk_4}
-%     \end{align}
-    
-%     \item \textbf{Verification of the multiplicative inverse relation ($\beta = \frac{1}{\alpha}$):}
-    
-%     The core cryptographic property enforced by our protocol is the multiplicative inverse relationship between $m$ and $x$. This is where the protocol's security guarantee is ultimately derived from. We verify this relationship using the final verification equation $\frac{\cm_3}{\cm_4} = g_1$.
-    
-%     Substituting our extracted witness values:
-%     \begin{align}
-%         \frac{\cm_3}{\cm_4} &= g_1 \\
-%         \frac{\cm_2^\alpha g^{\usk_3}}{g^{\usk_4}} &= g_1 \\
-%         \cm_2^\alpha g^{\usk_3 - \usk_4} &= g_1
-%     \end{align}
-    
-%     Further substituting $\cm_2 = g_1^x g^{\usk_2}$:
-%     \begin{align}
-%         (g_1^x g^{\usk_2})^\alpha g^{\usk_3 - \usk_4} &= g_1 \\
-%         g_1^{x \cdot \alpha} g^{\alpha \cdot \usk_2 + \usk_3 - \usk_4} &= g_1
-%     \end{align}
-    
-%     In the generic group model, this equation can only hold if:
-%     \begin{align}
-%         \beta \cdot \alpha &= 1 \\
-%         \alpha \cdot \usk_2 + \usk_3 - \usk_4 &= 0
-%     \end{align}
-    
-%     These equations immediately give us the two critical relations:
-%     \begin{align}
-%         \beta &= \frac{1}{\alpha} \\
-%         \usk_4 &= \usk_3 + \alpha \usk_2
-%     \end{align}
-    
-%     The first relation confirms that our protocol successfully enforces the multiplicative inverse relationship between $\alpha$ and $\beta$. The second relation verifies the consistency of the randomizers across the commitments, ensuring that no malicious prover can construct valid-looking commitments without knowing values that satisfy all required relations.
-% \end{enumerate}
+The CRBN provides sybil resistance through the uniqueness property: for any fixed master credential key $sk$ and context $x$, there exists only one valid nullifier value $g^{1/(sk+x)}$ that will verify correctly. Even with the committed variant, the underlying deterministic value ensures a user cannot create multiple valid credential relationships for the same context.
 
-% We have thus demonstrated that our extractor obtains a complete and valid witness $(\alpha, \beta, \usk_1, \usk_2, \usk_3, \usk_4)$ satisfying all relations in the statement, establishing the special soundness property of our sigma protocol. This ensures that no prover can successfully convince a verifier without knowledge of values satisfying the multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ and the associated consistency requirements.
+This uniqueness is rooted in the algebraic structure of the inverse relationship. If a user could produce two different nullifiers $y$ and $y'$ for the same $(sk,x)$ pair, both would satisfy $y^{sk+x} = g$ and $y'^{sk+x} = g$, which implies $(y/y')^{sk+x} = 1$. In a prime-order group, this is only possible if $y = y'$ or $sk+x \equiv 0 \pmod{p}$, the latter occurring with negligible probability.
 
-% \subsubsection*{Zero-Knowledge}
-% We prove the honest-verifier zero-knowledge property by presenting a simulator that produces transcripts indistinguishable from real protocol executions without knowing any witness.
+\subsubsection{Privacy}
 
-% \begin{enumerate}
-%     \item \textbf{Simulator Construction:}
-    
-%     Given public input $(g_1, g, \cm_1, \cm_2, \cm_3, \cm_4)$ and any challenge $c \in \mathbb{Z}_q$, our simulator:
-    
-%     \begin{itemize}
-%         \item Samples $z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4} \sample \mathbb{Z}_q$ uniformly at random
-        
-%         \item Computes the first message by working backwards from the verification equations:
-%         \begin{align}
-%             T_1 &\gets g_1^{z_\alpha} g^{z_{\usk_1}} \cdot \cm_1^{-c} \\
-%             T_2 &\gets g_1^{z_\beta} g^{z_{\usk_2}} \cdot \cm_2^{-c} \\
-%             T_3 &\gets \cm_2^{z_\alpha} g^{z_{\usk_3}} \cdot \cm_3^{-c} \\
-%             T_4 &\gets g^{z_{\usk_4}} \cdot \cm_4^{-c}
-%         \end{align}
-        
-%         \item Outputs the transcript $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$
-%     \end{itemize}
-    
-%     \item \textbf{Perfect Indistinguishability:}
-    
-%     In a real protocol execution with an honest prover, the responses have the form $z_\alpha = a_\alpha + c \cdot \alpha$ where $a_\alpha$ are uniformly random values. Since $a_\alpha \sample \mathbb{Z}_q$ and addition with $c \cdot \alpha$ is a permutation over $\mathbb{Z}_q$, the distribution of real responses is uniform over $\mathbb{Z}_q$.
-    
-%     The simulator directly samples responses uniformly from $\mathbb{Z}_q$, matching this distribution exactly. Given these responses and the challenge $c$, the first message components $T_i$ are uniquely determined by the verification equations in both real and simulated cases.
-    
-%     Consequently, the joint distribution of $(T_1, T_2, T_3, T_4, c, z_\alpha, z_\beta, z_{\usk_1}, z_{\usk_2}, z_{\usk_3}, z_{\usk_4})$ is identical for both the simulator and the honest protocol.
-% \end{enumerate}
+Both the deterministic and committed variants protect the privacy of credential attributes. The zero-knowledge property of our protocols ensures that nothing is revealed about $sk$ or $x$ beyond the fact that they satisfy the nullifier relationship.
 
-% This construction demonstrates that our protocol satisfies perfect honest-verifier zero-knowledge. Notably, the simulator succeeds without requiring knowledge of the critical multiplicative inverse relationship $\beta = \frac{1}{\alpha}$ or any other witness values, confirming that the protocol reveals no information about these secret values beyond what is already implied by the statement being proven.
+In the deterministic variant, the nullifier $y = g^{1/(sk+x)}$ is pseudorandom under the $q$-DDHI assumption, appearing as a random group element to any party not knowing $sk$ and $x$. The committed variant provides even stronger privacy by hiding the nullifier value itself.
+
+\subsubsection{Unlinkability}
+
+The committed CRBN variant enables unlinkable presentations through randomized commitments. Each time a user presents their credential relationship, they generate fresh randomness $r_3, r_4$ for commitments $\cm_3$ and $\cm_4$. These commitments appear as new, unrelated values in each presentation, preventing linking across verifications.
+
+The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ reveal no information about the underlying deterministic nullifier. Even a verifier who sees multiple presentations of the same credential relationship cannot determine whether they originated from the same user.
 
 
 
@@ -1022,11 +1018,49 @@ This contribution is crucial for enabling hierarchical, sybil-resistant anonymou
 
 
 
-\subsection{Performance Analysis}
-Benchmarks were performed on MacBook Air M2 16GB RAM using our Rust implementation with the arkworks library \cite{arkworks_contributors_arkworks_2022}. Compared to the state-of-the-art nullifier scheme from \cite{tomescu2022utt},
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Performance Evaluation}\label{sec:performance}
+
+We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares our constructions against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification.
 
 \begin{table}[ht]
 \begin{center}
@@ -1049,10 +1083,36 @@ Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}       & 2.01 & 2.9x  
 \par\medskip
 \raggedright
 \footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
-
-\footnotesize{$^2$[Your second footnote text here]} 
 \end{center}
 \end{table}
 
 
+Our evaluation reveals several key findings:
 
+\begin{enumerate}
+    \item \textbf{Pairing Elimination:} Our DY-PF construction achieves a 3.1× speedup over the original DY VRF by eliminating pairing operations, demonstrating the efficiency benefits of our approach.
+    
+    \item \textbf{Privacy Preservation Overhead:} Adding privacy preservation through commitments inevitably increases computational costs, but our DY-PF-Private design achieves a 5.5× speedup over comparable pairing-based private VRF schemes.
+    
+    \item \textbf{Unlinkability Trade-off:} The committed nullifier variant (DY-PF-Private-ComOut) involves additional operations for commitment handling, yet still maintains a 2.9× evaluation speedup and 3.9× verification speedup over pairing-based alternatives.
+\end{enumerate}
+
+These performance improvements have significant practical implications. The verification time of 1.65ms for our committed nullifier means that credential binding can be performed at interactive speeds on standard hardware. This enables real-time verification in applications like authentication systems, doorkey access, and mobile identity solutions.
+
+Even with the additional privacy and unlinkability properties, our CRBN construction remains efficient enough for practical deployment in resource-constrained environments like mobile devices, where the elimination of pairing operations provides particular benefits in terms of battery usage and computational demand.
+
+\subsection{Applications}
+
+The CRBN enables several important applications for privacy-preserving identity systems:
+
+\begin{enumerate}
+    \item \textbf{Hierarchical Credential Systems:} Users can prove relationships between credentials from different issuers without revealing their identity or enabling tracking.
+    
+    \item \textbf{Private Revocation:} The nullifier can be used to implement privacy-preserving revocation mechanisms where credentials can be invalidated without compromising user anonymity.
+    
+    \item \textbf{One-Time Credentials:} Services can issue credentials meant for single use, with nullifiers ensuring they cannot be reused while maintaining privacy.
+    
+    \item \textbf{Secure Attribute Aggregation:} Organizations can verify attribute relationships across credentials (e.g., "this person's income exceeds their claimed threshold") without learning the underlying values.
+\end{enumerate}
+
+These applications demonstrate how CRBN addresses a critical gap in privacy-preserving digital identity: enabling hierarchical credential structures with binding enforceable through zero-knowledge proofs.
