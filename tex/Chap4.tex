@@ -42,6 +42,11 @@ Real-world credentials naturally form a hierarchy, this is notable when applying
 
 This presents a core technical challenge: \emph{How can we create a nullifier that cryptographically proves the relationship between two separate credentials without revealing the underlying attributes or enabling tracking across verifications?}
 
+\section{SHOULD WE INCLUDE A CHAPTER ROADMAP?}
+
+% \subsection*{Chapter Organization}
+% The remainder of this chapter is organized as follows: Section 4.3 introduces our pairing-free VRF construction in prime-order groups. Section 4.4 presents our zero-knowledge proof protocol for multiplicative inverse relationships. Section 4.5 combines these components to construct the complete Credential Relationship Binding Nullifier (CRBN) system and demonstrates its integration with our identity framework. Finally, Section 4.6 provides a comprehensive performance evaluation comparing our approach to existing techniques.
+
 
 \subsection{Technical Challenges and Approach}
 
@@ -76,32 +81,33 @@ Our approach leverages and extends Verifiable Random Functions (VRFs) to address
 \toprule
 \textbf{Scheme} & 
 \textbf{Pairing-} & 
-\textbf{Committed} & 
-\textbf{Committed} & 
+\textbf{Com. } & 
+\textbf{Com. }  & 
 \textbf{Deterministic} & 
 \textbf{Proof} & 
-\textbf{Relative} 
-\\
+\textbf{Relative} \\
  & 
  \textbf{Free} & 
- \textbf{Inputs} & 
- \textbf{Outputs} & 
- \textbf{Outputs} & 
+ \textbf{Inputs}$^1$ & 
+ \textbf{Outputs}$^2$ & 
+ \textbf{Value}$^3$ & 
  \textbf{Type} & 
- \textbf{Efficiency} \\
+ \textbf{Ver. Time}$^4$ \\
 \midrule
-DY VRF \cite{hutchison_verifiable_2005} & \ding{55} & \ding{55} & \ding{55} &  \ding{51} & Pairing & 3x slower \\
-CanDID \cite{maram2021candid} & \ding{51} & \ding{51} & \ding{55} & \ding{55} &MPC & exponentially slow \\
-SyRA's Function \cite{crites_syra_2024} & \ding{51} & \ding{51} & \ding{55} & ?? & ZK proofs & ? \\
-UTT Nullifier \cite{tomescu2022utt} & \ding{55} & \ding{51} & \ding{51} & \ding{51} &Sigma+Pairing & 1.5x slower \\
-\textbf{Our CRBN} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & Sigma only & 1x (baseline) \\
+DY VRF \cite{hutchison_verifiable_2005} & \ding{55} & \ding{55} & \ding{55} & \ding{51} & Pairing & 3x slower \\
+CanDID \cite{maram2021candid} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & MPC & Very slow \\
+TACT/S3ID \cite{rabaninejad_attribute-based_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Groth Sahai + Pairing & ~1.5-2 slower \\
+SyRA \cite{crites_syra_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Sigma+Pairing & ~1.5-2 slower \\
+UTT Nullifier \cite{tomescu2022utt} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & Sigma+Pairing & 1.5x slower \\
+\textbf{Our CRBN} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & Sigma only & 1x (baseline) \\
 \bottomrule
 \end{tabular}
 \end{center}
 \vspace{1em}
-\footnotesize{Hidden Inputs: The nullifier doesn't reveal user's secret key or credential attributes}\\
-\footnotesize{Works with Commitments: Can operate on attributes committed in credential structures}\\
-\footnotesize{Efficiency: Approximate comparison of verification costs based on our benchmarks}
+\footnotesize{$^1$Operates on inputs (e.g., secret keys, attributes) hidden in commitments.} \\
+\footnotesize{$^2$Nullifier can be presented as a commitment for unlinkability.} \\
+\footnotesize{$^3$Ensures a unique underlying nullifier value per user-context pair for sybil resistance.} \\
+\footnotesize{$^4$Approximate verification time relative to CRBN, based on benchmarks in Section X.}
 \end{table}
 
 Previous systems have addressed aspects of hierarchical credential binding and sybil resistance, but all have significant limitations:
@@ -111,9 +117,9 @@ Previous systems have addressed aspects of hierarchical credential binding and s
     
     \item \textbf{CanDID}~\cite{maram2021candid} clearly defines the master/context credential relationship but compromises privacy by maintaining mappings between credential public keys, enabling linkability across interactions.
     
-    \item \textbf{Pairing-based systems} like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024} implement hierarchical credentials but suffer from efficiency issues due to their reliance on costly cryptographic primitives.
+    \item \textbf{Pairing-based systems} like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024} implement hierarchical credentials but suffer from efficiency issues due to their reliance on pairings and S3ID uses Groth Sahai proofs which are less efficient than $\Sigma$-protocols.
     
-    \item \textbf{Standard VRFs}~\cite{hutchison_verifiable_2005} could generate unique nullifiers but reveal the user's public key during verification, compromising anonymity.
+    \item \textbf{Standard VRFs}~\cite{hutchison_verifiable_2005} could generate unique nullifiers but use pairings and reveal the user's public key during verification, compromising anonymity.
 \end{itemize}
 
 While our $\MIMCABC$ system (Chapter 3) provides efficient identity binding across multiple credentials, it doesn't address the hierarchical relationship between credentials or prevent a user from obtaining multiple credentials for the same context. This chapter fills that gap.
@@ -123,207 +129,84 @@ While our $\MIMCABC$ system (Chapter 3) provides efficient identity binding acro
 We advance anonymous credential systems with three key contributions:
 
 \begin{enumerate}
-    \item \textbf{Pairing-Free VRF Construction}: We redesign the Dodis-Yampolskiy VRF for standard prime-order groups, eliminating pairings while maintaining security under the $q$-DDHI assumption. Our construction transforms $y = e(g, \tilde{g})^{1/(sk+x)}$ to $y = g^{1/(sk+x)}$ with a novel verification approach.
+    \item \textbf{Pairing-Free VRF Construction}: We redesign the Dodis-Yampolskiy VRF for standard prime-order groups, eliminating pairings while maintaining security under the $q$-DDHI assumption. Our construction transforms $y = e(g, \tilde{g})^{1/(sk+x)}$ to $y = g^{1/(sk+x)}$ with a novel verification approach. We show a 3.1x speedup of our construction against the DY VRF. 
     
     \item \textbf{Zero-Knowledge Protocols for Inverse Relations}: We develop efficient $\Sigma$-protocols to prove knowledge of committed inverse exponents—a crucial building block for private nullifier verification. These protocols enable statements of the form:
     \[
     \zkpok\{(sk, x, r_1, r_2) : \cm_1 = g_1^{sk}g^{r_1} \land \cm_2 = g_2^{x}g^{r_2} \land y = g^{1/(sk+x)}\}
     \]
     
-    \item \textbf{Credential Relationship Binding Nullifier (CRBN)}: We integrate these components into a complete system that binds master credentials to context credentials via nullifiers. Our implementation is 33\% faster for nullifier generation and 60\% faster for verification compared to pairing-based alternatives.
+    \item \textbf{Credential Relationship Binding Nullifier (CRBN)}: We integrate these components into a complete system that binds master credentials to context credentials via nullifiers. Our two constructions, 1) producing a deterministic nullifier and 2) producing a committed nullifier, are respectively 5.5x and 2.9x faster for  $\VRFEval+\VRFProve$ and 4.6x and 3.9x faster for $\VRFVerify$ compared to the fastest pairing-based alternative we found \cite{tomescu2022utt}.
 \end{enumerate}
 
 These contributions enable a privacy-preserving credential hierarchy with sybil resistance, addressing a critical gap in existing anonymous credential systems. Our approach maintains the privacy guarantees of $\MIMCABC$ while adding the ability to enforce context-specific uniqueness—balancing privacy with the accountability requirements of real-world identity systems.
 
-\section{Preliminaries}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Introduction OLD}
-
-In Chapters 2 and 3, we developed a robust foundation for anonymous credentials, evolving from single-issuer Attribute-Based Anonymous Credentials $(\ABC)$ to the Multi-Issuer Multi-Credential ABC $(\MIMCABC)$ system with identity binding security. $\MIMCABC$ enables users to privately prove that credentials from multiple, mutually distrusting issuers belong to the same identity, a significant advance for applications like federated identity proofs or content credentialing. However, real-world identity systems impose additional requirements that $\MIMCABC$ does not fully address: hierarchical structure and sybil resistance for context-specific credentials.
-
-In practice, credentials often form a natural hierarchy, with foundational identities—such as government-issued IDs or passports—serving as Master Credentials, and dependent credentials—like driver’s licenses, professional certificates, or access rights—acting as Context Credentials. Furthermore, regulatory frameworks like KYC/AML demand accountability, requiring systems to prevent sybil attacks where users illegitimately obtain multiple credentials for the same context (e.g., multiple driver’s licenses). Furthermore, nullifiers can enable efficient revocation. 
-
-While MIMC-ABC ensures credentials share a single identity, it lacks mechanisms to enforce this hierarchical dependency or prevent sybil attacks in a privacy-preserving manner, as its identity binding operates agnostically across all credentials without distinguishing their roles or contexts. To meet these practical and regulatory needs, we must extend MIMC-ABC with a cryptographic framework that organizes credentials hierarchically and ensures context-specific uniqueness, all while preserving user anonymity and computational efficiency
-
-
-\subsection{Problem Statement}
-
-We want to improve MIMC-ABC for real-world use. Our goal is a private credential hierarchy with Sybil resistance. A user has a Master Credential with a secret key $\k$. They also have Context Credentials with unique IDs $\ctx$ (e.g., $\mathcal{H}(\text{"DriverLicense"})$). We need a mechanism that:
-\begin{enumerate}
-    \item Links each Context Credential to the Master Credential. It uses a unique nullifier $\nul$ from committed values $\k$ and $\ctx$ from different commitments.
-    \item Prevents sybil attacks. It prevents multiple nullifiers for the same $(k, \ctx)$ pair.
-    \item Verifies nullifier correctness in zero-knowledge. It hides $\k$ and $\ctx$.
-\end{enumerate}
-
-
-Our main challenge is:
-\begin{center}
-\emph{How do we efficiently generate a verifiable nullifier that proves the binding relationship between two separate credentials without leaking any additional information}
-\end{center}
-
-E.g.
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Passport}{%
-                \id: 12345, \\
-                \ctx: "master", \\
-                \exp: "10/11/2026" \\
-                \k: 54321
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Driver License}{%
-                 \id: 12345, \\
-                 \ctx: "DMV", \\
-                 \exp: "10/11/2028"
-                }
-            \end{pcvstack}
-            \begin{pcvstack}
-                \procedure[space=auto]{Nullifier}{%
-                 \textsf{n} = 1/(\k + "DMV") \\
-                 \nul = g^{\textsf{n}}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{Example Credential and Nullifier for context DMV}
-    \label{fig:two-creds}
-\end{figure}
-
-
-
-\subsection{Background Work}
-
-Past works tackled hierarchy and sybil resistance in credential systems. None fully balances privacy, efficiency, and flexibility. 
-\begin{enumerate}
-    \item The UTT anonymous payment system ~\cite{tomescu2022utt} is the closest work, using a registration credential (like a Master Credential) and the coins are also credentials using serial numbers (like Context Credentials) where a coin can only be spent once. UTT uses pairings in their pseudorandom function which we benchmark against and show our speedup.
-
-    \item CanDID~\cite{maram2021candid} defines Master and Context Credentials clearly, but has weakened privacy. It uses mappings between credential public keys in a table, breaking unlinkability. It also relies on an MPC-based PRF for sybil resistance. This adds complexity and overhead, unfit for lightweight use.
-
-    \item Other pairing-based systems, like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024}, offer private hierarchies. Yet, they suffer from pairing-related efficiency issues and slower zero-knowledge proofs where we use $\Sigma$-protocols, which are the most efficient zero-knowledge proofs.
-
-    \item Standard Verifiable Random Functions  (VRFs)~\cite{hutchison_verifiable_2005} reveal the user’s public key during verification impacting anonymity and furthermore are constructed with bilinear pairings.
-
-\end{enumerate}
-
-Our MIMC-ABC system (Chapter 3) binds identities efficiently and anonymously but without hierarchy and context-specific sybil resistance. We need a solution that keeps MIMC-ABC’s strengths. It must add a light, private way to handle credential hierarchies and sybil resistance.
-
-
-
-
-\subsection{Contributions}
-
-We advance anonymous credential systems by developing a lightweight, pairing-free Verifiable Random Function (VRF) construction optimized for our use-case of hierarchical credential binding and sybil resistance. Our contributions are threefold:
-
-\begin{enumerate}
-        \item \textbf{Pairing-Free VRF in Prime-Order Groups:} We adapt the Dodis-Yampolskiy VRF structure for standard prime-order groups by replacing the proof mechnaism and prove our construction retains the security properties - \emph{pseudorandomness, uniqueness, verifiability} - under the $q$-DDHI assumption. (We show the efficiency speedup of this change)
-
-        \item \textbf{Novel $\Sigma$-protocols for Inverse Exponents and Committed Inverse Exponents} We develop novel zero-knowledge proof protocols to prove knowledge of an inverse exponent and committed inverse exponent.        
-        We use these protocols to prove the correctness of the Diffie Hellman Inversion (DHI) structure used in our Pairing-Free DY VRF VRF. Both techniques are new general techniques for $\Sigma$-protocols.
-        
-        \item \textbf{Credential Relationship Binding Nullifier } We combine our VRF improvement with our novel $\Sigma$-protocols to compute a nullifier in the $\MIMCABC$ model and show it's 33\% faster for evaluation and 60\% faster for verification than previous constructions while retaining security properties.
-
-\end{enumerate}
-
-
-\subsection{System Benefits}
-Leveraging our technical contributions, the Credential Relationship Binding Nullifier (CRBN) extends the MIMC-ABC system into a complete identity framework with the following benefits:
-
-\begin{enumerate}
-    \item Cryptographically binds master credentials (containing key $\k$) to context credentials (with context identifiers $\ctx$) via a verifiable nullifier enabling accountability
-    
-    \item Enforces sybil resistance for context credentials while retaining privacy by using committed attributes and zero-knowledge proofs
-    
-    \item Integrates with the efficient $\Sigma$-protocols used throughout the credential system
-\end{enumerate}
-
-\subsection*{Chapter Organization}
-The remainder of this chapter is organized as follows: Section 4.3 introduces our pairing-free VRF construction in prime-order groups. Section 4.4 presents our zero-knowledge proof protocol for multiplicative inverse relationships. Section 4.5 combines these components to construct the complete Credential Relationship Binding Nullifier (CRBN) system and demonstrates its integration with our identity framework. Finally, Section 4.6 provides a comprehensive performance evaluation comparing our approach to existing techniques.
-
-
-
-
-
-
-
-
 
 
 
 
 
 \section{Preliminaries}
+
 \subsection{Cryptographic Assumptions}
 
 \begin{definition}[q-DDHI Assumption]
-Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Decisional-Diffie-Hellman Inversion ($q$-DDHI) assumption\cite{mitsunari_new_2002} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q$-Decisional-Diffie-Hellman Inversion ($q$-DDHI) \cite{mitsunari_new_2002} assumption states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
-\Pr\left[ x \sample \Zp^*, \quad \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}) = g^{1/x} \right] \leq \negl(\lambda)
+\left|\Pr\left[ x \sample \Zp^*, b \sample \{0,1\}, z_0 = g^{1/x}, z_1 \sample \G : \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}, z_b) = b \right] - \frac{1}{2}\right| \leq \negl(\lambda)
 \]
-where the probability is taken over the random choice of $x$ and the random coins of $\mathcal{A}$. Informally, no $\PPT$ adversary can distinguish between $g^{1/\alpha}$ from a random group element.
+Informally, given $(g, g^x, g^{x^2}, \ldots, g^{x^q})$, no PPT adversary can distinguish $g^{1/x}$ from a random group element with non-negligible advantage.
 \end{definition}
 
 \begin{remark}
-The $q$-DDHI assumption is equivalent to the $(q+1)$-generalized Diffie-Hellman assumption (GDH) as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This equivalence provides a solid theoretical foundation for the security of our VRF construction.
+The $q$-DDHI assumption is a variant of the $(q+1)$-generalized Diffie-Hellman assumption as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This assumption directly underpins the security of our pairing-free VRF construction.
 \end{remark}
 
 \begin{definition}[$q$-DBDHI Assumption]
-Let $\mathbb{G}$ and $\mathbb{G}_T$ be cyclic groups of prime order $p$ with a bilinear pairing $e: \mathbb{G} \times \mathbb{G} \times \G_2 \to \mathbb{G}_T$, and let $g$ be a generator of $\mathbb{G}$. The $q$-Decisional-Bilinear Diffie-Hellman Inversion ( $q$-DBDHI) assumption states that for any probabilistic polynomial-time (PPT) adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+Let $\mathbb{G}_1, \mathbb{G}_2, \mathbb{G}_T$ be cyclic groups of prime order $p$ with a bilinear pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \to \mathbb{G}_T$, and generators $g \in \mathbb{G}_1$, $\tilde{g} \in \mathbb{G}_2$. The $q$-Decisional-Bilinear Diffie-Hellman Inversion ($q$-DBDHI) assumption states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
-\left| \Pr\left[ x \stackrel{\$}{\leftarrow} \mathbb{Z}_p^*, \, \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}, e(g, g)^{1/x}) = 1 \right] - \Pr\left[ x \stackrel{\$}{\leftarrow} \mathbb{Z}_p^*, \, r \stackrel{\$}{\leftarrow} \mathbb{G}_T, \, \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}, r) = 1 \right] \right| \leq \negl
+\left| \Pr\left[ x \sample \Z_p^*, b \sample \{0,1\}, z_0 = e(g, \tilde{g})^{1/x}, z_1 \sample \G_T : \mathcal{A}(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g}, z_b) = b \right] - \frac{1}{2}\right| \leq \negl(\lambda)
 \]
-where the probabilities are taken over the random choices of $x \in \mathbb{Z}_p^*$, $r \in \mathbb{G}_T$, and the random coins of $\mathcal{A}$. In other words, no PPT adversary can distinguish between $e(g, g)^{1/x}$ and a random element $r$ in $\mathbb{G}_T$ given the tuple $(g, g^x, g^{x^2}, \ldots, g^{x^q})$.
+Informally, no PPT adversary can distinguish $e(g, \tilde{g})^{1/x}$ from a random element in $\mathbb{G}_T$ given $(g, g^x, \ldots, g^{x^q}, \tilde{g})$ with non-negligible advantage.
 \end{definition}
-
 
 
 \subsection{Building Blocks}
-We use the Pedersen Commitments from chapter 2, committing to a vector of messages $\cm = \CMCom([\id, \ctx, \exp, \k];\usk) = g_1^\id g_2^\ctx g_3^\exp g_4^\k g^\usk$. Pedersen Commitments are hiding, binding, and position-binding which enforces their position in the vector of messages such that the exponent at one position can't be swapped with another position. 
+
+\subsubsection{Pedersen Vector Commitments}
+We use position-binding Pedersen Commitments from Chapter 2, which allow committing to a vector of messages while hiding the values. For a message vector $[\id, \ctx, \exp, \k]$ and randomness $\usk$, the commitment is:
+\[
+\cm = \CMCom([m_1, \ldots, m_n];\usk) = g_1^{m_1} \cdots g_n^{m_n} g^\usk
+\]
+
+Pedersen Commitments provide three key properties:
+\begin{itemize}
+    \item \textbf{Hiding}: The commitment reveals no information about the committed values.
+    \item \textbf{Binding}: It's computationally infeasible to open a commitment to different values.
+    \item \textbf{Position-Binding}: Each position in the vector is cryptographically bound to its specific base element, preventing attribute swapping.
+\end{itemize}
 
 
-
-
-
+\subsubsection{Verifiable Random Functions}
+A Verifiable Random Function (VRF) \cite{micali_verifiable_1999, hutchison_verifiable_2005} is a pseudorandom function that provides proofs of correct evaluation. Following \cite{bitansky_verifiable_2020}, a VRF consists of these algorithms:
 
 \begin{definition}[Verifiable Random Function]
-We use the definition by \cite{bitansky_verifiable_2020} A Verifiable Random Function (VRF) is a tuple of probabilistic polynomial-time algorithms $(\VRFGen, \VRFEval, \VRFProve, \VRFVerify)$ with an associated message space $\mathcal{X}$, output space $\mathcal{Y}$ and proof space $\Pi$ defined as:
+A VRF is a tuple of PPT algorithms \\
+$(\VRFGen, \VRFEval, \VRFProve, \VRFVerify)$ with message space $\mathcal{X}$, output space $\mathcal{Y}$ and proof space $\Pi$ where:
 \begin{itemize}
-    \item $\VRFGen(1^\lambda) \to (sk, pk)$: Takes a security parameter $\lambda$ and outputs a secret key $sk$ and a public key $pk$.
-    
-    \item $\VRFEval(sk,x) \to y$: On input $x \in \mathcal{X}$ and secret key $sk$, outputs a value $y \in \mathcal{Y}$.
-    
-    \item $\VRFProve(sk,x) \to \pi$: On input $x \in \mathcal{X}$ and secret key $sk$, produces a proof $\pi$ that $y$ is consistent with the public key $pk$.
-    
-    \item $\VRFVerify(pk,x, y, \pi) \to \{0,1\}$: Using the public key $pk$, verifies that $y$ is the correct output for input $x$ with proof $\pi$, returning 1 if valid, 0 otherwise.
+    \item $\VRFGen(1^\lambda) \to (sk, pk)$: Generates a secret key $sk$ and public key $pk$.
+    \item $\VRFEval(sk,x) \to y$: Computes the VRF output $y \in \mathcal{Y}$ for input $x \in \mathcal{X}$ using secret key $sk$.
+    \item $\VRFProve(sk,x) \to \pi$: Produces a proof $\pi \in \Pi$ that $y = \VRFEval(sk,x)$ is computed correctly.
+    \item $\VRFVerify(pk,x,y,\pi) \to \{0,1\}$: Verifies that $y$ is the correct VRF output for input $x$ using proof $\pi$.
 \end{itemize}
-    
 \end{definition}
 
-A $\mathrm{VRF}$ must satisfy three properties:
+A secure VRF must satisfy the following properties:
+
 \begin{itemize}
-    \item \textbf{Completeness:} For every security parameter $\lambda \in \mathbb{N}$ and input $x \in \{0,1\}^{n(\lambda)}$:
+    \item \textbf{Completeness:} Honest evaluation and proof generation always passes verification:
     \[
-    \Pr\left[ \VRFVerify(pk,x, y, \pi) = 1 \ \middle| \ 
+    \Pr\left[ \VRFVerify(pk,x,y,\pi) = 1 \ \middle| \ 
     \begin{array}{l}
         (sk, pk) \leftarrow \VRFGen(1^\lambda) \\
         y = \VRFEval(sk,x) \\
@@ -332,50 +215,55 @@ A $\mathrm{VRF}$ must satisfy three properties:
     \right] = 1
     \]
     
-    \item \textbf{Uniqueness:} For every security parameter $\lambda \in \mathbb{N}$, input $x \in \{0,1\}^{n(\lambda)}$, and arbitrary public key $pk^* \in \{0,1\}^{k(\lambda)}$, there exists at most a single $y \in \{0,1\}^{m(\lambda)}$ for which there exists an accepting proof $\pi$. That is,
+    \item \textbf{Uniqueness:} For each input $x$ and public key $pk$, only one output $y$ can be verified:
     \[
-    \text{if} \quad \VRFVerify(pk^*, \pi_0, x, y_0) = \VRFVerify(pk^*, \pi_1, x, y_1) = 1 \quad \text{then} \quad y_0 = y_1
+    \text{if} \quad \VRFVerify(pk, x, y_0, \pi_0) = \VRFVerify(pk, x, y_1, \pi_1) = 1 \quad \text{then} \quad y_0 = y_1
     \]
     
-    \item \textbf{Adaptive Indistinguishability:} For any adversary $\mathcal{A}(1^\lambda)$, consider the following game $\mathcal{G}_{\mathcal{A}}^{\text{vrf}}$:
+    \item \textbf{Pseudorandomness:} The VRF output is indistinguishable from random for any input not previously queried, defined by the following game $\mathcal{G}_{\mathcal{A}}^{\text{vrf}}$:
     \begin{enumerate}
         \item The VRF challenger samples $(sk, pk) \leftarrow \VRFGen(1^\lambda)$, and sends $pk$ to $\mathcal{A}$.
-        \item $\mathcal{A}$ submits to a challenger evaluation queries $x_1, \ldots, x_Q$, and gets back from the challenger $(y_i, \pi_i), \ldots, (y_Q, \pi_Q)$, where $y_i = \VRFEval(sk, x_i)$, $\pi_i \leftarrow \VRFProve(x_i, sk)$.
-        \item At any point, including between evaluation queries, $\mathcal{A}$ may submit a challenge input $x_* \in \{0,1\}^{n(\lambda)}$. The challenger then sets $y_0^* = \VRFEval(sk, x_*)$, $y_1^* \leftarrow \{0,1\}^{m(\lambda)}$, samples $b \leftarrow \{0,1\}$, and sends $y_b^*$ to $\mathcal{A}$. (The adversary $\mathcal{A}$ may then make additional evaluation queries.)
-        \item At the end, $\mathcal{A}$ outputs a guess $b'$. The result of the game $\mathcal{G}_{\mathcal{A}}^{\text{vrf}}(\lambda)$ is 1 if $b' = b$, and 0 otherwise.
+        \item $\mathcal{A}$ submits evaluation queries $x_1, \ldots, x_Q \in \mathcal{X}$, and receives $(y_i, \pi_i)$ for each query, where $y_i = \VRFEval(sk, x_i)$ and $\pi_i \leftarrow \VRFProve(sk, x_i)$.
+        \item At any point, $\mathcal{A}$ submits a challenge input $x_* \in \mathcal{X}$ such that $x_* \not\in \{x_1, \ldots, x_Q\}$.
+        \item The challenger computes $y_0^* = \VRFEval(sk, x_*)$, samples $y_1^* \sample \mathcal{Y}$ uniformly at random, then samples $b \sample \{0,1\}$ and sends $y_b^*$ to $\mathcal{A}$.
+        \item $\mathcal{A}$ may continue to make evaluation queries for inputs other than $x_*$.
+        \item At the end, $\mathcal{A}$ outputs a guess $b'$. The game outputs 1 if $b' = b$, and 0 otherwise.
     \end{enumerate}
     
-    We say that $\mathcal{A}$ is \textit{admissible} if in the above game it is always the case that $x_* \not\in \{x_i | i \in [Q]\}$. We require that any polynomial-size admissible adversary wins the game with negligible advantage:
+    We say that the VRF satisfies pseudorandomness if for all PPT adversaries $\mathcal{A}$:
     \[
     \text{Adv}_{\mathcal{A}}^{\text{vrf}} := \left|\Pr\left[\mathcal{G}_{\mathcal{A}}^{\text{vrf}}(\lambda) = 1\right] - \frac{1}{2}\right| \leq \text{negl}(\lambda)
     \]
+\end{itemize}
+
+
     
-    We say that the VRF satisfies \textit{Selective Indistinguishability} (rather than adaptive) if $\mathcal{A}$ submits the challenge query $x_*$ at the beginning of the game, before getting $pk$ and making any evaluation query.
-\end{itemize}
+In our work, we focus on adapting the Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005}, which computes $y = e(g, \tilde{g})^{1/(sk+x)}$ in bilinear groups, to work efficiently in standard prime-order groups without pairings.
 
-\subsubsection{Zero-Knowledge Proofs}
-A zero-knowledge proof (ZKP) enables a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ that a statement $x \in L$ holds for a language $L$, without revealing any witness $w$. Formally, an interactive proof system $(\mathcal{P}, \mathcal{V})$ for $L$ satisfies:
+\subsubsection{Zero-Knowledge Proofs and Sigma-Protocols}
+Our credential binding mechanism relies on zero-knowledge proofs, particularly Sigma-protocols, to verify relations between committed values without revealing them.
+
+A Sigma-protocol is a three-move interactive proof system where:
+\begin{enumerate}
+    \item The prover $\mathcal{P}$ sends a commitment message $a$.
+    \item The verifier $\mathcal{V}$ sends a random challenge $e$.
+    \item The prover responds with $z$, and $\mathcal{V}$ accepts if the verification equation holds.
+\end{enumerate}
+These protocols satisfy:
 \begin{itemize}
-    \item \textbf{Completeness}: If $x \in L$, then $\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] \geq 1 - \negl(\lambda)$.
-    \item \textbf{Soundness}: If $x \notin L$, then for any $\mathcal{P}^*$, $\Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] \leq \negl(\lambda)$.
-    \item \textbf{Zero-Knowledge}: There exists a simulator $\mathcal{S}$ such that for all $x \in L$, the view of any $\mathcal{V}^*$ is computationally indistinguishable from $\mathcal{S}(x)$.
+    \item \textbf{Completeness}: For all $(x,w) \in \mathcal{R}$, an honest prover always convinces the verifier.
+    \item \textbf{Special Soundness}: There exists an efficient extractor $\mathcal{E}$ such that, given any statement $x$ and two accepting transcripts $(a,e,z)$ and $(a,e',z')$ with $e \neq e'$, $\mathcal{E}$ can extract a witness $w$ such that $(x,w) \in \mathcal{R}$.
+    \item \textbf{Special Honest-Verifier Zero-Knowledge}: There exists an efficient simulator $\mathcal{S}$ that, given a statement $x$ and a challenge $e$, produces a transcript $(a,e,z)$ that is computationally indistinguishable from a real transcript between an honest prover and verifier, without using a witness.
 \end{itemize}
-
-
-\subsubsection{Sigma-Protocols}
-A Sigma-protocol is a three-move ZKP where: (1) $\mathcal{P}$ sends a commitment $a$, (2) $\mathcal{V}$ sends a random challenge $e$, and (3) $\mathcal{P}$ responds with $z$. It satisfies:
-\begin{itemize}
-    \item \textbf{Completeness}: Honest execution accepts with probability 1.
-    \item \textbf{Special Soundness}: From two accepting transcripts $(a, e, z)$ and $(a, e', z')$ with $e \neq e'$, a witness $w$ can be extracted.
-    \item \textbf{Special Honest-Verifier Zero-Knowledge (SHVZK)}: A simulator can generate transcripts $(a, e, z)$ indistinguishable from real ones for any $e$.
-\end{itemize}
-
 
 
 
 
 
 \section{Technical Challenges in Credential Relationship Binding}
+
+The three core challenges we solve are 1) remove pairings from DY's VRF. 2) Preserve Privacy. 3) Enable Unlinkability.
+
 
 To understand our contributions, we examine the core technical challenges in creating an efficient, privacy-preserving nullifier mechanism for hierarchical credential systems. Consider a user with a master credential (containing secret key $\k$, denoted as $sk$ below) who needs to prove possession of a context credential (with identifier $\ctx = \text{"DMV"}$, denoted as $x$) without revealing their identity or allowing them to obtain multiple DMV credentials.
 
@@ -529,6 +417,54 @@ Each construction builds upon the previous one, culminating in the Credential Re
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\section{Introduction OLD}
 
 
 
@@ -1082,58 +1018,3 @@ Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}       & 2.01 & 2.9x  
 
 
 
-
-% \begin{table}
-% \begin{center}
-% \caption{Comparison of our construction over previous work.}
-% \label{tab:comparison-chap4}
-% \begin{tabular}{l|ccccc}
-% Features    									& 
-% Sybil Resist.  & 
-% Hierarchy & 
-% Private & 
-% Pairing-Free & 
-% Predicate Proofs \\
-% \hline
-% CanDID \cite{maram2021candid}     				&
-% \ding{51}     & 
-% \ding{51} 	& 
-% \ding{55}  &  
-% -     & 
-% \ding{55}		\\
-% SyRA \cite{crites_syra_2024}     				& 
-% \ding{51}    	& 
-% \ding{51}     & 
-% \ding{51}  &  
-% \ding{51}     & 
-% \ding{55}		\\
-% S3ID \cite{rabaninejad_attribute-based_2024}  & 
-% \ding{51}     & 
-% \ding{51}    	& 
-% \ding{55}  &  
-% \ding{55}     & 
-% \ding{55}		\\
-% UTT               & 
-% \ding{51}     & 
-% \ding{51}    	& 
-% \ding{51}  &  
-% \ding{55}     & 
-% \ding{51}		\\
-% Chap3             & 
-% \ding{55}     & 
-% \ding{55}    	& 
-% \ding{51}  &  
-% \ding{55}     & 
-% \ding{51}		\\
-% Ours  										& 
-% \ding{51}     & 
-% \ding{51}    	& 
-% \ding{51}  &  
-% \ding{51}     & 
-% \ding{51}		\\
-% \end{tabular}
-% \end{center}
-% \vspace{1em}
-% \footnotetext[1]{Predicate Proofs allow users to prove statements about their credentials privately}
-% \footnotetext[2]{Efficient Token refers to optimization of token verification}
-% \end{table}
