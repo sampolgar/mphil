@@ -26,13 +26,16 @@ Real-world credentials naturally form a hierarchy, this is notable when applying
         \begin{tikzpicture}
             \draw[->, thick] (-2,0) -- (-1,-1);
             \draw[->, thick] (2,0) -- (1,-1);
+
+            \node[black] at (-4,-0.5) {$\cmm = \CMCom([\id, \ctx, \exp, \k]; \usk_1)$};
+            \node[black] at (4,-0.5) {$\cmc = \CMCom([\id, \ctx, \exp]; \usk_2)$};
         \end{tikzpicture}
         \end{center}
         \begin{pchstack}[boxed, center]
             \begin{pcvstack}
                 \procedure[space=auto]{Nullifier}{%
-                 \textsf{n} = 1/(\k + \text{"DMV"}) \\
-                 \nul = g^{\textsf{n}} 
+                 \text{Sec:} \ref{sec:privacy-preserving-vrf}: \; y = g^{1\k + \text{"DMV"}} \\
+                 \text{Sec:} \ref{pok-committed-nullifier-vrf}: \; \cm_y = g_1^{1\k + \text{"DMV"}}g^{\usk_3}
                 }
             \end{pcvstack}
         \end{pchstack}
@@ -80,34 +83,79 @@ Our approach leverages and extends Verifiable Random Functions (VRFs) to address
 \begin{tabular}{l|cccccc}
 \toprule
 \textbf{Scheme} & 
-\textbf{Pairing-} & 
-\textbf{Private} & 
-\textbf{Unlinkable}  & 
 \textbf{Deterministic} & 
+\textbf{Unlinkable}  & 
+\textbf{Private} & 
+\textbf{Pairing-} & 
 \textbf{Proof} & 
 \textbf{Relative} \\
  & 
+ \textbf{Output}$^1$ & 
+ \textbf{Output}$^2$ & 
+ \textbf{Input}$^3$ & 
  \textbf{Free} & 
- \textbf{Inputs}$^1$ & 
- \textbf{Outputs}$^2$ & 
- \textbf{Value}$^3$ & 
  \textbf{Type} & 
  \textbf{Ver. Time}$^4$ \\
 \midrule
-DY VRF \cite{hutchison_verifiable_2005} & \ding{55} & \ding{55} & \ding{55} & \ding{51} & Pairing & 3x slower \\
-CanDID \cite{maram2021candid} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & MPC & Very slow \\
-TACT/S3ID \cite{rabaninejad_attribute-based_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Groth Sahai + Pairing & ~1.5-2x slower \\
-SyRA \cite{crites_syra_2024} & \ding{55} & \ding{51} & \ding{55} & \ding{51} & Sigma+Pairing & ~1.5-2x slower \\
-UTT Nullifier \cite{tomescu2022utt} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & Sigma+Pairing & 1.5x slower \\
-\textbf{Our CRBN} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & Sigma only & 1x (baseline) \\
+DY VRF \cite{hutchison_verifiable_2005} & 
+\ding{51} & 
+\ding{55} & 
+\ding{55} & 
+\ding{55} & 
+Pairing & 3x slower 
+\\
+CanDID \cite{maram2021candid} & 
+\ding{51} & 
+\ding{55} & 
+\ding{51} & 
+- & 
+MPC & Very slow $^5$
+\\
+TACT/S3ID \cite{rabaninejad_attribute-based_2024} & 
+\ding{51} & 
+\ding{55} & 
+\ding{51} & 
+\ding{55} & 
+Groth Sahai + Pairing & ~4x slower 
+\\
+SyRA \cite{crites_syra_2024} & 
+\ding{51} & 
+\ding{55} & 
+\ding{55}  &
+\ding{55} & 
+ Sigma+Pairing & ~4x slower 
+\\
+UTT Nullifier \cite{tomescu2022utt} & 
+\ding{51} & 
+\ding{51} & 
+\ding{51}  & 
+\ding{55} & 
+Sigma+Pairing & 4x slower 
+\\
+\text{Sec:} \ref{sec:privacy-preserving-vrf}: & 
+\ding{51} & 
+\ding{55} & 
+\ding{51} & 
+\ding{51} & 
+Sigma only & 2x faster
+\\
+\text{Sec:} \ref{pok-committed-nullifier-vrf}: & 
+\ding{51} & 
+\ding{51} & 
+\ding{51}  & 
+\ding{51} & 
+Sigma only & 1x (baseline) 
+\\
 \bottomrule
 \end{tabular}
 \end{center}
 \vspace{1em}
-\footnotesize{$^1$Operates on inputs (e.g., secret keys, attributes) hidden in commitments.} \\
+\footnotesize{$^1$Ensures a unique underlying nullifier value per user-context pair for sybil resistance.} \\
 \footnotesize{$^2$Nullifier can be presented as a commitment for unlinkability.} \\
-\footnotesize{$^3$Ensures a unique underlying nullifier value per user-context pair for sybil resistance.} \\
-\footnotesize{$^4$Approximate verification time relative to CRBN, based on benchmarks in Section X.}
+\footnotesize{$^3$Operates on inputs (e.g., secret keys, attributes) hidden in commitments.} \\
+\footnotesize{$^4$Approximate verification time relative to CRBN, based on benchmarks in Section \ref{sec:performance-vrf}} \\
+\footnotesize{$^5$CanDIDs nullifier uses MPF{-}PRF with uncomparable efficiency}
+\footnotesize{$^6$}
 \end{table}
 
 Previous systems have addressed aspects of hierarchical credential binding and sybil resistance, but all have significant limitations:
@@ -276,15 +324,15 @@ The three core challenges we solve are: 1) remove pairings from DY's VRF, 2) pre
 };
 
 \node[box, right=of dy] (dypf) {
-    \textbf{Ch 1. Pairing-Free VRF (DY-PF)}
+    \textbf{Chl. 1. Pairing-Free VRF (DY-PF)}
 };
 
 \node[box, right=of dypf] (private) {
-    \textbf{Ch 2. Privacy-Preserving VRF}
+    \textbf{Chl. 2. Privacy-Preserving VRF}
 };
 
 \node[box, right=of private] (crbn) {
-    \textbf{Ch 3. Privacy-Preserving Unlinkable VRF}
+    \textbf{Chl. 3. Privacy-Preserving Unlinkable VRF}
 };
 
 % Arrows 
@@ -450,25 +498,17 @@ Each construction builds upon the previous one, culminating in the Credential Re
 \section{Pairing-Free VRF Construction}\label{sec:pairing-free-vrf}
 In this section, we develop our pairing-free VRF (DY-PF), but first, we review the original DY VRF.
 
-The Dodis-Yampolskiy VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with prime-order groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$, with a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The construction is as follows:
+The Dodis-Yampolskiy (DY) VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$ of prime order $p$, and a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \to \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The VRF is defined as:
 
 \begin{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda) \to (sk, pk)$: Sample $sk \sample \mathbb{Z}_p^*$, compute $pk = g^{sk} \in \mathbb{G}_1$. Output $(sk, pk)$.
-    
-    \item $\mathsf{VRF.Eval}(sk, x) \to y$: Compute $y = e(g, \tilde{g})^{1/(sk + x)} \in \mathbb{G}_T$.
-    
-    \item $\mathsf{VRF.Prove}(sk, x) \to \pi$: Compute proof $\pi = \tilde{g}^{1/(sk + x)} \in \mathbb{G}_2$.
-    
-    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi) \to \{0, 1\}$: Verify two equations:
-    \begin{align}
-        e(g^{x} \cdot pk, \pi) &\stackrel{?}{=} e(g, \tilde{g}) \quad \text{(Equation 1)}\\
-        y &\stackrel{?}{=} e(g, \pi) \quad \text{(Equation 2)}
-    \end{align}
+    \item $\mathsf{VRF.Gen}(1^\lambda)$: Sample $sk \sample \mathbb{Z}_p^*$, set $pk = g^{sk}$.
+    \item $\mathsf{VRF.Eval}(sk, x)$: Compute $y = e(g, \tilde{g})^{1/(sk + x)}$.
+    \item $\mathsf{VRF.Prove}(sk, x)$: Compute $\pi = \tilde{g}^{1/(sk + x)}$.
+    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi)$: Check $e(g^{x} \cdot pk, \pi) \stackrel{?}{=} e(g, \tilde{g})$ and $y \stackrel{?}{=} e(g, \pi)$.
 \end{itemize}
 
-The security of this VRF rests upon the $q$-Decisional Bilinear Diffie-Hellman Inversion ($q$-DBDHI) assumption, which states that given $(g, g^{sk}, g^{(sk)^2}, \ldots, g^{(sk)^q})$ and $\tilde{g}$, the value $e(g, \tilde{g})^{1/(sk+x)}$ is computationally indistinguishable from a random element in $\mathbb{G}_T$.
+Security relies on the $q$-DBDHI assumption, ensuring $y$ is pseudorandom. However, verification requires pairings, which are computationally expensive. Our work eliminates pairings while preserving security.
 
-The pairing-based verification provides information-theoretic uniqueness, but at the cost of the pairing. Our goal is to preserve the security properties while eliminating pairings.
 
 \subsection{Pairing-Free Construction (DY-PF)}\label{sec-dy-pf}
 
@@ -1058,7 +1098,7 @@ The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ rev
 
 
 
-\subsection{Performance Evaluation}\label{sec:performance}
+\subsection{Performance Evaluation}\label{sec:performance-vrf}
 
 We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares our constructions against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification.
 
@@ -1086,6 +1126,8 @@ Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}       & 2.01 & 2.9x  
 \end{center}
 \end{table}
 
+CAN WE UPDATE THE CURVE WE USE AND GET DIFFERENT RESULTS?
+Can we include proof bit size?
 
 Our evaluation reveals several key findings:
 
