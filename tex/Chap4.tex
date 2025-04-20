@@ -18,57 +18,110 @@ The remainder of the chapter is as follows
 \section{Introduction}
 Real-world credentials naturally form a hierarchy, this is notable when applying for bank loans or new credentials from the government that require multiple credentials shown together. A simple task without privacy, a user hands over multiple credentials, and their details should match a "higher-security" document, like a passport. However, it is a challenging request with privacy-preserving credential systems. Consider a user in a privacy-preserving identity system with both a passport and a driver's license, as shown in Figure~\ref{fig:credential-nullifier}, the passport functions as a foundational Master Credential containing a secret key $\k$, while the driver's license is a Context Credential tied to a specific domain $\ctx$. For privacy and security, we need to cryptographically bind these credentials together and prevent users from obtaining multiple credentials for the same context (e.g., multiple driver's licenses) without compromising anonymity.
 
-\begin{figure}
-        \begin{pchstack}[boxed, center, space=4em]
-            \begin{pcvstack}
-                \procedure[space=auto]{Master Credential (Passport)}{%
-                \id: 12345, \\
-                \ctx: "master", \\
-                \exp: "10/11/2026", \\
-                \k: 54321
-                }
-            \end{pcvstack}
-            \pcvspace
-            \begin{pcvstack}
-                \procedure[space=auto]{Context Credential (Driver's License)}{%
-                 \id: 12345, \\
-                 \ctx: "DMV", \\
-                 \exp: "10/11/2028"
-                }
-            \end{pcvstack}
-        \end{pchstack}
-        \begin{center}
-        \begin{tikzpicture}
-            \draw[->, thick] (-2,0) -- (-1,-1);
-            \draw[->, thick] (2,0) -- (1,-1);
+A nullifier is a public piece of data that represents a user's account or specific credential information in secrecy. Our nullifier scheme commits to the user's key in a master credential and context. The deterministic version can be used in an anonymous user list for sybil resistance, and the probabilistic version can be used in membership proofs. 
 
-            \node[black] at (-4,-0.5) {$\cmm = \CMCom([\id, \ctx, \exp, \k]; \usk_1)$};
-            \node[black] at (4,-0.5) {$\cmc = \CMCom([\id, \ctx, \exp]; \usk_2)$};
-        \end{tikzpicture}
-        \end{center}
-        \begin{pchstack}[boxed, center]
-            \begin{pcvstack}
-                \procedure[space=auto]{Nullifier}{%
-                 \text{Sec:} \ref{sec:privacy-preserving-vrf}: \; y = g^{1\k + \text{"DMV"}} \\
-                 \text{Sec:} \ref{pok-committed-nullifier-vrf}: \; \cm_y = g_1^{1\k + \text{"DMV"}}g^{\usk_3}
-                }
-            \end{pcvstack}
-        \end{pchstack}
-    \caption{A credential hierarchy with a nullifier that binds a context credential to a master credential. The nullifier combines the master credential's secret key $\k$ with the context identifier "DMV" through a one-way function, creating a unique, verifiable binding that prevents sybil attacks while maintaining privacy.}
-    \label{fig:credential-nullifier}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners=2pt, minimum width=6cm, minimum height=8cm},
+        smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=3cm},
+        listbox/.style={draw, rounded corners=2pt, minimum width=5cm, minimum height=3cm},
+        thick
+    ]
+    
+    % Digital Credential Wallet
+    \node[box] (wallet) at (0,0) {};
+    \node[anchor=north, font=\bfseries] at ($(wallet.north) + (0,-0.3)$) {Digital Credential Wallet};
+    
+    % Master Credential
+    \node[smallbox] (master) at (0,1.7) {};
+    \node[anchor=north, font=\small\bfseries] at ($(master.north) + (0,-0.3)$) {Master Credential};
+    
+    \node[anchor=north west, font=\small, align=left] at ($(master.north west) + (0.5,-0.7)$) {
+        id : 12345, \\
+        ctx : "passport", \\
+        exp : "10/11/2026", \\
+        k : 54321
+    };
+    
+    % Context Credential
+    \node[smallbox] (context) at (0,-1.7) {};
+    \node[anchor=north, font=\small\bfseries] at ($(context.north) + (0,-0.3)$) {Context Credential};
+    
+    \node[anchor=north west, font=\small, align=left] at ($(context.north west) + (0.5,-0.7)$) {
+        id : 12345, \\
+        ctx : "DMV", \\
+        exp : "10/11/2028"
+    };
+    
+    % Add a dividing line between credentials in wallet
+    \draw[dashed] ($(wallet.west) + (0.2,0)$) -- ($(wallet.east) + (-0.2,0)$);
+    
+    % Anonymous User List
+    \node[listbox] (userlist) at (8,2.5) {};
+    \node[anchor=north, font=\bfseries] at ($(userlist.north) + (0,-0.3)$) {Anon. User List};
+    
+    % Draw horizontal lines in the user list
+    \draw ($(userlist.north west) + (0,-0.8)$) -- ($(userlist.north east) + (0,-0.8)$);
+    
+    % Formula in the second row of user list
+    \node[font=\small, align=center] at ($(userlist.north) + (0,-1.3)$) {Sec: \ref{sec:privacy-preserving-vrf} $ y = g^{1/(k + \text{"DMV"})}$};
+    
+    \draw ($(userlist.north west) + (0,-1.8)$) -- ($(userlist.north east) + (0,-1.8)$);
+    \draw ($(userlist.north west) + (0,-2.2)$) -- ($(userlist.north east) + (0,-2.2)$);
+    \draw ($(userlist.north west) + (0,-2.6)$) -- ($(userlist.north east) + (0,-2.6)$);
+    
+    % Revocation List
+    \node[listbox] (revlist) at (8,-2.5) {};
+    \node[anchor=north, font=\bfseries] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
+    
+    % Draw horizontal lines in the revocation list
+    \draw ($(revlist.north west) + (0,-0.8)$) -- ($(revlist.north east) + (0,-0.8)$);
+    
+    % Formula in the second row of revocation list
+    \node[font=\small, align=center] at ($(revlist.north) + (0,-1.3)$) {Sec: \ref{pok-committed-nullifier-vrf} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
+
+    
+    
+    \draw ($(revlist.north west) + (0,-1.8)$) -- ($(revlist.north east) + (0,-1.8)$);
+    \draw ($(revlist.north west) + (0,-2.2)$) -- ($(revlist.north east) + (0,-2.2)$);
+    \draw ($(revlist.north west) + (0,-2.6)$) -- ($(revlist.north east) + (0,-2.6)$);
+    
+    % Arrows - from wallet to lists, touching the boxes
+    \draw[->, thick] (wallet.east) -- (userlist.west);
+    \draw[->, thick] (wallet.east) -- (revlist.west);
+    
+    \end{tikzpicture}
+    \caption{A credential hierarchy with nullifiers that bind context credentials to a master credential. The nullifiers create verifiable bindings that prevent sybil attacks while maintaining privacy, with separate paths for anonymous user authentication and revocation management.}
+    \label{fig:credential-nullifier-revised}
 \end{figure}
 
 
 \subsection{Goals}
 
-Creating an efficient, privacy-preserving nullifier for credential binding raises three specific challenges:
+
 \begin{enumerate}
-    \item \textbf{Efficient}: The nullifier must be generated and verifiable with minimal overhead, avoiding bilinear pairings and MPC while maintaining provable uniqueness and verifiable pseudorandomness.
+    \item \textbf{Efficiency}: The nullifier must be generated and verifiable with minimal overhead, avoiding bilinear pairings and MPC while maintaining provable uniqueness and verifiable pseudorandomness.
     
     \item \textbf{Anonymity}: Nullifier generation and verification must not reveal the user inputs $\k, \ctx$ and optionally enable unlinkable outputs. 
     
     \item \textbf{Integration with Anonymous Credentials}: The nullifier mechanism must seamlessly extend our existing anonymous credential framework without compromising its security properties.
 \end{enumerate}
+
+\subsection{Core Challenges}
+
+
+Creating an efficient, privacy-preserving nullifier for credential binding raises three specific challenges:
+
+\begin{enumerate}
+    \item \textbf{Pairing-Free (Prime Order) DY VRF}: The DY VRF provides a secure structure but uses expensive bilinear pairings. Our first challenge is to create a Pairing-Free DY VRF using a $\Sigma$-protocol to maintain security under the $q$-DDHI assumption.
+    
+    \item \textbf{Anonymous Input for Prime-Order VRF}: To transform our Prime-Order DY VRF for Anonymous Credentials, we must use a commitment to the VRF inputs. Our second core challenge is to create a $\Sigma$-protocol to prove knowledge of $x$ such that $y = g^{1/x}$ (the $q$-DDHI challenge). Our third core challenge extends this by incorporating the proof of linear relations, the final protocol proves knowledge of $(x, sk)$ such that $y = g^{1/(sk + x)}$ where $y$ is a deterministic nullifier.
+    
+    \item \textbf{Unlinkable Output for Prime-Order VRF}: The deterministic nullifier can be used for sybil resistance during credential generation but can't be used ongoing as each output links the user's actions. Our fourth and last core challenge is to extend our protocol to generate provable, probabilistic nullifiers. We need to output a commitment to the nullifier so it can be used without linking the user. The final protocol proves knowledge of $(x, sk,r)$ such that $\cm_y = g_1^{1/(sk + x)}g^r$. 
+\end{enumerate}
+
 
 
 \subsection{Related Work}
@@ -219,136 +272,6 @@ We start with the $q$-DDHI assumption and work in two different directions. Firs
 
 
 
-
-
-
-To understand our contributions, we examine the core technical challenges in creating an efficient, privacy-preserving nullifier mechanism for hierarchical credential systems. Consider a user with a master credential (containing secret key $\k$, denoted as $sk$ below) who needs to prove possession of a context credential (with identifier $\ctx = \text{"DMV"}$, denoted as $x$) without revealing their identity or allowing them to obtain multiple DMV credentials.
-
-
-\subsection{Challenge 1: Creating a Pairing-Free Nullifier}
-
-The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF provides an elegant solution for generating unique, pseudorandom nullifiers using $y = e(g, \tilde{g})^{1/(sk+x)}$ in bilinear groups. We wish to improve on the efficiency and privacy. 
-
-\subsubsection{Can we remove Bilinear Pairings from DY VRF?}
-
-We start with the challenge of removing pairings from the DY VRF. DY VRF achieves verifiability:
-
-\begin{itemize}
-    \item The verifier confirms $\pi = \tilde{g}^{1/(sk+x)}$ is valid via $e(g^x \cdot pk, \pi) = e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) = e(g, \tilde{g})$
-    \item Then checks $y = e(g, \pi) = e(g, \tilde{g})^{1/(sk+x)}$
-\end{itemize}
-
-Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \tilde{g})^{abc}$, which enables "exponent multiplication" across groups, allowing the transformations
-\[
-e(g^x \cdot pk, \pi) \quad \stackrel{?}{=} \quad e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) \quad \stackrel{?}{=} \quad 
- e(g, \tilde{g})^{(sk+x)/(sk+x)} \quad  \stackrel{}{=} \quad e(g, \tilde{g})
-\]
-\[
-y \quad \stackrel{?}{=} \quad e(g, \pi) \quad \stackrel{?}{=} \quad e(g,\tilde{g}^{1/(sk+x)}) \quad \stackrel{}{=} \quad e(g, \tilde{g})^{1/(sk+x)}
-\]
-
-Security relies on the $q$-DBDHI problem which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g})$, no $\PPT$ adversary can distinguish between $e(g,\tilde{g})^{1/x}$ and a uniform element in $\G_T$ with non-negligible advantage , ensuring the VRF outputs maintain pseudorandomness after the adversary has observed $(x',y',\pi')$ pairs.
-
-\subsubsection{The Prime-Order Group Challenge}
-
-Prime-order groups without pairings don't have the bilinearity property, given $pk = g^{sk}$, $x$, and $y = g^{1/(sk+x)}$, standard group operations cannot directly verify the relationship. For example, given $pk  \cdot g^x = g^{sk+x}$, attempts fail to equate or cancel out:
-
-\begin{enumerate}
-    \item $g^{sk+x} \cdot g^{1/(sk+x)} = g^{sk+x+1/(sk+x)}$
-    \item $g^{sk+x}/g^{1/(sk+x)} = g^{(sk+x)^2-1/(sk+x)}$
-\end{enumerate}
-
-Our insight is to reverse the verification approach. Instead of trying to derive $g^{1/(sk+x)}$ from $g^{sk+x}$ or cancel with a reciprocal, we use a zero knowledge proof $\Sigma$-protocol to verify that $y$ raised to the power $(sk+x)$ equals $g$. In doing so, our pairing-free construction shifts from the $q$-DBDHI assumption to the $q$-DDHI assumption. This gives us the relation:
-
-\[
-\mathcal{R}_{\mathsf{DY-PF}} = \left\{ 
-\begin{array}{l} 
-(\pk, x, y),\\
-(sk) 
-\end{array}
-\ \middle|
-\ \begin{array}{l}
-pk = g^{sk} \\
-y^{sk + x} = g  \\
-\end{array} \right\}
-\]
-
-\subsection{Challenge 2: Privacy-Preserving Credential Binding}
-
-Even with a pairing-free solution, standard VRFs reveal the public key $pk = g^{sk}$ and the input $x$,  compromising credential anonymity. In our hierarchical credential system, $sk$ and $x$ are committed attributes in different credentials that must remain private. We solve this through a two-step approach: first, addressing the simpler case of a single committed exponent, then extending to linear combinations.
-
-\subsubsection*{Step 1. Proving Knowledge of a Committed Inverse}
-Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent which is congruent to proving a DDHI challenge $g^{1/x}$
-\[
-\mathcal{R}_{\mathsf{DDHI}} = \left\{ 
-\begin{array}{l} (\cm, y),\\
-(x, r) 
-\end{array}
-\ \middle|
-\ \begin{array}{l}
-\cm = g_1^{x} g^r \\
-y = g^{1/x} \\
-\end{array} \right\}
-\]
-
-We use a $\Sigma$-protocol to prove knowledge of the exponents $x, r$; during the protocol, we use the same random coin and response from $x$ to show the relation $y^x (=g)$ holds, and therefore $y$ must commit to $x$. We show the full protocol \ref{pok-committed-inverse-exponent}. 
-
-\subsubsection*{Step 2. Proving Knowledge of a Committed Inverse Linear Relation}
-
-We then extend this to prove a linear relation of inverse exponents $y = g^{1/(sk+x)}$ where $sk$ and $x$ come from different commitments, enforcing a relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}. 
-
-\[
-\mathcal{R}_{\mathsf{nullifier}} = \left\{ 
-\begin{array}{l} (\cm_1, \cm_2, y),\\
-(sk, x, r_1, r_2) 
-\end{array}
-\ \middle|
-\ \begin{array}{l}
-\cm_1 = g_1^{sk} g^{r_1} \\
-\cm_2 = g_2^{x} g^{r_2} \\
-y = g^{1/(sk + x)} \\
-\end{array} \right\}
-\]
-
-
-\subsection{Challenge 3: Unlinkable Credential Presentations}
-
-A deterministic nullifier $y = g^{1/(sk+x)}$ is necessary for Sybil resistance ensuring a unique, verifiable value for each $(sk,x)$ pair. However, deterministic algorithms create privacy problems with linkability. There are many use-cases for the verifiable connection of $(sk, x)$, such as revocation accumulators, which a user would need to interact with frequently, requiring a probabilistic output that can verify the $(sk+x)$ connection. 
-
-Our solution is to commit to the nullifier rather than revealing it directly:
-\[
-\cm_{\mathsf{null}} = g_3^{1/(sk+x)} g^{r_3}
-\]
-
-We must now prove that the committed value represents the nullifiers $(sk+x)$, we do so with the following relation:
-
-
-\[
-\mathcal{R}_{\mathsf{CommittedNull}} = \left\{ 
-\begin{array}{l} 
-(\cm_1, \cm_2, \cm_3, \cm_4), \\
-(sk, x, r_1, r_2, r_3, r_4) 
-\end{array}
-\ \middle| \
-\begin{array}{l}
-\cm_1 = g_1^{sk} g^{r_1} \\
-\cm_2 = g_2^{x} g^{r_2} \\
-\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{The Committed Nullifier}}\\
-\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
-\end{array} \right\}
-\]
-
-The auxiliary commitment $\cm_4$ enables verification analogous to our approach in Challenge 1: instead of verifying $y^{sk+x} = g$ directly, we prove that $\cm_3^{sk+x} = g_3$ (modulo some randomness $g^{r_4}$). This algebraic relationship can only hold if $\cm_3$ commits to $g_3^{1/(sk+x)}$, thus verifying the correctness of the committed nullifier without revealing it.
-
-This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
-
-
-
-
-
-
-
-
 \section{Preliminaries}
 
 \subsection{Cryptographic Assumptions}
@@ -361,9 +284,9 @@ Let $\mathbb{G}$ be a cyclic group of prime order $p$ with generator $g$. The $q
 Informally, given $(g, g^x, g^{x^2}, \ldots, g^{x^q})$, no PPT adversary can distinguish $g^{1/x}$ from a random group element with non-negligible advantage.
 \end{definition}
 
-\begin{remark}
-The $q$-DDHI assumption is a variant of the $(q+1)$-generalized Diffie-Hellman assumption as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This assumption directly underpins the security of our pairing-free VRF construction.
-\end{remark}
+% \begin{remark}
+% The $q$-DDHI assumption is a variant of the $(q+1)$-generalized Diffie-Hellman assumption as shown by Boneh and Boyen \cite{kanade_efficient_2004}. This assumption directly underpins the security of our pairing-free VRF construction.
+% \end{remark}
 
 \begin{definition}[$q$-DBDHI Assumption]
 Let $\mathbb{G}_1, \mathbb{G}_2, \mathbb{G}_T$ be cyclic groups of prime order $p$ with a bilinear pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \to \mathbb{G}_T$, and generators $g \in \mathbb{G}_1$, $\tilde{g} \in \mathbb{G}_2$. The $q$-Decisional-Bilinear Diffie-Hellman Inversion ($q$-DBDHI) assumption states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
@@ -443,6 +366,22 @@ A secure VRF must satisfy the following properties:
     
 In our work, we focus on adapting the Dodis-Yampolskiy VRF \cite{hutchison_verifiable_2005}, which computes $y = e(g, \tilde{g})^{1/(sk+x)}$ in bilinear groups, to work efficiently in standard prime-order groups without pairings.
 
+\begin{definition}[Dodis Yampolskiy VRF]
+    The Dodis-Yampolskiy (DY) VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$ of prime order $p$, and a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \to \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The VRF is defined as:
+
+\begin{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda)$: Sample $sk \sample \mathbb{Z}_p^*$, set $pk = g^{sk}$.
+    \item $\mathsf{VRF.Eval}(sk, x)$: Compute $y = e(g, \tilde{g})^{1/(sk + x)}$.
+    \item $\mathsf{VRF.Prove}(sk, x)$: Compute $\pi = \tilde{g}^{1/(sk + x)}$.
+    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi)$: Check $e(g^{x} \cdot pk, \pi) \stackrel{?}{=} e(g, \tilde{g})$ and $y \stackrel{?}{=} e(g, \pi)$.
+\end{itemize}
+
+Security relies on the $q$-DBDHI assumption, ensuring $y$ is pseudorandom.
+
+\end{definition}
+
+
+
 \subsubsection{Zero-Knowledge Proofs and Sigma-Protocols}
 Our credential binding mechanism relies on zero-knowledge proofs, particularly Sigma-protocols, to verify relations between committed values without revealing them.
 
@@ -468,26 +407,58 @@ These protocols satisfy:
 
 
 
-\section{Pairing-Free VRF Construction}\label{sec:pairing-free-vrf}
-In this section, we develop our pairing-free VRF (DY-PF), but first, we review the original DY VRF.
-
-The Dodis-Yampolskiy (DY) VRF~\cite{hutchison_verifiable_2005} operates in a bilinear group setting with groups $\mathbb{G}_1$, $\mathbb{G}_2$, and $\mathbb{G}_T$ of prime order $p$, and a Type-3 pairing $e: \mathbb{G}_1 \times \mathbb{G}_2 \to \mathbb{G}_T$. Let $g \in \mathbb{G}_1$ and $\tilde{g} \in \mathbb{G}_2$ be generators. The VRF is defined as:
-
-\begin{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda)$: Sample $sk \sample \mathbb{Z}_p^*$, set $pk = g^{sk}$.
-    \item $\mathsf{VRF.Eval}(sk, x)$: Compute $y = e(g, \tilde{g})^{1/(sk + x)}$.
-    \item $\mathsf{VRF.Prove}(sk, x)$: Compute $\pi = \tilde{g}^{1/(sk + x)}$.
-    \item $\mathsf{VRF.Vfy}(pk, x, y, \pi)$: Check $e(g^{x} \cdot pk, \pi) \stackrel{?}{=} e(g, \tilde{g})$ and $y \stackrel{?}{=} e(g, \pi)$.
-\end{itemize}
-
-Security relies on the $q$-DBDHI assumption, ensuring $y$ is pseudorandom. However, verification requires pairings, which are computationally expensive. Our work eliminates pairings while preserving security.
 
 
-\subsection{Pairing-Free Construction (DY-PF)}\label{sec-dy-pf}
+\section{Prime-Order VRF from the q-DDHI Assumption}\label{sec:pairing-free-vrf}
 
-Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. The message space is $\mathcal{X} = \mathbb{Z}_p$, the output space is $\mathcal{Y} = \mathbb{G}$, and the proof space is $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$.
+The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF provides an elegant solution for generating unique, pseudorandom nullifiers $y$ and their proofs of correctness $\pi$. We start with the question of removing pairings to improve efficiency. DY consists of $(y, \pi)$:
+\[
+y = e(g, \tilde{g})^{1/(sk+x)} \qquad \pi = \tilde{g}^{1/(sk+x)}
+\]
 
-\subsection{Construction}
+Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \tilde{g})^{abc}$, which enables "exponent multiplication" across groups, allowing the transformations:
+
+\begin{align*}
+    \begin{array}{rcl}
+    e(g^x \cdot pk, \pi) & \stackrel{?}{=} & e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) \\
+     & \stackrel{?}{=} & e(g, \tilde{g})^{(sk+x)/(sk+x)} \\
+     & = & e(g, \tilde{g})
+    \end{array}
+    &&
+    \begin{array}{rcl}
+    y & \stackrel{?}{=} & e(g, \pi) \\
+     & \stackrel{?}{=} & e(g,\tilde{g}^{1/(sk+x)}) \\
+     & = & e(g, \tilde{g})^{1/(sk+x)}
+    \end{array}
+\end{align*}
+
+Security relies on the $q$-DBDHI problem which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g})$, no $\PPT$ adversary can distinguish between $e(g,\tilde{g})^{1/x}$ and a uniform element in $\G_T$ with non-negligible advantage , ensuring the VRF outputs maintain pseudorandomness after the adversary has observed $(x',y',\pi')$ pairs.
+
+\subsubsection{The Prime-Order Group Challenge}
+
+Prime-order groups and standard group operations (without such bilinearity property) cannot be used to directly verify the $1/(sk+x)$ relationship with standard cryptographic operations. For example, given $pk  \cdot g^x = g^{sk+x}$, verification attempts to equate or cancel out fail:
+
+\begin{enumerate}
+    \item $g^{sk+x} \cdot g^{1/(sk+x)} = g^{sk + x + \frac{1}{sk+x}}$
+    \item $\frac{g^{sk+x}}{g^{1/(sk+x)}} = g^{(sk+x)^2-\frac{1}{sk+x}}$
+\end{enumerate}
+
+Our insight is to reverse the verification approach. Instead of trying to derive $g^{1/(sk+x)}$ from $g^{sk+x}$ or cancel with a reciprocal, we use a zero knowledge proof $\Sigma$-protocol to verify that $y$ raised to the power $(sk+x)$ equals $g$. In doing so, our pairing-free construction shifts from the $q$-DBDHI assumption to the $q$-DDHI assumption. This gives us the relation:
+
+\[
+\mathcal{R}_{\mathsf{DY-PF}} = \left\{ 
+\begin{array}{l} 
+(\pk, x, y),\\
+(sk) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+pk = g^{sk} \\
+y^{sk + x} = g  \\
+\end{array} \right\}
+\]
+
+\subsection{Construction}\label{sec-dy-pf}
 
 Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. The message space is $\mathcal{X} = \mathbb{Z}_p$, the output space is $\mathcal{Y} = \mathbb{G}$, and the proof space is $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. The algorithms are defined as follows:
 
@@ -559,11 +530,87 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 
 
 
-\section{Privacy-Preserving Proofs for Inverse Relations}\label{sec:privacy-preserving-vrf}
+\section{Anonymous Prime-Order VRFs from the $q$-DDHI}\label{sec:privacy-preserving-vrf}
 
 While our pairing-free VRF construction eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk$ and input $x$ during verification. In anonymous credential systems, both the master credential key $sk$ and the context identifier $x$ must remain private. This section develops zero-knowledge proof techniques for verifying VRF outputs computed from committed attributes, addressing our second technical challenge.
 
-We proceed in two stages: first proving knowledge of a single committed inverse relation, then extending to linear combinations of committed exponents.
+
+
+\subsection{Challenge 2: Privacy-Preserving Credential Binding}
+
+Even with a pairing-free solution, standard VRFs reveal the public key $pk = g^{sk}$ and the input $x$,  compromising credential anonymity. In our hierarchical credential system, $sk$ and $x$ are committed attributes in different credentials that must remain private. We solve this through a two-step approach: first, addressing the simpler case of a single committed exponent, then extending to linear combinations.
+
+\subsubsection*{Step 1. Proving Knowledge of a Committed Inverse}
+Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent which is congruent to proving a DDHI challenge $g^{1/x}$
+\[
+\mathcal{R}_{\mathsf{DDHI}} = \left\{ 
+\begin{array}{l} (\cm, y),\\
+(x, r) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm = g_1^{x} g^r \\
+y = g^{1/x} \\
+\end{array} \right\}
+\]
+
+We use a $\Sigma$-protocol to prove knowledge of the exponents $x, r$; during the protocol, we use the same random coin and response from $x$ to show the relation $y^x (=g)$ holds, and therefore $y$ must commit to $x$. We show the full protocol \ref{pok-committed-inverse-exponent}. 
+
+\subsubsection*{Step 2. Proving Knowledge of a Committed Inverse Linear Relation}
+
+We then extend this to prove a linear relation of inverse exponents $y = g^{1/(sk+x)}$ where $sk$ and $x$ come from different commitments, enforcing a relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}. 
+
+\[
+\mathcal{R}_{\mathsf{nullifier}} = \left\{ 
+\begin{array}{l} (\cm_1, \cm_2, y),\\
+(sk, x, r_1, r_2) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+y = g^{1/(sk + x)} \\
+\end{array} \right\}
+\]
+
+
+\subsection{Challenge 3: Unlinkable Credential Presentations}
+
+A deterministic nullifier $y = g^{1/(sk+x)}$ is necessary for Sybil resistance ensuring a unique, verifiable value for each $(sk,x)$ pair. However, deterministic algorithms create privacy problems with linkability. There are many use-cases for the verifiable connection of $(sk, x)$, such as revocation accumulators, which a user would need to interact with frequently, requiring a probabilistic output that can verify the $(sk+x)$ connection. 
+
+Our solution is to commit to the nullifier rather than revealing it directly:
+\[
+\cm_{\mathsf{null}} = g_3^{1/(sk+x)} g^{r_3}
+\]
+
+We must now prove that the committed value represents the nullifiers $(sk+x)$, we do so with the following relation:
+
+
+\[
+\mathcal{R}_{\mathsf{CommittedNull}} = \left\{ 
+\begin{array}{l} 
+(\cm_1, \cm_2, \cm_3, \cm_4), \\
+(sk, x, r_1, r_2, r_3, r_4) 
+\end{array}
+\ \middle| \
+\begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{The Committed Nullifier}}\\
+\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
+\end{array} \right\}
+\]
+
+The auxiliary commitment $\cm_4$ enables verification analogous to our approach in Challenge 1: instead of verifying $y^{sk+x} = g$ directly, we prove that $\cm_3^{sk+x} = g_3$ (modulo some randomness $g^{r_4}$). This algebraic relationship can only hold if $\cm_3$ commits to $g_3^{1/(sk+x)}$, thus verifying the correctness of the committed nullifier without revealing it.
+
+This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
+
+
+
+
+
+
+
 
 
 \subsection{Step 2.1: Proving Committed Exponent and DDHI Challenge}
@@ -1131,3 +1178,7 @@ The CRBN enables several important applications for privacy-preserving identity 
 \end{enumerate}
 
 These applications demonstrate how CRBN addresses a critical gap in privacy-preserving digital identity: enabling hierarchical credential structures with binding enforceable through zero-knowledge proofs.
+
+
+
+
