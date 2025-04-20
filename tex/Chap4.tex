@@ -532,15 +532,34 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 
 \section{Anonymous Prime-Order VRFs from the $q$-DDHI}\label{sec:privacy-preserving-vrf}
 
-While our pairing-free VRF construction eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk$ and input $x$ during verification. In anonymous credential systems, both the master credential key $sk$ and the context identifier $x$ must remain private. This section develops zero-knowledge proof techniques for verifying VRF outputs computed from committed attributes, addressing our second technical challenge.
+While our pairing-free VRF construction, presented in Section 3, eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk = g^{sk}$ and input $x$ during verification. This is a limitation for anonymous credential systems, where both the master credential key $sk$ and the context identifier $x$ must remain private to ensure user anonymity. In this section, we address this challenge by developing zero-knowledge proof techniques that enable verification of VRF outputs computed from committed attributes, without revealing sensitive information.
+
+Our approach builds progressively across three key stages:
+
+\begin{enumerate}
+    \item \textbf{Proving Knowledge of a Committed Inverse Exponent}: We start with a foundational protocol to prove that a value $y = g^{1/x}$ corresponds to a committed exponent $x$, leveraging the $q$-DDHI assumption. This establishes the base for our next protocols.
+
+    \item \textbf{Proving Knowledge of a Committed Inverse Linear Relation}: We extend this technique to handle linear combinations of committed values, enabling verification of a VRF output $y = g^{1/(sk + x)}$ where $sk$ and $x$ are committed in separate credentials. This deterministic nullifier supports privacy-preserving credential binding and sybil resistance.
+
+    \item \textbf{Proving Knowledge of a Committed Nullifier}: Finally, we introduce a protocol to commit to the VRF output itself (i.e., $\cm_y = g_3^{1/(sk + x)} g^{r_3}$), allowing unlinkable presentations. This probabilistic nullifier ensures that repeated uses of the same credential relationship remain unlinkable while still verifiable.
+\end{enumerate}
+
+These protocols collectively transform our prime-order VRF into a privacy-preserving tool suitable for hierarchical anonymous credential systems. In the subsections that follow, we detail each stage, presenting the cryptographic constructions and their security properties. Section 6 will later demonstrate how these building blocks are instantiated for sybil resistance and revocation in the Multi-Issuer Multi-Credential (MIMC) system.
 
 
 
-\subsection{Challenge 2: Privacy-Preserving Credential Binding}
 
-Even with a pairing-free solution, standard VRFs reveal the public key $pk = g^{sk}$ and the input $x$,  compromising credential anonymity. In our hierarchical credential system, $sk$ and $x$ are committed attributes in different credentials that must remain private. We solve this through a two-step approach: first, addressing the simpler case of a single committed exponent, then extending to linear combinations.
 
-\subsubsection*{Step 1. Proving Knowledge of a Committed Inverse}
+
+
+
+
+
+
+
+
+
+\subsection{Proving Knowledge of a Committed Inverse}
 Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent which is congruent to proving a DDHI challenge $g^{1/x}$
 \[
 \mathcal{R}_{\mathsf{DDHI}} = \left\{ 
@@ -556,64 +575,10 @@ y = g^{1/x} \\
 
 We use a $\Sigma$-protocol to prove knowledge of the exponents $x, r$; during the protocol, we use the same random coin and response from $x$ to show the relation $y^x (=g)$ holds, and therefore $y$ must commit to $x$. We show the full protocol \ref{pok-committed-inverse-exponent}. 
 
-\subsubsection*{Step 2. Proving Knowledge of a Committed Inverse Linear Relation}
-
-We then extend this to prove a linear relation of inverse exponents $y = g^{1/(sk+x)}$ where $sk$ and $x$ come from different commitments, enforcing a relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}. 
-
-\[
-\mathcal{R}_{\mathsf{nullifier}} = \left\{ 
-\begin{array}{l} (\cm_1, \cm_2, y),\\
-(sk, x, r_1, r_2) 
-\end{array}
-\ \middle|
-\ \begin{array}{l}
-\cm_1 = g_1^{sk} g^{r_1} \\
-\cm_2 = g_2^{x} g^{r_2} \\
-y = g^{1/(sk + x)} \\
-\end{array} \right\}
-\]
-
-
-\subsection{Challenge 3: Unlinkable Credential Presentations}
-
-A deterministic nullifier $y = g^{1/(sk+x)}$ is necessary for Sybil resistance ensuring a unique, verifiable value for each $(sk,x)$ pair. However, deterministic algorithms create privacy problems with linkability. There are many use-cases for the verifiable connection of $(sk, x)$, such as revocation accumulators, which a user would need to interact with frequently, requiring a probabilistic output that can verify the $(sk+x)$ connection. 
-
-Our solution is to commit to the nullifier rather than revealing it directly:
-\[
-\cm_{\mathsf{null}} = g_3^{1/(sk+x)} g^{r_3}
-\]
-
-We must now prove that the committed value represents the nullifiers $(sk+x)$, we do so with the following relation:
-
-
-\[
-\mathcal{R}_{\mathsf{CommittedNull}} = \left\{ 
-\begin{array}{l} 
-(\cm_1, \cm_2, \cm_3, \cm_4), \\
-(sk, x, r_1, r_2, r_3, r_4) 
-\end{array}
-\ \middle| \
-\begin{array}{l}
-\cm_1 = g_1^{sk} g^{r_1} \\
-\cm_2 = g_2^{x} g^{r_2} \\
-\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{The Committed Nullifier}}\\
-\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
-\end{array} \right\}
-\]
-
-The auxiliary commitment $\cm_4$ enables verification analogous to our approach in Challenge 1: instead of verifying $y^{sk+x} = g$ directly, we prove that $\cm_3^{sk+x} = g_3$ (modulo some randomness $g^{r_4}$). This algebraic relationship can only hold if $\cm_3$ commits to $g_3^{1/(sk+x)}$, thus verifying the correctness of the committed nullifier without revealing it.
-
-This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
 
 
 
-
-
-
-
-
-
-\subsection{Step 2.1: Proving Committed Exponent and DDHI Challenge}
+\subsubsection{Construction}
 
 We begin with a simplified relation: given a commitment $\cm = g_1^x g^r$ and an element $y = g^{1/x}$, the prover demonstrates knowledge of $x$ and $r$ satisfying both equations, without revealing them. This is linked to the Decisional Diffie-Hellman Inversion (DDHI) assumption—where distinguishing $g^{1/x}$ from a random element given $g, g^x$ is computationally hard—making it a secure and essential starting point for our privacy-preserving construction.
 
@@ -711,7 +676,39 @@ This simulated transcript is perfectly indistinguishable from a real execution, 
 
 
 
-\subsection{Extended Protocol: Proving Committed Inverse Linear Relations}
+
+
+
+
+
+
+
+
+
+
+\subsection{Proving Knowledge of a Committed Inverse Linear Relation}
+
+We then extend this to prove a linear relation of inverse exponents $y = g^{1/(sk+x)}$ where $sk$ and $x$ come from different commitments, enforcing a relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}. 
+
+\[
+\mathcal{R}_{\mathsf{nullifier}} = \left\{ 
+\begin{array}{l} (\cm_1, \cm_2, y),\\
+(sk, x, r_1, r_2) 
+\end{array}
+\ \middle|
+\ \begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+y = g^{1/(sk + x)} \\
+\end{array} \right\}
+\]
+
+
+
+
+
+
+\subsubsection{Construction}
 
 We now extend our approach to handle linear combinations of committed values. Given commitments $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$ to values $sk$ and $x$, we want to prove that $y = g^{1/(sk + x)}$ without revealing $sk$, $x$, or the randomness values.
 
@@ -778,40 +775,6 @@ This protocol forms the foundation for our credential binding nullifier, allowin
 
 
 
-% \begin{protocol}{Proving Committed Inverse Linear Relation}{}\label{pok-committed-inverse-linear-relation}
-% \textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, \cm_2, y \in \mathbb{G}$ \\
-% \textbf{Prover Input:} Witness $(sk, x, \usk_1, \usk_2)$ such that $\cm_1 = g_1^{sk} g^{\usk_1}$, $\cm_2 = g_2^{x}g^{\usk_2}$ and $ y = g^{1/(sk + x)}$ \\
-% \textbf{Relation: }
-% \[
-% \mathcal{R} = \{(\cm_1,\cm_2, y), (sk, x, \usk_1, \usk_2) \mid \cm_1 = g_1^{sk} g^{\usk} \wedge \cm_2 = g_2^{x}g^{\usk_2} \wedge y = g^{1/(sk + x)}\}
-% \]
-% \begin{enumerate}
-%     \item \textbf{Commitment:} Prover computes:
-%     \begin{align*}
-%         a_{sk}, a_x, a_{r_1}, a_{r_2} &\sample \Z_q & T_1 &\gets g_1^{a_{sk}} g^{a_{r_1}} & T_2 &\gets g_2^{a_x} g^{a_{r_2}} & T_y &\gets y^{a_{sk} + a_x}
-%     \end{align*}
-%     Sends $(T_1, T_2, T_y)$ to verifier.
-    
-%     \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-%     \item \textbf{Response:} Prover computes:
-%      \begin{align*}
-%         z_{sk} &= a_{sk} + c \cdot sk & z_x &= a_x + c \cdot x &  z_m &= (a_{sk} + a_x) + c \cdot (sk + x)\\   
-%         z_{r_1} &= a_{r_1} + c \cdot r_1 & z_{r_2} &= a_{r_2} + c \cdot r_2
-%     \end{align*}
-%     Sends $(z_{sk}, z_x, z_{r_1} z_{r_2}, z_m)$ to verifier.
-    
-%     \item \textbf{Verification:} Verifier checks:
-%     \begin{align*}
-%         T_1 \cdot \cm_1^c &\stackrel{?}{=} g_1^{z_{sk}}g^{z_{r_1}} 
-%         &
-%         T_2 \cdot \cm_2^c &\stackrel{?}{=}  g_2^{z_x} g^{z_{r_2}} 
-%         &
-%         T_y \cdot g^c &\stackrel{?}{=} y^{z_m} &
-%         z_m &\stackrel{?}{=} z_{sk} + z_x
-%     \end{align*}
-% \end{enumerate}
-% \end{protocol}
 
 
 
@@ -819,9 +782,65 @@ This protocol forms the foundation for our credential binding nullifier, allowin
 
 
 
-\newpage
-\section{Privacy-Preserving Committed Nullifier for Hierarchical Credentials}
-\label{sec:committed-nullifier}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Proving Knowledge of a Committed Nullifier}
+
+A deterministic nullifier $y = g^{1/(sk+x)}$ is necessary for Sybil resistance ensuring a unique, verifiable value for each $(sk,x)$ pair. However, deterministic algorithms create privacy problems with linkability. There are many use-cases for the verifiable connection of $(sk, x)$, such as revocation accumulators, which a user would need to interact with frequently, requiring a probabilistic output that can verify the $(sk+x)$ connection. 
+
+Our solution is to commit to the nullifier rather than revealing it directly:
+\[
+\cm_{\mathsf{null}} = g_3^{1/(sk+x)} g^{r_3}
+\]
+
+We must now prove that the committed value represents the nullifiers $(sk+x)$, we do so with the following relation:
+
+
+\[
+\mathcal{R}_{\mathsf{CommittedNull}} = \left\{ 
+\begin{array}{l} 
+(\cm_1, \cm_2, \cm_3, \cm_4), \\
+(sk, x, r_1, r_2, r_3, r_4) 
+\end{array}
+\ \middle| \
+\begin{array}{l}
+\cm_1 = g_1^{sk} g^{r_1} \\
+\cm_2 = g_2^{x} g^{r_2} \\
+\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{The Committed Nullifier}}\\
+\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
+\end{array} \right\}
+\]
+
+The auxiliary commitment $\cm_4$ enables verification analogous to our approach in Challenge 1: instead of verifying $y^{sk+x} = g$ directly, we prove that $\cm_3^{sk+x} = g_3$ (modulo some randomness $g^{r_4}$). This algebraic relationship can only hold if $\cm_3$ commits to $g_3^{1/(sk+x)}$, thus verifying the correctness of the committed nullifier without revealing it.
+
+This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
+
+
+
+\subsubsection{Construction}\label{sec:committed-nullifier}
+
 
 In the Multi-Issuer Multi-Credential Attribute-Based Anonymous Credential (MIMC-ABC) system, nullifiers ensure sybil resistance by enforcing uniqueness of context-specific credentials bound to a master credential. However, exposing nullifiers as public values, as in our pairing-free Verifiable Random Function (VRF) construction (Section~\ref{sec-dy-pf}), risks linkability across presentations, compromising user privacy. To address this, we propose a novel zero-knowledge protocol that commits the nullifier within a Pedersen commitment, proving its correctness relative to committed attributes from master and context credentials without revealing sensitive information.
 
@@ -882,6 +901,7 @@ This contribution is crucial for enabling hierarchical, sybil-resistant anonymou
 \end{protocol}
 
 
+\subsubsection{Security Analysis}
 
 
 
@@ -894,231 +914,7 @@ This contribution is crucial for enabling hierarchical, sybil-resistant anonymou
 
 
 
-
-\section{Credential Relationship Binding Nullifier}\label{sec:crbn}
-
-Building on our privacy-preserving VRF constructions, we now present the complete Credential Relationship Binding Nullifier (CRBN) system. This section addresses our third technical challenge: creating a nullifier mechanism that prevents credential reuse (Sybil attacks) while maintaining unlinkability across presentations.
-
-\subsection{Motivation and Design Goals}
-
-In a hierarchical credential system, users obtain both master credentials (containing secret key $sk$) and context credentials (tied to specific domains $x$). The CRBN provides three critical properties:
-
-\begin{enumerate}
-    \item \textbf{Uniqueness:} For each master-context credential pair, only one valid nullifier can exist, preventing users from obtaining multiple credentials for the same context
-    \item \textbf{Privacy:} The nullifier reveals nothing about the underlying credentials or user identity
-    \item \textbf{Unlinkability:} Multiple uses of the same credential relationship cannot be linked across different verifications
-\end{enumerate}
-
-\begin{figure}[ht]
-\centering
-\begin{tikzpicture}[
-    box/.style={rectangle, rounded corners, draw, minimum width=4.5cm, minimum height=2cm, align=center},
-    nullifier/.style={rectangle, rounded corners, draw, fill=gray!10, minimum width=5cm, minimum height=1.5cm, align=center},
-    arrow/.style={thick,->,>=stealth},
-    label/.style={font=\small\itshape}
-]
-
-% Credential boxes
-\node[box] (master) at (0,0) {
-    \textbf{Master Credential}\\
-    $\cm_1 = g_1^{sk} g^{r_1}$\\
-    \small{(e.g., Passport)}
-};
-
-\node[box] (context) at (8,0) {
-    \textbf{Context Credential}\\
-    $\cm_2 = g_2^{x} g^{r_2}$\\
-    \small{(e.g., Driver's License)}
-};
-
-% Nullifier box
-\node[nullifier] (nullifier) at (4,-3) {
-    \textbf{Committed Nullifier}\\
-    $\cm_3 = g_3^{1/(sk+x)} g^{r_3}$\\
-    $\cm_4 = \cm_3^{sk+x} g^{r_4} = g_3 g^{r_3(sk+x)+r_4}$
-};
-
-% Arrows and labels
-\draw[arrow] (master) -- (nullifier) node[midway, left, label, text width=3cm] {Secret key $sk$ from master credential};
-\draw[arrow] (context) -- (nullifier) node[midway, right, label, text width=3cm] {Context identifier $x$ from context credential};
-
-% Sybil resistance note
-\node[draw, rounded corners, fill=gray!5, text width=8cm, align=center] at (4,-5.5) {
-    \small \textbf{Sybil Resistance}: For fixed $(sk,x)$, only one valid nullifier exists\\
-    \small \textbf{Unlinkability}: $\cm_3$ and $\cm_4$ appear random for each presentation
-};
-
-\end{tikzpicture}
-\caption{Credential Relationship Binding Nullifier connecting master and context credentials}
-\label{fig:credential-nullifier-system}
-\end{figure}
-
-While our pairing-free VRF with privacy-preserving extensions addresses uniqueness and privacy, the deterministic nature of $y = g^{1/(sk+x)}$ would make presentations linkable. Our solution is to commit to the nullifier value itself, producing randomized commitments that can be verified without revealing the underlying deterministic nullifier.
-
-\subsection{Construction}
-
-We present two variants: a deterministic nullifier ensuring strict uniqueness, and a committed nullifier enabling unlinkable presentations while maintaining sybil resistance.
-
-\subsubsection{Deterministic CRBN}
-
-The deterministic CRBN directly applies our privacy-preserving VRF from Section \ref{sec:privacy-preserving-vrf}:
-
-\begin{itemize}
-    \item \textbf{Setup}: Generate group parameters and commitment bases $g_1, g_2, g \in \mathbb{G}$
-    \item \textbf{MasterCredential}: Commit to master credential attributes including the secret key $sk$: $\cm_1 = g_1^{sk} g^{r_1}$
-    \item \textbf{ContextCredential}: Commit to context credential attributes including the identifier $x$: $\cm_2 = g_2^{x} g^{r_2}$
-    \item \textbf{NullifierEval}: Compute $y = g^{1/(sk+x)}$
-    \item \textbf{NullifierProve}: Generate proof $\pi$ using Protocol~\ref{pok-committed-inverse-linear-relation}
-    \item \textbf{NullifierVerify}: Verify proof $\pi$ against commitments $\cm_1, \cm_2$ and nullifier $y$
-\end{itemize}
-
-This construction ensures uniqueness but lacks unlinkability since $y$ is deterministic for each $(sk,x)$ pair.
-
-\subsubsection{Committed CRBN}
-
-To achieve unlinkability, we extend the construction to commit the nullifier itself:
-
-\begin{protocol}{Proving Committed Nullifier for VRF}{committed-nullifier-vrf}\label{pok-committed-nullifier-vrf}
-\textbf{Common Input:} Group generators $g_1, g_2, g_3, g \in \mathbb{G}$, commitments $\cm_1, \cm_2, \cm_3, \cm_4 \in \mathbb{G}$ \\
-\textbf{Prover Input:} Witness $(sk, x, r_1, r_2, r_3, r_4)$ such that:
-    \[
-    \cm_1 = g_1^{sk} g^{r_1}, \quad \cm_2 = g_2^{x} g^{r_2}, \quad \cm_3 = g_3^{1/(sk + x)} g^{r_3}, \quad \cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
-    \]
-\textbf{Relation:}
-\[
-\mathcal{R} = \left\{ 
-\begin{array}{l} 
-(\cm_1, \cm_2, \cm_3, \cm_4), \\
-(sk, x, r_1, r_2, r_3, r_4) 
-\end{array}
-\ \middle| \
-\begin{array}{l}
-\cm_1 = g_1^{sk} g^{r_1} \\
-\cm_2 = g_2^{x} g^{r_2} \\
-\cm_3 = g_3^{1/(sk + x)} g^{r_3} \\
-\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
-\end{array} \right\}
-\]
-\begin{enumerate}
-    \item \textbf{Commitment:} Prover samples $a_{sk}, a_x, a_{r_1}, a_{r_2}, a_{r_3}, a_{r_4} \sample \mathbb{Z}_q$ and computes:
-       \[
-       T_1 = g_1^{a_{sk}} g^{a_{r_1}}, \quad T_2 = g_2^{a_x} g^{a_{r_2}}, \quad T_3 = g_3^{a_{\beta}} g^{a_{r_3}}, \quad T_4 = \cm_3^{a_{sk} + a_x} g^{a_{r_4}}
-       \]
-       where $a_{\beta} = -a_{\beta}/(a_{sk} + a_x)$ uses a technique similar to our inverse proofs. Sends $(T_1, T_2, T_3, T_4)$ to verifier.
-    
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
-    
-    \item \textbf{Response:} Prover computes:
-       \[
-       z_{sk} = a_{sk} + c \cdot sk, \quad z_x = a_x + c \cdot x, \quad z_{r_1} = a_{r_1} + c \cdot r_1, \quad z_{r_2} = a_{r_2} + c \cdot r_2
-       \]
-       \[
-       z_{r_3} = a_{r_3} + c \cdot r_3, \quad z_{r_4} = a_{r_4} + c \cdot r_4, \quad z_{\beta} = a_{\beta} + c \cdot \frac{1}{sk + x}
-       \]
-       Sends $(z_{sk}, z_x, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4}, z_{\beta})$ to verifier.
-    
-    \item \textbf{Verification:} Verifier checks:
-       \[
-       T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}, \quad T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}, \quad T_3 \cdot \cm_3^c \stackrel{?}{=} g_3^{z_{\beta}} g^{z_{r_3}}
-       \]
-       \[
-       T_4 \cdot \cm_4^c \stackrel{?}{=} \cm_3^{z_{sk} + z_x} g^{z_{r_4}}
-       \]
-       
-       Additionally verifies that $\cm_4 / g_3$ represents a valid randomization term (i.e., it's of the form $g^s$ for some $s \in \mathbb{Z}_q$).
-\end{enumerate}
-\end{protocol}
-
-This protocol extends our previous approaches with two key innovations:
-\begin{enumerate}
-    \item The nullifier $g^{1/(sk+x)}$ is now embedded in commitment $\cm_3$ rather than revealed directly
-    \item The auxiliary commitment $\cm_4$ enables verification that $\cm_3$ correctly commits to $g_3^{1/(sk+x)}$ by proving $\cm_3^{sk+x} = g_3 g^s$ for some randomization $s$
-\end{enumerate}
-
-The construction creates a cryptographic binding between the deterministic nullifier and the committed values, while the randomization ensures presentations remain unlinkable.
-
-\subsection{Security Analysis}
-
-\subsubsection{Sybil Resistance}
-
-The CRBN provides sybil resistance through the uniqueness property: for any fixed master credential key $sk$ and context $x$, there exists only one valid nullifier value $g^{1/(sk+x)}$ that will verify correctly. Even with the committed variant, the underlying deterministic value ensures a user cannot create multiple valid credential relationships for the same context.
-
-This uniqueness is rooted in the algebraic structure of the inverse relationship. If a user could produce two different nullifiers $y$ and $y'$ for the same $(sk,x)$ pair, both would satisfy $y^{sk+x} = g$ and $y'^{sk+x} = g$, which implies $(y/y')^{sk+x} = 1$. In a prime-order group, this is only possible if $y = y'$ or $sk+x \equiv 0 \pmod{p}$, the latter occurring with negligible probability.
-
-\subsubsection{Privacy}
-
-Both the deterministic and committed variants protect the privacy of credential attributes. The zero-knowledge property of our protocols ensures that nothing is revealed about $sk$ or $x$ beyond the fact that they satisfy the nullifier relationship.
-
-In the deterministic variant, the nullifier $y = g^{1/(sk+x)}$ is pseudorandom under the $q$-DDHI assumption, appearing as a random group element to any party not knowing $sk$ and $x$. The committed variant provides even stronger privacy by hiding the nullifier value itself.
-
-\subsubsection{Unlinkability}
-
-The committed CRBN variant enables unlinkable presentations through randomized commitments. Each time a user presents their credential relationship, they generate fresh randomness $r_3, r_4$ for commitments $\cm_3$ and $\cm_4$. These commitments appear as new, unrelated values in each presentation, preventing linking across verifications.
-
-The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ reveal no information about the underlying deterministic nullifier. Even a verifier who sees multiple presentations of the same credential relationship cannot determine whether they originated from the same user.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Performance Evaluation}\label{sec:performance-vrf}
+\section{Performance Evaluation}\label{sec:performance-vrf}
 
 We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares our constructions against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification.
 
@@ -1163,6 +959,11 @@ These performance improvements have significant practical implications. The veri
 
 Even with the additional privacy and unlinkability properties, our CRBN construction remains efficient enough for practical deployment in resource-constrained environments like mobile devices, where the elimination of pairing operations provides particular benefits in terms of battery usage and computational demand.
 
+
+
+
+\section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}
+
 \subsection{Applications}
 
 The CRBN enables several important applications for privacy-preserving identity systems:
@@ -1180,5 +981,24 @@ The CRBN enables several important applications for privacy-preserving identity 
 These applications demonstrate how CRBN addresses a critical gap in privacy-preserving digital identity: enabling hierarchical credential structures with binding enforceable through zero-knowledge proofs.
 
 
+\subsubsection{Sybil Resistance}
+
+The CRBN provides sybil resistance through the uniqueness property: for any fixed master credential key $sk$ and context $x$, there exists only one valid nullifier value $g^{1/(sk+x)}$ that will verify correctly. Even with the committed variant, the underlying deterministic value ensures a user cannot create multiple valid credential relationships for the same context.
+
+This uniqueness is rooted in the algebraic structure of the inverse relationship. If a user could produce two different nullifiers $y$ and $y'$ for the same $(sk,x)$ pair, both would satisfy $y^{sk+x} = g$ and $y'^{sk+x} = g$, which implies $(y/y')^{sk+x} = 1$. In a prime-order group, this is only possible if $y = y'$ or $sk+x \equiv 0 \pmod{p}$, the latter occurring with negligible probability.
+
+\subsubsection{Revocation}
+
+Both the deterministic and committed variants protect the privacy of credential attributes. The zero-knowledge property of our protocols ensures that nothing is revealed about $sk$ or $x$ beyond the fact that they satisfy the nullifier relationship.
+
+In the deterministic variant, the nullifier $y = g^{1/(sk+x)}$ is pseudorandom under the $q$-DDHI assumption, appearing as a random group element to any party not knowing $sk$ and $x$. The committed variant provides even stronger privacy by hiding the nullifier value itself.
+
+\subsubsection{Unlinkability}
+
+The committed CRBN variant enables unlinkable presentations through randomized commitments. Each time a user presents their credential relationship, they generate fresh randomness $r_3, r_4$ for commitments $\cm_3$ and $\cm_4$. These commitments appear as new, unrelated values in each presentation, preventing linking across verifications.
+
+The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ reveal no information about the underlying deterministic nullifier. Even a verifier who sees multiple presentations of the same credential relationship cannot determine whether they originated from the same user.
 
 
+\section{Conclusion}
+    
