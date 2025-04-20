@@ -67,7 +67,7 @@ Creating an efficient, privacy-preserving nullifier for credential binding raise
     
     \item \textbf{Anonymity}: Nullifier generation and verification must not reveal the user inputs $\k, \ctx$ and optionally enable unlinkable outputs. 
     
-    \item \textbf{Integration with $\MIMCABC$}: The nullifier mechanism must seamlessly extend our existing anonymous credential framework without compromising its security properties.
+    \item \textbf{Integration with Anonymous Credentials}: The nullifier mechanism must seamlessly extend our existing anonymous credential framework without compromising its security properties.
 \end{enumerate}
 
 
@@ -177,49 +177,50 @@ Previous systems have addressed aspects of hierarchical credential binding and s
 \end{itemize}
 
 
-\subsection{Technical Challenges}\label{sec:technical-challenges}
+\subsection{Contributions}\label{sec:vrf-contributions}
+We start with the $q$-DDHI assumption and work in two different directions. Firstly, we aim for efficiency and reconstruct the Dodis Yampolskiy VRF in a prime-order group and show XXX efficiency improvement while retaining security properties. Secondly, we aim for privacy,  starting with a novel zkpok protocol to prove the DDHI challenge $(g^{1/x})$ which we generalise to a sigma protocol for \emph{proof of inverse exponent}. We then extend this with a new private VRF to generate deterministic nullifiers from private inputs, combining our prime-order DY VRF and the ZKPoK of a DDHI challenge, where inputs are exponents in commitments for use in sybil-resistant mechanisms. We then extend this further for probabilistic outputs, committed but provable nullifiers to be used in revocation schemes. 
 
-The three core challenges we solve are: 1) remove pairings from DY's VRF, 2) preserve privacy, and 3) enable unlinkability. This section provides a roadmap of our approach before we detail each construction.
 
 \begin{figure}[ht]
 \centering
 \begin{tikzpicture}[
-    node distance=1.5cm,
-    box/.style={rectangle, rounded corners, draw, fill=white, text width=2.5cm, minimum height=1.2cm, align=center, font=\small},
+    node distance=1cm,
+    box/.style={rectangle, rounded corners, draw, fill=white, text width=2.5cm, minimum height=1cm, align=center, font=\small},
     arrow/.style={thick,->,>=stealth},
-    improvement/.style={text width=2.2cm, align=center, font=\footnotesize\itshape}
+    improvement/.style={text width=3cm, align=center, font=\footnotesize\itshape}
 ]
-% Nodes
-\node[box] (dy) {
-    \textbf{Dodis-Yampolskiy VRF}
-};
+% Root node
+\node[box, fill=gray!10] (ddhi) {\textbf{DDHI Assumption}};
 
-\node[box, right=of dy] (dypf) {
-    \textbf{Pairing-Free}
-};
+% Branch 1 - Top horizontal branch
+\node[box, right=1.25cm of ddhi, yshift=1cm] (pfdy) {\textbf{Prime Order DY}};
 
-\node[box, right=of dypf] (private) {
-    \textbf{Private Input}
-};
+% Branch 2 - Bottom horizontal branch with sequence
+\node[box, right=1.25cm of ddhi, yshift=-1cm] (zkpok) {\textbf{ZKPoK of DDHI challenge}};
+\node[box, right=1.25cm of zkpok] (anon) {\textbf{Anonymous VRF}};
+\node[box, right=1.25cm of anon] (unlink) {\textbf{Unlinkable VRF}};
 
-\node[box, right=of private] (crbn) {
-    \textbf{Full Anonymity}
-};
+% Arrows between nodes with smooth curves
+\draw[arrow] (ddhi.east) -- ++(0,0) -- (pfdy.west);
+\draw[arrow] (ddhi.east) -- ++(0,0) -- (zkpok.west);
+\draw[arrow] (zkpok.east) -- (anon.west);
+\draw[arrow] (anon.east) -- (unlink.west);
 
-% Arrows 
-\draw[arrow] (dy.east) -- (dypf.west);
-\draw[arrow] (dypf.east) -- (private.west);
-\draw[arrow] (private.east) -- (crbn.west);
+% Improvement labels - positioned below the boxes
+% \node[improvement, below=0.2cm of pfdy] {Remove Pairings};
 
-% Improvement text below arrows
-\node[improvement, below=1cm of dy.east] (imp1) {Eliminates pairings for 3.1× performance gain};
-\node[improvement, below=1cm of dypf.east] (imp2) {Enables operations on hidden attributes};
-\node[improvement, below=1cm of private.east] (imp3) {Adds unlinkability while maintaining verifiability};
-
+% \node[improvement, below=0.2cm of zkpok] {Prove};
+% \node[improvement, below=0.2cm of anon] {Adds privacy protection};
+% \node[improvement, below=0.2cm of unlink] {Maintains verifiability while adding unlinkability};
 \end{tikzpicture}
-\caption{Overview of our construction approach, progressing from the original Dodis-Yampolskiy VRF to our final Credential Relationship Binding Nullifier (CRBN).}
+\caption{Sigma Protocols and VRF Constructions from the $q$-DDHI assumption}
 \label{fig:vrf-construction-overview}
 \end{figure}
+
+
+
+
+
 
 To understand our contributions, we examine the core technical challenges in creating an efficient, privacy-preserving nullifier mechanism for hierarchical credential systems. Consider a user with a master credential (containing secret key $\k$, denoted as $sk$ below) who needs to prove possession of a context credential (with identifier $\ctx = \text{"DMV"}$, denoted as $x$) without revealing their identity or allowing them to obtain multiple DMV credentials.
 
@@ -342,43 +343,6 @@ The auxiliary commitment $\cm_4$ enables verification analogous to our approach 
 This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
 
 
-
-
-\subsection{Our Approach}
-
-To address these challenges, we develop a series of progressively more sophisticated cryptographic constructions:
-
-\begin{enumerate}
-    \item \textbf{Pairing-Free VRF (DY-PF):} We design a $\Sigma$-protocol that enables verification of $y = g^{1/(sk+x)}$ without pairings by proving the relation $y^{sk+x} = g$, preserving the security properties of the original DY VRF but with significantly improved efficiency.
-    
-    \item \textbf{Privacy-Preserving VRF:} We extend our technique to verify nullifiers computed from committed attributes, creating novel $\Sigma$-protocols for proving inverse exponent relations between commitments.
-    
-    \item \textbf{Committed Nullifier:} We further develop our framework to commit the nullifier itself, enabling unlinkable credential presentations while maintaining Sybil resistance.
-\end{enumerate}
-
-Each construction builds upon the previous one, culminating in the Credential Relationship Binding Nullifier (CRBN) that satisfies all our requirements for hierarchical, privacy-preserving, and efficient credential systems.
-
-
-
-
-
-
-\subsection{Contributions}
-
-We advance anonymous credential systems with three key contributions:
-
-\begin{enumerate}
-    \item \textbf{Pairing-Free VRF Construction}: We redesign the Dodis-Yampolskiy VRF for standard prime-order groups, eliminating pairings while maintaining security under the $q$-DDHI assumption. Our construction transforms $y = e(g, \tilde{g})^{1/(sk+x)}$ to $y = g^{1/(sk+x)}$ with a novel verification approach. We show a 3.1x speedup of our construction against the DY VRF. 
-    
-    \item \textbf{Zero-Knowledge Protocols for Inverse Relations}: We develop efficient $\Sigma$-protocols to prove knowledge of committed inverse exponents—a crucial building block for private nullifier verification. These protocols enable statements of the form:
-    \[
-    \zkpok\{(sk, x, r_1, r_2) : \cm_1 = g_1^{sk}g^{r_1} \land \cm_2 = g_2^{x}g^{r_2} \land y = g^{1/(sk+x)}\}
-    \]
-    
-    \item \textbf{Credential Relationship Binding Nullifier (CRBN)}: We integrate these components into a complete system that binds master credentials to context credentials via nullifiers. Our two constructions, 1) producing a deterministic nullifier and 2) producing a committed nullifier, are respectively 5.5x and 2.9x faster for  $\VRFEval+\VRFProve$ and 4.6x and 3.9x faster for $\VRFVerify$ compared to the fastest pairing-based alternative we found \cite{tomescu2022utt}.
-\end{enumerate}
-
-These contributions enable a privacy-preserving credential hierarchy with sybil resistance, addressing a critical gap in existing anonymous credential systems. Our approach maintains the privacy guarantees of $\MIMCABC$ while adding the ability to enforce context-specific uniqueness—balancing privacy with the accountability requirements of real-world identity systems.
 
 
 
