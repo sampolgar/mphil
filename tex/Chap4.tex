@@ -18,7 +18,7 @@ The remainder of the chapter is as follows
 \section{Introduction}
 Real-world credentials naturally form a hierarchy, this is notable when applying for bank loans or new credentials from the government that require multiple credentials shown together. A simple task without privacy, a user hands over multiple credentials, and their details should match a "higher-security" document, like a passport. However, it is a challenging request with privacy-preserving credential systems. Consider a user in a privacy-preserving identity system with both a passport and a driver's license, as shown in Figure~\ref{fig:credential-nullifier}, the passport functions as a foundational Master Credential containing a secret key $\k$, while the driver's license is a Context Credential tied to a specific domain $\ctx$. For privacy and security, we need to cryptographically bind these credentials together and prevent users from obtaining multiple credentials for the same context (e.g., multiple driver's licenses) without compromising anonymity.
 
-A nullifier is a public piece of data that represents a user's account or specific credential information in secrecy. Our nullifier scheme commits to the user's key in a master credential and context. The deterministic version can be used in an anonymous user list for sybil resistance, and the probabilistic version can be used in membership proofs. 
+A nullifier is a public piece of data that represents a user's account or specific credential information in secrecy. Our nullifier schemes take in the key $\k$ from the master credential and $\ctx$ from the context credential and produce a unique and pseudorandom output. The deterministic version can be used in an anonymous user list for sybil resistance, and the probabilistic version can be used in membership proofs and revocation lists. 
 
 
 \begin{figure}
@@ -115,7 +115,7 @@ A nullifier is a public piece of data that represents a user's account or specif
 Creating an efficient, privacy-preserving nullifier for credential binding raises three specific challenges:
 
 \begin{enumerate}
-    \item \textbf{Pairing-Free (Prime Order) DY VRF}: The DY VRF provides a secure structure but uses expensive bilinear pairings. Our first challenge is to create a Pairing-Free DY VRF using a $\Sigma$-protocol to maintain security under the $q$-DDHI assumption.
+    \item \textbf{Prime Order (Pairing-Free) DY VRF}: The DY VRF provides a secure structure but uses expensive bilinear pairings. Our first challenge is to create a Pairing-Free DY VRF using a $\Sigma$-protocol to maintain security under the $q$-DDHI assumption.
     
     \item \textbf{Anonymous Input for Prime-Order VRF}: To transform our Prime-Order DY VRF for Anonymous Credentials, we must use a commitment to the VRF inputs. Our second core challenge is to create a $\Sigma$-protocol to prove knowledge of $x$ such that $y = g^{1/x}$ (the $q$-DDHI challenge). Our third core challenge extends this by incorporating the proof of linear relations, the final protocol proves knowledge of $(x, sk)$ such that $y = g^{1/(sk + x)}$ where $y$ is a deterministic nullifier.
     
@@ -474,7 +474,7 @@ Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator
 \end{remark}
 
 \subsection{Proof Protocol}
-\begin{protocol}{P-DY Proof Protocol}{}\label{protocol-pdy-protocol1}
+\begin{protocol}{DY Prime Order Proof Protocol}{}\label{protocol-pdy-protocol1}
 \textbf{Common Input:} $g, pk, y \in \mathbb{G}$, $x \in \mathbb{Z}_p$ \\
 \textbf{Prover Input:} $sk \in \mathbb{Z}_p^*$ with $pk = g^{sk}$, $y = g^{1/(sk + x)}$ \\
 \textbf{Relation: }
@@ -544,7 +544,7 @@ Our approach builds progressively across three key stages:
     \item \textbf{Proving Knowledge of a Committed Nullifier}: Finally, we introduce a protocol to commit to the VRF output itself (i.e., $\cm_y = g_3^{1/(sk + x)} g^{r_3}$), allowing unlinkable presentations. This probabilistic nullifier ensures that repeated uses of the same credential relationship remain unlinkable while still verifiable.
 \end{enumerate}
 
-These protocols collectively transform our prime-order VRF into a privacy-preserving tool suitable for hierarchical anonymous credential systems. In the subsections that follow, we detail each stage, presenting the cryptographic constructions and their security properties. Section 6 will later demonstrate how these building blocks are instantiated for sybil resistance and revocation in the Multi-Issuer Multi-Credential (MIMC) system.
+These protocols collectively transform our prime-order VRF into a privacy-preserving tool suitable for hierarchical anonymous credential systems. In the subsections that follow, we detail each stage, presenting the cryptographic constructions and their security properties. \ref{sec-instantiation} will later demonstrate how these building blocks are instantiated for sybil resistance and revocation in the Multi-Issuer Multi-Credential (MIMC) system.
 
 
 
@@ -560,7 +560,7 @@ These protocols collectively transform our prime-order VRF into a privacy-preser
 
 
 \subsection{Proving Knowledge of a Committed Inverse}
-Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent which is congruent to proving a DDHI challenge $g^{1/x}$
+Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent, which is congruent to proving a DDHI challenge $g^{1/x}$
 \[
 \mathcal{R}_{\mathsf{DDHI}} = \left\{ 
 \begin{array}{l} (\cm, y),\\
@@ -916,24 +916,24 @@ This contribution is crucial for enabling hierarchical, sybil-resistant anonymou
 
 \section{Performance Evaluation}\label{sec:performance-vrf}
 
-We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares our constructions against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification.
+We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares our constructions on BLS12-381 curve against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification. Table \ref{tab:performance-vrf-curves} shows our constructions built on different, non-pairing curves.
 
 \begin{table}[ht]
 \begin{center}
-\caption{Verification Time for 4 Credentials with Varying Attributes (time in ms)}
+\caption{VRF Comparison with curve BLS12-381}
 \label{tab:performance-vrf}
-\begin{tabular}{l@{\hspace{1em}}r@{\hspace{2em}}r@{\hspace{5em}}r@{\hspace{2em}}r}
+\begin{tabular}{l@{\hspace{1em}}c@{\hspace{1em}}r@{\hspace{2em}}r@{\hspace{5em}}r@{\hspace{2em}}r}
 \toprule
-\textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval + Prove (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-& \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} \\
+\textbf{Scheme} & \textbf{Pairing} & \multicolumn{2}{c}{\textbf{Eval + Prove (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+& & \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} \\
 \midrule
-DY$^1$ \cite{hutchison_verifiable_2005}                     & 1.27 &        & 2.2   &       \\
-Our DY-PF \ref{sec-dy-pf}                                   & 0.41 & 3.1x   & 0.70  & 3.1x  \\
+DY$^1$ \cite{hutchison_verifiable_2005}                     & yes & 1.27 &  -      & 2.2   &  -     \\
+Our DY-PF \ref{sec-dy-pf}                                   & no  & 0.41 & 3.1x   & 0.70  & 3.1x  \\
 \midrule
-DY Private \cite{tomescu2022utt}                            & 5.91 &        & 6.47  &       \\
-Our DY-PF-Private \ref{pok-committed-inverse-linear-relation}                      & 1.08 & 5.5x   & 1.41  & 4.6x  \\
-Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}       & 2.01 & 2.9x   & 1.65  & 3.9x  \\
+DY Private \cite{tomescu2022utt}                            & yes & 5.91 &   -     & 6.47  &   -    \\
+Our DY-PF-Private \ref{pok-committed-inverse-linear-relation} & no  & 1.08 & 5.5x   & 1.41  & 4.6x  \\
+Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}  & no  & 2.01 & 2.9x   & 1.65  & 3.9x  \\
 \bottomrule
 \end{tabular}
 \par\medskip
@@ -942,8 +942,40 @@ Our DY-PF-Private-ComOut \ref{pok-committed-nullifier-vrf}       & 2.01 & 2.9x  
 \end{center}
 \end{table}
 
-CAN WE UPDATE THE CURVE WE USE AND GET DIFFERENT RESULTS?
-Can we include proof bit size?
+\begin{table}[ht]
+\begin{center}
+\caption{Performance of our VRF Constructions Across Elliptic Curves (time in ms)}
+\label{tab:performance-vrf-curves}
+\begin{tabular}{ll@{\hspace{1em}}r@{\hspace{1em}}r@{\hspace{3em}}r@{\hspace{1em}}r}
+\toprule
+\textbf{Curve} & \textbf{Scheme} & \multicolumn{2}{c}{\textbf{Eval + Prove}} & \multicolumn{2}{c}{\textbf{Verify}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+& & \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} \\
+\midrule
+\multirow{3}{*}{BLS12-381} 
+& DY-PF  \S\ref{sec-dy-pf} & 0.41 & - & 0.71 & - \\
+& DY-PF-Private \S\ref{pok-committed-inverse-linear-relation} & 1.15 & - & 1.08 & - \\
+& DY-PF-Private-ComOut \S\ref{pok-committed-nullifier-vrf} & 2.01 & - & 1.65 & - \\
+\midrule
+\multirow{3}{*}{Ed25519} 
+& DY-PF \S\ref{sec-dy-pf} & 0.21 & 2.0$\times$ & 0.37 & 1.9$\times$ \\
+& DY-PF-Private \S\ref{pok-committed-inverse-linear-relation} & 0.56 & 2.0$\times$ & 0.56 & 1.9$\times$ \\
+& DY-PF-Private-ComOut \S\ref{pok-committed-nullifier-vrf} & 1.04 & 1.9$\times$ & 0.84 & 2.0$\times$ \\
+\midrule
+\multirow{3}{*}{secp256k1} 
+& DY-PF \S\ref{sec-dy-pf} & 0.25 & 1.6$\times$ & 0.42 & 1.7$\times$ \\
+& DY-PF-Private \S\ref{pok-committed-inverse-linear-relation} & 0.66 & 1.8$\times$ & 0.66 & 1.6$\times$ \\
+& DY-PF-Private-ComOut \S\ref{pok-committed-nullifier-vrf} & 1.29 & 1.6$\times$ & 1.05 & 1.6$\times$ \\
+\bottomrule
+\end{tabular}
+\par\medskip
+\raggedright
+\footnotesize{Measurements conducted on a MacBook Air M2 with 16GB RAM using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust. Speedup is calculated relative to BLS12-381 for each scheme and operation. Times are rounded to two decimal places for clarity.}
+\end{center}
+\end{table}
+
+
+
 
 Our evaluation reveals several key findings:
 
@@ -953,6 +985,8 @@ Our evaluation reveals several key findings:
     \item \textbf{Privacy Preservation Overhead:} Adding privacy preservation through commitments inevitably increases computational costs, but our DY-PF-Private design achieves a 5.5× speedup over comparable pairing-based private VRF schemes.
     
     \item \textbf{Unlinkability Trade-off:} The committed nullifier variant (DY-PF-Private-ComOut) involves additional operations for commitment handling, yet still maintains a 2.9× evaluation speedup and 3.9× verification speedup over pairing-based alternatives.
+
+    \item \textbf{Inefficiency of Pairing Curve Operations} The non-pairing curve operations are from 1.6x - 2x more efficient
 \end{enumerate}
 
 These performance improvements have significant practical implications. The verification time of 1.65ms for our committed nullifier means that credential binding can be performed at interactive speeds on standard hardware. This enables real-time verification in applications like authentication systems, doorkey access, and mobile identity solutions.
@@ -962,7 +996,7 @@ Even with the additional privacy and unlinkability properties, our CRBN construc
 
 
 
-\section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}
+\section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-instantiation}
 
 \subsection{Applications}
 
@@ -1001,4 +1035,7 @@ The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ rev
 
 
 \section{Conclusion}
-    
+
+% Could compare my construction with others
+% https://eprint.iacr.org/2022/1255 e.g.
+% https://xn--2-umb.com/22/nullifiers/#zerocoin-nullifiers
