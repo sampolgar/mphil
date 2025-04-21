@@ -653,9 +653,9 @@ Detailed proofs of these properties are provided in Appendix~\ref{app:vrf-commit
 
 
 
-\subsection{Proving Knowledge of a Committed Inverse Linear Relation}
+\subsection{Proving Knowledge of a Committed Inverse Linear Relation}\label{sec-pok-committed-inv-linear-relation}
 
-We then extend this to prove a linear relation of inverse exponents $y = g^{1/(sk+x)}$ where $sk$ and $x$ come from different commitments, enforcing a relation $\mathcal{R}_{\mathsf{nullifier}}$ holds. We show the full protocol here \ref{pok-committed-inverse-linear-relation}. 
+We now address proving inverse relationships involving linear combinations of committed values. Specifically, we prove knowledge of $(sk, x, r_1, r_2)$ such that:
 
 \[
 \mathcal{R}_{\mathsf{nullifier}} = \left\{ 
@@ -675,11 +675,9 @@ y = g^{1/(sk + x)} \\
 
 
 
+
 \subsubsection{Construction}
-
-We now extend our approach to handle linear combinations of committed values. Given commitments $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$ to values $sk$ and $x$, we want to prove that $y = g^{1/(sk + x)}$ without revealing $sk$, $x$, or the randomness values.
-
-This extension is essential for the credential binding scenario, where $sk$ is a secret key in a master credential and $x$ is a context identifier in a separate credential. The protocol must verify the correct computation of $y$ from these disparate committed values.
+The protocol extends our single-commitment construction by (1) proving knowledge of openings for $\cm_1$ and $\cm_2$ simultaneously, and (2) verifying $y^{sk+x} = g$ where $sk+x$ combines values from distinct commitments. The consistency check $z_m = z_{sk} + z_x$ prevents substitution attacks where an adversary might use different linear combinations across verification equations.
 
 \begin{protocol}{Proving Committed Inverse Linear Relation}{}\label{pok-committed-inverse-linear-relation}
 \textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, \cm_2, y \in \mathbb{G}$ \\
@@ -717,34 +715,21 @@ This extension is essential for the credential binding scenario, where $sk$ is a
 \end{protocol}
 
 
-This protocol extends our basic approach in two key ways:
-\begin{enumerate}
-    \item It simultaneously proves knowledge of openings for two separate commitments ($\cm_1$ and $\cm_2$).
-    \item It verifies that $y^{sk+x} = g$, proving $y = g^{1/(sk+x)}$, where the exponent $sk+x$ is a linear combination of values from different commitments.
-\end{enumerate}
-
-The additional check $z_m \stackrel{?}{=} z_{sk} + z_x$ ensures consistency between the individual responses and their sum, preventing a malicious prover from using different values in different parts of the proof.
-
 \subsubsection{Security Analysis}
 
-The security analysis follows similar principles to the basic protocol, with the additional complexity of handling two commitments and their linear combination.
+\begin{theorem}
+Protocol~\ref{pok-committed-inverse-linear-relation} is a $\Sigma$-protocol for $\mathcal{R}_{\mathsf{nullifier}}$.
+\end{theorem}
 
-\paragraph{Completeness:} For an honest prover, all verification equations hold by similar derivations to the basic case, with the additional consistency check $z_m = z_{sk} + z_x$ holding by construction.
+\begin{proof}[Sketch]
+\begin{itemize}
+    \item \textbf{Completeness:} For an honest prover, all verification equations hold by similar derivations to the basic case, with the additional consistency check $z_m = z_{sk} + z_x$ holding by construction.
+    
+    \item \textbf{Special Soundness:} From accepting transcripts $(T_1, T_2, T_y, c, z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$ and \\ $(T_1, T_2, T_y, c', z'_{sk}, z'_x, z'_{r_1}, z'_{r_2}, z'_m)$ with $c \neq c'$, extract $sk = \frac{z_{sk} - z'_{sk}}{c - c'}$, etc. The third verification equation yields $y^{(c - c')(sk + x)} = g^{c - c'}$, thus $y^{sk+x} = g$.
 
-\paragraph{Special Soundness:} Given two accepting transcripts with different challenges, we can extract $sk$, $x$, $r_1$, and $r_2$ satisfying the commitment openings and, crucially, verify through the third equation that $y^{sk+x} = g$, proving $y = g^{1/(sk+x)}$.
-
-\paragraph{Honest-Verifier Zero-Knowledge:} A simulator can generate indistinguishable transcripts by sampling responses randomly and computing commitments that satisfy the verification equations, ensuring no information about the witness is revealed.
-
-This protocol forms the foundation for our credential binding nullifier, allowing us to prove relationships between attributes from different credentials without compromising privacy.
-
-
-
-
-
-
-
-
-
+    \item \textbf{HVZK:} Simulator samples $z_{sk}, z_x, z_{r_1}, z_{r_2} \sample \mathbb{Z}_q$, sets $z_m = z_{sk} + z_x$, computes $T_1 = g_1^{z_{sk}}g^{z_{r_1}} \cdot \cm_1^{-c}$, etc.
+\end{itemize}
+\end{proof}
 
 
 
@@ -775,18 +760,24 @@ This protocol forms the foundation for our credential binding nullifier, allowin
 
 \subsection{Proving Knowledge of a Committed Nullifier}
 
-A deterministic nullifier $y = g^{1/(sk+x)}$ is necessary for Sybil resistance ensuring a unique, verifiable value for each $(sk,x)$ pair. However, deterministic algorithms create privacy problems with linkability. There are many use-cases for the verifiable connection of $(sk, x)$, such as revocation accumulators, which a user would need to interact with frequently, requiring a probabilistic output that can verify the $(sk+x)$ connection. 
+A deterministic nullifier $y = g^{1/(sk + x)}$ is essential for sybil resistance, ensuring a unique, verifiable value for each $(sk, x)$ pair derived from a master credential key $sk$ and context identifier $x$. However, revealing the nullifier directly introduces linkability risks, as each presentation exposes a deterministic function of $(sk, x)$, potentially allowing user actions to be tracked across interactions. To resolve this, we construct a zero-knowledge Sigma-protocol that proves knowledge of a nullifier embedded within a Pedersen commitment, enabling unlinkable presentations while preserving the verifiable binding necessary for security.
 
-Our solution is to commit to the nullifier rather than revealing it directly:
+Our solution commits to the nullifier as:
 \[
-\cm_{\mathsf{null}} = g_3^{1/(sk+x)} g^{r_3}
+\cm_{\text{null}} = g_3^{1/(sk + x)} g^{r_3}
 \]
+where $r_3 \sample \mathbb{Z}_q$ provides fresh randomness for each presentation, ensuring unlinkability. We then design a protocol to prove that $\cm_{\text{null}}$ correctly commits to $g_3^{1/(sk + x)}$, where $sk$ and $x$ are themselves committed in $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$, without revealing any of these values. This approach supports privacy-preserving applications like revocation and set membership proofs in the Multi-Issuer Multi-Credential (MIMC) system.
 
-We must now prove that the committed value represents the nullifiers $(sk+x)$, we do so with the following relation:
+The key innovation is an auxiliary commitment $\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}$, which allows us to verify that $\cm_3^{sk + x} = g_3$ (modulo randomness) in zero knowledge. This algebraic structure ensures the nullifier’s correctness while operating entirely within the commitment space.
 
-
+\begin{protocol}{$\Pi_{\mathsf{CN}}$: Zero-Knowledge Proof for $\mathcal{R}_{\mathsf{CN}}$}{}
+\label{prot:committed-nullifier}
+\textbf{Public parameters:} Prime-order group $\mathbb{G}$ with generators $g_1, g_2, g_3, g \in \mathbb{G}$\\
+\textbf{Common input:} $(\cm_1, \cm_2, \cm_3, \cm_4) \in \mathbb{G}^4$\\
+\textbf{Prover input:} $(sk, x, r_1, r_2, r_3, r_4) \in \mathbb{Z}_p^6$  \\
+\textbf{Relation:} 
 \[
-\mathcal{R}_{\mathsf{CommittedNull}} = \left\{ 
+\mathcal{R}_{\mathsf{CN}} = \left\{ 
 \begin{array}{l} 
 (\cm_1, \cm_2, \cm_3, \cm_4), \\
 (sk, x, r_1, r_2, r_3, r_4) 
@@ -795,80 +786,122 @@ We must now prove that the committed value represents the nullifiers $(sk+x)$, w
 \begin{array}{l}
 \cm_1 = g_1^{sk} g^{r_1} \\
 \cm_2 = g_2^{x} g^{r_2} \\
-\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{The Committed Nullifier}}\\
-\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
-\end{array} \right\}
-\]
-
-The auxiliary commitment $\cm_4$ enables verification analogous to our approach in Challenge 1: instead of verifying $y^{sk+x} = g$ directly, we prove that $\cm_3^{sk+x} = g_3$ (modulo some randomness $g^{r_4}$). This algebraic relationship can only hold if $\cm_3$ commits to $g_3^{1/(sk+x)}$, thus verifying the correctness of the committed nullifier without revealing it.
-
-This construction extends our technique from Challenge 2 by applying the exponentiation-inversion verification paradigm entirely within the commitment space. The verification operates on the same mathematical principle ($x \cdot \frac{1}{x} = 1$), but now uses homomorphic properties of Pedersen commitments to prove the relationship between committed values, enabling both unlinkable presentations and verifiable credential binding.
-
-
-
-\subsubsection{Construction}\label{sec:committed-nullifier}
-
-
-In the Multi-Issuer Multi-Credential Attribute-Based Anonymous Credential (MIMC-ABC) system, nullifiers ensure sybil resistance by enforcing uniqueness of context-specific credentials bound to a master credential. However, exposing nullifiers as public values, as in our pairing-free Verifiable Random Function (VRF) construction (Section~\ref{sec-dy-pf}), risks linkability across presentations, compromising user privacy. To address this, we propose a novel zero-knowledge protocol that commits the nullifier within a Pedersen commitment, proving its correctness relative to committed attributes from master and context credentials without revealing sensitive information.
-
-Our goal is to design a Sigma-protocol that proves a commitment $\cm_3 = g_3^{1/(sk + x)} g^{r_3}$ contains the inverse exponent $1/(sk + x)$, where $sk$ and $x$ are attributes committed in $\cm_1 = g_1^{sk} g^{r_1}$ (master credential) and $\cm_2 = g_2^{x} g^{r_2}$ (context credential), respectively. This enables privacy-preserving sybil resistance, allowing nullifiers to be used in applications like set membership proofs without linking user actions. The protocol operates in prime-order groups, avoiding the computational overhead of bilinear pairings, and integrates seamlessly with MIMC-ABC's efficient Sigma-protocol framework.
-
-The novelty of our approach lies in its pairing-free, zero-knowledge proof of a committed inverse linear relation, a significant advancement over prior VRF-based nullifiers that rely on pairings or expose inputs \cite{hutchison_verifiable_2005,tomescu2022utt}. By committing the nullifier, we achieve unlinkability, a critical requirement for anonymous credential systems in regulatory contexts like KYC/AML. Furthermore, our protocol is 33\% faster in evaluation and 60\% faster in verification compared to pairing-based schemes (Section~\ref{sec:performance}), offering practical scalability for real-world deployments.
-
-This contribution is crucial for enabling hierarchical, sybil-resistant anonymous credentials that balance privacy, accountability, and efficiency. It addresses practical challenges in federated identity systems, where users must prove credential relationships without compromising anonymity, and lays the foundation for advanced functionalities like private revocation and accumulator-based proofs.
-
-\begin{protocol}{Proving Committed Nullifier for VRF}{committed-nullifier-vrf}\label{pok-committed-nullifier-vrf}
-\textbf{Common Input:} Group generators $g_1, g_2, g_3, g \in \mathbb{G}$, commitments $\cm_1, \cm_2, \cm_3, \cm_4 \in \mathbb{G}$ \\
-\textbf{Prover Input:} Witness $(sk, x, r_1, r_2, r_3, r_4)$ such that:
-    \[
-    \cm_1 = g_1^{sk} g^{r_1}, \quad \cm_2 = g_2^{x} g^{r_2}, \quad \cm_3 = g_3^{1/(sk + x)} g^{r_3}, \quad \cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
-    \]
-\textbf{Relation:}
-\[
-\mathcal{R} = \left\{ 
-\begin{array}{l} 
-(\cm_1, \cm_2, \cm_3, \cm_4), \\
-(sk, x, r_1, r_2, r_3, r_4) 
-\end{array}
-\ \middle| \
-\begin{array}{l}
-\cm_1 = g_1^{sk} g^{r_1} \\
-\cm_2 = g_2^{x} g^{r_2} \\
-\cm_3 = g_3^{1/(sk + x)} g^{r_3} \\
-\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}
+\cm_3 = g_3^{1/(sk + x)} g^{r_3}  \quad \text{\small{(committed nullifier)}}\\
+\cm_4 = g_3 g^{r_3 (sk + x) + r_4}  \quad \text{\small{(auxiliary commitment)}}
 \end{array} \right\}
 \]
 \begin{enumerate}
-    \item \textbf{Commitment:} Prover samples $a_{sk}, a_x, a_{r_1}, a_{r_2}, a_{r_3}, a_{r_4} \sample \mathbb{Z}_q$ and computes:
-       \[
-       T_1 = g_1^{a_{sk}} g^{a_{r_1}}, \quad T_2 = g_2^{a_x} g^{a_{r_2}}, \quad T_3 = g_3^{a_{\beta}} g^{a_{r_3}}, \quad T_4 = \cm_3^{a_{sk} + a_x} g^{a_{r_4}}
-       \]
-       where $a_{\beta} = 1/(a_{sk} + a_x)$. Sends $(T_1, T_2, T_3, T_4)$ to verifier.
+    \item \textbf{Prover} samples $a_{sk}, a_x, a_{r_1}, a_{r_2}, a_{r_3}, a_{r_4} \sample \mathbb{Z}_p$ and computes:
+    \begin{align*}
+        T_1 &= g_1^{a_{sk}} g^{a_{r_1}} & T_2 &= g_2^{a_x} g^{a_{r_2}} &
+        T_3 &= g_3^{a_{\beta}} g^{a_{r_3}} & T_4 &= \cm_3^{a_m} g^{a_{r_4}}
+    \end{align*}
+    where $a_m = a_{sk} + a_x$ and $a_{\beta} = \frac{1}{a_m}$. Sends $(T_1, T_2, T_3, T_4)$.
     
-    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    \item \textbf{Verifier} sends challenge $c \sample \mathbb{Z}_p$.
     
-    \item \textbf{Response:} Prover computes:
-       \[
-       z_{sk} = a_{sk} + c \cdot sk, \quad z_x = a_x + c \cdot x, \quad z_{r_1} = a_{r_1} + c \cdot r_1, \quad z_{r_2} = a_{r_2} + c \cdot r_2
-       \]
-       \[
-       z_{r_3} = a_{r_3} + c \cdot r_3, \quad z_{r_4} = a_{r_4} + c \cdot r_4
-       \]
-       Sends $(z_{sk}, z_x, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4})$ to verifier.
+    \item \textbf{Prover} computes and sends:
+    \begin{align*}
+        z_{sk} &= a_{sk} + c \cdot sk & z_x &= a_x + c \cdot x &  z_{r_i} &= a_{r_i} + c \cdot r_i \text{ for } i \in \{1,2,3,4\} \\
+        z_m &= a_m + c \cdot (sk + x) & z_{\beta} &= a_{\beta} + c \cdot \frac{1}{sk + x}
+    \end{align*}
     
-    \item \textbf{Verification:} Verifier checks:
-       \[
-       T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}, \quad T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}, \quad T_3 \cdot \cm_3^c \stackrel{?}{=} g_3^{z_{\beta}} g^{z_{r_3}}
-       \]
-       \[
-       T_4 \cdot \cm_4^c \stackrel{?}{=} \cm_3^{z_{sk} + z_x} g^{z_{r_4}}
-       % \cm_4 \stackrel{?}{=} g_3 g^{s} \text{ for some } s \in \mathbb{Z}_q
-       \]
+    \item \textbf{Verifier} accepts iff:
+    \begin{align*}
+        T_1 \cdot \cm_1^c &= g_1^{z_{sk}} g^{z_{r_1}} 
+        & 
+        T_2 \cdot \cm_2^c &= g_2^{z_x} g^{z_{r_2}} 
+        &
+        T_3 \cdot \cm_3^c &= g_3^{z_{\beta}} g^{z_{r_3}} \\
+        T_4 \cdot \cm_4^c &= \cm_3^{z_m} g^{z_{r_4}}
+        &
+        z_m &= z_{sk} + z_x
+    \end{align*}
 \end{enumerate}
 \end{protocol}
 
 
+
 \subsubsection{Security Analysis}
+We establish the security of our protocol by proving three core properties: completeness, special soundness, and honest-verifier zero-knowledge (HVZK). These properties ensure that the protocol is correct, extractable, and privacy-preserving, respectively.
+
+\paragraph{Completeness}
+Completeness guarantees that an honest prover, using the correct witness $(sk, x, r_1, r_2, r_3, r_4)$ satisfying the relation $\mathcal{R}_{\mathsf{CN}}$, always convinces the verifier. We verify each step of the protocol to confirm that all verification equations hold.
+
+Assume the prover follows the protocol with:
+\[
+\cm_1 = g_1^{sk} g^{r_1}, \quad \cm_2 = g_2^{x} g^{r_2}, \quad \cm_3 = g_3^{1/(sk + x)} g^{r_3}, \quad \cm_4 = g_3 g^{r_3 (sk + x) + r_4}
+\]
+and samples $a_{sk}, a_x, a_{r_1}, a_{r_2}, a_{r_3}, a_{r_4} \sample \mathbb{Z}_p$. Let $a_m = a_{sk} + a_x$ and $a_{\beta} = \frac{1}{a_m}$, assuming $a_m \neq 0 \pmod{p}$
+
+
+The prover computes:
+\[
+T_1 = g_1^{a_{sk}} g^{a_{r_1}}, \quad T_2 = g_2^{a_x} g^{a_{r_2}}, \quad T_3 = g_3^{a_{\beta}} g^{a_{r_3}}, \quad T_4 = \cm_3^{a_m} g^{a_{r_4}}
+\]
+After receiving challenge $c$, the prover sends:
+\[
+z_{sk} = a_{sk} + c \cdot sk, \quad z_x = a_x + c \cdot x, \quad z_{r_i} = a_{r_i} + c \cdot r_i \text{ for } i \in \{1,2,3,4\}, \quad z_m = a_m + c \cdot (sk + x), \quad z_{\beta} = a_{\beta} + c \cdot \frac{1}{sk + x}
+\]
+
+The verifier checks:
+\begin{enumerate}
+    \item $T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}$
+    \[
+    T_1 \cdot \cm_1^c = g_1^{a_{sk}} g^{a_{r_1}} \cdot (g_1^{sk} g^{r_1})^c = g_1^{a_{sk} + c \cdot sk} g^{a_{r_1} + c \cdot r_1} = g_1^{z_{sk}} g^{z_{r_1}}
+    \]
+    \item $T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}$
+    \[
+    T_2 \cdot \cm_2^c = g_2^{a_x} g^{a_{r_2}} \cdot (g_2^{x} g^{r_2})^c = g_2^{a_x + c \cdot x} g^{a_{r_2} + c \cdot r_2} = g_2^{z_x} g^{z_{r_2}}
+    \]
+    \item $T_3 \cdot \cm_3^c \stackrel{?}{=} g_3^{z_{\beta}} g^{z_{r_3}}$
+    \[
+    T_3 \cdot \cm_3^c = g_3^{a_{\beta}} g^{a_{r_3}} \cdot (g_3^{1/(sk + x)} g^{r_3})^c = g_3^{a_{\beta} + c / (sk + x)} g^{a_{r_3} + c \cdot r_3} = g_3^{z_{\beta}} g^{z_{r_3}}
+    \]
+    \item $T_4 \cdot \cm_4^c \stackrel{?}{=} \cm_3^{z_m} g^{z_{r_4}}$
+    \[
+    T_4 \cdot \cm_4^c = \cm_3^{a_m} g^{a_{r_4}} \cdot (g_3 g^{r_3 (sk + x) + r_4})^c = \cm_3^{a_m} g^{a_{r_4}} \cdot g_3^c g^{c (r_3 (sk + x) + r_4)}
+    \]
+    Since $\cm_3^{sk + x} = g_3 g^{r_3 (sk + x)}$ and $\cm_4 = \cm_3^{sk + x} g^{r_4}$, we have:
+    \[
+    T_4 \cdot \cm_4^c = \cm_3^{a_m} g^{a_{r_4}} \cdot (\cm_3^{sk + x} g^{r_4})^c = \cm_3^{a_m + c (sk + x)} g^{a_{r_4} + c r_4} = \cm_3^{z_m} g^{z_{r_4}}
+    \]
+    \item $z_m \stackrel{?}{=} z_{sk} + z_x$
+    \[
+    z_m = a_m + c (sk + x) = (a_{sk} + a_x) + c (sk + x) = z_{sk} + z_x
+    \]
+\end{enumerate}
+All equations hold, confirming completeness.
+
+\paragraph{Special Soundness}
+Given two accepting transcripts with distinct challenges $c \neq c'$, we extract:
+\[
+sk = \frac{z_{sk} - z_{sk}'}{c - c'}, \quad x = \frac{z_x - z_x'}{c - c'}, \quad r_i = \frac{z_{r_i} - z_{r_i}'}{c - c'} \text{ for } i \in \{1,2,3,4\}
+\]
+From $z_{\beta} = a_{\beta} + c \cdot \frac{1}{sk + x}$ and $z_{\beta}' = a_{\beta} + c' \cdot \frac{1}{sk + x}$, we derive $\frac{1}{sk + x} = \frac{z_{\beta} - z_{\beta}'}{c - c'}$, ensuring $\cm_3$ commits to $g_3^{1/(sk + x)} g^{r_3}$. This confirms extractability.
+
+\paragraph{Honest-Verifier Zero-Knowledge (HVZK)}
+A simulator samples $z_{sk}, z_x, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4}, z_m, z_{\beta} \sample \mathbb{Z}_p$ and computes:
+\[
+T_1 = g_1^{z_{sk}} g^{z_{r_1}} \cdot \cm_1^{-c}, \quad T_2 = g_2^{z_x} g^{z_{r_2}} \cdot \cm_2^{-c}, \quad T_3 = g_3^{z_{\beta}} g^{z_{r_3}} \cdot \cm_3^{-c}, \quad T_4 = \cm_3^{z_m} g^{z_{r_4}} \cdot \cm_4^{-c}
+\]
+These satisfy the verification equations, and the simulated transcript’s distribution matches the real one, ensuring zero-knowledge.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
