@@ -652,7 +652,6 @@ Detailed proofs of these properties are provided in Appendix~\ref{app:vrf-commit
 
 
 
-
 \subsection{Proving Knowledge of a Committed Inverse Linear Relation}\label{sec-pok-committed-inv-linear-relation}
 
 We now address proving inverse relationships involving linear combinations of committed values. Specifically, we prove knowledge of $(sk, x, r_1, r_2)$ such that:
@@ -733,6 +732,70 @@ Protocol~\ref{pok-committed-inverse-linear-relation} is a $\Sigma$-protocol for 
 
 
 
+
+\subsection{Deterministic Nullifier VRF}
+
+\subsubsection{Algorithm Syntax}
+This VRF takes inputs $sk$ (master credential key) and $x$ (context), hidden in commitments $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$. The output is $y = g^{1/(sk + x)}$, verified via a zero-knowledge proof.
+
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda)$: 
+    \begin{itemize}
+        \item Outputs group parameters: prime-order group $\mathbb{G}$ of order $p$, generators $g_1, g_2, g \in \mathbb{G}$.
+    \end{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda)$:
+    \begin{itemize}
+        \item Sample $sk, r_1 \sample \mathbb{Z}_p$.
+        \item Compute $\cm_1 = g_1^{sk} g^{r_1}$ (the "public key" is a commitment).
+        \item Output secret key $skk = (sk, r_1)$ and public key $pk = \cm_1$.
+    \end{itemize}
+    \item $\mathsf{VRF.Eval}(skk, x)$:
+    \begin{itemize}
+        \item Input: $skk = (sk, r_1)$, $x \in \mathbb{Z}_p$.
+        \item Compute $y = g^{1/(sk + x)}$.
+        \item Output $y \in \mathbb{G}$.
+    \end{itemize}
+    \item $\mathsf{VRF.Prove}(skk, x, r_2, \cm_2)$:
+    \begin{itemize}
+        \item Input: $skk = (sk, r_1)$, $x$, $r_2$, where $\cm_2 = g_2^{x} g^{r_2}$.
+        \item Run Protocol 3 (Section 4.2):
+        \begin{itemize}
+            \item Compute commitments $T_1 = g_1^{a_{sk}} g^{a_{r_1}}$, $T_2 = g_2^{a_x} g^{a_{r_2}}$, $T_y = y^{a_{sk} + a_x}$.
+            \item After challenge $c$, compute responses $z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m$.
+        \end{itemize}
+        \item Output proof $\pi = (T_1, T_2, T_y, z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$.
+    \end{itemize}
+    \item $\mathsf{VRF.Verify}(\cm_1, \cm_2, y, \pi)$:
+    \begin{itemize}
+        \item Input: $\cm_1, \cm_2, y \in \mathbb{G}$, $\pi$.
+        \item Verify per Protocol 3:
+        \begin{itemize}
+            \item Check $T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}$.
+            \item Check $T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}$.
+            \item Check $T_y \cdot g^c \stackrel{?}{=} y^{z_m}$.
+            \item Check $z_m \stackrel{?}{=} z_{sk} + z_x$.
+        \end{itemize}
+        \item Output 1 if all pass, 0 otherwise.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Security Properties}
+\begin{itemize}
+    \item \textbf{Correctness}:
+    \begin{itemize}
+        \item Follows from the completeness of Protocol 3 (Section 4.2). Honest execution ensures all verification equations hold.
+    \end{itemize}
+    \item \textbf{Uniqueness}:
+    \begin{itemize}
+        \item For fixed $\cm_1, \cm_2$, the commitments bind $sk, x$ (via the binding property of Pedersen commitments). Thus, $y = g^{1/(sk + x)}$ is unique.
+        \item If $y' \neq y$ verifies, special soundness implies extracting $sk', x'$ satisfying $y'^{sk' + x'} = g$, but different $y$ values contradict the discrete log assumption unless $sk + x = 0 \pmod{p}$ (negligible probability).
+    \end{itemize}
+    \item \textbf{Pseudorandomness}:
+    \begin{itemize}
+        \item \textbf{Game}: Adversary queries $\cm_2^{(i)}$ (chosen contexts), receives $y^{(i)}, \pi^{(i)}$. For challenge $\cm_2^*$, distinguish $y^* = g^{1/(sk + x^*)}$ from random.
+        \item \textbf{Reduction}: Under $q$-DDHI, $y$ is pseudorandom. Simulator uses HVZK to generate proofs, embedding $q$-DDHI challenge into $y^*$.
+    \end{itemize}
+\end{itemize}
 
 
 
@@ -894,6 +957,69 @@ These satisfy the verification equations, and the simulated transcript’s distr
 
 
 
+
+\subsection{Probabilistic (Committed) Nullifier VRF}
+
+\subsubsection{Algorithm Syntax}
+Here, the output is a commitment $\cm_y = g_3^{1/(sk + x)} g^{r_3}$, randomized per presentation, with an auxiliary commitment $\cm_4$ for verification.
+
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda)$:
+    \begin{itemize}
+        \item Output group parameters: $\mathbb{G}$, generators $g_1, g_2, g_3, g$.
+    \end{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda)$:
+    \begin{itemize}
+        \item Sample $sk, r_1 \sample \mathbb{Z}_p$.
+        \item Compute $\cm_1 = g_1^{sk} g^{r_1}$.
+        \item Output $skk = (sk, r_1)$, $pk = \cm_1$.
+    \end{itemize}
+    \item $\mathsf{VRF.Eval}(skk, x)$:
+    \begin{itemize}
+        \item Input: $skk = (sk, r_1)$, $x \in \mathbb{Z}_p$.
+        \item Sample $r_3 \sample \mathbb{Z}_p$.
+        \item Compute $\cm_y = g_3^{1/(sk + x)} g^{r_3}$ (committed nullifier).
+        \item Output $\cm_y \in \mathbb{G}$.
+    \end{itemize}
+    \item $\mathsf{VRF.Prove}(skk, x, r_2, \cm_2)$:
+    \begin{itemize}
+        \item Input: $skk = (sk, r_1)$, $x$, $r_2$, where $\cm_2 = g_2^{x} g^{r_2}$.
+        \item Sample $r_3, r_4 \sample \mathbb{Z}_p$.
+        \item Compute $\cm_y = g_3^{1/(sk + x)} g^{r_3}$, $\cm_4 = g_3 g^{r_3 (sk + x) + r_4}$.
+        \item Run Protocol 4 (Section 4.3):
+        \begin{itemize}
+            \item Compute $T_1, T_2, T_3, T_4$.
+            \item After challenge $c$, compute $z_{sk}, z_x, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4}, z_m, z_{\beta}$.
+        \end{itemize}
+        \item Output $\pi = (\cm_y, \cm_4, T_1, T_2, T_3, T_4, z_{sk}, z_x, z_{r_1}, z_{r_2}, z_{r_3}, z_{r_4}, z_m, z_{\beta})$.
+    \end{itemize}
+    \item $\mathsf{VRF.Verify}(\cm_1, \cm_2, \cm_y, \pi)$:
+    \begin{itemize}
+        \item Input: $\cm_1, \cm_2, \cm_y \in \mathbb{G}$, $\pi$ (includes $\cm_4$).
+        \item Verify per Protocol 4:
+        \begin{itemize}
+            \item Check all equations: $T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}$, etc.
+        \end{itemize}
+        \item Output 1 if all pass, 0 otherwise.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Security Properties}
+\begin{itemize}
+    \item \textbf{Correctness}:
+    \begin{itemize}
+        \item Follows from completeness of Protocol 4 (Section 4.3).
+    \end{itemize}
+    \item \textbf{Uniqueness}:
+    \begin{itemize}
+        \item The underlying $y = g^{1/(sk + x)}$ is unique for fixed $\cm_1, \cm_2$. The commitment $\cm_y$ varies with $r_3$, but special soundness ensures extraction of consistent $sk, x$.
+    \end{itemize}
+    \item \textbf{Unlinkability}:
+    \begin{itemize}
+        \item \textbf{Definition}: For each presentation, $\cm_y, \cm_4$ are unlinkable to prior ones for the same $(sk, x)$.
+        \item \textbf{Argument}: Fresh $r_3, r_4$ make $\cm_y, \cm_4$ hiding (Pedersen commitment property). Zero-knowledge proofs reveal no link.
+    \end{itemize}
+\end{itemize}
 
 
 
