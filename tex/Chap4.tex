@@ -576,7 +576,7 @@ We begin with a simplified relation: given a commitment $\cm = g_1^x g^r$ and an
 \textbf{Prover Input:} Witness $(x, r)$ such that $\cm = g_1^x g^r$ and $y = g^{1/x}$ \\
 \textbf{Relation:} 
 \[
-\mathcal{R} = \left\{ (\cm, y), (x, r) \ \middle|\ \cm = g_1^x g^r \ \land\ y = g^{1/x} \right\}
+\mathcal{R}_{\mathsf{DDHI}} = \left\{ (\cm, y), (x, r) \ \middle|\ \cm = g_1^x g^r \ \land\ y = g^{1/x} \right\}
 \]
 \begin{enumerate}
     \item \textbf{Commitment:} Prover samples $a_x, a_r \sample \mathbb{Z}_q$ and computes:
@@ -612,28 +612,30 @@ This protocol achieves two objectives simultaneously:
 
 \subsubsection{Security Analysis}
 
-The protocol satisfies the standard security properties of Sigma protocols: completeness, special soundness, and honest-verifier zero-knowledge.
 
-\paragraph{Completeness.} For an honest prover with witness $(x, r)$ satisfying $\cm = g_1^x g^r$ and $y = g^{1/x}$, the verification equations hold as demonstrated in the protocol~\ref{pok-committed-inverse-exponent}.
+\begin{theorem}
+Protocol~\ref{pok-committed-inverse-exponent} is a $\Sigma$-protocol for $\mathcal{R}_{\mathsf{DDHI}}$.
+\end{theorem}
 
-\paragraph{Special Soundness.} Given two accepting transcripts with different challenges, an extractor $\mathcal{E}$ can compute $x = \frac{z_x - z_x'}{c - c'}$ and $r = \frac{z_r - z_r'}{c - c'}$. The extracted values satisfy both $\cm = g_1^x g^r$ and $y^x = g$, confirming $y = g^{1/x}$.
+\begin{proof}[Sketch]
+We verify the three properties of a $\Sigma$-protocol:
 
-\paragraph{Honest-Verifier Zero-Knowledge.} There exists a simulator $\mathcal{S}$ that, given only the statement $(\cm, y)$ and a challenge $c$, produces transcripts indistinguishable from real protocol executions by sampling $z_x, z_r \sample \mathbb{Z}_p$ and computing commitment values that satisfy the verification equations.
-
-Detailed proofs of these properties are provided in Appendix~\ref{app:vrf-committed-inverse-exponent}.
-
+\begin{itemize}
+    \item \textbf{Completeness:} For an honest prover with witness $(x, r)$, the verification equations hold:
+          $$T_1 \cdot \cm^c = g_1^{z_x} g^{z_r} \quad \text{and} \quad T_y \cdot g^c = y^{z_x},$$
+          as they are satisfied by the protocol's construction.
+    
+    \item \textbf{Special Soundness:} Given two accepting transcripts $(T_1, T_y, c, z_x, z_r)$ and $(T_1, T_y, c', z_x', z_r')$ with $c \neq c'$, we can extract:
+          $$x = \frac{z_x - z_x'}{c - c'} \quad \text{and} \quad r = \frac{z_r - z_r'}{c - c'},$$
+          such that $\cm = g_1^x g^r$ and $y^x = g$.
+    
+    \item \textbf{Honest-Verifier Zero-Knowledge (HVZK):} A simulator samples $z_x, z_r \in \mathbb{Z}_q$ and computes:
+          $$T_1 = g_1^{z_x} g^{z_r} \cdot \cm^{-c} \quad \text{and} \quad T_y = y^{z_x} \cdot g^{-c},$$
+          yielding a transcript indistinguishable from a real one.
+\end{itemize}
+\end{proof}
 
 \paragraph{Relation to $q$-DDHI Assumption.}  The $q$-DDHI assumption ensures that $g^{1/x}$ is computationally indistinguishable from random elements when $x$ is hidden. However, pseudorandomness requires outputs remain indistinguishable even after seeing multiple input-output pairs from the same secret key, and therefore $y = g^{1/x}$ is not pseudorandom.
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -732,70 +734,6 @@ Protocol~\ref{pok-committed-inverse-linear-relation} is a $\Sigma$-protocol for 
 
 
 
-
-\subsection{Deterministic Nullifier VRF}
-
-\subsubsection{Algorithm Syntax}
-This VRF takes inputs $sk$ (master credential key) and $x$ (context), hidden in commitments $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$. The output is $y = g^{1/(sk + x)}$, verified via a zero-knowledge proof.
-
-\begin{itemize}
-    \item $\mathsf{Setup}(1^\lambda)$: 
-    \begin{itemize}
-        \item Outputs group parameters: prime-order group $\mathbb{G}$ of order $p$, generators $g_1, g_2, g \in \mathbb{G}$.
-    \end{itemize}
-    \item $\mathsf{VRF.Gen}(1^\lambda)$:
-    \begin{itemize}
-        \item Sample $sk, r_1 \sample \mathbb{Z}_p$.
-        \item Compute $\cm_1 = g_1^{sk} g^{r_1}$ (the "public key" is a commitment).
-        \item Output secret key $skk = (sk, r_1)$ and public key $pk = \cm_1$.
-    \end{itemize}
-    \item $\mathsf{VRF.Eval}(skk, x)$:
-    \begin{itemize}
-        \item Input: $skk = (sk, r_1)$, $x \in \mathbb{Z}_p$.
-        \item Compute $y = g^{1/(sk + x)}$.
-        \item Output $y \in \mathbb{G}$.
-    \end{itemize}
-    \item $\mathsf{VRF.Prove}(skk, x, r_2, \cm_2)$:
-    \begin{itemize}
-        \item Input: $skk = (sk, r_1)$, $x$, $r_2$, where $\cm_2 = g_2^{x} g^{r_2}$.
-        \item Run Protocol 3 (Section 4.2):
-        \begin{itemize}
-            \item Compute commitments $T_1 = g_1^{a_{sk}} g^{a_{r_1}}$, $T_2 = g_2^{a_x} g^{a_{r_2}}$, $T_y = y^{a_{sk} + a_x}$.
-            \item After challenge $c$, compute responses $z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m$.
-        \end{itemize}
-        \item Output proof $\pi = (T_1, T_2, T_y, z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$.
-    \end{itemize}
-    \item $\mathsf{VRF.Verify}(\cm_1, \cm_2, y, \pi)$:
-    \begin{itemize}
-        \item Input: $\cm_1, \cm_2, y \in \mathbb{G}$, $\pi$.
-        \item Verify per Protocol 3:
-        \begin{itemize}
-            \item Check $T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}$.
-            \item Check $T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}$.
-            \item Check $T_y \cdot g^c \stackrel{?}{=} y^{z_m}$.
-            \item Check $z_m \stackrel{?}{=} z_{sk} + z_x$.
-        \end{itemize}
-        \item Output 1 if all pass, 0 otherwise.
-    \end{itemize}
-\end{itemize}
-
-\subsubsection{Security Properties}
-\begin{itemize}
-    \item \textbf{Correctness}:
-    \begin{itemize}
-        \item Follows from the completeness of Protocol 3 (Section 4.2). Honest execution ensures all verification equations hold.
-    \end{itemize}
-    \item \textbf{Uniqueness}:
-    \begin{itemize}
-        \item For fixed $\cm_1, \cm_2$, the commitments bind $sk, x$ (via the binding property of Pedersen commitments). Thus, $y = g^{1/(sk + x)}$ is unique.
-        \item If $y' \neq y$ verifies, special soundness implies extracting $sk', x'$ satisfying $y'^{sk' + x'} = g$, but different $y$ values contradict the discrete log assumption unless $sk + x = 0 \pmod{p}$ (negligible probability).
-    \end{itemize}
-    \item \textbf{Pseudorandomness}:
-    \begin{itemize}
-        \item \textbf{Game}: Adversary queries $\cm_2^{(i)}$ (chosen contexts), receives $y^{(i)}, \pi^{(i)}$. For challenge $\cm_2^*$, distinguish $y^* = g^{1/(sk + x^*)}$ from random.
-        \item \textbf{Reduction}: Under $q$-DDHI, $y$ is pseudorandom. Simulator uses HVZK to generate proofs, embedding $q$-DDHI challenge into $y^*$.
-    \end{itemize}
-\end{itemize}
 
 
 
@@ -958,6 +896,143 @@ These satisfy the verification equations, and the simulated transcript’s distr
 
 
 
+
+
+
+
+
+
+\subsection{Deterministic Nullifier VRF}
+
+\subsubsection{Algorithm Syntax}
+This VRF takes inputs $sk$ (master credential key) and $x$ (context), hidden in commitments $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$. The output is $y = g^{1/(sk + x)}$, verified via a zero-knowledge proof.
+
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda)$: 
+    \begin{itemize}
+        \item Outputs group parameters: prime-order group $\mathbb{G}$ of order $p$, generators $g_1, g_2, g \in \mathbb{G}$.
+    \end{itemize}
+    \item $\mathsf{VRF.Gen}(1^\lambda)$:
+    \begin{itemize}
+        \item Sample $sk, r_1 \sample \mathbb{Z}_p$.
+        \item Compute $\cm_1 = g_1^{sk} g^{r_1}$ (the "public key" is a commitment).
+        \item Output secret key $skk = (sk, r_1)$ and public key $pk = \cm_1$.
+    \end{itemize}
+    \item $\mathsf{VRF.Eval}(skk, x)$:
+    \begin{itemize}
+        \item Input: $skk = (sk, r_1)$, $x \in \mathbb{Z}_p$.
+        \item Compute $y = g^{1/(sk + x)}$.
+        \item Output $y \in \mathbb{G}$.
+    \end{itemize}
+    \item $\mathsf{VRF.Prove}(skk, x, r_2, \cm_2)$:
+    \begin{itemize}
+        \item Input: $skk = (sk, r_1)$, $x$, $r_2$, where $\cm_2 = g_2^{x} g^{r_2}$.
+        \item Run Protocol 3 (Section 4.2):
+        \begin{itemize}
+            \item Compute commitments $T_1 = g_1^{a_{sk}} g^{a_{r_1}}$, $T_2 = g_2^{a_x} g^{a_{r_2}}$, $T_y = y^{a_{sk} + a_x}$.
+            \item After challenge $c$, compute responses $z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m$.
+        \end{itemize}
+        \item Output proof $\pi = (T_1, T_2, T_y, z_{sk}, z_x, z_{r_1}, z_{r_2}, z_m)$.
+    \end{itemize}
+    \item $\mathsf{VRF.Verify}(\cm_1, \cm_2, y, \pi)$:
+    \begin{itemize}
+        \item Input: $\cm_1, \cm_2, y \in \mathbb{G}$, $\pi$.
+        \item Verify per Protocol 3:
+        \begin{itemize}
+            \item Check $T_1 \cdot \cm_1^c \stackrel{?}{=} g_1^{z_{sk}} g^{z_{r_1}}$.
+            \item Check $T_2 \cdot \cm_2^c \stackrel{?}{=} g_2^{z_x} g^{z_{r_2}}$.
+            \item Check $T_y \cdot g^c \stackrel{?}{=} y^{z_m}$.
+            \item Check $z_m \stackrel{?}{=} z_{sk} + z_x$.
+        \end{itemize}
+        \item Output 1 if all pass, 0 otherwise.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Security Properties}
+\begin{itemize}
+    \item \textbf{Correctness}:
+    \begin{itemize}
+        \item Follows from the completeness of Protocol 3 (Section 4.2). Honest execution ensures all verification equations hold.
+    \end{itemize}
+    \item \textbf{Uniqueness}:
+    \begin{itemize}
+        \item For fixed $\cm_1, \cm_2$, the commitments bind $sk, x$ (via the binding property of Pedersen commitments). Thus, $y = g^{1/(sk + x)}$ is unique.
+        \item If $y' \neq y$ verifies, special soundness implies extracting $sk', x'$ satisfying $y'^{sk' + x'} = g$, but different $y$ values contradict the discrete log assumption unless $sk + x = 0 \pmod{p}$ (negligible probability).
+    \end{itemize}
+    \item \textbf{Pseudorandomness}:
+    \begin{itemize}
+        \item \textbf{Game}: Adversary queries $\cm_2^{(i)}$ (chosen contexts), receives $y^{(i)}, \pi^{(i)}$. For challenge $\cm_2^*$, distinguish $y^* = g^{1/(sk + x^*)}$ from random.
+        \item \textbf{Reduction}: Under $q$-DDHI, $y$ is pseudorandom. Simulator uses HVZK to generate proofs, embedding $q$-DDHI challenge into $y^*$.
+    \end{itemize}
+\end{itemize}
+
+
+\subsubsection{Security Properties}
+
+\begin{theorem}[Correctness]
+The deterministic nullifier VRF is correct: for all $\lambda \in \mathbb{N}$, $\mathsf{pp} \in \mathsf{Setup}(1^\lambda)$, $(\mathsf{sk}, \mathsf{pk}) \in \mathsf{VRF.Gen}(\mathsf{pp})$, $x \in \mathbb{Z}_p$, and $\cm_2 = g_2^{x} g^{r_2}$:
+\[
+\Pr[\mathsf{VRF.Verify}(\mathsf{pk}, \cm_2, \mathsf{VRF.Eval}(\mathsf{sk}, x), \mathsf{VRF.Prove}(\mathsf{sk}, x, \cm_2)) = 1] = 1
+\]
+\end{theorem}
+
+\begin{proof}
+Correctness follows directly from the completeness of Protocol~\ref{pok-committed-inverse-linear-relation}. Since honest execution ensures all verification equations in the underlying Sigma protocol hold, the VRF verification checks pass.
+\end{proof}
+
+\begin{theorem}[Uniqueness]
+Under the binding property of Pedersen commitments and the discrete logarithm assumption, for any $\mathsf{pk}$ and $\cm_2$, there exists at most one $y \in \mathbb{G}$ such that $\mathsf{VRF.Verify}(\mathsf{pk}, \cm_2, y, \pi) = 1$ for any $\pi$.
+\end{theorem}
+
+\begin{proof}[Sketch]
+The binding property of Pedersen commitments ensures that $\mathsf{pk} = \cm_1$ and $\cm_2$ uniquely determine $sk$ and $x$. Therefore, $y = g^{1/(sk + x)}$ is uniquely determined. If two different values $y' \neq y$ could verify, special soundness would extract witnesses satisfying both $y^{sk+x} = g$ and $y'^{sk+x} = g$, implying $(y'/y)^{sk+x} = 1$. In a prime-order group, this holds only if $y' = y$ or $sk + x \equiv 0 \pmod{p}$. The latter occurs with negligible probability for randomly chosen $sk$ and $x$.
+\end{proof}
+
+\begin{theorem}[Pseudorandomness]
+Under the $q$-DDHI assumption, the deterministic nullifier VRF satisfies pseudorandomness. For any PPT adversary $\mathcal{A}$:
+\[
+\mathsf{Adv}^{\mathsf{vrf}}_{\mathcal{A}}(\lambda) \leq \mathsf{Adv}^{\mathsf{q-DDHI}}(\lambda) + \mathsf{negl}(\lambda)
+\]
+\end{theorem}
+
+\begin{proof}[Sketch]
+We construct a reduction $\mathcal{B}$ that uses $\mathcal{A}$ to solve $q$-DDHI:
+\begin{enumerate}
+    \item $\mathcal{B}$ receives a $q$-DDHI challenge $(g, g^a, \ldots, g^{a^q}, Z)$ where $Z$ is either $g^{1/a}$ or random
+    \item $\mathcal{B}$ embeds $a$ as $sk$ by setting $\mathsf{pk} = \cm_1 = g_1^a \cdot g^{r_1}$
+    \item For evaluation queries on $x_i$, $\mathcal{B}$ computes $y_i = g^{1/(a+x_i)}$ using the $q$-DDHI instance
+    \item For the challenge $x^*$, $\mathcal{B}$ returns $y^* = Z^{1/(a+x^*)}$
+    \item By the HVZK property of the Sigma protocol, $\mathcal{B}$ simulates proofs
+    \item If $\mathcal{A}$ distinguishes, $\mathcal{B}$ solves the $q$-DDHI challenge
+\end{enumerate}
+The advantage is bounded by the $q$-DDHI advantage plus the negligible HVZK simulation error.
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
 \subsection{Probabilistic (Committed) Nullifier VRF}
 
 \subsubsection{Algorithm Syntax}
@@ -1020,6 +1095,43 @@ Here, the output is a commitment $\cm_y = g_3^{1/(sk + x)} g^{r_3}$, randomized 
         \item \textbf{Argument}: Fresh $r_3, r_4$ make $\cm_y, \cm_4$ hiding (Pedersen commitment property). Zero-knowledge proofs reveal no link.
     \end{itemize}
 \end{itemize}
+
+
+
+
+
+\subsubsection{Security Properties}
+
+\begin{theorem}[Correctness]
+The probabilistic nullifier VRF is correct following from the completeness of Protocol~\ref{prot:committed-nullifier}.
+\end{theorem}
+
+\begin{theorem}[Uniqueness]
+For fixed $\mathsf{pk}$ and $\cm_2$, the underlying nullifier value $g^{1/(sk + x)}$ is unique, though committed differently each time. The binding property of commitments ensures $sk$ and $x$ are uniquely determined.
+\end{theorem}
+
+\begin{theorem}[Unlinkability]
+For any PPT adversary $\mathcal{A}$ making polynomially many queries, the following experiment has negligible advantage:
+\[
+\mathsf{Adv}^{\mathsf{unlink}}_{\mathcal{A}}(\lambda) = \left| \Pr[\mathsf{Exp}^{\mathsf{unlink-1}}_{\mathcal{A}}(\lambda) = 1] - \Pr[\mathsf{Exp}^{\mathsf{unlink-0}}_{\mathcal{A}}(\lambda) = 1] \right| \leq \mathsf{negl}(\lambda)
+\]
+where $\mathsf{Exp}^{\mathsf{unlink-b}}$ is:
+\begin{enumerate}
+    \item $\mathcal{A}$ chooses $(\mathsf{pk}, \cm_{2,0}, \cm_{2,1})$ where $\cm_{2,0}, \cm_{2,1}$ commit to the same $x$
+    \item Challenger computes $(\cm_{y,b}, \pi_b) \leftarrow \mathsf{VRF.Eval}(\mathsf{sk}, x), \mathsf{VRF.Prove}(\mathsf{sk}, x, \cm_{2,b})$
+    \item $\mathcal{A}$ outputs $b'$ given $(\cm_{y,b}, \pi_b)$
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Sketch]
+Unlinkability follows from:
+\begin{enumerate}
+    \item The hiding property of Pedersen commitments with fresh randomness $r_3, r_4$
+    \item The HVZK property of Protocol~\ref{prot:committed-nullifier}, which reveals nothing beyond statement validity
+    \item The statistical independence of commitments across presentations
+\end{enumerate}
+Each presentation uses independent randomness, making transcripts indistinguishable even for the same underlying $(sk, x)$ pair.
+\end{proof}
 
 
 
@@ -1124,6 +1236,7 @@ Even with the additional privacy and unlinkability properties, our CRBN construc
 
 \section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-instantiation}
 
+
 \subsection{Applications}
 
 The CRBN enables several important applications for privacy-preserving identity systems:
@@ -1167,73 +1280,3 @@ The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ rev
 % https://xn--2-umb.com/22/nullifiers/#zerocoin-nullifiers
 
 
-
-
-
-
-
-\section{Appendix}
-
-
-
-\subsection{Security Analysis - Committed Inverse Exponent}\label{app:vrf-committed-inverse-exponent}
-
-\subsubsection*{Special Soundness.} Given two accepting transcripts $(T_1, T_y, c, z_x, z_r)$ and $(T_1, T_y, c', z_x', z_r')$ with $c \neq c'$, we extract:
-\begin{align}
-x &= \frac{z_x - z_x'}{c - c'} \\
-r &= \frac{z_r - z_r'}{c - c'}
-\end{align}
-
-We verify that the extracted values satisfy both required properties. From the first verification equation, we have:
-\begin{align}
-T_1 \cdot \cm^c &= g_1^{z_x} g^{z_r} \\
-T_1 \cdot \cm^{c'} &= g_1^{z_x'} g^{z_r'}
-\end{align}
-
-Dividing these equations and using the definition of $\cm$:
-\begin{align}
-\cm^{c-c'} &= g_1^{z_x - z_x'} g^{z_r - z_r'} \\
-(g_1^{x} g^{r})^{c-c'} &= g_1^{z_x - z_x'} g^{z_r - z_r'} \\
-g_1^{x(c-c')} g^{r(c-c')} &= g_1^{z_x - z_x'} g^{z_r - z_r'} 
-\end{align}
-
-This implies:
-\begin{align}
-x(c-c') &= z_x - z_x' \\
-r(c-c') &= z_r - z_r'
-\end{align}
-
-Thus $x$ and $r$ are the unique values that satisfy $\cm = g_1^x g^r$.
-
-For the second verification equation:
-\begin{align}
-T_y \cdot g^c &= y^{z_x} \\
-T_y \cdot g^{c'} &= y^{z_x'}
-\end{align}
-
-Dividing these equations:
-\begin{align}
-g^{c-c'} &= y^{z_x - z_x'} \\
-g^{c-c'} &= y^{x(c-c')} \\
-g &= y^x
-\end{align}
-
-This confirms that $y = g^{1/x}$, proving that any prover producing valid protocol transcripts must know the witness $(x,r)$ satisfying both required relations.
-
-\subsubsection*{Honest-Verifier Zero-Knowledge.} To establish HVZK, we construct a simulator $\mathcal{S}$ that, given the statement $(\cm, y)$ and a challenge $c$, produces a transcript indistinguishable from a real protocol execution without knowing the witness.
-
-The simulator operates as follows:
-\begin{enumerate}
-    \item Sample $z_x, z_r \sample \mathbb{Z}_p$ uniformly at random
-    \item Compute $T_1 = g_1^{z_x} g^{z_r} \cdot \cm^{-c}$
-    \item Compute $T_y = y^{z_x} \cdot g^{-c}$
-    \item Output the transcript $(T_1, T_y, c, z_x, z_r)$
-\end{enumerate}
-
-We verify that this transcript passes verification:
-\begin{align}
-T_1 \cdot \cm^c &= g_1^{z_x} g^{z_r} \cdot \cm^{-c} \cdot \cm^c = g_1^{z_x} g^{z_r} \\
-T_y \cdot g^c &= y^{z_x} \cdot g^{-c} \cdot g^c = y^{z_x}
-\end{align}
-
-Since $z_x$ and $z_r$ are uniformly distributed in $\mathbb{Z}_p$ in both real protocols and simulation, the simulated transcript is perfectly indistinguishable from a real transcript, establishing perfect HVZK.
