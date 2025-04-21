@@ -559,23 +559,11 @@ These protocols collectively transform our prime-order VRF into a privacy-preser
 
 
 
-\subsection{Proving Knowledge of a Committed Inverse}
-Our first insight is reducing this problem to the problem of proving knowledge of a (committed) inverse exponent, which is congruent to proving a DDHI challenge $g^{1/x}$
-\[
-\mathcal{R}_{\mathsf{DDHI}} = \left\{ 
-\begin{array}{l} (\cm, y),\\
-(x, r) 
-\end{array}
-\ \middle|
-\ \begin{array}{l}
-\cm = g_1^{x} g^r \\
-y = g^{1/x} \\
-\end{array} \right\}
-\]
+\subsection{Proving Knowledge of a Committed Inverse Exponent}
 
-We use a $\Sigma$-protocol to prove knowledge of the exponents $x, r$; during the protocol, we use the same random coin and response from $x$ to show the relation $y^x (=g)$ holds, and therefore $y$ must commit to $x$. We show the full protocol \ref{pok-committed-inverse-exponent}. 
+The central challenge in constructing a pairing-free VRF lies in verifying the correctness of an inverse relationship, specifically that $y = g^{1/x}$ for committed values, without relying on bilinear pairings. In standard prime-order group cryptography, while computing $g^x$ is straightforward, directly verifying $g^{1/x}$ is not, as pairings typically enable this through $e(g^x, g^{1/x}) = e(g,g)$. Our key insight is to reformulate this verification by proving an equivalent relationship: $y^x = g$. This equivalence holds because if $y = g^{1/x}$, then $y^x = (g^{1/x})^x = g^{(1/x) \cdot x} = g$, and conversely, if $y^x = g$, then $y = g^{1/x}$ (assuming $x \neq 0 \mod q$). This transformation eliminates the need for pairings by enabling verification via standard exponentiation, which can be efficiently proven using zero-knowledge techniques.
 
-
+The protocol we present leverages this equivalence through a zero-knowledge proof where the prover demonstrates knowledge of the opening of a commitment $\cm = g_1^x g^r$ while simultaneously proving that $y^x = g$. This dual verification ensures that $y$ correctly encodes the inverse of $x$ without revealing $x$, forming a foundation for our pairing-free VRF that balances efficiency and privacy.
 
 
 \subsubsection{Construction}
@@ -624,39 +612,18 @@ This protocol achieves two objectives simultaneously:
 
 \subsubsection{Security Analysis}
 
-\paragraph{Completeness:} For an honest prover with witness $(x, r)$ satisfying $\cm = g_1^x g^r$ and $y = g^{1/x}$, the verification equations hold:
-\begin{align*}
-T_1 \cdot \cm^c &= g_1^{a_x} g^{a_r} \cdot (g_1^x g^r)^c \\
-&= g_1^{a_x} g^{a_r} \cdot g_1^{x \cdot c} g^{r \cdot c} \\
-&= g_1^{a_x + x \cdot c} g^{a_r + r \cdot c} \\
-&= g_1^{z_x} g^{z_r}
-\end{align*}
+The protocol satisfies the standard security properties of Sigma protocols: completeness, special soundness, and honest-verifier zero-knowledge.
 
-And for the second equation:
-\begin{align*}
-T_y \cdot g^c &= y^{a_x} \cdot g^c \\
-&= y^{a_x} \cdot (y^x)^c \quad \text{(since $y^x = g$ when $y = g^{1/x}$)} \\
-&= y^{a_x} \cdot y^{x \cdot c} \\
-&= y^{a_x + x \cdot c} \\
-&= y^{z_x}
-\end{align*}
+\paragraph{Completeness.} For an honest prover with witness $(x, r)$ satisfying $\cm = g_1^x g^r$ and $y = g^{1/x}$, the verification equations hold as demonstrated in the protocol~\ref{pok-committed-inverse-exponent}.
 
-\paragraph{Special Soundness:} Given two accepting transcripts $(T_1, T_y, c, z_x, z_r)$ and $(T_1, T_y, c', z_x', z_r')$ with $c \neq c'$, we can extract:
-\[
-x = \frac{z_x - z_x'}{c - c'}, \quad r = \frac{z_r - z_r'}{c - c'}
-\]
+\paragraph{Special Soundness.} Given two accepting transcripts with different challenges, an extractor $\mathcal{E}$ can compute $x = \frac{z_x - z_x'}{c - c'}$ and $r = \frac{z_r - z_r'}{c - c'}$. The extracted values satisfy both $\cm = g_1^x g^r$ and $y^x = g$, confirming $y = g^{1/x}$.
 
-From the second verification equation, we can confirm that the extracted $x$ satisfies $y^x = g$, proving $y = g^{1/x}$. This demonstrates that no prover can produce an accepting transcript without knowing $(x, r)$ satisfying both $\cm = g_1^x g^r$ and $y = g^{1/x}$.
+\paragraph{Honest-Verifier Zero-Knowledge.} There exists a simulator $\mathcal{S}$ that, given only the statement $(\cm, y)$ and a challenge $c$, produces transcripts indistinguishable from real protocol executions by sampling $z_x, z_r \sample \mathbb{Z}_p$ and computing commitment values that satisfy the verification equations.
 
-\paragraph{Honest-Verifier Zero-Knowledge:} A simulator can produce indistinguishable transcripts by:
-\begin{enumerate}
-    \item Sampling $c, z_x, z_r \sample \mathbb{Z}_q$ randomly
-    \item Computing $T_1 = g_1^{z_x} g^{z_r} \cdot \cm^{-c}$ and $T_y = y^{z_x} \cdot g^{-c}$
-    \item Outputting the transcript $(T_1, T_y, c, z_x, z_r)$
-\end{enumerate}
+Detailed proofs of these properties are provided in Appendix~\ref{app:vrf-committed-inverse-exponent}.
 
-This simulated transcript is perfectly indistinguishable from a real execution, ensuring no information about $(x, r)$ is leaked beyond what is already implied by $\cm$ and $y$.
 
+\paragraph{Relation to $q$-DDHI Assumption.}  The $q$-DDHI assumption ensures that $g^{1/x}$ is computationally indistinguishable from random elements when $x$ is hidden. However, pseudorandomness requires outputs remain indistinguishable even after seeing multiple input-output pairs from the same secret key, and therefore $y = g^{1/x}$ is not pseudorandom.
 
 
 
@@ -1039,3 +1006,75 @@ The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ rev
 % Could compare my construction with others
 % https://eprint.iacr.org/2022/1255 e.g.
 % https://xn--2-umb.com/22/nullifiers/#zerocoin-nullifiers
+
+
+
+
+
+
+
+\section{Appendix}
+
+
+
+\subsection{Security Analysis - Committed Inverse Exponent}\label{app:vrf-committed-inverse-exponent}
+
+\subsubsection*{Special Soundness.} Given two accepting transcripts $(T_1, T_y, c, z_x, z_r)$ and $(T_1, T_y, c', z_x', z_r')$ with $c \neq c'$, we extract:
+\begin{align}
+x &= \frac{z_x - z_x'}{c - c'} \\
+r &= \frac{z_r - z_r'}{c - c'}
+\end{align}
+
+We verify that the extracted values satisfy both required properties. From the first verification equation, we have:
+\begin{align}
+T_1 \cdot \cm^c &= g_1^{z_x} g^{z_r} \\
+T_1 \cdot \cm^{c'} &= g_1^{z_x'} g^{z_r'}
+\end{align}
+
+Dividing these equations and using the definition of $\cm$:
+\begin{align}
+\cm^{c-c'} &= g_1^{z_x - z_x'} g^{z_r - z_r'} \\
+(g_1^{x} g^{r})^{c-c'} &= g_1^{z_x - z_x'} g^{z_r - z_r'} \\
+g_1^{x(c-c')} g^{r(c-c')} &= g_1^{z_x - z_x'} g^{z_r - z_r'} 
+\end{align}
+
+This implies:
+\begin{align}
+x(c-c') &= z_x - z_x' \\
+r(c-c') &= z_r - z_r'
+\end{align}
+
+Thus $x$ and $r$ are the unique values that satisfy $\cm = g_1^x g^r$.
+
+For the second verification equation:
+\begin{align}
+T_y \cdot g^c &= y^{z_x} \\
+T_y \cdot g^{c'} &= y^{z_x'}
+\end{align}
+
+Dividing these equations:
+\begin{align}
+g^{c-c'} &= y^{z_x - z_x'} \\
+g^{c-c'} &= y^{x(c-c')} \\
+g &= y^x
+\end{align}
+
+This confirms that $y = g^{1/x}$, proving that any prover producing valid protocol transcripts must know the witness $(x,r)$ satisfying both required relations.
+
+\subsubsection*{Honest-Verifier Zero-Knowledge.} To establish HVZK, we construct a simulator $\mathcal{S}$ that, given the statement $(\cm, y)$ and a challenge $c$, produces a transcript indistinguishable from a real protocol execution without knowing the witness.
+
+The simulator operates as follows:
+\begin{enumerate}
+    \item Sample $z_x, z_r \sample \mathbb{Z}_p$ uniformly at random
+    \item Compute $T_1 = g_1^{z_x} g^{z_r} \cdot \cm^{-c}$
+    \item Compute $T_y = y^{z_x} \cdot g^{-c}$
+    \item Output the transcript $(T_1, T_y, c, z_x, z_r)$
+\end{enumerate}
+
+We verify that this transcript passes verification:
+\begin{align}
+T_1 \cdot \cm^c &= g_1^{z_x} g^{z_r} \cdot \cm^{-c} \cdot \cm^c = g_1^{z_x} g^{z_r} \\
+T_y \cdot g^c &= y^{z_x} \cdot g^{-c} \cdot g^c = y^{z_x}
+\end{align}
+
+Since $z_x$ and $z_r$ are uniformly distributed in $\mathbb{Z}_p$ in both real protocols and simulation, the simulated transcript is perfectly indistinguishable from a real transcript, establishing perfect HVZK.
