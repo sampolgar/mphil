@@ -1114,9 +1114,9 @@ Our implementation is available in our open-source repository https://github.com
 
 
 
-\subsection{G2 Signature Optimization Analysis}
+\subsection{G2 Signature Optimization Analysis}\
 
-Our G2 signature variant represents an optimization over the PS-UTT G1 approach described in \cite{tomescu2022utt}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation, we prove correctness below \ref{rerandsig_g2}.  Table~\ref{tab:g1-g2-comparison} presents a direct comparison between the two variants.
+Our G2 signature variant \ref{rerandsig_g2} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu2022utt}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation, we prove correctness below \ref{rerandsig_g2}.  Table~\ref{tab:g1-g2-comparison} presents a direct comparison between the two variants.
 The optimization reduces Show + Verify algorithms by more than 10\% which becomes important when multiple credentials are verified together.
 
 \begin{table}[htbp]

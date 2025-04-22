@@ -1,24 +1,11 @@
-\mychapter{Credential Relationship Binding Nullifier}
-Anonymous credential systems enable users to prove statements about their identity while maintaining privacy. In Chapters 2 and 3, we advanced from single-issuer Attribute-Based Anonymous Credentials ($\ABC$) to a Multi-Issuer Multi-Credential system ($\MIMCABC$) that securely binds credentials from different issuers to the same identity. However, practical identity frameworks require two additional capabilities: sybil resistance, revocation, and credential hierarchy.
-
-In this chapter, we address the challenge of designing efficient, privacy-preserving Verifiable Random Functions (VRFs) for the Multi-Issuer Multi-Credential (MIMC) system, focusing on hierarchical credential binding and nullifier generation. Existing VRF constructions, such as those relying on pairings or RSA, often suffer from computational overhead or limited privacy guarantees, making them impractical for large-scale anonymous credential systems requiring sybil resistance and revocation.
+\mychapter{Efficient Relationship Binding Nullifiers}
+Anonymous credential systems enable users to prove identity attributes while preserving privacy. In Chapters 2 and 3, we progressed from single-issuer Attribute-Based Anonymous Credentials (ABC) to a Multi-Issuer Multi-Credential (MIMC) system that securely binds credentials from multiple issuers to a single identity. However, practical privacy-preserving protocols, including credential systems, require mechanisms to enforce uniqueness (e.g., preventing sybil attacks) and revocability without compromising anonymity. Nullifiers—cryptographic primitives that represent a user’s action or identity in secrecy—are critical for these purposes, with applications spanning credential binding, anonymous voting, and pseudonymous messaging. This chapter addresses the challenge of designing efficient, privacy-preserving nullifiers using pairing-free Verifiable Random Functions (VRFs), focusing on their application to hierarchical credential binding in the MIMC system while demonstrating their broader utility. Existing VRF constructions, reliant on pairings or RSA, suffer from computational overhead or limited privacy, making them impractical for large-scale anonymous systems. We overcome these limitations with novel Sigma-protocols and prime-order VRFs, achieving significant efficiency and privacy gains.
 
 \subsection*{Chapter Roadmap}
-The remainder of the chapter is as follows
-\begin{enumerate}
-    \item Introduction
-    \item Preliminaries
-    \item Prime-Order VRF From the $q$-DDHI (DY-PF)
-    \item Anonymous Prime-Order VRFs from the $q$-DDHI
-    \item Performance Evaluation
-    \item Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation
-    \item Conclusion
-\end{enumerate}
+The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries, in Section \ref{sec-deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
 
-\section{Introduction}
-Real-world credentials naturally form a hierarchy, this is notable when applying for bank loans or new credentials from the government that require multiple credentials shown together. A simple task without privacy, a user hands over multiple credentials, and their details should match a "higher-security" document, like a passport. However, it is a challenging request with privacy-preserving credential systems. Consider a user in a privacy-preserving identity system with both a passport and a driver's license, as shown in Figure~\ref{fig:credential-nullifier}, the passport functions as a foundational Master Credential containing a secret key $\k$, while the driver's license is a Context Credential tied to a specific domain $\ctx$. For privacy and security, we need to cryptographically bind these credentials together and prevent users from obtaining multiple credentials for the same context (e.g., multiple driver's licenses) without compromising anonymity.
-
-A nullifier is a public piece of data that represents a user's account or specific credential information in secrecy. Our nullifier schemes take in the key $\k$ from the master credential and $\ctx$ from the context credential and produce a unique and pseudorandom output. The deterministic version can be used in an anonymous user list for sybil resistance, and the probabilistic version can be used in membership proofs and revocation lists. 
+\section{Introduction}\label{sec-vrf-introduction}
+Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu2022utt, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu2022utt}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
 
 
 \begin{figure}
@@ -66,7 +53,7 @@ A nullifier is a public piece of data that represents a user's account or specif
     \draw ($(userlist.north west) + (0,-0.8)$) -- ($(userlist.north east) + (0,-0.8)$);
     
     % Formula in the second row of user list
-    \node[font=\small, align=center] at ($(userlist.north) + (0,-1.3)$) {Sec: \ref{sec:privacy-preserving-vrf} $ y = g^{1/(k + \text{"DMV"})}$};
+    \node[font=\small, align=center] at ($(userlist.north) + (0,-1.3)$) {Sec: \ref{sec-deterministic-nullifier} $ y = g^{1/(k + \text{"DMV"})}$};
     
     \draw ($(userlist.north west) + (0,-1.8)$) -- ($(userlist.north east) + (0,-1.8)$);
     \draw ($(userlist.north west) + (0,-2.2)$) -- ($(userlist.north east) + (0,-2.2)$);
@@ -80,7 +67,7 @@ A nullifier is a public piece of data that represents a user's account or specif
     \draw ($(revlist.north west) + (0,-0.8)$) -- ($(revlist.north east) + (0,-0.8)$);
     
     % Formula in the second row of revocation list
-    \node[font=\small, align=center] at ($(revlist.north) + (0,-1.3)$) {Sec: \ref{pok-committed-nullifier-vrf} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
+    \node[font=\small, align=center] at ($(revlist.north) + (0,-1.3)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
 
     
     
@@ -93,7 +80,7 @@ A nullifier is a public piece of data that represents a user's account or specif
     \draw[->, thick] (wallet.east) -- (revlist.west);
     
     \end{tikzpicture}
-    \caption{A credential hierarchy with nullifiers that bind context credentials to a master credential. The nullifiers create verifiable bindings that prevent sybil attacks while maintaining privacy, with separate paths for anonymous user authentication and revocation management.}
+    \caption[Nullifier Scheme for ]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver’s license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities}.
     \label{fig:credential-nullifier-revised}
 \end{figure}
 
@@ -125,6 +112,7 @@ Creating an efficient, privacy-preserving nullifier for credential binding raise
 
 
 \subsection{Related Work}
+We use standard $\Sigma$-protocols for their superior efficiency, familiarity among practical implementations, and composability with various cryptographic primitives like our anonymous credential system; additionally, they avoid the computational overhead of MPC and ZK-SNARKs. 
 
 \begin{table}
 \begin{center}
@@ -153,6 +141,13 @@ NSEC5 \cite{goldberg_nsec5_2015} &
 \ding{55} & 
 \ding{51} & 
 Sigma Only & 3x faster
+\\
+PLUME \cite{gupta_plume_2022} & 
+\ding{51} & 
+\ding{55} & 
+\ding{51} & 
+- & 
+ZK-SNARK & Slower
 \\
 DY VRF \cite{hutchison_verifiable_2005} & 
 \ding{51} & 
@@ -189,14 +184,14 @@ UTT Nullifier \cite{tomescu2022utt} &
 \ding{55} & 
 Sigma+Pairing & 4x slower 
 \\
-\text{Sec:} \ref{sec:privacy-preserving-vrf}: & 
+\text{Sec:} \ref{sec-deterministic-nullifier}: & 
 \ding{51} & 
 \ding{55} & 
 \ding{51} & 
 \ding{51} & 
 Sigma only & 2x faster
 \\
-\text{Sec:} \ref{pok-committed-nullifier-vrf}: & 
+\text{Sec:} \ref{sec-probabilistic-nullifier}: & 
 \ding{51} & 
 \ding{51} & 
 \ding{51}  & 
@@ -272,7 +267,7 @@ We start with the $q$-DDHI assumption and work in two different directions. Firs
 
 
 
-\section{Preliminaries}
+\section{Preliminaries}\label{sec-vrf-preliminaries}
 
 \subsection{Cryptographic Assumptions}
 
@@ -409,7 +404,7 @@ These protocols satisfy:
 
 
 
-\section{Prime-Order VRF from the q-DDHI Assumption}\label{sec:pairing-free-vrf}
+\section{Prime-Order VRF from the q-DDHI Assumption}\label{sec:vrf-prime-order}
 
 The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF provides an elegant solution for generating unique, pseudorandom nullifiers $y$ and their proofs of correctness $\pi$. We start with the question of removing pairings to improve efficiency. DY consists of $(y, \pi)$:
 \[
@@ -771,7 +766,7 @@ where $r_3 \sample \mathbb{Z}_q$ provides fresh randomness for each presentation
 
 The key innovation is an auxiliary commitment $\cm_4 = \cm_3^{sk + x} g^{r_4} = g_3 g^{r_3 (sk + x) + r_4}$, which allows us to verify that $\cm_3^{sk + x} = g_3$ (modulo randomness) in zero knowledge. This algebraic structure ensures the nullifier’s correctness while operating entirely within the commitment space.
 
-\begin{protocol}{$\Pi_{\mathsf{CN}}$: Zero-Knowledge Proof for $\mathcal{R}_{\mathsf{CN}}$}{}
+\begin{protocol}{Proof of Committed Nullifier}{}
 \label{prot:committed-nullifier}
 \textbf{Public parameters:} Prime-order group $\mathbb{G}$ with generators $g_1, g_2, g_3, g \in \mathbb{G}$\\
 \textbf{Common input:} $(\cm_1, \cm_2, \cm_3, \cm_4) \in \mathbb{G}^4$\\
@@ -902,7 +897,7 @@ These satisfy the verification equations, and the simulated transcript’s distr
 
 
 
-\subsection{Deterministic Nullifier VRF}
+\subsection{Deterministic Nullifier VRF}\label{sec-deterministic-nullifier}
 
 Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generators $g_1, g_2, g_3, g$. The message space is $ x \in \mathcal{X} = \Z_p^*$, the output space is $y \in \mathcal{Y} = \Z_p^*$, and the proof space is $\pi \in \Pi\ = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. We assume the existence of $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$.
 
@@ -1128,9 +1123,9 @@ Our evaluation reveals several key findings:
 \end{enumerate}
 
 
-\section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-instantiation}
+\section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-vrf-instantiation}
 
-In this section, we instantiate the Credential Relationship Binding Nullifier (CRBN) within the Multi-Issuer Multi-Credential (MIMC) system, demonstrating its utility in real-world privacy-preserving identity frameworks. The CRBN leverages the prime-order, pairing-free Verifiable Random Function (VRF) constructions from Sections~\ref{sec:pairing-free-vrf} and~\ref{sec:privacy-preserving-vrf} to provide efficient, anonymous nullifiers. We focus on two primary applications—sybil resistance and revocation—while highlighting additional use cases inspired by novel zkp applications. 
+In this section, we instantiate the Credential Relationship Binding Nullifier (CRBN) within the Multi-Issuer Multi-Credential (MIMC) system, demonstrating its utility in real-world privacy-preserving identity frameworks. The CRBN leverages the prime-order, pairing-free Verifiable Random Function (VRF) constructions from Sections~\ref{sec:vrf-prime-order} and~\ref{sec:privacy-preserving-vrf} to provide efficient, anonymous nullifiers. We focus on two primary applications—sybil resistance and revocation—while highlighting additional use cases inspired by novel zkp applications. 
 
 \subsection{Applications}\label{subsec:applications}
 
@@ -1147,7 +1142,7 @@ Revocation allows credentials to be invalidated without compromising privacy. Su
 \textbf{Example: Service Access.} A user accesses a service with a credential tied to context $x$ (e.g., "ServiceA"). If revocation is required, the service adds the nullifier $g^{1/(sk + x)}$ to a revocation list. Subsequent access attempts require a zero-knowledge proof that the user’s nullifier is not in the list, using techniques like set membership proofs~\cite{goos_dynamic_2002}. The committed variant ensures each presentation is unlinkable, protecting user privacy.
 
 \subsubsection{Additional Use Cases}\label{subsubsec:other-applications}
-Beyond sybil resistance and revocation, the CRBN supports diverse applications, drawing from recent privacy-preserving protocol designs~\cite{blog_nullifiers_2022}:
+Beyond sybil resistance and revocation, the CRBN supports diverse applications, drawing from recent privacy-preserving protocol designs:
 
 \begin{itemize}
     \item \textbf{ZK Airdrops:} In cryptocurrency airdrops, users prove eligibility (e.g., ownership of a key in a Merkle tree) and uniqueness via a nullifier, claiming rewards once anonymously.

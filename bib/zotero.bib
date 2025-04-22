@@ -1,11 +1,22 @@
 
-@misc{gupta_plume_nodate,
+@misc{gurkan_community_2020,
+	title = {Community {Proposal}: {Semaphore}: {Zero}-{Knowledge} {Signaling} on {Ethereum}},
+	abstract = {Privacy has been a big concern in the blockchain space. While diﬀerent speciﬁc solutions have been introduced to introduce more privacy into systems, they remain focused on speciﬁc problems and are complex to extend and deploy.},
+	language = {en},
+	author = {Gurkan, Kobi and {Koh Wei Jie} and {Barry Whitehat}},
+	month = mar,
+	year = {2020},
+}
+
+@misc{gupta_plume_2022,
 	title = {{PLUME}: {An} {ECDSA} {Nullifier} {Scheme} for {Unique} {Pseudonymity} within {Zero} {Knowledge} {Proofs}},
 	shorttitle = {{PLUME}},
 	url = {https://eprint.iacr.org/2022/1255},
+	doi = {https://doi.org/1721.1/147434},
 	abstract = {ZK-SNARKs (Zero Knowledge Succinct Noninteractive ARguments of Knowledge) are one of the most promising new applied cryptography tools: proofs allow anyone to prove a property about some data, without revealing that data. Largely spurred by the adoption of cryptographic primitives in blockchain systems, ZK-SNARKs are rapidly becoming computationally practical in real-world settings, shown by i.e. tornado.cash and rollups. These have enabled ideation for new identity applications based on anonymous proof-of-ownership. One of the primary technologies that would enable the jump from existing apps to such systems is the development of deterministic nullifiers. Nullifiers are used as a public commitment to a specific anonymous account, to forbid actions like double spending, or allow a consistent identity between anonymous actions. We identify a new deterministic signature algorithm that both uniquely identifies the keypair, and keeps the account identity secret. In this work, we will define the full DDH-VRF construction, and prove uniqueness, secrecy, and existential unforgeability. We will also demonstrate a proof of concept of our Pseudonymously Linked Unique Message Entity (PLUME) scheme.Edited some wordings and added PLUME to the title},
 	urldate = {2023-04-24},
 	author = {Gupta, Aayush and Gurkan, Kobi},
+	year = {2022},
 	keywords = {bitcoin, ddh-vrf, ecdsa, ethereum, nullifier, plume, pseudonymity, secp256k1, signature, vrf, zero knowledge, zk proof},
 }
 
@@ -1371,7 +1382,7 @@ Usr\_lan: en},
 	pages = {1--1},
 }
 
-@article{kepkowski_privacy_nodate-1,
+@article{kepkowski_privacy_nodate,
 	title = {Privacy enhancing technologies for identity and access management},
 	language = {en},
 	author = {Kepkowski, Michal},
@@ -2828,25 +2839,6 @@ In this SoK, we categorize the main traditional and decentralized financial appl
 	title = {Modern {Verifiable} {Computation}},
 	language = {en},
 	author = {Thaler, Justin},
-}
-
-@incollection{goos_dynamic_2002,
-	address = {Berlin, Heidelberg},
-	title = {Dynamic {Accumulators} and {Application} to {Efficient} {Revocation} of {Anonymous} {Credentials}},
-	volume = {2442},
-	isbn = {978-3-540-44050-5 978-3-540-45708-4},
-	url = {http://link.springer.com/10.1007/3-540-45708-9_5},
-	abstract = {An accumulator scheme, as introduced by Benaloh and de Mare [BdM94] and further studied by Baric´ and Pﬁtzmann [BP97], is an algorithm that allows one to hash a large set of inputs into one short value, called the accumulator, such that there is a (short) witness that a given input was incorporated into the accumulator. At the same time, it is infeasible to ﬁnd a witness for a value that was not accumulated. We put forward the notion of a dynamic accumulator, which is an accumulator that allows one to dynamically add and delete inputs, such that the cost of an add or delete is independent of the number of accumulated values. We achieve this under the strong RSA assumption. For this construction, we also show an efﬁcient zero-knowledge protocol for proving that a committed value is in the accumulator.},
-	language = {en},
-	urldate = {2024-06-06},
-	booktitle = {Advances in {Cryptology} — {CRYPTO} 2002},
-	publisher = {Springer Berlin Heidelberg},
-	author = {Camenisch, Jan and Lysyanskaya, Anna},
-	editor = {Goos, Gerhard and Hartmanis, Juris and Van Leeuwen, Jan and Yung, Moti},
-	year = {2002},
-	doi = {10.1007/3-540-45708-9_5},
-	note = {Series Title: Lecture Notes in Computer Science},
-	pages = {61--76},
 }
 
 @incollection{kutylowski_privacy-preserving_2014,
@@ -6487,13 +6479,6 @@ Additionally, through our framework and gadgets, we are able to obtain new succi
 	journal = {HackMD},
 }
 
-@article{gurkan_community_nodate,
-	title = {Community {Proposal}: {Semaphore}: {Zero}-{Knowledge} {Signaling} on {Ethereum}},
-	abstract = {Privacy has been a big concern in the blockchain space. While diﬀerent speciﬁc solutions have been introduced to introduce more privacy into systems, they remain focused on speciﬁc problems and are complex to extend and deploy.},
-	language = {en},
-	author = {Gurkan, Kobi and Jie, Koh Wei},
-}
-
 @misc{noauthor_worldcoin_nodate,
 	title = {Worldcoin {Whitepaper}},
 	url = {https://whitepaper.worldcoin.org/},
@@ -7471,20 +7456,6 @@ The core of our preprocessing zkSNARK is an efficient *algebraic holographic pro
 	note = {Conference Name: IEEE Access},
 	keywords = {Blockchain, Blockchains, Consensus protocol, Proof of Work, Scalability, Security, Throughput, rollups, scalability, second layer solutions, survey},
 	pages = {93039--93054},
-}
-
-@inproceedings{ben_sasson_zerocash_2014,
-	title = {Zerocash: {Decentralized} {Anonymous} {Payments} from {Bitcoin}},
-	shorttitle = {Zerocash},
-	doi = {10.1109/SP.2014.36},
-	abstract = {Bit coin is the first digital currency to see widespread adoption. While payments are conducted between pseudonyms, Bit coin cannot offer strong privacy guarantees: payment transactions are recorded in a public decentralized ledger, from which much information can be deduced. Zero coin (Miers et al., IEEE S\&P 2013) tackles some of these privacy issues by unlinking transactions from the payment's origin. Yet, it still reveals payments' destinations and amounts, and is limited in functionality. In this paper, we construct a full-fledged ledger-based digital currency with strong privacy guarantees. Our results leverage recent advances in zero-knowledge Succinct Non-interactive Arguments of Knowledge (zk-SNARKs). First, we formulate and construct decentralized anonymous payment schemes (DAP schemes). A DAP scheme enables users to directly pay each other privately: the corresponding transaction hides the payment's origin, destination, and transferred amount. We provide formal definitions and proofs of the construction's security. Second, we build Zero cash, a practical instantiation of our DAP scheme construction. In Zero cash, transactions are less than 1 kB and take under 6 ms to verify - orders of magnitude more efficient than the less-anonymous Zero coin and competitive with plain Bit coin.},
-	booktitle = {2014 {IEEE} {Symposium} on {Security} and {Privacy}},
-	author = {Ben Sasson, Eli and Chiesa, Alessandro and Garman, Christina and Green, Matthew and Miers, Ian and Tromer, Eran and Virza, Madars},
-	month = may,
-	year = {2014},
-	note = {ISSN: 2375-1207},
-	keywords = {Bitcoin, Logic gates, Online banking, Privacy, Protocols, Public key, decentralized electronic cash, zero knowledge},
-	pages = {459--474},
 }
 
 @misc{wu_tutela_2022,
