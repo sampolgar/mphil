@@ -1,6 +1,6 @@
-\mychapter{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{sec:mimc}
+\mychapter{Multi Issuer Multi Credential Anonymous Credentials (MIMC-ABC)}\label{chap3}
 
-\section{Introduction}
+\section{Introduction}\label{sec:mimc}
 Anonymous credential systems enable users to prove statements about their attributes while preserving privacy, evolving from single-issuer designs (e.g., Idemix~\cite{camenisch_design_2002}) to meet complex, real-world demands. Unlike Chapter 2's single-issuer $\ABC$ system, we address the problem \emph{how can users privately combine credentials from multiple, mutually distrusting issuers to prove they belong to the same identity, without revealing it?}
 
 Consider a user proving they hold (1) a government-issued ID confirming residency, (2) an employer credential verifying income, and (3) a training certificate—all tied to one identity, without linking them via a public identifier. Alternatively, in content credentialing, a user might present images signed by different devices (e.g., cameras) to a journal, proving they share an account while selectively disclosing metadata. Existing approaches fall short: attribute-based signatures lack aggregation~\cite{cimato_signature_2003}, aggregate signatures assume a single issuer \cite{goos_short_2001, hutchison_short_2004} or limit revocation flexibility~\cite{hebant_traceable_nodate}, and generic zkSNARKs, while expressive, incur high computational costs~\cite{rosenberg_zk-creds_2022}. CanDID~\cite{maram2021candid} binds credentials via a consistent name, but this offers weaker security against malicious issuers and their system lacks issuer-privacy for internal identifiers. ZKcreds~\cite{rosenberg_zk-creds_2022} uses a zkSNARK-based join gadget for multi-credential proofs, yet its proof computation scales poorly, especially for multiple credentials. Our Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) overcomes these limitations with a secure, efficient solution.
@@ -28,7 +28,8 @@ Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends
 
 A MIMC-ABC system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$:
 
-\begin{itemize}
+\begin{definition}[MIMC-ABC]
+    \begin{itemize}
     \item $\mathsf{Setup}(1^\lambda) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp}$, including a bilinear group $\BG = (\G_1, \G_2, \G_T, e, g, \tilde{g}, p)$ as in Section 2.1.
     
     \item $\mathsf{OrgKeyGen}(\mathsf{pp}, \ell, j) \to (\mathsf{osk}_j, \mathsf{opk}_j)$: For issuer $j$, takes $\mathsf{pp}$ and $\ell$, outputs a keypair $(\mathsf{osk}_j, \mathsf{opk}_j)$ using the signature scheme from Section 2.3.
@@ -37,6 +38,8 @@ A MIMC-ABC system consists of the following probabilistic polynomial-time (PPT) 
 
     \item $(\mathsf{Show}(\{\mathsf{cred}_j\}_j, \{\usk_j\}_j, \phi), \mathsf{Verify}(\{\mathsf{cred}_j'\}_j, \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a set of credentials $\{\mathsf{cred}_j\}_j$ from (optionally) distinct issuers, rerandomizes each $(\sigma_j, \mathsf{cm})$ to $(\sigma_j', \mathsf{cm}')$, and computes a proof $\pi$ that $\phi(\{\attrs_j\}_j) = 1$ and all $\id$ values match, using $\Sigma$-protocols (Section 2.4.3). The verifier checks the proof and rerandomized credentials against $\{\mathsf{opk}_j\}_j$, outputting 1 if valid, 0 otherwise.
 \end{itemize}
+\end{definition}
+
 
 \subsection{Security Properties}
 

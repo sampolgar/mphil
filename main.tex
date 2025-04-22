@@ -21,7 +21,16 @@
 \input{tex/ZZZ_header}
 
 \begin{document}
+\renewcommand{\thetheorem}{\themychapter.\arabic{theorem}}
+\renewcommand{\thedefinition}{\themychapter.\arabic{definition}}
+\renewcommand{\thelemma}{\themychapter.\arabic{lemma}}
+\renewcommand{\theproposition}{\themychapter.\arabic{proposition}}
+\renewcommand{\thecorollary}{\themychapter.\arabic{corollary}}
+\renewcommand{\theexample}{\themychapter.\arabic{example}}
+\renewcommand{\theremark}{\themychapter.\arabic{remark}}
   \input{tex/1_titlepage}
+
+  
 
 
 \title{Privacy-Preserving Identity Systems}

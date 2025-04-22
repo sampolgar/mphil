@@ -164,6 +164,8 @@ keys
 
 
 \usepackage{etoolbox}
+
+
 \makeatletter
 \let\llncs@addcontentsline\addcontentsline
 \patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
@@ -181,29 +183,30 @@ keys
 
 
 \makeatletter
-% First, clear the current definitions
-% \let\proposition\relax
-% \let\endproposition\relax
-% \let\lemma\relax
-% \let\endlemma\relax
-% \let\definition\relax
-% \let\enddefinition\relax
+% Simple solution - just reset counters in the chapter command
+\newcounter{mychapter}
+\newcommand{\mychapter}[1]{
+  \clearpage
+  \refstepcounter{mychapter}
+  \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
+  \setcounter{section}{0}  % Reset section counter
+  
+  % Manually reset all theorem-like environments
+  \setcounter{theorem}{0}
+  \setcounter{definition}{0}
+  \setcounter{lemma}{0}  
+  \setcounter{proposition}{0}
+  \setcounter{corollary}{0}
+  \setcounter{example}{0}
+  \setcounter{remark}{0}
+  
+  \vspace*{2cm}
+  {\centering\Huge\bfseries Chapter \themychapter\par}
+  \vspace{1em}
+  {\centering\Huge\bfseries #1\par}
+  \vspace{2em}
+}
 
-% % Now create fresh counters
-% \newcounter{proposition}
-% \newcounter{lemma}
-% \newcounter{definition}
-
-% Define the environments with their own counters
-% \spnewtheorem{proposition}{Proposition}{\bfseries}{\itshape}
-% \spnewtheorem{lemma}{Lemma}{\bfseries}{\itshape}
-% \spnewtheorem{definition}{Definition}{\bfseries}{\itshape}
-% \makeatother
-
-% \makeatletter
-% \@removefromreset{proposition}{theorem}
-% \@removefromreset{lemma}{theorem}
-% \makeatother
 
 \newtcbtheorem[auto counter]{protocol}{Protocol}{
     colback=white,
@@ -457,25 +460,19 @@ keys
 
 
 
+% \newcounter{mychapter}
 % \newcommand{\mychapter}[1]{
 %   \clearpage
-%   \phantomsection
-%   \addcontentsline{toc}{section}{#1}
+%   \refstepcounter{mychapter}
+%   \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
+%   \setcounter{section}{0}  % Reset section counter for new chapter
 %   \vspace*{2cm}
-%   {\huge\bfseries\centering #1\par\vspace{1.5cm}}
+%   {\centering\Huge\bfseries Chapter \themychapter\par}
+%   \vspace{1em}
+%   {\centering\Huge\bfseries #1\par}
+%   \vspace{2em}
 % }
 
-
-\newcounter{mychapter}
-\newcommand{\mychapter}[1]{
-  \clearpage
-  \stepcounter{mychapter}
-  \vspace*{2cm}
-  {\centering\Huge\bfseries Chapter \themychapter\par}
-  \vspace{1em}
-  {\centering\Huge\bfseries #1\par}
-  \vspace{2em}
-}
 
 %--------------------------------------------------------
 % New from NDSS paper
