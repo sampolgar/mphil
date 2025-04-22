@@ -143,30 +143,36 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
 \section{Construction}
 \label{sec:threshold-construction}
 
-
-\begin{figure}\label{construction-TABC}
-    \caption{T-ABC System}
+\begin{figure}
+    \caption{T-ABC System with Master Credential and Nullifier}
     \begin{center}
     \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
     \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
     \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
-    \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}), \; \text{Return } (\osk, \opk) = (\sk, (\vk, \ck))$} \\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
-    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\k_1,\usk) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
-    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
-    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)}$ \\[1em]
-    & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
-    If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
-    \multicolumn{3}{l}{$\k_1 \sample \Z_p, \usk \sample \Z_p\;, \cm_1 = \CMCom([0,0,0,\k_1];\usk)$} \\[1em]
-     & $\xrightarrow{\;\; \pirzero(\cm_1) \;\;}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
-     \multicolumn{3}{r}{$\k_2 \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
-     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
-    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \k_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
-    \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
+    \multicolumn{3}{l}{$\text{Assume threshold keys } (\sk_1, \dots, \sk_n), \vk \text{ are generated via DKG.}$} \\[1em]
+    \multicolumn{3}{l}{$\text{Return } (\osk, \opk) = ((\sk_1, \dots, \sk_n), (\vk, \ck))$} \\[1em]
+
+    \multicolumn{3}{l}{$\underline{\mathsf{(ObtainContext, IssueContext)}}$ for context credential:} \\[1em]
+    \multicolumn{3}{l}{$\text{Assume user holds master credential } \cred_{\text{master}} = (\sigma_{\text{master}}, \cm_{\text{master}}, \usk_{\text{master}}, \opk)$} \\[1em]
+    \multicolumn{3}{l}{$\pirverkey(\vk, \ck) = \zkpok\{(\vk, x) \mid \vk = \tilde{g}^x \}$} \\[1em]
+    \multicolumn{3}{l}{$\pirnull(\cm_{\text{master}}, \mathsf{ctx}) = \zkpok\{(\k_{\text{master}}, \usk_{\text{master}}) \mid \cm_{\text{master}} = g_1^{\id} g_2^{\text{"master"}} g_3^{\exp} g_4^{\k_{\text{master}}} g^{\usk_{\text{master}}} \land y = g^{1/(\k_{\text{master}} + \mathsf{ctx})} \}$} \\[1em]
+
+    $\underline{\mathsf{ObtainContext}(\credm, \cmc)}$ && $\underline{\mathsf{IssueContext}(\pirverkey, \pirnull, y, \cm_{\text{ctx}}, \osk)}$ \\[1em]
+    & $\xleftarrow{\pirverkey(\vk, \ck)}$ & Each issuer $i$ sends $\pirverkey(\vk, \ck)$ \\[1em]
+    If $\pirverkey(\vk, \ck)$ fails for any $i$, return $\bot$ && \\[1em]
+    \multicolumn{3}{l}{User computes nullifier $y = g^{1/(\k_{\text{master}} + \mathsf{ctx})}$ for context $\mathsf{ctx}$} \\[1em]
+    \multicolumn{3}{l}{User generates $\pirnull(\cmm, \cmc)$} \\[1em]
+    & $\xrightarrow{\;\; y, \pirnull \;\;}$ & If $\pirnull$ fails or $y \in \text{DedupTable}$, return $\bot$ \\[1em]
+    \multicolumn{3}{l}{$\k_{\text{ctx}} \sample \Z_p, \usk_{\text{ctx}} \sample \Z_p, \; \cm_{\text{ctx}} = \CMCom([\id, \mathsf{ctx}, \exp, \k_{\text{ctx}}]; \usk_{\text{ctx}})$} \\[1em]
+    \multicolumn{3}{r}{Each issuer $i$ computes partial signature $\sigma_i \sample \mathsf{RS.ShareSign}(\cm_{\text{ctx}}, \sk_i)$} \\[1em]
+    \multicolumn{3}{r}{User aggregates $\sigma = \mathsf{RS.Aggregate}(\{\sigma_i\}_{i \in S})$ for threshold set $S$} \\[1em]
+    If $\RSVer(\sigma, \cm_{\text{ctx}}, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm_{\text{ctx}} \qquad}$ & \\[1em]
+    \multicolumn{3}{l}{Else, return $\cred_{\text{ctx}} = (\sigma, \cm_{\text{ctx}}, \usk_{\text{ctx}}, \opk)$} \\[1em]
+
     \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
     \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
     $\underline{\mathsf{Show}(\cred)}$ && $\underline{\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)}$ \\[1em]
-    \multicolumn{3}{r}{Send empty access policy $\phi = \bot$} \\[0.5em]
+    \multicolumn{3}{r}{Send access policy $\phi$} \\[0.5em]
     \multicolumn{3}{l}{Parse $\cred = (\sigma, \cm, \usk, \opk)$} \\[0.5em]
     \multicolumn{3}{l}{\quad Sample $\Delta_\usk, \Delta_u \sample \Z_p$} \\[1em]
     \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \Delta_\usk, \Delta_u)$} \\[1em]
@@ -175,26 +181,8 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
     & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
     \end{tabular}
     \end{center}
-    \label{fig:single-cred-protocol}
+    \label{fig:threshold-cred-protocol}
 \end{figure}
-
-
-
-\begin{definition}[PS Threshold Signatures over Pedersen Commitments]
-A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists of the following algorithms:
-    \begin{itemize}
-        \item $\mathsf{DistKeyGen}(1^\lambda, t+1, n, \ell) \rightarrow (\mathsf{ck}, \mathsf{vk}, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]})$: Takes security parameter $\lambda$, corruption threshold $t$, number of parties $n$, and attribute count $\ell$. Outputs commitment key $\mathsf{ck}$, verification key $\mathsf{vk}$, and per-party keys $(\mathsf{sk}_i, \mathsf{vk}_i)$.
-        
-        \item $\mathsf{ShareSign}(\mathsf{ck}, \mathsf{sk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}; h) \rightarrow [\sigma^*]_i$: Takes party $i$'s secret key $\mathsf{sk}_i$, commitments $\mathsf{cm}_k$ with ZK proofs $\pi_k^{\mathsf{zkpok}}$, and randomizer $h$. Outputs signature share $[\sigma^*]_i$.
-        
-        \item $\mathsf{ShareVer}(\mathsf{ck}, \mathsf{vk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}, [\sigma^*]_i; h) \rightarrow \{0,1\}$: Takes party $i$'s verification key $\mathsf{vk}_i$, commitments with proofs, and signature share $[\sigma^*]_i$. Outputs accept (1) or reject (0).
-        
-        \item $\mathsf{Aggregate}(\mathsf{ck}, ([\sigma^*]_i)_{i \in S}, (r_k)_{k \in [\ell]}) \rightarrow \sigma$: Takes signature shares from subset $S$ of parties and commitment randomness values. Outputs aggregated signature $\sigma$.
-    \end{itemize}
-\end{definition}
-
-
-
 
 
 
@@ -225,11 +213,11 @@ Efficient sybil resistance using nullifiers:
 
 
 \subsection{Deduplication Protocol}
-Efficient sybil resistance using nullifiers:
+Efficient Sybil Resistance Using Nullifiers:
 \begin{itemize}
     \item During issuance: Check nullifier $y = g^{1/(k + \mathsf{ctx})}$ against deduplication table
     \item Zero-knowledge proof: $\pi_{\mathsf{dedup}} = \mathsf{ZKPoK}\{(k, \mathsf{ctx}, r) : \mathsf{cm} = \mathsf{Commit}([\mathsf{id}, \mathsf{ctx}, \ldots]; r) \land y = g^{1/(k + \mathsf{ctx})}\}$
-    \item Advantage: No expensive EDDX operations required
+    \item Advantage: Efficiency
 \end{itemize}
 
 \section{Security Analysis}
@@ -417,20 +405,6 @@ Prove+Verify & <3ms & >20ms & >7× faster \\
 \end{tabular}
 \end{table}
 
-\begin{table}[h]
-\centering
-\caption{Deduplication Performance Comparison (ms)}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Operation} & \textbf{Our Nullifier} & \textbf{S3ID EDDX} \\
-\midrule
-Generate Nullifier/EDDX & 1.08* & 8-10** \\
-Zero-Knowledge Proof & 1.41* & 7-9** \\
-Total Deduplication & 2.49 & 15-19 \\
-\bottomrule
-\end{tabular}
-\footnotesize{*From Chapter 4 results **Estimated from S3ID/TACT operations}
-\end{table}
 
 \begin{table}[h]
 \centering
@@ -442,6 +416,40 @@ Total Deduplication & 2.49 & 15-19 \\
 Token Request & 6.16 & 37.15 & 6.0× \\
 Prove & 1.35 & 15.78 & 11.7× \\
 Verify & 1.82 & 26.64 & 14.6× \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+\section{Performance Tables}a
+\label{app:perf-tables}
+
+\begin{table}[h]
+\centering
+\caption{Performance Comparison for $N=4$, $t=3$ (ms)}
+\label{tab:perf-comp-4-3}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
+\midrule
+Token Request & PS-UTT & $1.67$ & $3.08$ & $5.97$ & $11.55$ & $22.79$ & $45.48$ \\
+& TACT & $8.33$ & $16.58$ & $33.84$ & $67.08$ & $135.96$ & $284.83$ \\
+\midrule
+Issue & PS-UTT & $6.66$ & $11.67$ & $21.19$ & $40.15$ & $76.09$ & $150.47$ \\
+& TACT & $3.05$ & $6.30$ & $13.68$ & $27.17$ & $52.02$ & $122.63$ \\
+\midrule
+(Aggregate, Unblind) & PS-UTT & $0.39$ & $0.44$ & $0.51$ & $0.68$ & $0.86$ & $1.10$ \\
+& TACT & $1.78$ & $3.37$ & $6.46$ & $15.31$ & $29.01$ & $68.57$ \\
+\midrule
+(Aggregate, Unblind)+Verify & PS-UTT & $10.11$ & $15.76$ & $26.23$ & $48.10$ & $85.96$ & $159.58$ \\
+& TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
+\midrule
+Prove & PS-UTT & $1.24$ & $1.24$ & $1.33$ & $1.51$ & $1.66$ & $1.97$ \\
+& TACT & $7.98$ & $10.36$ & $14.67$ & $24.39$ & $42.76$ & $70.61$ \\
+\midrule
+Verify & PS-UTT & $1.70$ & $1.75$ & $1.69$ & $1.69$ & $1.68$ & $1.70$ \\
+& TACT & $11.55$ & $15.24$ & $23.51$ & $44.30$ & $72.31$ & $138.38$ \\
 \bottomrule
 \end{tabular}
 \end{table}
