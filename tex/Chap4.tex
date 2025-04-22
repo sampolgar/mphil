@@ -1128,49 +1128,40 @@ Our evaluation reveals several key findings:
 \end{enumerate}
 
 
-
 \section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-instantiation}
 
+In this section, we instantiate the Credential Relationship Binding Nullifier (CRBN) within the Multi-Issuer Multi-Credential (MIMC) system, demonstrating its utility in real-world privacy-preserving identity frameworks. The CRBN leverages the prime-order, pairing-free Verifiable Random Function (VRF) constructions from Sections~\ref{sec:pairing-free-vrf} and~\ref{sec:privacy-preserving-vrf} to provide efficient, anonymous nullifiers. We focus on two primary applications—sybil resistance and revocation—while highlighting additional use cases inspired by novel zkp applications. 
 
-\subsection{Applications}
+\subsection{Applications}\label{subsec:applications}
 
-The CRBN enables several important applications for privacy-preserving identity systems:
+The CRBN enables a range of privacy-preserving applications by binding credentials hierarchically while enforcing uniqueness and revocability. Below, we outline key use cases:
 
-\begin{enumerate}
-    \item \textbf{Hierarchical Credential Systems:} Users can prove relationships between credentials from different issuers without revealing their identity or enabling tracking.
-    
-    \item \textbf{Private Revocation:} The nullifier can be used to implement privacy-preserving revocation mechanisms where credentials can be invalidated without compromising user anonymity.
-    
-    \item \textbf{One-Time Credentials:} Services can issue credentials meant for single use, with nullifiers ensuring they cannot be reused while maintaining privacy.
-    
-    \item \textbf{Secure Attribute Aggregation:} Organizations can verify attribute relationships across credentials (e.g., "this person's income exceeds their claimed threshold") without learning the underlying values.
-\end{enumerate}
+\subsubsection{Sybil Resistance}\label{subsubsec:sybil-resistance}
+Sybil resistance ensures that users cannot create multiple identities to exploit a system. The CRBN achieves this through its deterministic nullifier, $y = g^{1/(sk + x)}$, where $sk$ is the master credential key and $x$ is the context identifier (e.g., "DMV" for a driver's license). This nullifier is unique per user-context pair and verifiable via the zero-knowledge proof from Protocol~\ref{pok-committed-inverse-linear-relation}.
 
-These applications demonstrate how CRBN addresses a critical gap in privacy-preserving digital identity: enabling hierarchical credential structures with binding enforceable through zero-knowledge proofs.
+\textbf{Example: Anonymous Voting.} Consider a voting system where each user should vote once per election. A user with master credential key $sk$ computes $y = g^{1/(sk + x)}$ for election context $x$ (e.g., "Election2024"). They present $y$ with a zero-knowledge proof that it corresponds to a valid credential, without revealing $sk$ or $x$. The system maintains an anonymous user list (see Figure~\ref{fig:credential-nullifier-revised}) and rejects duplicate nullifiers, preventing double voting while preserving anonymity.
 
+\subsubsection{Revocation}\label{subsubsec:revocation}
+Revocation allows credentials to be invalidated without compromising privacy. Suppose an identity system has some connection between a user's nullifier, which was submitted at the beginning of their relationship with the system and their user. Should the system require to revoke the user, they place the nullifier in the revocation list. The committed CRBN variant, $\cm_y = g_3^{1/(sk + x)} g^{r_3}$ (Protocol~\ref{pok-committed-nullifier-vrf}), supports this by embedding the nullifier in a commitment, enabling unlinkable presentations and privacy-preserving revocation checks.
 
-\subsubsection{Sybil Resistance}
+\textbf{Example: Service Access.} A user accesses a service with a credential tied to context $x$ (e.g., "ServiceA"). If revocation is required, the service adds the nullifier $g^{1/(sk + x)}$ to a revocation list. Subsequent access attempts require a zero-knowledge proof that the user’s nullifier is not in the list, using techniques like set membership proofs~\cite{goos_dynamic_2002}. The committed variant ensures each presentation is unlinkable, protecting user privacy.
 
-The CRBN provides sybil resistance through the uniqueness property: for any fixed master credential key $sk$ and context $x$, there exists only one valid nullifier value $g^{1/(sk+x)}$ that will verify correctly. Even with the committed variant, the underlying deterministic value ensures a user cannot create multiple valid credential relationships for the same context.
+\subsubsection{Additional Use Cases}\label{subsubsec:other-applications}
+Beyond sybil resistance and revocation, the CRBN supports diverse applications, drawing from recent privacy-preserving protocol designs~\cite{blog_nullifiers_2022}:
 
-This uniqueness is rooted in the algebraic structure of the inverse relationship. If a user could produce two different nullifiers $y$ and $y'$ for the same $(sk,x)$ pair, both would satisfy $y^{sk+x} = g$ and $y'^{sk+x} = g$, which implies $(y/y')^{sk+x} = 1$. In a prime-order group, this is only possible if $y = y'$ or $sk+x \equiv 0 \pmod{p}$, the latter occurring with negligible probability.
+\begin{itemize}
+    \item \textbf{ZK Airdrops:} In cryptocurrency airdrops, users prove eligibility (e.g., ownership of a key in a Merkle tree) and uniqueness via a nullifier, claiming rewards once anonymously.
+    \item \textbf{Persistent Anonymous Identities:} On message boards, users post under a consistent nullifier (e.g., $y = g^{1/(sk + \text{"threadID"})})$), linking posts to one identity without revealing it.
+    \item \textbf{Uniqueness Claims:} For proof of ownership (e.g., a unique asset), a nullifier ensures single claims while maintaining anonymity.
+\end{itemize}
 
-\subsubsection{Revocation}
+\subsection{Discussion}
+The CRBN’s pairing-free design and zero-knowledge proofs provide efficiency and privacy advantages over pairing-based alternatives (e.g., UTT~\cite{tomescu2022utt}), as shown in Section~\ref{sec:performance-vrf}. Its flexibility supports both deterministic (sybil resistance) and committed (revocation) variants, addressing diverse needs in anonymous credential systems.
 
-Both the deterministic and committed variants protect the privacy of credential attributes. The zero-knowledge property of our protocols ensures that nothing is revealed about $sk$ or $x$ beyond the fact that they satisfy the nullifier relationship.
-
-In the deterministic variant, the nullifier $y = g^{1/(sk+x)}$ is pseudorandom under the $q$-DDHI assumption, appearing as a random group element to any party not knowing $sk$ and $x$. The committed variant provides even stronger privacy by hiding the nullifier value itself.
-
-\subsubsection{Unlinkability}
-
-The committed CRBN variant enables unlinkable presentations through randomized commitments. Each time a user presents their credential relationship, they generate fresh randomness $r_3, r_4$ for commitments $\cm_3$ and $\cm_4$. These commitments appear as new, unrelated values in each presentation, preventing linking across verifications.
-
-The hiding property of Pedersen commitments ensures that $\cm_3$ and $\cm_4$ reveal no information about the underlying deterministic nullifier. Even a verifier who sees multiple presentations of the same credential relationship cannot determine whether they originated from the same user.
-
-
-\section{Conclusion}
-
+\subsection{Conclusion}
+The CRBN instantiates a versatile, efficient nullifier mechanism for the MIMC system, enabling sybil-resistant credential binding and privacy-preserving revocation. Its applications extend to emerging use cases like ZK airdrops and persistent identities, positioning it as a foundational tool for next-generation privacy-preserving identity frameworks.
 
 % Could compare my construction with others
 % https://eprint.iacr.org/2022/1255 e.g.
 % https://xn--2-umb.com/22/nullifiers/#zerocoin-nullifiers
+
