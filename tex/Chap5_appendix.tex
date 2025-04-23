@@ -1,0 +1,90 @@
+
+\section{Appendix A: Benchmarks}\label{chap5:appendix-tactvspsutt-results}
+\begin{table}[htbp]
+\centering
+\caption{Performance Comparison for N=4, t=3 (milliseconds)}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
+\midrule
+token request & PS-UTT & 1.67 & 3.08 & 5.97 & 11.55 & 22.79 & 45.48 \\
+ & TACT & 8.33 & 16.58 & 33.84 & 67.08 & 135.96 & 284.83 \\
+\midrule
+issue & PS-UTT & 6.66 & 11.67 & 21.19 & 40.15 & 76.09 & 150.47 \\
+ & TACT & 3.05 & 6.30 & 13.68 & 27.17 & 52.02 & 122.63 \\
+\midrule
+(aggregate, unblind) & PS-UTT & 0.39 & 0.44 & 0.51 & 0.68 & 0.86 & 1.10 \\
+ & TACT & 1.78 & 3.37 & 6.46 & 15.31 & 29.01 & 68.57 \\
+\midrule
+(aggregate, unblind)+ vfy & PS-UTT & 10.11 & 15.76 & 26.23 & 48.10 & 85.96 & 159.58 \\
+ & TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
+\midrule
+prove & PS-UTT & 1.24 & 1.24 & 1.33 & 1.51 & 1.66 & 1.97 \\
+ & TACT & 7.98 & 10.36 & 14.67 & 24.39 & 42.76 & 70.61 \\
+\midrule
+verify & PS-UTT & 1.70 & 1.75 & 1.69 & 1.69 & 1.68 & 1.70 \\
+ & TACT & 11.55 & 15.24 & 23.51 & 44.30 & 72.31 & 138.38 \\
+\bottomrule
+\end{tabular}
+\label{tab:perf-comp-4-3}
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\caption{Performance Comparison for N=16, t=9 (milliseconds)}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
+\midrule
+token request & PS-UTT & 1.65 & 3.25 & 6.16 & 11.81 & 22.71 & 44.38 \\
+ & TACT & 8.55 & 17.44 & 37.15 & 75.19 & 135.91 & 281.95 \\
+\midrule
+issue & PS-UTT & 20.95 & 34.84 & 63.40 & 127.27 & 244.22 & 497.48 \\
+ & TACT & 3.09 & 6.57 & 14.14 & 27.81 & 61.34 & 116.14 \\
+\midrule
+(aggregate, unblind) & PS-UTT & 0.99 & 1.00 & 1.10 & 1.28 & 1.46 & 1.69 \\
+ & TACT & 3.92 & 6.45 & 15.04 & 29.33 & 52.55 & 109.71 \\
+\midrule
+(aggregate, unblind)+ vfy & PS-UTT & 32.72 & 47.59 & 78.13 & 130.12 & 230.15 & 434.51 \\
+ & TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
+\midrule
+prove & PS-UTT & 1.26 & 1.37 & 1.35 & 1.48 & 1.61 & 1.96 \\
+ & TACT & 7.90 & 10.03 & 15.78 & 23.11 & 40.56 & 73.03 \\
+\midrule
+verify & PS-UTT & 1.71 & 1.82 & 1.82 & 1.69 & 1.68 & 1.70 \\
+ & TACT & 11.20 & 16.83 & 26.64 & 41.20 & 74.07 & 138.99 \\
+\bottomrule
+\end{tabular}
+\label{tab:perf-comp-16-9}
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\caption{Performance Comparison for N=64, t=33 (milliseconds)}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
+\midrule
+token request & PS-UTT & 1.64 & 3.07 & 5.88 & 11.49 & 22.65 & 44.51 \\
+ & TACT & 8.40 & 20.27 & 36.11 & 72.58 & 135.28 & 273.16 \\
+\midrule
+issue & PS-UTT & 84.67 & 147.86 & 283.72 & 457.91 & 874.70 & 1700.96 \\
+ & TACT & 3.68 & 7.64 & 13.52 & 27.96 & 50.73 & 112.36 \\
+\midrule
+(aggregate, unblind) & PS-UTT & 4.79 & 4.81 & 4.89 & 5.02 & 5.21 & 5.60 \\
+ & TACT & 15.66 & 27.00 & 41.02 & 91.36 & 135.35 & 288.26 \\
+\midrule
+(aggregate, unblind)+ vfy & PS-UTT & 109.81 & 157.39 & 259.85 & 452.79 & 837.01 & 1578.62 \\
+ & TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
+\midrule
+prove & PS-UTT & 1.22 & 1.40 & 1.33 & 1.50 & 1.67 & 1.99 \\
+ & TACT & 8.85 & 11.52 & 14.55 & 22.23 & 40.12 & 70.57 \\
+\midrule
+verify & PS-UTT & 1.69 & 1.68 & 1.69 & 1.74 & 1.86 & 1.73 \\
+ & TACT & 11.75 & 14.92 & 25.03 & 41.43 & 71.80 & 129.43 \\
+\bottomrule
+\end{tabular}
+\label{tab:perf-comp-64-33}
+\end{table}

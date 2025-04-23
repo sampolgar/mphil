@@ -102,7 +102,7 @@ Our MIMC-ABC system constructs credentials as rerandomizable Pointcheval-Sanders
 
 Each credential from issuer $j$ commits to an attribute vector $\attrs_j = [\id, \ctx_j, \exp_j]$, where $\id$ is a unique, user-chosen identifier, $\ctx_j$ denotes the credential’s context (e.g., "passport"), and $\exp_j$ is an expiration date. The vector can extend to additional attributes as needed (e.g., income, degree, date of birth). 
 
-Each credential from issuer $j$ commits to an attribute vector $\attrs_j = [\id, \ctx_j, \exp_j]$, where $\id$ is a unique, user-chosen identifier, $\ctx_j$ denotes the credential’s context (e.g., "passport"), and $\exp_j$ is an expiration date. The vector can extend to additional attributes as needed (e.g., income, degree). Issuance is flexible: the user privately commits to $\mathsf{cm}_1 = \mathsf{CM.Com}([\id, 0, 0]; \usk_j)$ with randomness $\usk_j$ and proves its opening and proves it commits to zero's in positions 2, 3, while issuer $j$ commits to $\mathsf{cm}_2 = \mathsf{CM.Com}([0, \ctx_j, \exp_j]; 0)$ and homomorphically combines them into $\mathsf{cm}_j = \mathsf{cm}_1 \cdot \mathsf{cm}_2 = \mathsf{CM.Com}([\id, \ctx_j, \exp_j]; \usk_j)$, signing it. Alternatively, the user can commit to all attributes privately, and the issuer signs directly, supporting both fully private and issuer-driven scenarios (e.g., credential oracles like DECO~\cite{zhang_deco_2019}). To present credentials, the user rerandomizes each signature and commitment, then proves in zero-knowledge that: (1) all signatures are valid under their respective issuer keys, and (2) all commitments share the same $\id$, satisfying a predicate $\phi$.
+Each credential from issuer $j$ commits to an attribute vector $\attrs_j = [\id, \ctx_j, \exp_j]$, where $\id$ is a unique, user-chosen identifier, $\ctx_j$ denotes the credential’s context (e.g., "passport"), and $\exp_j$ is an expiration date. The vector can extend to additional attributes as needed (e.g., income, degree). Issuance is flexible: the user privately commits to $\mathsf{cm}_1 = \mathsf{CM.Com}([\id, 0, 0]; \usk_j)$ with randomness $\usk_j$ and proves its opening and proves it commits to zero's in positions 2, 3, while issuer $j$ commits to $\mathsf{cm}_2 = \mathsf{CM.Com}([0, \ctx_j, \exp_j]; 0)$ and homomorphically combines them into $\mathsf{cm}_j = \mathsf{cm}_1 \cdot \mathsf{cm}_2 = \mathsf{CM.Com}([\id, \ctx_j, \exp_j]; \usk_j)$, signing it. Alternatively, the user can commit to all attributes privately, and the issuer signs directly, supporting both fully private and issuer-driven scenarios (e.g., credential oracles like DECO~\cite{zhang_deco_2020}). To present credentials, the user rerandomizes each signature and commitment, then proves in zero-knowledge that: (1) all signatures are valid under their respective issuer keys, and (2) all commitments share the same $\id$, satisfying a predicate $\phi$.
 
 For example, consider a user with credentials from three issuers ($j = 1, 2, 3$): a passport, driver’s license, and university degree, each with the same $\id = 12345$ (Figure~\ref{fig:three-creds}). The user rerandomizes each pair $(\sigma_j, \mathsf{cm}_j)$ to $(\sigma_j', \mathsf{cm}_j')$ and proves they meet a policy, e.g., $\phi = (\ctx_1 = \text{"passport"} \land \exp_1 > \text{today} \land \ctx_2 = \text{"dmv"} \land \ctx_3 \in \mathcal{D})$, where $\mathcal{D}$ is a set of accredited universities.
 
@@ -249,7 +249,7 @@ The identity binding advantage scales linearly with $n$ and $m$, reflecting the 
 
 \section{Performance Evaluation}
 
-We evaluate MIMC-ABC to quantify the overhead of privacy-preserving multi-issuer credential verification, comparing it against non-private and single-issuer baselines. Unlike prior multi-issuer systems (e.g., CanDID~\cite{maram2021candid}, ZKcreds~\cite{rosenberg_zk-creds_2022}), MIMC-ABC balances strong identity binding with practical efficiency, leveraging the optimized PS-UTT signatures from Section 2.4. Our benchmarks focus on verification time—the critical path in authentication—across three scenarios: non-private, private single-issuer with batch aggregation, and private multi-issuer.
+We evaluate MIMC-ABC to quantify the overhead of privacy-preserving multi-issuer credential verification, comparing it against non-private and single-issuer baselines. Unlike prior multi-issuer systems (e.g., CanDID~\cite{maram2021candid}, ZKcreds~\cite{rosenberg_zk-creds_2022}), MIMC-ABC balances strong identity binding with practical efficiency, leveraging our signature optimization \ref{rerandsig_g2}. Our benchmarks focus on verification time—the critical path in authentication—across three scenarios: non-private, private single-issuer with batch signature aggregation, and private multi-issuer.
 
 \subsection{Methodology}
 
@@ -266,7 +266,7 @@ We implemented MIMC-ABC using the arkworks library~\cite{arkworks_contributors_a
 
 \begin{table}[ht]
 \centering
-\caption{Verification Time for Credentials with 4 Attributes (time in ms)}
+\caption{Varying Credential Count, Set Attribute Number (4) (time in ms)}
 \label{tab:performance-credentialscaling-chap3}
 \begin{tabular}{l@{\hspace{1em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{1em}}r}
 \toprule
@@ -286,7 +286,7 @@ Private Multi-Issuer & 17.65 & 72.57 & 147.35 & 2.6× & Worst-case, distinct iss
 
 \begin{table}[ht]
 \centering
-\caption{Verification Time for 4 Credentials with Varying Attributes (time in ms)}
+\caption{Varying Attribute Count, Set Credential Count (4) (time in ms)}
 \label{tab:performance-attributescaling-chap3}
 \begin{tabular}{l@{\hspace{1em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{0.5em}}r@{\hspace{1em}}r}
 \toprule

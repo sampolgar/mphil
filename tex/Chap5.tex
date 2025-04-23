@@ -237,33 +237,122 @@ If the threshold signature scheme is EUF-CMA secure and the MIMC-ABC system is u
 \end{theorem}
 
 \begin{theorem}[Sybil Resistance]
-If the nullifier scheme from Chapter~\ref{sec:nullifier} satisfies uniqueness, then $\mathsf{T\text{-}SIRIS}$ is sybil-resistant.
+If the nullifier scheme from Chapter~\ref{chap4} satisfies uniqueness, then $\mathsf{T\text{-}SIRIS}$ is sybil-resistant.
 \end{theorem}
 
+\newpage
 \section{Performance Evaluation}
-\label{sec:threshold-performance}
 
-\subsection{Comparison with S3ID}
-\begin{table}[h]
-    \centering
-    \caption{Performance Comparison: T-SIRIS vs S3ID (time in ms)}
-    \begin{tabular}{lcc}
-        \toprule
-        \textbf{Operation} & \textbf{T-SIRIS (Ours)} & \textbf{S3ID} \\
-        \midrule
-        Deduplication & 3.2 & 15.7 \\
-        Threshold Issuance & 12.5 & 14.3 \\
-        Expressive Proof Verification & 4.1 & N/A \\
-        \bottomrule
-    \end{tabular}
+First we compare the threshold anonymous counting token TACT with our Threshold ABC system. 
+
+Then we compare their S3ID system (based on TACT) with our Threshold Identity System based on our ABC system and MIMC-ABC. 
+
+
+\label{sec:threshold-performance-tact}
+We have 2 subsets of tests, our first is where we benchmark the threshold primitive TABC in Token Request, Issue, Aggregate, Unblind, Prove, Verify algorithms, and compare ours against the construction from \cite{rabaninejad_attribute-based_2024}.
+
+The second is its instantiation in an identity system where we combine our benchmark times from our threshold primitive with our other times to estimate and compare against the Dedup, MicroCred, AppCred, VerifyCred algorithms in \cite{rabaninejad_attribute-based_2024}.
+
+\subsection{T-ABC Algorithm Benchmarks}
+
+We evaluate performance with a fixed $N = 16$ (number of Threshold Nodes) and $t = 9$ (Threshold), varying attribute sizes $n = 4, 16, 64$, as shown in Table~\ref{tab:perf-comp-vary-n}. We set the middleground $N$ with comprehensive results for other $N$ in the appendix \ref{chap5:appendix-tactvspsutt-results}. The $n = 64$ case represents the worst-case scenario for large attribute sets. We then set $n$ (the number of attributes) to 16 and vary $N, t$ and show results in Table ~\ref{tab:perf-comp-vary-N}.
+
+\subsubsection{Key Observations}
+
+\begin{itemize}
+    \item \textbf{Table \ref{tab:perf-comp-vary-n}: Fixed $N = 16, t = 9$, Varying $n$}
+        \begin{itemize}
+        \item Our scheme (PS-UTT) outperforms TACT in \textit{Token Request} ($6.0\times$) and \textit{Aggregate, Unblind} ($36.0\times$) at $n = 64$, leveraging \textit{multi-scalar multiplication} (MSM) in Schnorr proofs for sublinear scaling as explored in benchmarks \ref{fig:schnorr-benchmarks}. 
+        
+        \item In \textit{Prove} and \textit{Verify}, PS-UTT achieves speedups of $25.2\times$ and $44.1\times$ at $n = 64$, respectively, due to optimized Schnorr protocols avoiding TACT's costly pairings. TACT's \textit{Verify} time scales linearly with $n$ due to individual pairing checks per message in its threshold Shacham-Waters (tSW) signature verification.
+        
+        \item TACT excels in \textit{Issue} ($4.0\times$ faster at $n = 64$)
+    \end{itemize}
+
+    \item  \textbf{Table \ref{tab:perf-comp-vary-N}: Fixed $n = 16$, Varying $N,t$}
+        \begin{itemize}
+            \item \textit{Issue:} PS-UTT's time rises from 21.19 ms ($N = 4$) to 283.72 ms ($N = 64$) due to \textit{distributed key generation and threshold signing}, scaling linearly with $N$. 
+            \item \textit{Token Request, Prove, Verify:} PS-UTT maintains consistent performance (e.g., Verify: 1.69-1.82 ms) with speedups of $6.1\times$ to $14.8\times$ at $N = 64$, as these operations are $N$-independent.
+        \end{itemize}
+
+    \item \textbf{Synthesis}
+    PS-UTT scales efficiently with attributes $n$, achieving up to $44.1\times$ speedup in \textit{Verify} at $n = 64$, thanks to \textit{MSM-optimized Schnorr proofs}. However, it scales less favorably with nodes $N$, with \textit{Issue} performance dropping as $N$ grows, unlike TACT’s stable 13-14 ms. PS-UTT suits frequent credential use, while TACT fits large $N$, infrequent issuance scenarios.
+
+\end{itemize}
+
+
+
+\begin{table}[!htbp]
+\centering
+\caption[Threshold ABC Performance Comparison, fixed number of nodes, varying attribute length]{Performance Comparison for fixed $ N = 16, t = 9 $, varying $n$ (milliseconds)}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=16} & \textbf{n=64} & \textbf{Speedup (n=64)} \\
+\midrule
+Token Request & PS-UTT & 1.65 & 6.16 & 22.71 & 6.0$\times$ \\
+              & TACT   & 8.55 & 37.15 & 135.91 & \\
+\midrule
+Issue         & PS-UTT & 20.95 & 63.40 & 244.22 & -3.98$\times^\dagger$ \\
+              & TACT   & 3.09 & 14.14 & 61.34 & \\
+\midrule
+(Aggregate, Unblind) & PS-UTT & 0.99 & 1.10 & 1.46 & 36.0$\times$ \\
+                     & TACT   & 3.92 & 15.04 & 52.55 & \\
+\midrule
+Prove         & PS-UTT & 1.26 & 1.35 & 1.61 & 25.2$\times$ \\
+              & TACT   & 7.90 & 15.78 & 40.56 & \\
+\midrule
+Verify        & PS-UTT & 1.71 & 1.82 & 1.68 & 44.1$\times$ \\
+              & TACT   & 11.20 & 26.64 & 74.07 & \\
+\bottomrule
+\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
+\end{tabular}
+\label{tab:perf-comp-vary-n}
 \end{table}
 
-\subsection{Key Performance Advantages}
-\begin{itemize}
-    \item 5× faster deduplication due to efficient nullifiers vs EDDX
-    \item Comparable or better threshold issuance performance
-    \item Additional capability for expressive proofs with minimal overhead
-\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption[Threshold ABC Performance Comparison, fixed attribute length, varying number of nodes]{Performance Comparison for $n = 16$ (milliseconds)}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{N=4, t=3} & \textbf{N=16, t=9} & \textbf{N=64, t=33} & \textbf{Speedup (N=64)} \\
+\midrule
+Token Request & PS-UTT & 5.97 & 6.16 & 5.88 & 6.1$\times$ \\
+              & TACT   & 33.84 & 37.15 & 36.11 & \\
+\midrule
+Issue         & PS-UTT & 21.19 & 63.40 & 283.72 & -20.99$\times^\dagger$ \\
+              & TACT   & 13.68 & 14.14 & 13.52 & \\
+\midrule
+(Aggregate, Unblind) & PS-UTT & 0.51 & 1.10 & 4.89 & 8.4$\times$ \\
+                     & TACT   & 6.46 & 15.04 & 41.02 & \\
+\midrule
+Prove         & PS-UTT & 1.33 & 1.35 & 1.33 & 10.9$\times$\\
+              & TACT   & 14.67 & 15.78 & 14.55 & \\
+\midrule
+Verify        & PS-UTT & 1.69 & 1.82 & 1.69 & 14.8$\times$ \\
+              & TACT   & 23.51 & 26.64 & 25.03 & \\
+\bottomrule
+\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
+\end{tabular}
+\label{tab:perf-comp-vary-N}
+
+\end{table}
+
+
+
+
+
+
+\subsection{T-SIRIS Algorithm Benchmarks}
+
+
+
+
+
+
+
+
+
 
 \section{Discussion}
 \label{sec:threshold-discussion}
@@ -293,96 +382,14 @@ We presented the first threshold identity system that efficiently combines sybil
 
 
 
+
+
+
+
+
+
+
 \section{Threshold Credential Comparison}
-
-\begin{table}[htbp]
-\centering
-\caption{Performance Comparison for N=4, t=3 (milliseconds)}
-\begin{tabular}{lccccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
-\midrule
-token request & PS-UTT & 1.67 & 3.08 & 5.97 & 11.55 & 22.79 & 45.48 \\
- & TACT & 8.33 & 16.58 & 33.84 & 67.08 & 135.96 & 284.83 \\
-\midrule
-issue & PS-UTT & 6.66 & 11.67 & 21.19 & 40.15 & 76.09 & 150.47 \\
- & TACT & 3.05 & 6.30 & 13.68 & 27.17 & 52.02 & 122.63 \\
-\midrule
-(aggregate, unblind) & PS-UTT & 0.39 & 0.44 & 0.51 & 0.68 & 0.86 & 1.10 \\
- & TACT & 1.78 & 3.37 & 6.46 & 15.31 & 29.01 & 68.57 \\
-\midrule
-(aggregate, unblind)+ vfy & PS-UTT & 10.11 & 15.76 & 26.23 & 48.10 & 85.96 & 159.58 \\
- & TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
-\midrule
-prove & PS-UTT & 1.24 & 1.24 & 1.33 & 1.51 & 1.66 & 1.97 \\
- & TACT & 7.98 & 10.36 & 14.67 & 24.39 & 42.76 & 70.61 \\
-\midrule
-verify & PS-UTT & 1.70 & 1.75 & 1.69 & 1.69 & 1.68 & 1.70 \\
- & TACT & 11.55 & 15.24 & 23.51 & 44.30 & 72.31 & 138.38 \\
-\bottomrule
-\end{tabular}
-\label{tab:perf-comp-4-3}
-\end{table}
-
-
-\begin{table}[htbp]
-\centering
-\caption{Performance Comparison for N=16, t=9 (milliseconds)}
-\begin{tabular}{lccccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
-\midrule
-token request & PS-UTT & 1.65 & 3.25 & 6.16 & 11.81 & 22.71 & 44.38 \\
- & TACT & 8.55 & 17.44 & 37.15 & 75.19 & 135.91 & 281.95 \\
-\midrule
-issue & PS-UTT & 20.95 & 34.84 & 63.40 & 127.27 & 244.22 & 497.48 \\
- & TACT & 3.09 & 6.57 & 14.14 & 27.81 & 61.34 & 116.14 \\
-\midrule
-(aggregate, unblind) & PS-UTT & 0.99 & 1.00 & 1.10 & 1.28 & 1.46 & 1.69 \\
- & TACT & 3.92 & 6.45 & 15.04 & 29.33 & 52.55 & 109.71 \\
-\midrule
-(aggregate, unblind)+ vfy & PS-UTT & 32.72 & 47.59 & 78.13 & 130.12 & 230.15 & 434.51 \\
- & TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
-\midrule
-prove & PS-UTT & 1.26 & 1.37 & 1.35 & 1.48 & 1.61 & 1.96 \\
- & TACT & 7.90 & 10.03 & 15.78 & 23.11 & 40.56 & 73.03 \\
-\midrule
-verify & PS-UTT & 1.71 & 1.82 & 1.82 & 1.69 & 1.68 & 1.70 \\
- & TACT & 11.20 & 16.83 & 26.64 & 41.20 & 74.07 & 138.99 \\
-\bottomrule
-\end{tabular}
-\label{tab:perf-comp-16-9}
-\end{table}
-
-
-\begin{table}[htbp]
-\centering
-\caption{Performance Comparison for N=64, t=33 (milliseconds)}
-\begin{tabular}{lccccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
-\midrule
-token request & PS-UTT & 1.64 & 3.07 & 5.88 & 11.49 & 22.65 & 44.51 \\
- & TACT & 8.40 & 20.27 & 36.11 & 72.58 & 135.28 & 273.16 \\
-\midrule
-issue & PS-UTT & 84.67 & 147.86 & 283.72 & 457.91 & 874.70 & 1700.96 \\
- & TACT & 3.68 & 7.64 & 13.52 & 27.96 & 50.73 & 112.36 \\
-\midrule
-(aggregate, unblind) & PS-UTT & 4.79 & 4.81 & 4.89 & 5.02 & 5.21 & 5.60 \\
- & TACT & 15.66 & 27.00 & 41.02 & 91.36 & 135.35 & 288.26 \\
-\midrule
-(aggregate, unblind)+ vfy & PS-UTT & 109.81 & 157.39 & 259.85 & 452.79 & 837.01 & 1578.62 \\
- & TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
-\midrule
-prove & PS-UTT & 1.22 & 1.40 & 1.33 & 1.50 & 1.67 & 1.99 \\
- & TACT & 8.85 & 11.52 & 14.55 & 22.23 & 40.12 & 70.57 \\
-\midrule
-verify & PS-UTT & 1.69 & 1.68 & 1.69 & 1.74 & 1.86 & 1.73 \\
- & TACT & 11.75 & 14.92 & 25.03 & 41.43 & 71.80 & 129.43 \\
-\bottomrule
-\end{tabular}
-\label{tab:perf-comp-64-33}
-\end{table}
 
 
 
@@ -401,55 +408,6 @@ Deduplication & Nullifier+ZKP & EDDX & ~5× faster \\
 Expressive Proofs & Yes (Ch. 2) & Limited & Richer functionality \\
 Token Request & 1.67-3.08ms & 8.33-16.58ms & 5× faster \\
 Prove+Verify & <3ms & >20ms & >7× faster \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-\begin{table}[h]
-\centering
-\caption{Key Operation Comparison (N=16, t=9)}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Operation} & \textbf{PS-UTT (Ours)} & \textbf{TACT (S3ID)} & \textbf{Speedup} \\
-\midrule
-Token Request & 6.16 & 37.15 & 6.0× \\
-Prove & 1.35 & 15.78 & 11.7× \\
-Verify & 1.82 & 26.64 & 14.6× \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-
-\section{Performance Tables}a
-\label{app:perf-tables}
-
-\begin{table}[h]
-\centering
-\caption{Performance Comparison for $N=4$, $t=3$ (ms)}
-\label{tab:perf-comp-4-3}
-\begin{tabular}{lccccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=8} & \textbf{n=16} & \textbf{n=32} & \textbf{n=64} & \textbf{n=128} \\
-\midrule
-Token Request & PS-UTT & $1.67$ & $3.08$ & $5.97$ & $11.55$ & $22.79$ & $45.48$ \\
-& TACT & $8.33$ & $16.58$ & $33.84$ & $67.08$ & $135.96$ & $284.83$ \\
-\midrule
-Issue & PS-UTT & $6.66$ & $11.67$ & $21.19$ & $40.15$ & $76.09$ & $150.47$ \\
-& TACT & $3.05$ & $6.30$ & $13.68$ & $27.17$ & $52.02$ & $122.63$ \\
-\midrule
-(Aggregate, Unblind) & PS-UTT & $0.39$ & $0.44$ & $0.51$ & $0.68$ & $0.86$ & $1.10$ \\
-& TACT & $1.78$ & $3.37$ & $6.46$ & $15.31$ & $29.01$ & $68.57$ \\
-\midrule
-(Aggregate, Unblind)+Verify & PS-UTT & $10.11$ & $15.76$ & $26.23$ & $48.10$ & $85.96$ & $159.58$ \\
-& TACT & N/A & N/A & N/A & N/A & N/A & N/A \\
-\midrule
-Prove & PS-UTT & $1.24$ & $1.24$ & $1.33$ & $1.51$ & $1.66$ & $1.97$ \\
-& TACT & $7.98$ & $10.36$ & $14.67$ & $24.39$ & $42.76$ & $70.61$ \\
-\midrule
-Verify & PS-UTT & $1.70$ & $1.75$ & $1.69$ & $1.69$ & $1.68$ & $1.70$ \\
-& TACT & $11.55$ & $15.24$ & $23.51$ & $44.30$ & $72.31$ & $138.38$ \\
 \bottomrule
 \end{tabular}
 \end{table}
