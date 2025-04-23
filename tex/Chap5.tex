@@ -1,41 +1,102 @@
 \mychapter{Threshold Sybil-Resistant Identity System}\label{chap6}
 
 \section{Introduction}\label{sec:threshold-intro}
+Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram2021candid} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a committee of nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and no credential non-transferability.
 
-This chapter presents the Threshold Sybil-Resistant Identity System (T-SIRIS), the culmination of our thesis, integrating the expressive attribute-based credentials (ABCs) from Chapter~\ref{chap2}, the Multi-Issuer Multi-Credential (MIMC) system from Chapter~\ref{chap3}, and the efficient nullifier scheme from Chapter~\ref{chap4} with standard threshold cryptography. T-SIRIS addresses critical gaps in prior privacy-preserving identity systems—such as CanDID's inefficiency~\cite{maram2021candid}, SyRA's lack of multi-issuer support~\cite{crites_syra_2024}, and S3ID's limited expressiveness and slower deduplication~\cite{rabaninejad_attribute-based_2024}—delivering a decentralized, efficient, and feature-rich solution.
+This chapter presents T-SIRIS, a threshold Sybil-resistant identity system built on our multi-issuer multi-credential anonymous credential system (MIMC-ABC) from Chapter~\ref{chap3} and Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}. T-SIRIS uses a $t$-out-of-$N$ threshold issuance model, secure against $t-1$ malicious issuers. We compare T-SIRIS with CanDID and S3ID~\cite{rabaninejad_attribute-based_2024}, which uses threshold anonymous counting tokens (tACT), showing improvements in efficiency and functionality.
+
+Traditional Attribute-Based Anonymous Credential systems (ABCs) are based on a centralized issuer, which has its own security flaws - a malicious issuer can issue credentials that can't be traced in an anonymous system, undermining the system's integrity. To address this, we distribute security among $N$ nodes, requiring a threshold of at least $t$ nodes to issue a valid credential. 
+
+\subsection*{Chapter Roadmap}
+% The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries and building blocks, in Section \ref{subsec:deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
 
 \subsection{Motivation and Challenges}
 
-Existing systems struggle to balance privacy, efficiency, and functionality. S3ID~\cite{rabaninejad_attribute-based_2024}, while advancing threshold issuance with anonymous counting tokens (tACT), lacks revocation and expressive proof predicates, and its deduplication via EDDX operations is computationally expensive ($15.7$ ms vs. our $3.2$ ms). Our work in Chapters~\ref{chap2}–\ref{chap4} laid the groundwork for overcoming these limitations, but decentralization via threshold issuance remained unaddressed. T-SIRIS meets this challenge, ensuring no single point of trust while maintaining performance.
+Existing systems struggle to balance privacy, efficiency, and functionality. 
 
-\subsection{Contributions}
+CanDID~\cite{maram2021candid} pioneered Sybil-resistant identity with legacy credential oracles, but relies on costly multi-party computation (MPC) among committee nodes for deduplication and requires interactive issuance for context credentials, contradicting self-sovereign principles. Each transaction requires communication with committee members, introducing privacy vulnerabilities where a single malicious node can link different user transactions.
+
+
+\subsubsection*{CanDID}
+CanDID deduplicates a user attribute, e.g. social security number using MPC, storing a unique value in a table $T_{\text{Dedup}}$. Users create a master credential from legacy data via oracles, then request context-specific credentials. Its limitations include:
 
 \begin{itemize}
-    \item \textbf{First Comprehensive Threshold System}: T-SIRIS is the first to combine sybil resistance, expressive proofs, revocation, and threshold issuance in a privacy-preserving identity framework.
-    \item \textbf{Efficient Deduplication}: Leveraging pairing-free nullifiers, we achieve a $5\times$ faster deduplication () compared to S3ID's EDDX-based approach.
-    \item \textbf{Performance Edge}: We demonstrate $2$–$3\times$ improvements over S3ID across key operations, with added functionality (e.g., expressive proofs at $4.1$ ms).
+    \item \textbf{Deduplication:} MPC deduplication is slow and reveals a pseudonym to issuers, enabling pseudonym linking. T-SIRIS uses CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. This is anonymous and $5\times$ faster than tACT~\cite{rabaninejad_attribute-based_2024} (see Section~\ref{sec:perf}).
+    
+    \item \textbf{Context Credential Issuance:} CanDID requires issuer interaction for each context credential, e.g., ``over 18.’’ T-SIRIS users receive credentials from different issuers and use ZKPs to prove predicates $\phi(\vec{m}) = m_1 \geq 18$ based on the attributes in their set of credentials, allowing flexibility and dynamic verification scenarios without interacting with an issuer each time. 
+    
+    \item \textbf{Sybil Resistance:} CanDID tracks public keys, risking linkability. T-SIRIS embeds $k$ in all credentials, using CRBN with ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(k + \text{ctx})}\}$ for unlinkable Sybil resistance.
 \end{itemize}
+
+Both systems use a master-context credential hierarchy, but T-SIRIS allows different issuers for context credentials and supports flexible ZKP-based predicates.
+
+\subsubsection*{S3ID/tACT} \cite{rabaninejad_attribute-based_2024} uses tACT, based on Shacham-Waters signatures, for Sybil resistance and threshold issuance. Both T-SIRIS and S3ID embed a user key $k$ in credentials. T-SIRIS improves in:
+\begin{itemize}
+    \item \textbf{Efficiency:} CRBN and Schnorr ZKPs avoid pairings, offering up to $44.1\times$ faster verification for $n=64$ attributes (see Section~\ref{sec:perf}).
+    \item \textbf{Predicate Support:} S3ID’s Groth-Sahai proofs limit predicate expressiveness. T-SIRIS’s MIMC-ABC supports complex computation over group exponents e.g. Schnorr proofs and Range Proofs (see Chapter~\ref{chap:proofs}).
+\end{itemize}
+
+\subsubsection*{Oracle Integration}
+
+
+\subsubsection*{Managing SSI Features with Privacy Preserving Cryptography}
+SSI requires unlinkability, Sybil resistance, and efficiency. Approaches include tokens (tACT~\cite{rabaninejad_attribute-based_2024}), zkSNARKs~\cite{rosenberg_zk-creds_2022}, and anonymous credentials (ABC). T-SIRIS’s ABC-based design with CRBN and MIMC-ABC balances speed and flexibility, scaling well with attributes $n$ and issuers $N$.
+
+
+\subsection{Contributions}
+\label{sec:tsiris_contributions}
+
+Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign identity (SSI) by combining efficiency, expressiveness, and security in a multi-issuer setting. Built on the Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) from Chapter~\ref{chap3} and the Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}, T-SIRIS outperforms existing systems like CanDID~\cite{maram2021candid} and S3ID~\cite{rabaninejad_attribute-based_2024}. Below, we outline our contributions, aligning them with S3ID’s claims to highlight T-SIRIS’s improvements.
+
+\begin{enumerate}
+    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike CanDID’s MPC-based deduplication, CRBN is pairing-free and $5\times$ faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
+    
+    \item \textbf{Expressive Predicate Proofs:} T-SIRIS supports complex predicates (e.g., $\phi(\vec{m}) = m_1 \geq 18 \wedge m_2 \in S$) via MIMC-ABC and Schnorr-based zero-knowledge proofs (ZKPs). Unlike S3ID’s Groth-Sahai proofs, which limit expressiveness, T-SIRIS enables range proofs and set membership with sublinear complexity, enhancing flexibility for SSI applications (see Chapter~\ref{chap6}).
+    
+    \item \textbf{Provably Secure Multi-issuer SSI:} T-SIRIS provides formal security definitions and proofs for unforgeability, Sybil resistance, strong unlinkability, and identity binding, secure against $t-1$ malicious issuers in a $t$-out-of-$N$ threshold model. Our proofs, based on the $q$-DDHI assumption for CRBN and SDLP for MIMC-ABC, extend S3ID’s tACT-based security to multi-issuer settings with identity binding (see Section~\ref{sec:security}).
+    
+    \item \textbf{Non-transferability and Identity Binding:} T-SIRIS embeds a user key $k$ in all credentials, ensuring only the owner can use them, similar to S3ID. Additionally, MIMC-ABC binds credentials from multiple issuers to a single identifier $\text{id} \in \mathbb{Z}_p$, enabling proofs of shared identity without revealing it. This strengthens S3ID’s non-transferability by supporting multi-issuer scenarios (see Section~\ref{sec:construction}).
+\end{enumerate}
+
+\textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency (CRBN vs. tACT) and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(k + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
 
 \begin{table}[h]
 \centering
-\caption{Comparison of our construction over previous work.}
+\caption{Comparison of T-SIRIS with prior SSI systems.}
 \label{tab:comparison-chap5}
-\begin{tabular}{l|ccccc}
+\begin{tabular}{l|cccccc}
 \toprule
-\textbf{Features} & \textbf{Sybil Resist.} & \textbf{Multi Issuer} & \textbf{Revocation} & \textbf{Expressive Proofs}$^{\dagger}$ & \textbf{M.I. Anonymity}$^{\ddagger}$ \\
+\textbf{System} & \textbf{Sybil Resist.} & \textbf{Multi-Issuer} & \textbf{Non-Interact.}$^{\dagger}$ & \textbf{Non-Transfer.}$^{\ddagger}$ & \textbf{Complex Pred.}$^{\S}$ & \textbf{M.I. Anon.}$^{\P}$ \\
 \midrule
-CanDID~\cite{maram2021candid} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{55} \\
-SyRA~\cite{crites_syra_2024} & \ding{51} & \ding{55} & \ding{55} & \ding{55} & \ding{55} \\
-S3ID~\cite{rabaninejad_attribute-based_2024} & \ding{51} & \ding{51} & \ding{55} & \ding{55} & \ding{55} \\
-Our Work & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} \\
+CanDID~\cite{maram2021candid} & \ding{51}$^{\text{a}}$ & \ding{51} & \ding{55} & \ding{55} & \ding{55} & \ding{55} \\
+SyRA~\cite{crites_syra_2024} & \ding{51} & \ding{55} & \ding{51} & \ding{55} & \ding{55} & \ding{55} \\
+S3ID~\cite{rabaninejad_attribute-based_2024} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{55} \\
+T-SIRIS (Ours) & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} \\
 \bottomrule
 \end{tabular}
 \begin{flushleft}
 \footnotesize
-$^{\dagger}$ Expressive Predicate Proofs allow users to prove expressive statements about their credentials privately. \\
-$^{\ddagger}$ Anonymity in the presence of Malicious Issuers.
+$^{\dagger}$ Non-interactive application credential generation (Section~\ref{sec:construction}). \\
+$^{\ddagger}$ Credentials bound to the true owner (Section~\ref{sec:construction}). \\
+$^{\S}$ Support for complex predicates, e.g., range proofs (Section~\ref{sec:proofs}). \\
+$^{\P}$ Anonymity against malicious issuers (Section~\ref{sec:security}). \\
+$^{\text{a}}$ Pseudonymous, not fully anonymous. \\
+\textit{Note:} We compare with CanDID for its SSI prominence, SyRA for its VRF-based Sybil resistance, and S3ID for its threshold similarity.
 \end{flushleft}
 \end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \section{System Model and Definitions}
 \label{sec:threshold-model}
@@ -200,26 +261,6 @@ Efficient sybil resistance using nullifiers:
 \end{itemize}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Deduplication Protocol}
-Efficient Sybil Resistance Using Nullifiers:
-\begin{itemize}
-    \item During issuance: Check nullifier $y = g^{1/(k + \mathsf{ctx})}$ against deduplication table
-    \item Zero-knowledge proof: $\pi_{\mathsf{dedup}} = \mathsf{ZKPoK}\{(k, \mathsf{ctx}, r) : \mathsf{cm} = \mathsf{Commit}([\mathsf{id}, \mathsf{ctx}, \ldots]; r) \land y = g^{1/(k + \mathsf{ctx})}\}$
-    \item Advantage: Efficiency
-\end{itemize}
-
 \section{Security Analysis}
 \label{sec:threshold-security}
 
@@ -341,10 +382,12 @@ Verify        & PS-UTT & 1.69 & 1.82 & 1.69 & 14.8$\times$ \\
 
 
 
+Sam
+Do the minimum.
 
+Obtain, Issue
 
-\subsection{T-SIRIS Algorithm Benchmarks}
-
+Show, Verify
 
 
 
