@@ -1,26 +1,43 @@
 \mychapter{Introduction}
 
+The rapid digitization of society has elevated digital identity systems to a cornerstone of online trust, processing billions of verifications daily~\cite{noauthor_happy_2021, pang_zanzibar_nodate}. Yet, traditional centralized systems, while meeting regulatory needs~\cite{eltayeb_crucial_2024}, are plagued by privacy and security vulnerabilities, with data breaches compromising billions of users~\cite{zhang_data_2022}. The European Union’s eIDAS framework, mandating a digital identity wallet for every citizen by 2026~\cite{noauthor_regulation_2024}, underscores the urgent need for secure, privacy-preserving alternatives. Moving to privacy-preserving digital identities reveals several functionality gaps; tensions between privacy and accountability in identity systems will hinder the functionality expectations of the new digital identity architecture. 
+
+Decentralized Identity (DID) systems, as outlined by W3C standards, empower users to control their credentials~\cite{soltani_survey_2021}, yet many implementations falter in balancing privacy with accountability~\cite{maram2021candid}. Anonymous Credential Systems (ACS) offer a cryptographic solution, enabling privacy-preserving authentication~\cite{chaum1985security, hutchison_signature_2004, noauthor_u-prove_2014, security_team_computer_science_dept_ibm_zurich_cryptographic_2010, davidson2018privacy}. However, challenges persist in achieving sybil resistance, revocation, and expressive authentication while integrating real-world identity data~\cite{crites_syra_2024, rosenberg_zk-creds_2022}. Current systems either fall short or are inefficient for real-world deployment. 
+
+This thesis delivers a framework for efficient, secure, and decentralized anonymous credential systems, directly addressing these gaps. We focus on decentralized identity as the primary use case, enabling users to prove attributes across multiple issuers (e.g., combining passports and bank statements) without sacrificing privacy or enabling abuse. Our work builds on prior innovations in credential oracles~\cite{zhang_deco_2020}, which allow individuals to create digital identities from existing real-world credentials—such as passports~\cite{rosenberg_zk-creds_2022} or Web2 logins~\cite{baldimtsi_zklogin_2024}—seamlessly integrating them into privacy-preserving architectures. These advancements are not just timely but essential: without them, emerging frameworks like eIDAS risk deploying vulnerable systems, undermining global digital security.
+
+Our contributions are five-fold:
 \begin{enumerate}
-    \item Chapter 1: Introduce the new Privacy Preserving Digital Identity landscape \\
-    We need ABCs that can prove expressive statements efficiently, components that can be decentralized
-
-    \item Chapter 2: Foundations: Optimized Expressive Predicate Proofs \\
-    We need efficient, expressive proofs for credentials, so I optimized PS signatures and benchmarked it against other similar schemes
-
-    \item Chapter 3: Multi-Issuer Multi-Credential System (MIMC-ABC) \\
-    Using this, I solved the problem of securely combining credentials from multiple issuers and showed privacy has a small overhead.
-
-    \item Chapter 4: Private Accountability: Sybil Resistance \\
-    I solve the private accountability problem by adding a hierarchy, improving a nullifier scheme, and show it can be used for revocation
-
-    \item Chapter 5: Threshold Sybil Resistant Identity System \\
-    To make it even more robust, I thresholdized the scheme and show it's more efficient than sota in key use-cases
-
-    \item Chapter 6: Conclusion and Future Work
-
-    \item Appendices: Detailed Proofs, Sigma Protocols
+    \item \textbf{Optimized Expressive Proofs}: We enhance the PS signature to support efficient zero-knowledge proofs of complex predicates (e.g., AND/OR/Equality, etc), achieving a $5$-$10\%$ speedup over prior constructions while ensuring anonymity against malicious issuers, proven secure in the Algebraic Group Model (Chapter $2$).
     
+    \item \textbf{Multi-Issuer Multi-Credential System (MIMC-ABC)}: We formalize security properties for binding credentials across multiple issuers, constructing a secure system with anonymity guarantees and show illustrate the computational cost of privacy, single issuer, and multi-issuer for a credential system
+    (Chapter $3$).
+    
+    \item \textbf{Sybil Resistance}: We introduce multiple novel, pairing-free nullifier schemes that demonstrate speedup ($1.9\times$) and private functionality over existing methods, enabling privacy-preserving accountability (Chapter $4$).
+    
+    \item \textbf{Threshold Decentralized Identity}: We design a threshold issuance protocol integrating MIMC-ABC and Sybil Resistance, outperforming comparable systems by xxxx across benchmarks (Chapter $5$).
+    
+    \item \textbf{Open-Source Benchmark Framework}: We provide the first standardized toolkit for fair evaluation of ABC schemes, enhancing reproducibility and practical insight (Chapter $6$).
 \end{enumerate}
+
+These advancements collectively resolve key tensions between privacy, accountability, and efficiency.  Beyond identity, our framework extends to anonymous credential applications like e-cash and anonymous voting, highlighting its versatility. The thesis is organized as follows: Sections~\ref{sec:commitment} and~\ref{sec:pssignature} detail our cryptographic primitives, Section~\ref{sec:sigmaproofs} presents the sigma protocols, Section~\ref{sec:mimc} describes the MIMC system, Section~\ref{sec:idsys} builds the identity system, and Section~\ref{sec:evaluation} provides our evaluation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
