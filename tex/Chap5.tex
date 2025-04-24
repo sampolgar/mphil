@@ -114,6 +114,7 @@ We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is th
 
 Importantly, this threshold construction distributed trust among multiple issuers while preserving the core properties of our underlying building block PS signature scheme - unforgeability and rerandomizability. Additionally, the end-signature algebraic structure is the same, and therefore, the verification algorithm and proof system compatibility are the same. 
 
+\subsection{Definition}
 
 \begin{definition}[PS Threshold Signatures over Pedersen Commitments]
 A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists of the following algorithms:
@@ -133,6 +134,7 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
 \end{itemize}
 \end{definition}
 
+\subsection{SAM WRITE THE SECURITY DEFINITIONS - UNF, Threshold, }
 
 
 
@@ -238,9 +240,11 @@ Importantly, the final aggregated signature is structurally identical to a stand
 \section{T-SIRIS: Threshold Sybil-Resistant Identity System}
 \label{sec:tsiris}
 
+% Overview
+
 Building on our threshold PS signature scheme, we now present T-SIRIS, a complete threshold sybil-resistant identity system. T-SIRIS integrates the threshold signature with credential relationship binding nullifiers (from Chapter~\ref{chap4}) and expressive zero-knowledge proofs (from Chapter~\ref{chap2}) to create a privacy-preserving identity framework that prevents sybil attacks while maintaining anonymity.
 
-\subsection{System Model}
+% Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends the single-issuer Attribute-Based Anonymous Credential (ABC) framework from Chapter 2 to support credentials from multiple, mutually distrusting issuers, bound to a single identity. The ABC system (Section 2.4) uses a variant of rerandomizable Pointcheval-Sanders signatures~\cite{sako_short_2016} and position-binding Pedersen commitments~\cite{tomescu2022utt} to enable expressive predicate proofs over attributes. MIMC-ABC builds on this by introducing multi-issuer key generation and a cryptographic identity binding mechanism, ensuring all credentials verifiably belong to the same user without revealing their identity.
 
 T-SIRIS integrates four key components:
 \begin{itemize}
@@ -249,14 +253,6 @@ T-SIRIS integrates four key components:
     \item \textbf{Deduplication}: Employs nullifiers from Chapter~\ref{chap4} for efficient sybil resistance without costly operations.
     \item \textbf{Expressive Proofs}: Leverages Chapter~\ref{chap2}'s ABCs for privacy-preserving predicate verification (e.g., range proofs).
 \end{itemize}
-
-
-
-\subsubsection{System Overview}
-
-
-
-
 
 
 \subsubsection{Threat Model}
@@ -271,27 +267,51 @@ We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is th
 We also assume users may attempt sybil attacks by requesting multiple credentials for the same context. However, the adversary cannot break the underlying cryptographic assumptions (DL and $q$-DDHI).
 
 
+% 
+
+\subsection{Definition}
+
+A T-SIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$:
+
+\begin{definition}[T-SIRIS]
+    \begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp}$, including a bilinear group $\BG = (\G_1, \G_2, \G_T, e, g, \tilde{g}, p)$ as in Section 2.1.
+
+    \item $\mathsf{KeyGen}(\mathsf{pp}, \ell, t, n) \to (\ck, \vk, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i \in [n]})$: Generates public commitment and verification keys  $\mathsf{ck}, \mathsf{vk}$ and distributes secret/verification key shares to $n$ issuers using a $(t,n)$-threshold scheme.
+
+    \item $\mathsf{Dedup}(\credm, \cmc, \nullifier, \pi_{\nullifier}, \mathcal{T}) \to (\bit, T'):$ Takes input the user master credential $(\credm = \sigmam, \cmm, \uskm)$ and context commitment $\cmc$, the nullifier $\nullifier$ and its proof of correctness $\pi_{\nullifier}$ and the redeemed credential list $\mathcal{T}$. Outputs 0 if the proof fails or outputs 1 and updates the credential list T with $\nullifier$
+
+    \item $(\mathsf{ObtainMaster}(\attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{IssueMaster}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]})) \to (\credm, \bot)$: an interactive protocol between a user running $\mathsf{ObtainMaster}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{IssueMaster}$. $\mathsf{ObtainMaster}$ takes in the user's attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueMaster}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$. Outputs $\credm$ to the user and $\bot$ to itself.
+
+    \item $(\mathsf{ObtainContext}(\credm, \attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{IssueContext}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]}, \aux)) \to (\credc, \bot)$: an interactive protocol between a user running $\mathsf{ObtainContext}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{IssueContext}$.
+    $\mathsf{ObtainContext}$ takes in the user's master credential $\credm$, new attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueContext}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$ and auxiliary information $\aux$ e.g. outputs $\nullifier, \pi_{\nullifier},\mathcal{T}$ from $\mathsf{Dedup}$ and $\pi_{\mathsf{verify}}$ for $\credm$. Outputs $\credc$ to the user and $\bot$ to itself.
+
+    \item $(\mathsf{Show}(\mathsf{cred}, \usk, \phi), \mathsf{Verify}(\mathsf{cred}', \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a credential $\cred = (\sigma, \cm, \usk)$ and predicate for verification $\phi$. $\mathsf{Verify}$ takes input the rerandomized credential $\cred'$ and proof $\pi$ it satisfies $\phi$. The verifier outputs 1 if valid, 0 otherwise.
+\end{itemize}
+\end{definition}
 
 
-\subsection{Syntax}
+\subsection{Security Properties}
 
-T-SIRIS consists of the following algorithms:
+T-SIRIS inherits the core security properties from the ABC system—correctness, unforgeability, and anonymity (Section 2.5)—and adds identity binding for the multi-issuer setting:
 
 \begin{itemize}
-    \item $\mathsf{Setup}(1^\lambda) \to \mathsf{pp}$: Generates system parameters.
+    \item \textbf{Correctness}: An honest user with valid credentials from multiple issuers can generate a proof for any predicate $\phi$ their attributes satisfy, including same-identity constraints, which verifies with probability $1 - \negl(\lambda)$.
     
-    \item $\mathsf{DistKeyGen}(1^\lambda, t, n, \ell) \to (\mathsf{ck}, \mathsf{vk}, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i \in [n]})$: Distributes signing keys using the threshold signature scheme.
+    \item \textbf{Unforgeability}: No PPT adversary can produce a valid proof for a predicate $\phi$ they cannot legitimately satisfy, including forging credentials or mixing credentials from different identities, except with negligible probability.
     
-    \item $(\mathsf{ObtainMaster}, \mathsf{IssueMaster})$: Interactive protocol for the user to obtain a master credential.
-    
-    \item $(\mathsf{ObtainContext}, \mathsf{IssueContext})$: Interactive protocol for the user to obtain a context credential bound to their master credential through a nullifier.
-    
-    \item $\mathsf{Show}(\{\mathsf{cred}_j\}_j, \{\mathsf{usk}_j\}_j, \phi) \to (\sigma', \mathsf{cm}', \pi)$: Generates a presentation proof for credentials.
-    
-    \item $\mathsf{Verify}(\sigma', \mathsf{cm}', \pi, \phi) \to \{0,1\}$: Verifies a presentation proof.
+    \item \textbf{Anonymity}: Proofs reveal only that $\phi$ is satisfied, not the user’s identity or credential details, even if all issuers and the verifier collude.
+
 \end{itemize}
 
 
+
+
+
+
+
+
+\subsubsection{System Overview}
 
 
 
@@ -306,7 +326,7 @@ T-SIRIS operates in two credential issuance phases: master credential issuance a
 
 \subsection{Security Analysis}
 
-We analyze the security of T-SIRIS in terms of four key properties: unforgeability, sybil resistance, anonymity, and unlinkability.
+We analyze the security of T-SIRIS in terms of four key properties: unforgeability, sybil resistance, anonymity
 
 % Keep your existing security theorems
 
