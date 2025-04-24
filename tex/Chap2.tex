@@ -470,21 +470,21 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
         Let $h \gets g^u$
         Return $\sigma \gets (h, (\sk \cdot \mathsf{cm})^u)$
     
-    \item $\mathsf{RS.Rerand}(\sigma, r_\Delta, u_\Delta) \to \sigma':$
+    \item $\mathsf{RS.Rerand}(\sigma, \Delta_r, \Delta_u) \to \sigma':$
         Parse $\sigma$ as $(\sigma_1, \sigma_2)$
-        Set $\sigma_1' \gets \sigma_1^{u_\Delta}$
-        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}$
+        Set $\sigma_1' \gets \sigma_1^{\Delta_u}$
+        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\Delta_r})^{\Delta_u}$
         Return $\sigma' \gets (\sigma_1', \sigma_2')$
     
     \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
         Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
     \[
-        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): 
+        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + \Delta_r): 
     \]
     \[
          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widetilde{\cm}') \quad \wedge \quad
         e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
-        \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+        \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
         \}
     \]
 
@@ -531,7 +531,7 @@ Thus the prover computes the following to prove equality of commitments across g
 \]
 Then proves the opening of the commitment in zero knowledge:
 \[
- \pircom  \gets \mathsf{ZKPoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+ \pircom  \gets \mathsf{ZKPoK}\{(m_1,\ldots,m_\ell, r + \Delta_r): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}\}
 \]
 
 

@@ -151,50 +151,63 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
 
 
 \subsubsection{Construction}\label{threshold-ps-construction}
-We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as input into our rerandomizable signature scheme $\mathsf{RS}$. We copy the algorithm below for convenience.
+We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as input into our rerandomizable signature scheme $\mathsf{RS}$. We extend the $\mathsf{RS}$ algorithms to support threshold operations as follows:
+
 \begin{itemize}
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   \item $\mathsf{RS.Rerand}(\sigma, r_\Delta, u_\Delta) \to \sigma':$
+    \item $\mathsf{DistKeyGen}(1^{\lambda}, t+1, n, \ell) \to (\ck, \vk, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]}):$ Takes input the security parameter, $t$ the corruption threshold, $n$ is number of nodes, $\ell$ is the credential message length. Outputs $\ck, \vk$ the commitment and verification keys generated with the secrets and $\sk_i, \vk_i$ the shared keys to distribute to $n$ nodes. let $\mathcal{X}$ and $\psi_k $ be $t$ degree polynomials:
+    \begin{itemize}
+        \item For the shared $x$ values: $\mathcal{X} \sample \Z_p[X], x \gets \mathcal{X}(0)$, $\{[x]_i \gets \mathcal{X}(i)\}_{i\in [n]}$
+        \item For the $k$ shared $y$ values: $\{\psi_k \sample \Z_p[X], y_k \gets \psi_k(0)\}_{k \in [\ell]}$, $\{[y_k]_i \gets \psi_k(i)\}_{k \in [\ell], i \in [n]}$
+        \item using the secret, non-shared values, trusted setup party computes $\vk \gets \tilde{g}^x, \ck \gets \CMSetup(1^{\lambda}, \ell, \vec{y})$ and parses $\ck$ as $(g, \vec{g}, \tilde{g}, \vec{\tilde{g}})$. Note that $g_k = g^{y_k}, \tilde{g}_k = \tilde{g}^{y_k}$
+        \item computes shared secret values $\{\sk_i \gets ([x]_i, ([y_k]_i))_{k\in[\ell]}\}_{i \in [n]}, \{\vk \gets (\tilde{g}^{[x]_i}, (\tilde{g}^{[y_k]_i})_{k\in[\ell]})\}_{i \in [n]}$
+        \item $\mathsf{Return } $ $ \ck, \vk, \{\sk_i, \vk_i\}_{i \in [n]}$
+    \end{itemize}
+        
+
+    \item $\mathsf{ShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$ the user runs $\mathsf{ShareSign}$ with at least $t$ nodes. 
+    \begin{itemize}
+        \item User commits to each $m$ individually: $\cm_k = h^{m_k}g^{r_k}$ and generates proofs for each $\cm_k = \zkpok(\cm_k, m_k, r_k)$ and sends each signer the commitment and proof.
+        \item Signer parses $g$ from $\ck$ and verifies the opening of the commitment w.r.t. the proof.
+        \item Signer parses $\sk_i$ as $[x]_i, \{[y_k]_i\}_{k \in [\ell]}$
+        \item Signer signs their share $[\sigma^*]_i \gets (h, h^{[x]_i} \prod_{k \in [\ell]} \cm_k^{[y_k]_i} )$ = $(h, h^{[x]_i + \sum_{k \in [\ell]} m_k[y_k]_i} \cdot g^{\sum_{k \in [\ell]} r_k [y_k]_i})$
+    \end{itemize}
+
+
+    \item $\mathsf{ShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ Run by a user to verify the signed share returned from each node before aggregating together. 
+    \begin{itemize}
+        \item Parse $[\sigma^*]_i$ as $([\sigma^*]_{i,1}, [\sigma^*]_{i,2})$ and check $h = [\sigma^*]_{i,1}$. 
+        \item Verify each message commitment $\cm_k$ and proof $\pi_k$
+        \item Parses $\vk_i$ as $(\tilde{g}^{[x]_i}, \{\tilde{g}^{[y_k]_i}\}_{k \in [\ell]})$
+        \item Asserts $e([\sigma^*]_{i,2}, \tilde{g}) = e(h, \tilde{g}^{[x]_i}) \cdot \prod_{k \in [\ell]} e(\cm_k, \tilde{g}^{[y_k]_i})$
+    \end{itemize}
+
+    \item $\mathsf{Aggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$ User parses $\ck$ as $(\cdot, \vec{g}, \cdot, \cdot)$ and $\forall i \in S$, parse $[\sigma^*]_i$ as $(h, [\sigma^*]_{i,2})$. Runs Lagrange Interpolation on $|S|=t+1$ signature shares:
+    \begin{itemize}
+        \item  $\mathcal{L}_i \gets \prod_{j \in S, j\neq i}\frac{0-j}{i-j} \forall i \in S$
+        \item $\sigma_2 \gets \prod_{j \in S}([\sigma^*]_{i,2})^{\mathcal{L}_i}$ = 
+        $(h, h^{x + \sum_{k \in [\ell]} m_ky_k} \cdot g^{\sum_{k \in [\ell]} r_ky_k})$ where $g_k = g^{y_k}$
+        \item $\sigma \gets (h, \sigma_2 / \prod_{k \in [\ell]}g_k^{r_k})$ = $(h, h^{x + \sum_{k \in [\ell]}m_ky_k})$
+    \end{itemize}
+
+    \item $\mathsf{RS.Rerand}(\sigma, \Delta_r, \Delta_u) \to \sigma':$
         Parse $\sigma$ as $(\sigma_1, \sigma_2)$
-        Set $\sigma_1' \gets \sigma_1^{u_\Delta}$
-        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}$
+        Set $\sigma_1' \gets \sigma_1^{\Delta_u}$
+        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{\Delta_r})^{\Delta_u}$
         Return $\sigma' \gets (\sigma_1', \sigma_2')$
     
     \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
         Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
     \[
-        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): 
+        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + \Delta_r): 
     \]
     \[
          e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widetilde{\cm}') \quad \wedge \quad
         e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
-        \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+        \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
         \}
     \]
 
-        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
-        \[
-        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-        \]
-        
 \end{itemize}
-
-
 
 
 
