@@ -299,11 +299,11 @@ This ensures that an adversary cannot open a commitment to two different values 
 A commitment scheme $\mathsf{Com} = (\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is rerandomizable if it includes an additional algorithm $\mathsf{Rerand}$ such that:
 
 \begin{itemize}
-\item $\mathsf{Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta) \rightarrow (\mathsf{cm}', r')$: is a probabilistic algorithm that takes as input the commitment key $\mathsf{ck}$, a commitment $\mathsf{cm}$, and additional randomness $r_\Delta$. It outputs a new commitment $\mathsf{cm}'$ and updated opening value $r'$.
+\item $\mathsf{Rerand}(\mathsf{ck}, \mathsf{cm}, \Delta_r) \rightarrow (\mathsf{cm}', r')$: is a probabilistic algorithm that takes as input the commitment key $\mathsf{ck}$, a commitment $\mathsf{cm}$, and additional randomness $\Delta_r$. It outputs a new commitment $\mathsf{cm}'$ and updated opening value $r'$.
 \end{itemize}
 
-For all $\lambda \in \mathbb{N}$, all $\mathsf{ck} \in [\mathsf{Setup}(1^\lambda)]$, all $m \in \mathcal{M}$, all $(\mathsf{cm}, r) \in [\mathsf{Commit}(\mathsf{ck}, m)]$, and all $r_\Delta$:
-$$\Pr[(\mathsf{cm}', r') \sample \mathsf{Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta) : \mathsf{Open}(\mathsf{ck}, \mathsf{cm}', m, r') = 1] = 1.$$
+For all $\lambda \in \mathbb{N}$, all $\mathsf{ck} \in [\mathsf{Setup}(1^\lambda)]$, all $m \in \mathcal{M}$, all $(\mathsf{cm}, r) \in [\mathsf{Commit}(\mathsf{ck}, m)]$, and all $\Delta_r$:
+$$\Pr[(\mathsf{cm}', r') \sample \mathsf{Rerand}(\mathsf{ck}, \mathsf{cm}, \Delta_r) : \mathsf{Open}(\mathsf{ck}, \mathsf{cm}', m, r') = 1] = 1.$$
 
 Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indistinguishable from a fresh commitment to the same message.
 \end{definition}
@@ -411,21 +411,21 @@ A rerandomizable signature scheme over commitments $\mathsf{RS}$ extends a stand
     
     \item $\mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u) \rightarrow \sigma$: Signs commitment $\mathsf{cm}$ using signing key $\mathsf{sk}$ and randomness $u$.
     
-    \item $\mathsf{Rerand}(\mathsf{pk}, \sigma, r_\Delta, u_\Delta) \rightarrow \sigma'$: Creates a rerandomized signature $\sigma'$ from signature $\sigma$ using randomization values $r_\Delta, u_\Delta$.
+    \item $\mathsf{Rerand}(\mathsf{pk}, \sigma, \Delta_r, \Delta_u) \rightarrow \sigma'$: Creates a rerandomized signature $\sigma'$ from signature $\sigma$ using randomization values $\Delta_r, \Delta_u$.
     
     \item $\mathsf{Verify}(\mathsf{pk}, \mathsf{cm}, \sigma) \rightarrow \{0,1\}$: Verifies signature $\sigma$ on commitment $\mathsf{cm}$ using public key $\mathsf{pk}$.
 \end{itemize}
 \end{definition}
 
 \begin{definition}[Correctness]
-A rerandomizable signature scheme over commitments satisfies correctness if for all security parameters $\lambda$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^\lambda, \mathsf{ck})]$, all messages $m \in \mathcal{M}$, all valid commitments $\mathsf{cm} = \mathsf{CM.Commit}(\mathsf{ck}, m, r)$, and all randomness values $u, r_\Delta, u_\Delta$:
+A rerandomizable signature scheme over commitments satisfies correctness if for all security parameters $\lambda$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^\lambda, \mathsf{ck})]$, all messages $m \in \mathcal{M}$, all valid commitments $\mathsf{cm} = \mathsf{CM.Commit}(\mathsf{ck}, m, r)$, and all randomness values $u, \Delta_r, \Delta_u$:
 
 \begin{enumerate}
     \item \textbf{Basic Verification}: $\mathsf{Verify}(\mathsf{pk}, \mathsf{cm}, \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u)) = 1$
     
-    \item \textbf{Rerandomization Consistency}: $\mathsf{Verify}(\mathsf{pk}, \mathsf{CM.Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta), \mathsf{Rerand}(\mathsf{pk}, \sigma, r_\Delta, u_\Delta)) = 1$ where $\sigma = \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u)$
+    \item \textbf{Rerandomization Consistency}: $\mathsf{Verify}(\mathsf{pk}, \mathsf{CM.Rerand}(\mathsf{ck}, \mathsf{cm}, \Delta_r), \mathsf{Rerand}(\mathsf{pk}, \sigma, \Delta_r, \Delta_u)) = 1$ where $\sigma = \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u)$
     
-    \item \textbf{Rerandomization Equivalence}: The distribution of $\mathsf{Rerand}(\mathsf{pk}, \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u), r_\Delta, u_\Delta)$ is computationally indistinguishable from $\mathsf{Sign}(\mathsf{sk}, \mathsf{CM.Rerand}(\mathsf{ck}, \mathsf{cm}, r_\Delta); u+u_\Delta)$
+    \item \textbf{Rerandomization Equivalence}: The distribution of $\mathsf{Rerand}(\mathsf{pk}, \mathsf{Sign}(\mathsf{sk}, \mathsf{cm}; u), \Delta_r, \Delta_u)$ is computationally indistinguishable from $\mathsf{Sign}(\mathsf{sk}, \mathsf{CM.Rerand}(\mathsf{ck}, \mathsf{cm}, \Delta_r); u+\Delta_u)$
 \end{enumerate}
 \end{definition}
 
@@ -513,13 +513,13 @@ First we demonstrate the prover's rerandomized signature verifies with the verif
 We manipulate the bilinearity properties of the pairing groups to verify this equation:
     
 \begin{align*}
-    e(\sigma_2', \tilde{g}) &= e((\mathsf{sk} \cdot \mathsf{cm})^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-    &= e(h^{x \cdot u_\Delta} \cdot \mathsf{cm}^{u \cdot u_\Delta} \cdot h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-    &= e(h^{x \cdot u_\Delta}, \tilde{g}) \cdot e(\mathsf{cm}^{u \cdot u_\Delta}, \tilde{g}) \cdot e(h^{u_\Delta \cdot r_\Delta}, \tilde{g}) \\
-    &= e(h^{u_\Delta}, \tilde{g}^x) \cdot e(\mathsf{cm}, \tilde{g})^{u \cdot u_\Delta} \cdot e(h^{u_\Delta}, \tilde{g})^{r_\Delta} \\
-    &= e(\sigma_1', \mathsf{vk}) \cdot e(g^{u \cdot u_\Delta}, \widetilde{\mathsf{cm}}) \cdot e(\sigma_1', \tilde{g})^{r_\Delta} \\
-    &= e(\sigma_1', \mathsf{vk}) \cdot e(\sigma_1', \widetilde{\mathsf{cm}}) \cdot e(\sigma_1', \tilde{g}^{r_\Delta}) \\
-    &= e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}} \cdot \tilde{g}^{r_\Delta}) \\
+    e(\sigma_2', \tilde{g}) &= e((\mathsf{sk} \cdot \mathsf{cm})^{u \cdot \Delta_u} \cdot h^{\Delta_u \cdot \Delta_r}, \tilde{g}) \\
+    &= e(h^{x \cdot \Delta_u} \cdot \mathsf{cm}^{u \cdot \Delta_u} \cdot h^{\Delta_u \cdot \Delta_r}, \tilde{g}) \\
+    &= e(h^{x \cdot \Delta_u}, \tilde{g}) \cdot e(\mathsf{cm}^{u \cdot \Delta_u}, \tilde{g}) \cdot e(h^{\Delta_u \cdot \Delta_r}, \tilde{g}) \\
+    &= e(h^{\Delta_u}, \tilde{g}^x) \cdot e(\mathsf{cm}, \tilde{g})^{u \cdot \Delta_u} \cdot e(h^{\Delta_u}, \tilde{g})^{\Delta_r} \\
+    &= e(\sigma_1', \mathsf{vk}) \cdot e(g^{u \cdot \Delta_u}, \widetilde{\mathsf{cm}}) \cdot e(\sigma_1', \tilde{g})^{\Delta_r} \\
+    &= e(\sigma_1', \mathsf{vk}) \cdot e(\sigma_1', \widetilde{\mathsf{cm}}) \cdot e(\sigma_1', \tilde{g}^{\Delta_r}) \\
+    &= e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}} \cdot \tilde{g}^{\Delta_r}) \\
     &= e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}'}) \\
 \end{align*}
 \end{proof}
@@ -676,20 +676,20 @@ We define a predicate $\phi$ as a boolean function over an attribute vector $\at
 For a credential with attributes $\attrs = [\id, \k, \ctx, \exp]$, we say that "$\attrs$ satisfies $\phi$", denoted as $\phi(\attrs) = 1$, if the boolean function evaluates to true on the attributes.
 For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\attrs: [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi: age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
 
-\subsection{Syntax}
-\begin{definition}[ABC System] An Attribute-based Anonymous Credential system consists of the following $\PPT$ algorithms:
-    \begin{itemize}
-    \item $\mathsf{Setup}(\secparam) \to (\ppar)$ Takes security parameter $\lambda$ in unary, outputs public parameters $\ppar$.
-    
-    \item $\mathsf{OrgKeygen}(\ppar, \ell) \to (\osk, \opk)$: Is a probabilistic algorithm that takes public parameters $\ppar$ and $\ell$ the upper bound of credential attributes. Outputs organisation's keypair $(\osk, \opk)$
-       
-    \item $(\mathsf{Obtain}(\attrs, \opk), \mathsf{Issue}(\osk, \cm_1, \aux)) \rightarrow (\cred, \bot)$ is an interactive protocol between a user and an issuing organization. The user inputs an attribute vector with just one element with zero's at the other indexes $\attrs = [0,0,0, k_1]$, generates $\usk \sample \Z_p$, commits to their messages $\cm_1 \gets \CMCom([0,0,0, k_1]; \usk)$. The issuer finalizes the shared key $\k$ by sampling $\k_2$ and committing to the user's attributes $\cm_2 = \CMCom([\id,\ctx,\exp, \k_2]; 0)$ while retaining $0$ at the user's randomness position as to not alter it. The issuer finalises $\cm$ by homomorphically adding $\cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp, \k_1+\k_2]; \usk)$ then signs the commitment. The protocol outputs a credential $\cred$ containing $(\sigma, \cm, \k_2)$ to the user and $\bot$ to the issuer.    
-    
-    \item $(\mathsf{Show}(\cred, \usk, \phistmt), \mathsf{Verify}(\{\cred'\}, \phistmt)) \rightarrow \{0,1\}$ is an interactive protocol between a user and verifier. The user runs $\mathsf{Show}$ with their credentials (signatures and paired commitments), and secret keys. The user rerandomizes their credentials and commitments and computes a proof $\pi$ that satisfies the predicate $\phi$.
-    $\Verify$ is run by the verifier, which takes input from the randomized credentials $\cred_i'$, randomized commitments $\cmi'$, and predicate, proof pair $\phi, \pi$. The protocol outputs 1 if verification succeeds, 0 otherwise.
-    \end{itemize}
-\end{definition}
 
+\subsection{Syntax}
+\begin{definition}[ABC System]
+An Attribute-based Anonymous Credential system consists of the following probabilistic polynomial-time (PPT) algorithms:
+\begin{itemize}
+\item $\mathsf{Setup}(\lambda) \to (\mathsf{ppar})$: Takes a security parameter $\lambda$ and outputs public parameters $\mathsf{ppar}$.
+
+\item $\mathsf{OrgKeygen}(\mathsf{ppar}, \ell) \to (\mathsf{osk}, \mathsf{opk})$: Takes public parameters $\mathsf{ppar}$ and an upper bound $\ell$ on the number of credential attributes, outputting an organization's secret key $\mathsf{osk}$ and public key $\mathsf{opk}$.
+
+\item $(\mathsf{Obtain}(\mathsf{attrs}, \mathsf{opk}), \mathsf{Issue}(\mathsf{osk}, \mathsf{aux})) \to (\mathsf{cred}, \bot)$: An interactive protocol where the user inputs attributes $\mathsf{attrs}$ and the organization's public key $\mathsf{opk}$, and the issuer inputs its secret key $\mathsf{osk}$ and auxiliary information $\mathsf{aux}$. Outputs a credential $\mathsf{cred}$ to the user and $\bot$ to the issuer.
+
+\item $(\mathsf{Show}(\mathsf{cred}, \mathsf{usk}, \phi), \mathsf{Verify}(\mathsf{cred}', \phi)) \to {0,1}$: An interactive protocol where the user inputs a credential $\mathsf{cred}$, a secret key $\mathsf{usk}$, and a predicate $\phi$, and the verifier inputs a credential presentation $\mathsf{cred}'$ and the predicate $\phi$. Outputs 1 if the presentation satisfies the predicate, 0 otherwise.
+\end{itemize}
+\end{definition}
 
 \subsection{Security Model}
 
@@ -1173,17 +1173,17 @@ In our optimized variant, we redefine the signature as $\widetilde{\sigma} = (\w
     \]
     \item Zero-Knowledge Proof Verification
     \[
-    \mathsf{ZK.Verify}(\pi, \cm') = 1 \quad \mid \quad \pi \gets \mathsf{PoK}\{(r + r_\Delta, m_1,\ldots,m_\ell): \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+    \mathsf{ZK.Verify}(\pi, \cm') = 1 \quad \mid \quad \pi \gets \mathsf{PoK}\{(r + \Delta_r, m_1,\ldots,m_\ell): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
     \]
 \end{enumerate}
 
 Correctness stems from the verification equation:
     \begin{align*}
-        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}) \\
-        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{u_\Delta} \cdot \tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
-        &= e(g, \widetilde{\sk}^{u_\Delta}) \cdot e(g, \widetilde{\cm}^{u + u_\Delta}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
-        &= e(g^x, \widetilde{h}^{u_\Delta}) \cdot e(g, \widetilde{\cm})^{u + u_\Delta} \cdot e(g,\tilde{h}^{u_\Delta})^{r_{\Delta}} \\
-        &= e(\vk, \widetilde{h}^{u_\Delta}) \cdot e(\cm, \widetilde{h}^{u_\Delta}) \cdot e(g^{r_{\Delta}},\tilde{h}^{u_\Delta}) \\
+        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{\Delta_r})^{\Delta_u}) \\
+        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{\Delta_u} \cdot \tilde{h}^{r_{\Delta} \cdot \Delta_u}) \\
+        &= e(g, \widetilde{\sk}^{\Delta_u}) \cdot e(g, \widetilde{\cm}^{u + \Delta_u}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot \Delta_u}) \\
+        &= e(g^x, \widetilde{h}^{\Delta_u}) \cdot e(g, \widetilde{\cm})^{u + \Delta_u} \cdot e(g,\tilde{h}^{\Delta_u})^{r_{\Delta}} \\
+        &= e(\vk, \widetilde{h}^{\Delta_u}) \cdot e(\cm, \widetilde{h}^{\Delta_u}) \cdot e(g^{r_{\Delta}},\tilde{h}^{\Delta_u}) \\
         &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
         &= e(\vk \cdot \cm', \sigma_1')  \\
     \end{align*}
