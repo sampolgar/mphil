@@ -6783,20 +6783,6 @@ Further, we show how to use these techniques to reduce the size of IOP instantia
 	keywords = {Computer Science - Cryptography and Security, H.0, J.0},
 }
 
-@misc{rathee_zebra_2022,
-	title = {{ZEBRA}: {SNARK}-based {Anonymous} {Credentials} for {Practical}, {Private} and {Accountable} {On}-chain {Access} {Control}},
-	shorttitle = {{ZEBRA}},
-	url = {https://eprint.iacr.org/2022/1286},
-	abstract = {Restricting access to certified users is not only desirable for many blockchain applications, it is also legally mandated for decentralized finance (DeFi) applications to counter malicious actors. Existing solutions, however, are either (i) non-private, i.e., they reveal the link between users and their wallets to the authority granting credentials, or (ii) they introduce additional trust assumptions by relying on a decentralized oracle to verify anonymous credentials (ACs).
-
-To remove additional trust in the latter approach, we propose verifying credentials on-chain in this work. We find that this approach has impractical costs with prior AC schemes, and propose a new AC scheme ZEBRA that crucially relies on zkSNARKs to provide efficient on-chain verification for the first time. In addition to the standard unlinkability property that provides privacy for users, ZEBRA also supports auditability, revocation, traceability, and theft detection, which adds accountability for malicious users and convenience for honest users to our access control solution. Even with these properties, ZEBRA reduces the gas cost incurred on the Ethereum Virtual Machine (EVM) by 14.3x when compared to Coconut [NDSS 2019], the state-of-the-art AC scheme for blockchains that only provides unlinkability. This improvement translates to a reduction in transaction fees from 176 USD to 12 USD on Ethereum in May 2023. Since 12 USD is still high for most applications, ZEBRA further drives down credential verification costs through batched verification. For a batch of 512 layer-1 and layer-2 wallets, the transaction fee on Ethereum is reduced to just 0.44 USD and 0.02 USD, respectively, which is comparable to the minimum transaction costs on Ethereum.},
-	urldate = {2023-10-15},
-	author = {Rathee, Deevashwer and Policharla, Guru Vamsi and Xie, Tiancheng and Cottone, Ryan and Song, Dawn},
-	year = {2022},
-	note = {Publication info: Preprint.},
-	keywords = {Anonymous Credentials, Decentralized Finance (DeFi), Know-your-customer (KYC), Permissionless Blockchains, zkSNARKs},
-}
-
 @inproceedings{henry_formalizing_2011,
 	address = {Oakland, CA, USA},
 	title = {Formalizing {Anonymous} {Blacklisting} {Systems}},
@@ -7212,35 +7198,6 @@ The efficiency of Bulletproofs is particularly well suited for the distributed a
 	urldate = {2023-07-09},
 	author = {Rathee, Deevashwer and Policharla, Guru Vamsi and Xie, Tiancheng and Cottone, Ryan and Song, Dawn},
 	keywords = {Anonymous Credentials, Decentralized Finance (DeFi), Know-your-customer (KYC), Permissionless Blockchains, zkSNARKs},
-}
-
-@inproceedings{halpin_nym_2020,
-	title = {Nym {Credentials}: {Privacy}-{Preserving} {Decentralized} {Identity} with {Blockchains}},
-	shorttitle = {Nym {Credentials}},
-	url = {https://arxiv.org/pdf/1802.07344.pdf},
-	doi = {10.1109/CVCBT50464.2020.00010},
-	abstract = {Nym credentials solve the problem of privacy-enhanced authentication amongst a decentralized open-ended ecosystem of services. Many blockchain systems offer decentralized services, but at the cost of revealing all transactions in a public ledger, which is clearly not suitable for high-value transactions involving personal data. Nym credentials deploy anonymous authentication credentials as an identity system that maintains user privacy. Due to the validators being decentralized, the system is compatible with blockchain-based systems. Tokens can be used to show the "right to access" privacy-enhanced services. Nym validators transform these tokens into Nym credentials that validated publicly in a decentralized manner via a modified Coconut signature scheme capable of the open-ended embedding arbitrary attributes.},
-	booktitle = {2020 {Crypto} {Valley} {Conference} on {Blockchain} {Technology} ({CVCBT})},
-	author = {Halpin, Harry},
-	month = jun,
-	year = {2020},
-	keywords = {Authentication, Authorization, Cryptography, Privacy, W3C},
-	pages = {56--67},
-}
-
-@article{sonnino_coconut_2019,
-	title = {Coconut: {Threshold} {Issuance} {Selective} {Disclosure} {Credentials} with {Applications} to {Distributed} {Ledgers}},
-	url = {https://arxiv.org/pdf/1802.07344.pdf},
-	doi = {10.14722/ndss.2019.23272},
-	abstract = {We present Coconut, a novel selective disclosure credential scheme supporting distributed threshold issuance, public and private attributes, re-randomization, and multiple unlinkable selective attribute revelations. Coconut can be used by modern blockchains to ensure confidentiality, authenticity and availability even when a subset of credential issuing authorities are malicious or offline. We implement and evaluate a generic Coconut smart contract library for Chainspace and Ethereum; and present three applications related to anonymous payments, electronic petitions, and distribution of proxies for censorship resistance. Coconut uses short and computationally efficient credentials, and our evaluation shows that most Coconut cryptographic primitives take just a few milliseconds on average, with verification taking the longest time (10 milliseconds).},
-	journal = {Network and Distributed System Security Symposium},
-	author = {Sonnino, Alberto and Al-Bassam, Mustafa and Bano, Shehar and Meiklejohn, Sarah and Danezis, George},
-	month = jan,
-	year = {2019},
-	doi = {10.14722/ndss.2019.23272},
-	note = {ARXIV\_ID: 1802.07344
-MAG ID: 2964250737
-S2ID: 935d5845cbbf5dd76f7539529e14c41929418896},
 }
 
 @misc{garman_decentralized_nodate,
@@ -7730,20 +7687,6 @@ Come and learn how “zero-knowledge (ZK) proofs” breakthrough in cryptography
 	note = {Conference Name: IEEE Transactions on Industrial Informatics},
 	keywords = {Accumulator, Authentication, Blockchain, Navigation, Privacy, Smart contracts, anonymous credentials, blockchain, revocation, smart industry},
 	pages = {3290--3300},
-}
-
-@misc{rathee_zebra_2022,
-	title = {{ZEBRA}: {SNARK}-based {Anonymous} {Credentials} for {Practical}, {Private} and {Accountable} {On}-chain {Access} {Control}},
-	shorttitle = {{ZEBRA}},
-	url = {https://eprint.iacr.org/2022/1286},
-	abstract = {Restricting access to certified users is not only desirable for many blockchain applications, it is also legally mandated for decentralized finance (DeFi) applications to counter malicious actors. Existing solutions, however, are either (i) non-private, i.e., they reveal the link between users and their wallets to the authority granting credentials, or (ii) they introduce additional trust assumptions by relying on a decentralized oracle to verify anonymous credentials (ACs).
-
-To remove additional trust in the latter approach, we propose verifying credentials on-chain in this work. We find that this approach has impractical costs with prior AC schemes, and propose a new AC scheme ZEBRA that crucially relies on zkSNARKs to provide efficient on-chain verification for the first time. In addition to the standard unlinkability property that provides privacy for users, ZEBRA also supports auditability, revocation, traceability, and theft detection, which adds accountability for malicious users and convenience for honest users to our access control solution. Even with these properties, ZEBRA reduces the gas cost incurred on the Ethereum Virtual Machine (EVM) by 14.3x when compared to Coconut [NDSS 2019], the state-of-the-art AC scheme for blockchains that only provides unlinkability. This improvement translates to a reduction in transaction fees from 176 USD to 12 USD on Ethereum in May 2023. Since 12 USD is still high for most applications, ZEBRA further drives down credential verification costs through batched verification. For a batch of 512 layer-1 and layer-2 wallets, the transaction fee on Ethereum is reduced to just 0.44 USD and 0.02 USD, respectively, which is comparable to the minimum transaction costs on Ethereum.},
-	urldate = {2023-08-16},
-	author = {Rathee, Deevashwer and Policharla, Guru Vamsi and Xie, Tiancheng and Cottone, Ryan and Song, Dawn},
-	year = {2022},
-	note = {Publication info: Preprint.},
-	keywords = {Anonymous Credentials, Decentralized Finance (DeFi), Know-your-customer (KYC), Permissionless Blockchains, zkSNARKs},
 }
 
 @misc{chator_sok_2023,

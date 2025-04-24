@@ -1,21 +1,20 @@
 \mychapter{Threshold Sybil-Resistant Identity System}\label{chap6}
 
 \section{Introduction}\label{sec:threshold-intro}
-Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram2021candid} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a committee of nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and no credential non-transferability.
+Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram2021candid} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability.
 
 This chapter presents T-SIRIS, a threshold Sybil-resistant identity system built on our multi-issuer multi-credential anonymous credential system (MIMC-ABC) from Chapter~\ref{chap3} and Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}. T-SIRIS uses a $t$-out-of-$N$ threshold issuance model, secure against $t-1$ malicious issuers. We compare T-SIRIS with CanDID and S3ID~\cite{rabaninejad_attribute-based_2024}, which uses threshold anonymous counting tokens (tACT), showing improvements in efficiency and functionality.
-
-Traditional Attribute-Based Anonymous Credential systems (ABCs) are based on a centralized issuer, which has its own security flaws - a malicious issuer can issue credentials that can't be traced in an anonymous system, undermining the system's integrity. To address this, we distribute security among $N$ nodes, requiring a threshold of at least $t$ nodes to issue a valid credential. 
 
 \subsection*{Chapter Roadmap}
 % The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries and building blocks, in Section \ref{subsec:deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
 
 \subsection{Motivation and Challenges}
 
+Traditional Attribute-Based Anonymous Credential systems (ABCs) are based on a centralized issuer, which has its own security flaws - a malicious issuer can issue credentials that can't be traced in an anonymous system, undermining the system's integrity. To address this, we distribute security among $N$ nodes, requiring a threshold of at least $t$ nodes to issue a valid credential. 
+
 Existing systems struggle to balance privacy, efficiency, and functionality. 
 
 CanDID~\cite{maram2021candid} pioneered Sybil-resistant identity with legacy credential oracles, but relies on costly multi-party computation (MPC) among committee nodes for deduplication and requires interactive issuance for context credentials, contradicting self-sovereign principles. Each transaction requires communication with committee members, introducing privacy vulnerabilities where a single malicious node can link different user transactions.
-
 
 \subsubsection*{CanDID}
 CanDID deduplicates a user attribute, e.g. social security number using MPC, storing a unique value in a table $T_{\text{Dedup}}$. Users create a master credential from legacy data via oracles, then request context-specific credentials. Its limitations include:
@@ -60,7 +59,7 @@ Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign 
 
 \textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency (CRBN vs. tACT) and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(k + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
 
-\begin{table}[h]
+\begin{table}[ht]
 \centering
 \caption{Comparison of T-SIRIS with prior SSI systems.}
 \label{tab:comparison-chap5}
@@ -96,8 +95,6 @@ $^{\text{a}}$ Pseudonymous, not fully anonymous. \\
 
 
 
-
-
 \section{System Model and Definitions}
 \label{sec:threshold-model}
 
@@ -115,12 +112,110 @@ T-SIRIS integrates four key components:
 
 We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold, reflecting realistic collusion scenarios in decentralized settings. The adversary cannot break the Discrete Logarithm (DL) or $q$-Diffie-Hellman Inversion ($q$-DDHI) assumptions, and network conditions support standard threshold protocols.
 
+
+
+
+
+
+\section{Construction}
+\label{sec:threshold-construction}
+
+Our T-SIRIS system integrates the efficient components from previous chapters with a threshold issuance protocol. We begin by explaining how we thresholdize the PS signature scheme over Pedersen commitments from Chapter~\ref{chap2}.
+
+\subsection{Threshold PS Signatures}
+
+To distribute trust among multiple issuers, we adopt the threshold PS signature scheme from \cite{tomescu2022utt} using Shamir secret sharing. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
+
+Our threshold PS construction works as follows:
+A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $\cm = \CMCom([\attrs];r)$. The user interacts with signers using a pre-agreed random element $h \in \G_1$, alternatively, \cite{sonnino_coconut_2020} generates this with a hash-to-group of the commitment $h \gets \mathcal{H}(\cm)$. The user sends $\cm$ with $\Pi_{\cm}$ OR $\pi^{\mathsf{zkpok}}$ proving its opening to each signer. Signers verify the proof and return a signature share $[\sigma^*]_i = \mathsf{tPSutt.ShareSign}(\ck, \mathsf{sk}_i, (\mathsf{cm}_k, \pi^{\mathsf{zkpok}}); h)$. The user verifies each share and checks the consistency of the message and proof previously shared $\mathsf{tPSutt.ShareVer}(\ck, \mathsf{vk}_i, (\mathsf{cm}, \pi^{\mathsf{zkpok}}), [\sigma^*]_i; h)$. The user identifies a set $S$ of at least $t+1$ valid shares and aggregates them, outputting their signature $\sigma \leftarrow \mathsf{tPSutt.Aggregate}(\ck, ([\sigma^*]_i)_{i \in S}, r)$ which verifies under the combined  verification key $\mathsf{PSutt.Ver}(\mathsf{vk}, \mathsf{cm}, \sigma) = 1$.
+
+Importantly, this threshold construction distributed trust among multiple issuers while preserving the core properties of our underlying building block PS signature scheme - unforgeability and rerandomizability. Additionally, the end-signature algebraic structure is the same, and therefore, the verification algorithm and proof system compatibility are the same. 
+
+
+\begin{definition}[PS Threshold Signatures over Pedersen Commitments]
+A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists of the following algorithms:
+\begin{itemize}
+    \item $\mathsf{DistKeyGen}(1^{\lambda}, t+1, n, \ell) \to (\mathsf{ck}, \mathsf{vk}, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]}):$ Takes security parameter $\lambda$, corruption threshold $t$, number of parties $n$, and attribute count $\ell$. Outputs commitment key $\mathsf{ck}$, verification key $\mathsf{vk}$, and per-party keys $(\mathsf{sk}_i, \mathsf{vk}_i)$.
+    
+    \item $\mathsf{ShareSign}(\mathsf{ck}, \mathsf{sk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}; h) \to [\sigma^*]_i:$ Takes party $i$'s secret key $\mathsf{sk}_i$, commitments $\mathsf{cm}_k$ with ZK proofs $\pi_k^{\mathsf{zkpok}}$, and randomizer $h$. Outputs signature share $[\sigma^*]_i$.
+    
+    \item $\mathsf{ShareVer}(\mathsf{ck}, \mathsf{vk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ Takes party $i$'s verification key $\mathsf{vk}_i$, commitments with proofs, and signature share $[\sigma^*]_i$. Outputs accept ($1$) or reject ($0$).
+    
+    \item $\mathsf{Aggregate}(\mathsf{ck}, ([\sigma^*]_i)_{i \in S}, (r_k)_{k \in [\ell]}) \to \sigma:$ Takes signature shares from subset $S$ of parties and commitment randomness values. Outputs aggregated signature $\sigma$.
+    
+\end{itemize}
+\end{definition}
+
+
+
+
+
+\subsubsection{Construction}\label{threshold-ps-construction}
+We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as input into our rerandomizable signature scheme $\mathsf{RS}$. We copy the algorithm below for convenience.
+\begin{itemize}
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   \item $\mathsf{RS.Rerand}(\sigma, r_\Delta, u_\Delta) \to \sigma':$
+        Parse $\sigma$ as $(\sigma_1, \sigma_2)$
+        Set $\sigma_1' \gets \sigma_1^{u_\Delta}$
+        Set $\sigma_2' \gets (\sigma_2 \cdot \sigma_1^{r_\Delta})^{u_\Delta}$
+        Return $\sigma' \gets (\sigma_1', \sigma_2')$
+    
+    \item $\mathsf{RS.Ver}(\vk, \cm, \sigma) \to \bit:$
+        Parse $\sigma$ as $(\sigma_1, \sigma_2)$, The prover $\Prover$ runs a Proof of Knowledge protocol with the following relation 
+    \[
+        \mathcal{R} \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + r_\Delta): 
+    \]
+    \[
+         e(\sigma_2', \tilde{g}) = e(\sigma_1', \vk)\cdot e(\sigma_1', \widetilde{\cm}') \quad \wedge \quad
+        e(\cm', \tilde{g}) = e(g, \widetilde{\cm}') \quad \wedge \quad
+        \cm' = g^{r + r_\Delta} \prod_{i=1}^\ell g_i^{m_i}
+        \}
+    \]
+
+        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
+        \[
+        \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+        \]
+        
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \section{Construction}
 \label{sec:threshold-construction}
 
 T-SIRIS builds on a PS threshold signature scheme over Pedersen commitments (detailed in Chapter~\ref{chap3}), enhanced with nullifiers for deduplication. The core protocol is outlined in Figure~\ref{fig:single-cred-protocol}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \caption{T-SIRIS Protocol Overview}
 \label{fig:single-cred-protocol}
 \begin{center}
@@ -190,16 +285,6 @@ $\underline{\mathsf{Show}(\mathsf{cred})}$ && $\underline{\mathsf{Verify}(\sigma
 
 
 
-
-\begin{definition}[PS Threshold Signatures over Pedersen Commitments]
-A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists of the following algorithms:
-\begin{itemize}
-    \item $\mathsf{DistKeyGen}(1^{\lambda}, t+1, n, \ell) \to (\mathsf{ck}, \mathsf{vk}, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]}):$ Takes security parameter $\lambda$, corruption threshold $t$, number of parties $n$, and attribute count $\ell$. Outputs commitment key $\mathsf{ck}$, verification key $\mathsf{vk}$, and per-party keys $(\mathsf{sk}_i, \mathsf{vk}_i)$.
-    \item $\mathsf{ShareSign}(\mathsf{ck}, \mathsf{sk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}; h) \to [\sigma^*]_i:$ Takes party $i$'s secret key $\mathsf{sk}_i$, commitments $\mathsf{cm}_k$ with ZK proofs $\pi_k^{\mathsf{zkpok}}$, and randomizer $h$. Outputs signature share $[\sigma^*]_i$.
-    \item $\mathsf{ShareVer}(\mathsf{ck}, \mathsf{vk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ Takes party $i$'s verification key $\mathsf{vk}_i$, commitments with proofs, and signature share $[\sigma^*]_i$. Outputs accept ($1$) or reject ($0$).
-    \item $\mathsf{Aggregate}(\mathsf{ck}, ([\sigma^*]_i)_{i \in S}, (r_k)_{k \in [\ell]}) \to \sigma:$ Takes signature shares from subset $S$ of parties and commitment randomness values. Outputs aggregated signature $\sigma$.
-\end{itemize}
-\end{definition}
 
 \section{Construction}
 \label{sec:threshold-construction}

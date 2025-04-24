@@ -1,4 +1,4 @@
-\mychapter{Expressive Proof Predicates for Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}\label{chap2}
+\mychapter{Efficient Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}\label{chap2}
 
 
 % \begin{table}
@@ -671,7 +671,7 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 We construct an Attribute-Based Anonymous Credential System from our Rerandomizable Commitment and Signature schemes and prove its security in the model \cite{fuchsbauer_structure-preserving_2019}; we extend it to support predicate-based zero-knowledge proof verification, allowing users to prove statements about their committed and signed attributes without revealing any additional information.
 
 
-\subsection{Predicate Satisfaction}
+\subsubsection*{Predicate Satisfaction}
 We define a predicate $\phi$ as a boolean function over an attribute vector $\attrs$, formally  $\phi: (\mathcal{A}) \rightarrow \{0,1\}$, where $\mathcal{A}$ is the space of the attribute vectors. 
 For a credential with attributes $\attrs = [\id, \k, \ctx, \exp]$, we say that "$\attrs$ satisfies $\phi$", denoted as $\phi(\attrs) = 1$, if the boolean function evaluates to true on the attributes.
 For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\attrs: [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi: age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond reusing existing credentials in a legitimate way.
