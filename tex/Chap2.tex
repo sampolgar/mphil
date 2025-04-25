@@ -1004,17 +1004,7 @@ To prevent attacks from malicious issuers, we extend our signature scheme with:
 This prevents deanonymization via specially crafted keys, and signature forgery via hidden key relationships. In security proofs, extractability enables reductions to standard cryptographic assumptions.
 
 \subsubsection{Two-Party Protocol for VRF Key Generation}
-The key $\k$ in the master credential, used as the input to a Verifiable Random Function (VRF), is generated through a two-party protocol between the user and the issuer. This process enhances unforgeability by preventing the user from forging a new master credential using a previously known key $\k$. 
-
-The protocol proceeds as follows:
-\begin{enumerate}
-    \item The user samples a secret $\k_1 \sample \Z_p$ and commits to it via a commitment scheme.
-    \item The issuer samples a secret $\k_2 \sample \Z_p$ and embeds it into the credential's attribute vector.
-    \item  The final key is computed as $\k = \k_1 + \k_2 \mod p$, ensuring neither party alone knows $\k$.
-\end{enumerate}
-
-This collaborative approach ensures the key $\k$ remains unpredictable and uncontrollable by the user, bolstering security against forgery attacks.
-
+The key $k$ in the master credential, used as input to a Verifiable Random Function (VRF), is generated through a two-party protocol between the user and issuer to enhance both unforgeability and privacy. The user samples a secret $k_1 \sample \mathbb{Z}_p$ and commits to it, while the issuer samples $k_2 \sample \mathbb{Z}_p$ and embeds it into the credential's attribute vector. The final key, computed as $k = k_1 + k_2$, ensures $k$ can't have been copied from another user or been maliciously issued by the issuer. The issuer learns the user's identity during registration but never learns the complete VRF key, maintaining user privacy while still enabling credential verification.
 
 
 \section{Security}

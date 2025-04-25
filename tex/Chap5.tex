@@ -95,12 +95,151 @@ $^{\text{a}}$ Pseudonymous, not fully anonymous. \\
 
 
 
+\section{Preliminaries}
+
+\begin{definition}[Shamir Secret Sharing]
+A $(t,n)$ secret sharing scheme $\mathsf{SS}$ consists of the following $\PPT$ algorithms over message space $\mathcal{X}$:
+\begin{itemize}
+    \item $\mathsf{Share}(1^{\lambda}, t, n, x) \to ([x]_1, \dots, [x]_n):$ Takes security parameter $\lambda$, threshold $t$, number of parties $n$, and secret $x \in X$. Outputs $n$ shares $([x]_1, \dots, [x]_n)$.
+    
+    \item $\mathsf{Combine}([x]_{i_1}, \dots, [x]_{i_t}) \to x:$ Takes as input $t$ distinct shares $[x]_{i_j}$ where $i_j \in [n]$ for $j \in [t]$, and outputs the reconstructed secret $x \in \mathcal{X}$.
+\end{itemize}
+\end{definition}
+
+
+
+
+\begin{definition}[Distributed Key Generation]
+A $(t,n)$-Distributed Key Generation (DKG) protocol $\mathsf{DKG}$ for discrete-log based cryptosystems is an interactive $\PPT$ protocol executed by $n$ parties over a group $G$ with generator $g$, taking as input a security parameter $1^\lambda$, threshold $t$, and number of parties $n$. At completion, each honest party $P_i$ outputs:
+\begin{itemize}
+    \item A share $[x]_i \in \mathbb{Z}_q$ of a secret $x \in \mathbb{Z}_q$.
+    \item A public key $y = g^x \in G$.
+\end{itemize}
+The protocol satisfies:
+\begin{itemize}
+    \item \textbf{Correctness:} All honest parties output the same $y$, and the shares $([x]_1, \dots, [x]_n)$ held by honest parties form a $(t,n)$-threshold sharing of $x$ such that $y = g^x$.
+    \item \textbf{Uniformity:} The secret $x$ is uniformly distributed in $\mathbb{Z}_q$.
+    \item \textbf{Security:} Against a static adversary corrupting up to $t < n/2$ parties, no information about $x$ is leaked beyond $y$, and correctness holds.
+\end{itemize}
+\end{definition}
+
+
+
+\subsubsection{DKG Construction}
+The $(t,n)$-DKG protocol from \cite{Gennaro2007} operates over a group $G$ with generator $g$, order $q$, and security parameter $\lambda = \log q$, executed by $n$ parties $P_1, \dots, P_n$ with threshold $t < n/2$. It proceeds in two phases:
+\begin{itemize}
+    \item \textbf{Phase 1 (Commitment):} Each party $P_i$:
+        \begin{enumerate}
+            \item Chooses a random secret $z_i \in \mathbb{Z}_q$ and a polynomial $f_i(z)$ of degree $t$ with $f_i(0) = z_i$.
+            \item Uses Pedersen’s VSS to distribute verifiable shares $s_{ij} = f_i(j)$ and commitments $C_{ik} = g^{a_{ik}} h^{b_{ik}}$ (for coefficients $a_{ik}$, blinding $b_{ik}$, and generator $h \in G$) to all parties $P_j$.
+            \item Verifies received shares $s_{ji}$ from others; if invalid, complains to disqualify the sender $P_j$. Let $QUAL$ be the set of non-disqualified parties.
+        \end{enumerate}
+    \item \textbf{Phase 2 (Key Generation):} Each party $P_i \in QUAL$:
+        \begin{enumerate}
+            \item Uses Feldman’s VSS to broadcast commitments $A_{ik} = g^{a_{ik}}$ for the same polynomial $f_i(z)$ from Phase 1.
+            \item Verifies received commitments; if invalid, reconstructs $z_j$ of the faulty $P_j \in QUAL$.
+            \item Computes share $[x]_i = \sum_{j \in QUAL} s_{ji}$ and public key $y = \prod_{j \in QUAL} A_{j0}$, where $A_{j0} = g^{z_j}$.
+        \end{enumerate}
+\end{itemize}
+The protocol outputs $([x]_i, y)$ for each $P_i \in QUAL$, where $x = \sum_{j \in QUAL} z_j$ and $y = g^x$.
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{definition}[Distributed Key Generation for VRF] 
+A $(t,n)$-threshold DKG scheme consists of the following probabilistic polynomial-time algorithms:
+
+\begin{itemize} 
+\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{pp}, \mathsf{vk}, \{[k_2]_i, \mathsf{vk}_i\}_{i \in [n]}):$ On input security parameter $\lambda$, threshold parameter $t < n$, and number of parties $n$, outputs public parameters $\mathsf{pp}$, a verification key $\mathsf{vk} = g^{k_2}$, and for each party $i$, a share $[k_2]_i$ of $k_2$ along with an individual verification key $\mathsf{vk}_i$.
+
+\item $\mathsf{ShareProve}(\mathsf{pp}, [k_2]_i) \to \pi_i:$ Generates a proof $\pi_i$ that the share $[k_2]_i$ is valid.
+
+\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k_2]_i, \pi_i) \to \{0,1\}:$ Verifies that a share $[k_2]_i$ is valid with respect to verification key $\mathsf{vk}_i$ using proof $\pi_i$.
+
+\item $\mathsf{Reconstruct}([k_2]_{i_1}, \dots, [k_2]_{i_{t+1}}) \to k_2:$ Takes $t+1$ distinct valid shares and reconstructs the secret $k_2$.
+\end{itemize}
+
+The scheme satisfies the following security properties:
+
+\begin{itemize}
+\item \textbf{Correctness:} For any $(\mathsf{pp}, \mathsf{vk}, \{[k_2]_i, \mathsf{vk}_i\}_{i \in [n]}) \leftarrow \mathsf{DistKeyGen}(1^{\lambda}, t, n)$, any subset $S \subset [n]$ of size $|S| = t+1$, and $k_2 \leftarrow \mathsf{Reconstruct}(\{[k_2]_i\}_{i \in S})$, it holds that $\mathsf{vk} = g^{k_2}$.
+
+\item \textbf{Secrecy:} Any adversary corrupting up to $t$ parties learns no information about $k_2$ beyond what can be derived from the verification key $\mathsf{vk}$.
+
+\item \textbf{Robustness:} Even if up to $t$ parties behave maliciously, the honest parties can still successfully generate and verify shares.
+\end{itemize}
+\end{definition}
+
+
+
+\begin{definition}[Distributed Key Generation]
+A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
+\begin{itemize}
+\item $\mathsf{Setup}(1^{\lambda}) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp} = (G, p, g)$ where $G$ is a cyclic group of prime order $p$ with generator $g$.
+\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: Generates a verification key $\mathsf{vk} = g^k$ and for each party $i$, a share $[k]_i$ of the secret key $k$ along with verification key $\mathsf{vk}_i = g^{[k]_i}$.
+\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k]_i) \to \{0,1\}$: Verifies that share $[k]_i$ is consistent with verification key $\mathsf{vk}_i$.
+\item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: Reconstructs the secret key $k$ from $t+1$ valid shares.
+\end{itemize}
+\end{definition}
+
+
+Our Simple DKG scheme is defined as follows:
+\begin{definition}[Simple Distributed Key Generation]
+A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
+\begin{itemize}
+\item $\mathsf{Setup}(1^{\lambda}) \to \mathsf{pp}$: 
+  Outputs public parameters $\mathsf{pp} = (G, p, g)$ where $G$ is a cyclic group of prime order $p$ with generator $g$.
+  
+\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: 
+  Executes the distributed key generation process:
+  \begin{enumerate}
+    \item All $n$ parties jointly generate a secret key $k$ such that any subset of $t+1$ parties can reconstruct $k$.
+    \item Outputs the global verification key $\mathsf{vk} = g^k$.
+    \item Each party $i$ receives:
+      \begin{itemize}
+        \item A share $[k]_i$ of the secret key $k$, and
+        \item A verification key $\mathsf{vk}_i = g^{[k]_i}$ to verify its share.
+      \end{itemize}
+  \end{enumerate}
+
+\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k]_i) \to \{0,1\}$: 
+  Verifies that the share $[k]_i$ held by party $i$ is consistent with its verification key $\mathsf{vk}_i$.
+  \begin{itemize}
+    \item Returns $1$ if the verification is successful (i.e., $[k]_i$ is valid).
+    \item Returns $0$ otherwise.
+  \end{itemize}
+
+\item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: 
+  Reconstructs the secret key $k$ using a subset of $t+1$ valid shares $\{[k]_{i_j}\}_{j=1}^{t+1}$. 
+  \begin{itemize}
+    \item Applies Lagrange interpolation over the valid shares to compute $k$.
+    \item Outputs the reconstructed secret key $k$.
+  \end{itemize}
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Security Properties]
+The Simple DKG construction satisfies the following properties:
+\begin{itemize}
+\item \textbf{Correctness}: For any execution of $\mathsf{DistKeyGen}$ producing shares $\{[k]_i\}_{i \in [n]}$, any subset $S \subset [n]$ of size $|S| = t+1$, and $k' \leftarrow \mathsf{Reconstruct}(\{[k]_i\}_{i \in S})$, it holds that $g^{k'} = \mathsf{vk}$.
+\item \textbf{Secrecy}: Any adversary controlling at most $t$ parties learns no information about the secret key $k$ beyond what can be derived from the public verification keys.
+\item \textbf{Binding}: It is computationally infeasible for an adversary to produce a valid share $[k]_i$ that is inconsistent with the verification key $\mathsf{vk}_i$.
+\end{itemize}
+\end{theorem}
 
 
 
@@ -147,7 +286,7 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
 
 
 \begin{itemize}
-    \item $\mathsf{DistKeyGen}(1^{\lambda}, t+1, n, \ell) \to (\ck, \vk, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]}):$ Takes input the security parameter, $t$ the corruption threshold, $n$ is number of nodes, $\ell$ is the credential message length. Outputs $\ck, \vk$ the commitment and verification keys generated with the secrets and $\sk_i, \vk_i$ the shared keys to distribute to $n$ nodes. let $\mathcal{X}$ and $\psi_k $ be $t$ degree polynomials:
+    \item $\mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell) \to (\ck, \vk, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]}):$ Takes input the security parameter, $t$ the corruption threshold, $n$ is number of nodes, $\ell$ is the credential message length. Outputs $\ck, \vk$ the commitment and verification keys generated with the secrets and $\sk_i, \vk_i$ the shared keys to distribute to $n$ nodes. let $\mathcal{X}$ and $\psi_k $ be $t$ degree polynomials:
     \begin{itemize}
         \item For the shared $x$ values: $\mathcal{X} \sample \Z_p[X], x \gets \mathcal{X}(0)$, $\{[x]_i \gets \mathcal{X}(i)\}_{i\in [n]}$
         \item For the $k$ shared $y$ values: $\{\psi_k \sample \Z_p[X], y_k \gets \psi_k(0)\}_{k \in [\ell]}$, $\{[y_k]_i \gets \psi_k(i)\}_{k \in [\ell], i \in [n]}$
@@ -157,7 +296,7 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
     \end{itemize}
         
 
-    \item $\mathsf{ShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$ the user runs $\mathsf{ShareSign}$ with at least $t$ nodes. 
+    \item $\mathsf{tShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$ the user runs $\mathsf{tShareSign}$ with at least $t$ nodes. 
     \begin{itemize}
         \item User commits to each $m$ individually: $\cm_k = h^{m_k}g^{r_k}$ and generates proofs for each $\cm_k = \zkpok(\cm_k, m_k, r_k)$ and sends each signer the commitment and proof.
         \item Signer parses $g$ from $\ck$ and verifies the opening of the commitment w.r.t. the proof.
@@ -166,7 +305,7 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
     \end{itemize}
 
 
-    \item $\mathsf{ShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ Run by a user to verify the signed share returned from each node before aggregating together. 
+    \item $\mathsf{tShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ Run by a user to verify the signed share returned from each node before aggregating together. 
     \begin{itemize}
         \item Parse $[\sigma^*]_i$ as $([\sigma^*]_{i,1}, [\sigma^*]_{i,2})$ and check $h = [\sigma^*]_{i,1}$. 
         \item Verify each message commitment $\cm_k$ and proof $\pi_k$
@@ -174,7 +313,7 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
         \item Asserts $e([\sigma^*]_{i,2}, \tilde{g}) = e(h, \tilde{g}^{[x]_i}) \cdot \prod_{k \in [\ell]} e(\cm_k, \tilde{g}^{[y_k]_i})$
     \end{itemize}
 
-    \item $\mathsf{Aggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$ User parses $\ck$ as $(\cdot, \vec{g}, \cdot, \cdot)$ and $\forall i \in S$, parse $[\sigma^*]_i$ as $(h, [\sigma^*]_{i,2})$. Runs Lagrange Interpolation on $|S|=t+1$ signature shares:
+    \item $\mathsf{tAggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$ User parses $\ck$ as $(\cdot, \vec{g}, \cdot, \cdot)$ and $\forall i \in S$, parse $[\sigma^*]_i$ as $(h, [\sigma^*]_{i,2})$. Runs Lagrange Interpolation on $|S|=t+1$ signature shares:
     \begin{itemize}
         \item  $\mathcal{L}_i \gets \prod_{j \in S, j\neq i}\frac{0-j}{i-j} \forall i \in S$
         \item $\sigma_2 \gets \prod_{j \in S}([\sigma^*]_{i,2})^{\mathcal{L}_i}$ = 
@@ -246,22 +385,22 @@ We also assume users may attempt sybil attacks by requesting multiple credential
 
 \subsection{Definition}
 
-A T-SIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$:
+A tSIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$. We use $\RSSetup, \RSRand, \RSVer$ from the rerandomizable signature scheme.
 
-\begin{definition}[T-SIRIS]
+\begin{definition}[tSIRIS]
     \begin{itemize}
-    \item $\mathsf{Setup}(1^\lambda) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp}$, including a bilinear group $\BG = (\G_1, \G_2, \G_T, e, g, \tilde{g}, p)$ as in Section 2.1.
+    \item $\mathsf{RS.Setup}(1^\lambda) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp}$, including a bilinear group $\BG = (\G_1, \G_2, \G_T, e, g, \tilde{g}, p)$.
 
-    \item $\mathsf{KeyGen}(\mathsf{pp}, \ell, t, n) \to (\ck, \vk, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i \in [n]})$: Generates public commitment and verification keys  $\mathsf{ck}, \mathsf{vk}$ and distributes secret/verification key shares to $n$ issuers using a $(t,n)$-threshold scheme.
+    \item $\mathsf{tKeyGen}(\mathsf{pp}, \ell, t, n) \to (\ck, \vk, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i \in [n]})$: Generates public commitment and verification keys  $\mathsf{ck}, \mathsf{vk}$ and distributes secret/verification key shares to $n$ issuers using a $(t,n)$-threshold scheme.
 
     \item $\mathsf{Dedup}(\credm, \cmc, \nullifier, \pi_{\nullifier}, \mathcal{T}) \to (\bit, T'):$ Takes input the user master credential $(\credm = \sigmam, \cmm, \uskm)$ and context commitment $\cmc$, the nullifier $\nullifier$ and its proof of correctness $\pi_{\nullifier}$ and the redeemed credential list $\mathcal{T}$. Outputs 0 if the proof fails or outputs 1 and updates the credential list T with $\nullifier$
 
-    \item $(\mathsf{ObtainMaster}(\attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{IssueMaster}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]})) \to (\credm, \bot)$: an interactive protocol between a user running $\mathsf{ObtainMaster}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{IssueMaster}$. $\mathsf{ObtainMaster}$ takes in the user's attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueMaster}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$. Outputs $\credm$ to the user and $\bot$ to itself.
+    \item $(\mathsf{tObtainMaster}(\attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{tIssueMaster}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]})) \to (\credm, \bot)$: an interactive protocol between a user running $\mathsf{tObtainMaster}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{tIssueMaster}$. $\mathsf{tObtainMaster}$ takes in the user's attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{tIssueMaster}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$. Outputs $\credm$ to the user and $\bot$ to itself.
 
-    \item $(\mathsf{ObtainContext}(\credm, \attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{IssueContext}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]}, \aux)) \to (\credc, \bot)$: an interactive protocol between a user running $\mathsf{ObtainContext}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{IssueContext}$.
-    $\mathsf{ObtainContext}$ takes in the user's master credential $\credm$, new attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueContext}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$ and auxiliary information $\aux$ e.g. outputs $\nullifier, \pi_{\nullifier},\mathcal{T}$ from $\mathsf{Dedup}$ and $\credm, \pi_{\mathsf{verify}}$ from $\RSVer(\credm, \vk)$ for $\credm$. Outputs $\credc$ to the user and $\bot$ to itself.
+    \item $(\mathsf{tObtainContext}(\credm, \attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{tIssueContext}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]}, \aux)) \to (\credc, \bot)$: an interactive protocol between a user running $\mathsf{tObtainContext}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{tIssueContext}$.
+    $\mathsf{tObtainContext}$ takes in the user's master credential $\credm$, new attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{tIssueContext}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$ and auxiliary information $\aux$ e.g. outputs $\nullifier, \pi_{\nullifier},\mathcal{T}$ from $\mathsf{Dedup}$ and $\credm, \pi_{\mathsf{verify}}$ from $\RSVer(\credm, \vk)$ for $\credm$. Outputs $\credc$ to the user and $\bot$ to itself.
 
-    \item $(\mathsf{Show}(\mathsf{cred}, \usk, \phi), \mathsf{Verify}(\mathsf{cred}', \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a credential $\cred = (\sigma, \cm, \usk)$ and predicate for verification $\phi$. $\mathsf{Verify}$ takes input the rerandomized credential $\cred'$ and proof $\pi$ it satisfies $\phi$. The verifier outputs 1 if valid, 0 otherwise.
+    \item $(\mathsf{tShow}(\mathsf{cred}, \usk, \phi), \mathsf{Verify}(\mathsf{cred}', \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a credential $\cred = (\sigma, \cm, \usk)$ and predicate for verification $\phi$. $\mathsf{RS.Verify}$ takes input the rerandomized credential $\cred'$ and proof $\pi$ it satisfies $\phi$. The verifier outputs 1 if valid, 0 otherwise.
 \end{itemize}
 \end{definition}
 
@@ -406,70 +545,81 @@ The deduplication table $\mathcal{T}$ should be replicated across all issuers or
 \subsubsection{Overview}
 T-SIRIS operates in two credential issuance phases: master credential issuance and context credential issuance. The master credential establishes the user's base identity with a secret key $\k$, while context credentials are bound to this master credential through nullifiers derived from $\k$ and a context $\mathsf{ctx}$. The nullifier mechanism prevents sybil attacks by ensuring users can obtain only one credential per context.
 
-\subsubsection{Detailed Construction}
+\subsubsection*{Similarites to Anonymous Payment Systems}
+
+
+\subsubsection*{Registration}
+Since we are optimizing for a private, accountable system, we make a small trade-off in privacy during Master Credential generation to satisfy the efficiency and private accountability requirements of an organization or government deploying this system today. We note that we can swap our methods for complete privacy using credential oracles like \cite{zhang_deco_2020, celi_distefano_2025, baldimtsi_zklogin_2024, ritzdorf_tls-n_2018} with a reduction in security and accountability.
+During Master Credential registration, we enforce the user's Master Credential to be issued in a semi-trusted process where the user verifies their identity to the registration authority during its issuance. This enables Sybil resistance on the user identifier, stronger security for their VRF key $k$ discussed below \ref{t-siris:vrf-key-k-gen}, which is used to attach other credentials to it. The Registration Authority keeps track of user identities and can request their revocation from the Accountability Authority with techniques from \cite{damgard_balancing_2020}. At the end of registration, the user has a master credential $\credm = (\sigmam, \cmm, \vkm)$, including a rerandomizable, threshold-signature over commitment.
+
+\subsubsection{Multi-Party Protocol for VRF Key Generation}\label{t-siris:vrf-key-k-gen}
+The VRF key $k$ is embedded in the master credential and used to generate nullifiers for every context credential. Therefore, $k$ must be generated in a way that prevents the user from stealing someone else's $k$ and embedding it in their master credential (and therefore generating their nullifiers and abusing the system), as well as ensuring the issuers can't modify or create it maliciously to attempt to break anonymity later.
+In the single issuer protocol, the user commits to their $k_1$, $\cm_1 = \CMCom([k_1];r)$\footnote{$\cm$ contains more than just the VRF key $\k$, we simplify in this explanation for brevity} and shares with the issuer along with a proof of its opening. Issuer verifies the proof and generates $k_2$, commits to it without randomness, $\cm_2 = \CMCom([k_2];0)$ and returns $\cm_2, k_2$ to the user. The user aggregates $\cm = \cm_1 \cdot \cm_2$ and computes $k = k_1 + k_2$ and now has a fully formed $\cm = \CMCom([k_1 + k_2];r)$.
+We adjust slightly for the threshold scenario. 
+The user computes $k_1$, $\cm_1 = \CMCom([k_1];r)$ and a proof of its opening.
+The issuers runs DKG with a subset  $|S| \geq t$ of nodes to produce $\vk = g^{k_2}$ and each node computes shared $\{k_{2_i}\}_{i \in S}$ and shares with the user (For efficiency, the issuers can precompute these values in bulk and retain a pool to choose from $k_2$).
+The user computes $k_2$ by combining $|S| \geq t$ with $\mathsf{DKG.Combine(\{k_{2_i}\}_{i \in S})}$, the user then computes $\cm = \CMCom([k_1 + k_2];r)$ and runs a sigma protocol to prove its correctness during credential generation. 
+\[
+\mathcal{R}: \left\{ 
+(\cm_1, \cm, \vk),(k_1, k_2, k, r) 
+\middle| 
+\begin{array}{lcl}
+    \cm_1 = \CMCom([k_1];r) \; \wedge \; \\
+    \vk = g^{k_2} \; \wedge \; \\
+    \cm = \CMCom([k_1 + k_2];r)
+\end{array} \right\}
+\]
+The issuer learns the user's identity during registration but never learns the complete VRF key, maintaining user privacy while still enabling credential verification. 
+
+\subsubsection*{Context Credential Issuance}
+A context credential is linked to a master credential with the same committed identifier e.g., $\cmm = \CMCom([id,\ldots];r_1), \cmc = \CMCom([id, \ldots];r_2)$ kept secret during the issuance process.
+A context credential issuer may be the same threshold committee, but may also be in the form of a credential oracle \cite{zhang_deco_2020, celi_distefano_2025, baldimtsi_zklogin_2024, ritzdorf_tls-n_2018}. The context credential issuance criteria will vary depending on their individual requirements; we represent this as the predicate $\phi$ that should be satisfied by the user during issuance. For example, perhaps a user successfully completed their driving test and should be issued a driving license. A user interacting with the DMV should first verify their master credential (e.g. they have a valid passport), The user also commits to their identifier $\cmc = \CMCom([id, \ctxc, \ldots]; r_c)$ and proves their $id$ is consistent between the two commitments. The user proves this relation:
+\[
+\mathcal{R}_{\phi}: \left\{ 
+\begin{array}{l}
+(\credm = (\sigmam, \cmm), \cmc), \\
+(id, k, \ctxm, \ctxc, r_m, r_c) 
+\end{array}
+\middle| 
+\begin{array}{lcl}
+    \RSVer(\cmm, \vkm) = 1 \; \wedge \; \\
+    \cmm = \CMCom([id, \ctxm, k, \ldots]; r_m) \; \wedge \ctxm = \texttt{"master"} \; \wedge \; \\
+    \cmc = \CMCom([id, \ctxc, \ldots]; r_c) \; \wedge \ctxc = \texttt{"DMV"} \; \\
+\end{array} \right\}
+\]
+The Context Credential issuer verifies the correctness of $\phi$ and runs their signing protocol over $\cmc$.
+
+\subsubsection*{Sybil Resistance}
+In the above scenario, the DMV is issuing 
+
+
+\subsubsection*{Revocation}
+
+
+\subsubsection*{Freshness}
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Security Analysis}
-
-
-
-We analyze the security of T-SIRIS in terms of four key properties: unforgeability, sybil resistance, anonymity
-
-% Keep your existing security theorems
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\subsubsection*{Threshold Security}
 
 
 
 
 
 \begin{figure}\label{threshold-construction-ABC}
-    \caption{ABC System}
+    \caption{tABC System}
     \begin{center}
     \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
-    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
-    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
-    \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}), \; \text{Return } (\osk, \opk) = (\sk, (\vk, \ck))$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{tOrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$ and threshold parameters $n, t$} \\[1em]
+    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; (\ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}) \gets \mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell, \BG)$} \\[1em]
+    \multicolumn{3}{l}{$\pcreturn \text{ public keys } (\ck, \vk). \text{ Each node receives their key share } (\sk_i, \vk_i)$} \\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
-    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\k_1,\usk) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
-    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
-    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)}$ \\[1em]
-    & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
-    If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
-    \multicolumn{3}{l}{$\k_1 \sample \Z_p, \usk \sample \Z_p\;, \cm_1 = \CMCom([0,0,0,\k_1];\usk)$} \\[1em]
-     & $\xrightarrow{\;\; \pirzero(\cm_1) \;\;}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
-     \multicolumn{3}{r}{$\k_2 \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
+    \multicolumn{3}{l}{$\pirzero(\cmm) = \zkpok\{(\k_1,\uskm) \mid \cmm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
+    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cmm, \id, \ctx, \exp, \osk)}$ \\[1em]
+    \multicolumn{3}{l}{$\k_1, \uskm \sample \Z_p\;, \cmm_1 = \CMCom([0,0,0,\k_1];\uskm)$} \\[1em]
+     & $\xrightarrow{\;\; \pirzero(\cmm_1) \;\;}$ & If $\pirzero(\cmm_1)$ fails, return $\bot$ \\[1em]
+     \multicolumn{3}{r}{$\{\k_2\}_{i \in t} \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
      \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
     If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \k_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
     \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
@@ -492,7 +642,7 @@ We analyze the security of T-SIRIS in terms of four key properties: unforgeabili
     \caption{T-ABC System with Master Credential and Nullifier}
     \begin{center}
     \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
-    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{T-OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
     \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
     \multicolumn{3}{l}{$\text{Assume threshold keys } (\sk_1, \dots, \sk_n), \vk \text{ are generated via DKG.}$} \\[1em]
     \multicolumn{3}{l}{$\text{Return } (\osk, \opk) = ((\sk_1, \dots, \sk_n), (\vk, \ck))$} \\[1em]

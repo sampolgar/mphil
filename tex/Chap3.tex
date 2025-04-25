@@ -153,7 +153,7 @@ The MIMC-ABC system operates as follows, reusing primitives from Chapter 2 (Sect
             \item Rerandomizes: $\mathsf{cm}_j' = \mathsf{CM.Rerand}(\mathsf{cm}_j, \Delta_{r_j})$, $\sigma_j' = \mathsf{RS.Rerand}(\sigma_j, \Delta_{r_j}, \Delta_{u_j})$.
             \item Proves via $\Sigma$-protocol:
                 \[
-                \mathcal{R}_\phi = \zkpok \left\{ 
+                \mathcal{R}_\phi =\left\{ 
                 \begin{array}{l} 
                 (\{\mathsf{cm}_j', \sigma_j'\}_j, (\id, \{\ctx_j, \exp_j, \usk_j + \Delta_{r_j}\}_j)) \\
                 \end{array} 
