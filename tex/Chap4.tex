@@ -417,13 +417,13 @@ Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \
     \begin{array}{rcl}
     e(g^x \cdot pk, \pi) & \stackrel{?}{=} & e(g^{sk+x}, \tilde{g}^{1/(sk+x)}) \\
      & \stackrel{?}{=} & e(g, \tilde{g})^{(sk+x)/(sk+x)} \\
-     & = & e(g, \tilde{g})
+     & = & e(g, \tilde{g}) \quad \checkmark
     \end{array}
     &&
     \begin{array}{rcl}
     y & \stackrel{?}{=} & e(g, \pi) \\
      & \stackrel{?}{=} & e(g,\tilde{g}^{1/(sk+x)}) \\
-     & = & e(g, \tilde{g})^{1/(sk+x)}
+     & = & e(g, \tilde{g})^{1/(sk+x)} \quad \checkmark
     \end{array}
 \end{align*}
 
@@ -529,6 +529,27 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 
 While our pairing-free VRF construction, presented in Section 3, eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk = g^{sk}$ and input $x$ during verification. This is a limitation for anonymous credential systems, where both the master credential key $sk$ and the context identifier $x$ must remain private to ensure user anonymity. In this section, we address this challenge by developing zero-knowledge proof techniques that enable verification of VRF outputs computed from committed attributes, without revealing sensitive information.
 
+\begin{table}[htbp]
+\centering
+\caption{Our Sigma Protocols and Their Applications}
+\label{tab:nullifier-protocols}
+\begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}}
+\toprule
+\textbf{Sigma Protocol} & \textbf{Application} \\
+\midrule
+DY Prime Order Proof Protocol \ref{protocol-pdy-protocol1} & Efficient VRF \\
+\midrule
+Proving Knowledge of Committed Inverse Exponent  \ref{pok-committed-inverse-exponent} & Generalized $\Sigma$-protocol \\
+\midrule
+Proving Knowledge of Committed Inverse Linear Relation \ref{pok-committed-inverse-linear-relation} & Anonymous Deterministic Nullifier VRF \ref{subsec:deterministic-nullifier}\\
+\midrule
+Proving Knowledge of Committed Nullifier \ref{prot:committed-nullifier} & Anonymous Probabilistic Nullifier VRF \ref{sec-probabilistic-nullifier} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
 Our approach builds progressively across three key stages:
 
 \begin{enumerate}
@@ -540,11 +561,6 @@ Our approach builds progressively across three key stages:
 \end{enumerate}
 
 These protocols collectively transform our prime-order VRF into a privacy-preserving tool suitable for hierarchical anonymous credential systems. In the subsections that follow, we detail each stage, presenting the cryptographic constructions and their security properties. \ref{sec-instantiation} will later demonstrate how these building blocks are instantiated for sybil resistance and revocation in the Multi-Issuer Multi-Credential (MIMC) system.
-
-
-
-
-
 
 
 

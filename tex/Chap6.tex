@@ -1,5 +1,15 @@
 \mychapter{Open Source Anonymous Credentials Library}
 
+For Anonymous Credential and Privacy-Preserving Identity there is no library to help people learn the differences between constructions, what they can use or can't use and how they differ from a practical / functional implementation standpoint. 
+
+Our contributions
+1. built opensource library framework for SOTA anonymous credentials and benchmarked against each other in rust
+2. Demonstrate that schnorr proofs which are usually "slandered" in academic papers for being linear in the size of the proven attributed are in-fact sublinear in practice due to MSM techniques
+3. we show the speedup from batch / windowing schnorr proofs 
+4. Show the computation reduction in pairings when using miller loop intermediate computation rather than computing and epxonentiating GT points
+
+
+
 \section{Practical Proof Analysis}
 \subsection{Sigma Protocols}\label{sigma-protocol-analysis}
 Many schemes refer to sigma protocol as having linear size proofs. 

@@ -1,9 +1,10 @@
 \mychapter{Threshold Sybil-Resistant Identity System}\label{chap6}
 
 \section{Introduction}\label{sec:threshold-intro}
-Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram2021candid} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability.
+Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram2021candid} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context.
 
 This chapter presents T-SIRIS, a threshold Sybil-resistant identity system built on our multi-issuer multi-credential anonymous credential system (MIMC-ABC) from Chapter~\ref{chap3} and Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}. T-SIRIS uses a $t$-out-of-$N$ threshold issuance model, secure against $t-1$ malicious issuers. We compare T-SIRIS with CanDID and S3ID~\cite{rabaninejad_attribute-based_2024}, which uses threshold anonymous counting tokens (tACT), showing improvements in efficiency and functionality.
+
 
 \subsection*{Chapter Roadmap}
 % The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries and building blocks, in Section \ref{subsec:deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
@@ -20,7 +21,9 @@ CanDID~\cite{maram2021candid} pioneered Sybil-resistant identity with legacy cre
 CanDID deduplicates a user attribute, e.g. social security number using MPC, storing a unique value in a table $T_{\text{Dedup}}$. Users create a master credential from legacy data via oracles, then request context-specific credentials. Its limitations include:
 
 \begin{itemize}
-    \item \textbf{Deduplication:} MPC deduplication is slow and reveals a pseudonym to issuers, enabling pseudonym linking. T-SIRIS uses CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. This is anonymous and $5\times$ faster than tACT~\cite{rabaninejad_attribute-based_2024} (see Section~\ref{sec:perf}).
+    \item \textbf{Deduplication:} MPC deduplication is slow and reveals a pseudonym to issuers, enabling pseudonym linking. T-SIRIS uses CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. This is anonymous and many times faster than tACT~\cite{rabaninejad_attribute-based_2024} (see Section~\ref{sec:perf}).
+
+    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and $5\times$ faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
     
     \item \textbf{Context Credential Issuance:} CanDID requires issuer interaction for each context credential, e.g., ``over 18.’’ T-SIRIS users receive credentials from different issuers and use ZKPs to prove predicates $\phi(\vec{m}) = m_1 \geq 18$ based on the attributes in their set of credentials, allowing flexibility and dynamic verification scenarios without interacting with an issuer each time. 
     
@@ -48,7 +51,7 @@ SSI requires unlinkability, Sybil resistance, and efficiency. Approaches include
 Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign identity (SSI) by combining efficiency, expressiveness, and security in a multi-issuer setting. Built on the Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) from Chapter~\ref{chap3} and the Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}, T-SIRIS outperforms existing systems like CanDID~\cite{maram2021candid} and S3ID~\cite{rabaninejad_attribute-based_2024}. Below, we outline our contributions, aligning them with S3ID’s claims to highlight T-SIRIS’s improvements.
 
 \begin{enumerate}
-    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike CanDID’s MPC-based deduplication, CRBN is pairing-free and $5\times$ faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
+    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and many times faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
     
     \item \textbf{Expressive Predicate Proofs:} T-SIRIS supports complex predicates (e.g., $\phi(\vec{m}) = m_1 \geq 18 \wedge m_2 \in S$) via MIMC-ABC and Schnorr-based zero-knowledge proofs (ZKPs). Unlike S3ID’s Groth-Sahai proofs, which limit expressiveness, T-SIRIS enables range proofs and set membership with sublinear complexity, enhancing flexibility for SSI applications (see Chapter~\ref{chap6}).
     
@@ -59,17 +62,19 @@ Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign 
 
 \textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency (CRBN vs. tACT) and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(k + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
 
+
 \begin{table}[ht]
 \centering
 \caption{Comparison of T-SIRIS with prior SSI systems.}
 \label{tab:comparison-chap5}
 \begin{tabular}{l|cccccc}
 \toprule
-\textbf{System} & \textbf{Sybil Resist.} & \textbf{Multi-Issuer} & \textbf{Non-Interact.}$^{\dagger}$ & \textbf{Non-Transfer.}$^{\ddagger}$ & \textbf{Complex Pred.}$^{\S}$ & \textbf{M.I. Anon.}$^{\P}$ \\
+\textbf{System} & \textbf{Sybil Resist.} & \textbf{Threshold} & \textbf{Non-Interact.}$^{\dagger}$ & \textbf{Non-Transfer.}$^{\ddagger}$ & \textbf{Complex Pred.}$^{\S}$ & \textbf{M.I. Anon.}$^{\P}$ \\
 \midrule
 CanDID~\cite{maram2021candid} & \ding{51}$^{\text{a}}$ & \ding{51} & \ding{55} & \ding{55} & \ding{55} & \ding{55} \\
 SyRA~\cite{crites_syra_2024} & \ding{51} & \ding{55} & \ding{51} & \ding{55} & \ding{55} & \ding{55} \\
 S3ID~\cite{rabaninejad_attribute-based_2024} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{55} \\
+Coconut~\cite{sonnino_coconut_2020} & \ding{55} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
 T-SIRIS (Ours) & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} \\
 \bottomrule
 \end{tabular}
@@ -80,10 +85,9 @@ $^{\ddagger}$ Credentials bound to the true owner (Section~\ref{sec:construction
 $^{\S}$ Support for complex predicates, e.g., range proofs (Section~\ref{sec:proofs}). \\
 $^{\P}$ Anonymity against malicious issuers (Section~\ref{sec:security}). \\
 $^{\text{a}}$ Pseudonymous, not fully anonymous. \\
-\textit{Note:} We compare with CanDID for its SSI prominence, SyRA for its VRF-based Sybil resistance, and S3ID for its threshold similarity.
+\textit{Note:} We compare with CanDID for its SSI prominence, SyRA for its VRF-based Sybil resistance, S3ID for its threshold similarity, and Coconut for its threshold issuance baseline.
 \end{flushleft}
 \end{table}
-
 
 
 
@@ -105,15 +109,13 @@ $^{\text{a}}$ Pseudonymous, not fully anonymous. \\
 \section{Threshold Rerandomizable Signature for ABCs}
 \label{sec:threshold-construction}
 
-To distribute trust among multiple issuers, we adopt the threshold PS signature scheme from \cite{tomescu2022utt} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020}. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
+We adopt the threshold PS signature scheme from \cite{tomescu2022utt} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
 
 
 \subsection{Overview}
-We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold, reflecting realistic collusion scenarios in decentralized settings. The adversary cannot break the hard problems our schemes are built upon, and network conditions support standard threshold protocols.
+We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold, reflecting realistic collusion scenarios in decentralized settings. The adversary cannot break the hard problems our schemes are built upon, and network conditions support standard threshold protocols. Similar to Coconut’s threshold issuance~\cite{sonnino_coconut_2020}, our threshold PS signature scheme distributes trust among $n$ issuers using Shamir secret sharing. However, we extend this foundation by integrating nullifiers from Chapter~\ref{chap4}, enabling sybil resistance—a critical feature for identity systems that Coconut does not address.
 
-
-Importantly, this threshold construction distributed trust among multiple issuers while preserving the core properties of our underlying building block PS signature scheme - unforgeability and rerandomizability. Additionally, the end-signature algebraic structure is the same, and therefore, the verification algorithm and proof system compatibility are the same. 
-
+Importantly, this threshold construction distributed trust among multiple issuers while preserving the core properties of our underlying building block PS signature scheme - unforgeability and rerandomizability. Additionally, the end-signature algebraic structure is the same, and therefore, the verification algorithm and proof system compatibility are the same.
 \subsection{Definition}
 
 \begin{definition}[PS Threshold Signatures over Pedersen Commitments]
@@ -125,7 +127,7 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
     
     \item $\mathsf{ShareVer}(\mathsf{ck}, \mathsf{vk}_i, (\mathsf{cm}_k, \pi_k^{\mathsf{zkpok}})_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ Takes party $i$'s verification key $\mathsf{vk}_i$, commitments with proofs, and signature share $[\sigma^*]_i$. Outputs accept ($1$) or reject ($0$).
     
-    \item $\mathsf{Aggregate}(\mathsf{ck}, ([\sigma^*]_i)_{i \in S}, (r_k)_{k \in [\ell]}) \to \sigma:$ Takes signature shares from subset $S$ of parties and commitment randomness values. Outputs aggregated signature $\sigma$.
+    \item $\mathsf{Aggregate}(\mathsf{ck}, \{[\sigma^*]_i\}_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$ Takes signature shares from subset $S$ of parties and commitment randomness values. Outputs aggregated signature $\sigma$.
 
     \item $\mathsf{Rerand}(\mathsf{vk}, \sigma, \Delta_r, \Delta_u) \rightarrow \sigma'$: Creates a rerandomized signature $\sigma'$ from signature $\sigma$ using randomization values $\Delta_r, \Delta_u$.
     
@@ -133,8 +135,6 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
     
 \end{itemize}
 \end{definition}
-
-\subsection{SAM WRITE THE SECURITY DEFINITIONS - UNF, Threshold, }
 
 
 
@@ -202,35 +202,19 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
 
 \end{itemize}
 
-\subsection{Security Properties}
+\subsubsection{Security Properties}
 
-The threshold PS signature scheme preserves the security properties of the underlying PS signature scheme while distributing trust across multiple parties.
+The threshold PS signature scheme preserves the security of the underlying PS signature scheme while distributing trust across multiple parties.
 
-\begin{theorem}[Threshold Security]
-The threshold PS signature scheme is secure against adversaries corrupting up to $t-1$ signers, assuming the hardness of the Discrete Logarithm (DL) problem and the unforgeability of the underlying PS signature scheme.
+\begin{theorem}[Threshold Unforgeability]
+The scheme is unforgeable against adversaries corrupting up to $t-1$ signers, assuming the hardness of the Discrete Logarithm (DL) problem and the unforgeability of the PS signature scheme.
 \end{theorem}
 
 \begin{theorem}[Rerandomizability]
-Signatures produced by the threshold PS scheme can be rerandomized to prevent linking, while preserving verifiability. The distribution of rerandomized signatures is computationally indistinguishable from freshly generated signatures on the same message.
+Signatures can be rerandomized to prevent linking, with the distribution of rerandomized signatures computationally indistinguishable from fresh signatures on the same message.
 \end{theorem}
 
-We omit formal proofs of these properties as they follow directly from the security of Shamir's secret sharing and the properties of the PS signature scheme established in Chapter~\ref{chap2}. The threshold construction ensures that no coalition of fewer than $t$ parties can forge valid signatures, while any set of at least $t+1$ honest parties can collaboratively issue signatures.
-
-\subsection{Application to Identity Systems}
-
-This threshold PS signature scheme forms the cryptographic foundation of our T-SIRIS identity system described in the next section. By distributing the signing authority across multiple issuers, we achieve:
-
-\begin{itemize}
-    \item \textbf{Distributed Trust}: No single issuer has complete control over credential generation
-    \item \textbf{Robustness}: The system remains operational even if some issuers become unavailable
-    \item \textbf{Integrity}: Preventing compromised issuers from unilaterally issuing credentials
-\end{itemize}
-
-Importantly, the final aggregated signature is structurally identical to a standard PS signature, allowing us to leverage all the zero-knowledge proof techniques and optimizations developed in Chapter~\ref{chap2} without modification. This enables seamless integration with our MIMC-ABC and nullifier constructions to create a comprehensive privacy-preserving identity framework.
-
-
-
-
+Formal proofs are omitted, as they follow from Shamir’s secret sharing security and the PS signature properties in Chapter~\ref{chap2}.
 
 
 
@@ -239,14 +223,7 @@ Importantly, the final aggregated signature is structurally identical to a stand
 
 \section{T-SIRIS: Threshold Sybil-Resistant Identity System}
 \label{sec:tsiris}
-
-% Overview
-
-Building on our threshold PS signature scheme, we now present T-SIRIS, a complete threshold sybil-resistant identity system. T-SIRIS integrates the threshold signature with credential relationship binding nullifiers (from Chapter~\ref{chap4}) and expressive zero-knowledge proofs (from Chapter~\ref{chap2}) to create a privacy-preserving identity framework that prevents sybil attacks while maintaining anonymity.
-
-% Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends the single-issuer Attribute-Based Anonymous Credential (ABC) framework from Chapter 2 to support credentials from multiple, mutually distrusting issuers, bound to a single identity. The ABC system (Section 2.4) uses a variant of rerandomizable Pointcheval-Sanders signatures~\cite{sako_short_2016} and position-binding Pedersen commitments~\cite{tomescu2022utt} to enable expressive predicate proofs over attributes. MIMC-ABC builds on this by introducing multi-issuer key generation and a cryptographic identity binding mechanism, ensuring all credentials verifiably belong to the same user without revealing their identity.
-
-T-SIRIS integrates four key components:
+Building on our threshold PS signature scheme, we now present T-SIRIS, a complete threshold sybil-resistant identity system. T-SIRIS integrates threshold issuance, similar to Coconut~\cite{sonnino_coconut_2020}, with credential relationship binding nullifiers (Chapter~\ref{chap4}) to prevent sybil attacks (formalized in Definition [Sybil Resistance]), distinguishing it as a robust SSI solution. T-SIRIS integrates four key components:
 \begin{itemize}
     \item \textbf{Threshold Key Generation}: Uses distributed key generation (DKG) with Shamir secret sharing for decentralized trust across $n$ issuers.
     \item \textbf{Threshold Issuance}: Extends MIMC-ABC (Chapter~\ref{chap3}) to issue credentials with $t$ of $n$ issuers, ensuring robustness.
@@ -255,7 +232,6 @@ T-SIRIS integrates four key components:
 \end{itemize}
 
 
-\subsubsection{Threat Model}
 We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold. These malicious issuers may:
 \begin{itemize}
     \item Deviate from the protocol specification
@@ -267,7 +243,6 @@ We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is th
 We also assume users may attempt sybil attacks by requesting multiple credentials for the same context. However, the adversary cannot break the underlying cryptographic assumptions (DL and $q$-DDHI).
 
 
-% 
 
 \subsection{Definition}
 
@@ -284,25 +259,36 @@ A T-SIRIS system consists of the following probabilistic polynomial-time (PPT) a
     \item $(\mathsf{ObtainMaster}(\attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{IssueMaster}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]})) \to (\credm, \bot)$: an interactive protocol between a user running $\mathsf{ObtainMaster}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{IssueMaster}$. $\mathsf{ObtainMaster}$ takes in the user's attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueMaster}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$. Outputs $\credm$ to the user and $\bot$ to itself.
 
     \item $(\mathsf{ObtainContext}(\credm, \attrs, \ck, \{\mathsf{vk}_i\}_{i \in S}), \mathsf{IssueContext}(\{(\mathsf{sk}_i)\}_{i \in S}, \{\cm_k, \pi_k\}_{k \in [\ell]}, \aux)) \to (\credc, \bot)$: an interactive protocol between a user running $\mathsf{ObtainContext}$ from a subset $S$ of issuers where $|S| \geq t$ with each issuer running $\mathsf{IssueContext}$.
-    $\mathsf{ObtainContext}$ takes in the user's master credential $\credm$, new attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueContext}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$ and auxiliary information $\aux$ e.g. outputs $\nullifier, \pi_{\nullifier},\mathcal{T}$ from $\mathsf{Dedup}$ and $\pi_{\mathsf{verify}}$ for $\credm$. Outputs $\credc$ to the user and $\bot$ to itself.
+    $\mathsf{ObtainContext}$ takes in the user's master credential $\credm$, new attributes $\attrs$, commitment key $\ck$ and verification key shares for at least $S$ nodes $\{\vk_i\}_{i \in S}$. $\mathsf{IssueContext}$ is run at least $|S|$ times, takes input the signers shared secret key $\sk_i$, commitment and proof pair for each message  $\{\cm_k, \pi_k\}_{k \in [\ell]}$ and auxiliary information $\aux$ e.g. outputs $\nullifier, \pi_{\nullifier},\mathcal{T}$ from $\mathsf{Dedup}$ and $\credm, \pi_{\mathsf{verify}}$ from $\RSVer(\credm, \vk)$ for $\credm$. Outputs $\credc$ to the user and $\bot$ to itself.
 
     \item $(\mathsf{Show}(\mathsf{cred}, \usk, \phi), \mathsf{Verify}(\mathsf{cred}', \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a credential $\cred = (\sigma, \cm, \usk)$ and predicate for verification $\phi$. $\mathsf{Verify}$ takes input the rerandomized credential $\cred'$ and proof $\pi$ it satisfies $\phi$. The verifier outputs 1 if valid, 0 otherwise.
 \end{itemize}
 \end{definition}
 
 
-\subsection{Security Properties}
+\begin{definition}[Threshold Unforgeability]
+Threshold Unforgeability captures that with $t-1$ corrupt issuers, an adversary cannot forge valid credentials. We define the following experiment:
 
-T-SIRIS inherits the core security properties from the ABC system—correctness, unforgeability, and anonymity (Section 2.5)—and adds identity binding for the multi-issuer setting:
+$\textbf{Experiment}~\mathsf{Exp}^{\mathsf{unf}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda):$
+\begin{enumerate}
+    \item $\mathsf{pp} \leftarrow \mathsf{Setup}(1^\lambda)$
+    \item $(\mathsf{ck}, \mathsf{vk}, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i\in[n]}) \leftarrow \mathsf{KeyGen}(\mathsf{pp}, \ell, t, n)$
+    \item Let $C$ be a set of corrupted issuers where $|C| \leq t-1$
+    \item $\mathcal{A}$ is given $\{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i\in C}, \{\mathsf{vk}_i\}_{i\in[n]\setminus C}$
+    \item $\mathcal{A}$ has access to credential issuance oracles $\mathcal{O}_{\text{obtain}},~\mathcal{O}_{\text{show}}$
+    \item $\mathcal{A}$ outputs $(\mathsf{cred}', \phi, \pi)$
+    \item The experiment returns 1 if:
+    \begin{itemize}
+        \item $\mathsf{Verify}(\mathsf{cred}', \phi, \pi) = 1$
+        \item $\mathsf{cred}'$ was not legitimately issued to a corrupted user
+        \item $\phi(\vec{m}) = 0$, where $\vec{m}$ are the attributes in $\mathsf{cred}'$
+    \end{itemize}
+\end{enumerate}
 
-\begin{itemize}
-    \item \textbf{Correctness}: An honest user with valid credentials from multiple issuers can generate a proof for any predicate $\phi$ their attributes satisfy, including same-identity constraints, which verifies with probability $1 - \negl(\lambda)$.
-    
-    \item \textbf{Unforgeability}: No PPT adversary can produce a valid proof for a predicate $\phi$ they cannot legitimately satisfy, including forging credentials or mixing credentials from different identities, except with negligible probability.
-    
-    \item \textbf{Anonymity}: Proofs reveal only that $\phi$ is satisfied, not the user’s identity or credential details, even if all issuers and the verifier collude.
+A T-SIRIS scheme satisfies threshold unforgeability if for any PPT adversary $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
 
-\end{itemize}
+$\Pr[\mathsf{Exp}^{\mathsf{unf}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda) = 1] \leq \mathsf{negl}(\lambda)$
+\end{definition}
 
 
 
@@ -311,7 +297,107 @@ T-SIRIS inherits the core security properties from the ABC system—correctness,
 
 
 
-\subsubsection{System Overview}
+\subsection{Sybil Resistance}
+
+We formalize sybil resistance, capturing that no user can obtain multiple credentials for the same context, even when interacting with multiple (potentially corrupted) subsets of issuers:
+
+\begin{definition}[Sybil Resistance]
+We formalize sybil resistance as a user unable to obtain multiple credentials for the same context even when interacting with multiple (potentially corrupt) subset of issuers:
+
+$\textbf{Experiment}~\mathsf{Exp}^{\mathsf{sybil}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda):$
+\begin{enumerate}
+    \item $\mathsf{pp} \leftarrow \mathsf{Setup}(1^\lambda)$
+    \item $(\mathsf{ck}, \mathsf{vk}, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i\in[n]}) \leftarrow \mathsf{KeyGen}(\mathsf{pp}, \ell, t, n)$
+    \item Let $C$ be a set of corrupted issuers where $|C| \leq t-1$
+    \item $\mathcal{A}$ is given $\{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i\in C}, \{\mathsf{vk}_i\}_{i\in[n]\setminus C}$
+    \item Initialize deduplication table $\mathcal{T} = \emptyset$
+    \item $\mathcal{A}$ interacts with credential issuance oracles
+    \item $\mathcal{A}$ outputs master credential $\mathsf{cred}_{\text{master}}$, context $\mathsf{ctx}$ and two context credentials $(\mathsf{cred}_1, \mathsf{cred}_2)$
+    \item The experiment returns 1 if:
+    \begin{itemize}
+        \item $\mathsf{Verify}(\mathsf{cred}_{\text{master}}, \phi_{\text{master}}, \pi_{\text{master}}) = 1$
+        \item $\mathsf{Verify}(\mathsf{cred}_1, \phi_{\mathsf{ctx}}, \pi_1) = \mathsf{Verify}(\mathsf{cred}_2, \phi_{\mathsf{ctx}}, \pi_2) = 1$
+        \item $\mathsf{cred}_1$ and $\mathsf{cred}_2$ have the same context $\mathsf{ctx}$
+        \item $\mathsf{cred}_1$ and $\mathsf{cred}_2$ were issued using the same $\mathsf{cred}_{\text{master}}$
+        \item $\mathsf{cred}_1 \neq \mathsf{cred}_2$ (i.e., they are distinct credentials)
+    \end{itemize}
+\end{enumerate}
+
+A T-SIRIS scheme satisfies sybil resistance if for any PPT adversary $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
+
+$\Pr[\mathsf{Exp}^{\mathsf{sybil}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda) = 1] \leq \mathsf{negl}(\lambda)$
+\end{definition}
+
+
+
+\subsection{Threshold Anonymity}
+
+We formalize threshold anonymity, capturing that credentials remain unlinkable and reveal nothing beyond what's explicitly proven, even when up to $t-1$ issuers are corrupted:
+
+\begin{definition}[Threshold Anonymity]
+We define the following experiment:
+
+$\textbf{Experiment}~\mathsf{Exp}^{\mathsf{anon-b}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda):$
+\begin{enumerate}
+    \item $\mathsf{pp} \leftarrow \mathsf{Setup}(1^\lambda)$
+    \item $(\mathsf{ck}, \mathsf{vk}, \{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i\in[n]}) \leftarrow \mathsf{KeyGen}(\mathsf{pp}, \ell, t, n)$
+    \item Let $C$ be a set of corrupted issuers where $|C| \leq t-1$
+    \item $\mathcal{A}$ is given $\{(\mathsf{sk}_i, \mathsf{vk}_i)\}_{i\in C}, \{\mathsf{vk}_i\}_{i\in[n]\setminus C}$
+    \item For $i \in \{0,1\}$:
+    \begin{itemize}
+        \item User $i$ obtains a master credential $\mathsf{cred}_{\text{master}}^i$ with attributes $\mathsf{attrs}_i$
+        \item User $i$ obtains a context credential $\mathsf{cred}_{\mathsf{ctx}}^i$ for context $\mathsf{ctx}$
+    \end{itemize}
+    \item $\mathcal{A}$ outputs predicate $\phi$ such that $\phi(\mathsf{attrs}_0) = \phi(\mathsf{attrs}_1) = 1$
+    \item $b \sample \{0,1\}$
+    \item Generate $(\mathsf{cred}', \pi) \leftarrow \mathsf{Show}(\mathsf{cred}_{\mathsf{ctx}}^b, \mathsf{usk}_b, \phi)$
+    \item $b' \leftarrow \mathcal{A}(\mathsf{cred}', \pi)$
+    \item The experiment returns 1 if $b' = b$, otherwise 0
+\end{enumerate}
+
+A T-SIRIS scheme satisfies threshold anonymity if for any PPT adversary $\mathcal{A}$, there exists a negligible function $\mathsf{negl}$ such that:
+
+$\left|\Pr[\mathsf{Exp}^{\mathsf{anon-1}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda) = 1] - \Pr[\mathsf{Exp}^{\mathsf{anon-0}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda) = 1]\right| \leq \mathsf{negl}(\lambda)$
+\end{definition}
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Notes on Security Definitions}
+
+These security definitions capture the unique challenges of the threshold setting:
+
+\begin{enumerate}
+    \item \textbf{Threshold Unforgeability}: Ensures that even with $t-1$ corrupted issuers, an adversary cannot forge credentials or prove false statements about them.
+
+    \item \textbf{Sybil Resistance}: Guarantees that the nullifier-based deduplication mechanism works correctly even when interacting with different subsets of issuers, preventing users from obtaining multiple credentials for the same context.
+
+    \item \textbf{Threshold Anonymity}: Ensures that credential presentations reveal nothing beyond the proven statement, even when up to $t-1$ issuers collude. This is stronger than standard anonymity since it must account for partial issuer corruption.
+\end{enumerate}
+
+The deduplication table $\mathcal{T}$ should be replicated across all issuers or maintained through a consensus protocol.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -321,10 +407,26 @@ T-SIRIS inherits the core security properties from the ABC system—correctness,
 T-SIRIS operates in two credential issuance phases: master credential issuance and context credential issuance. The master credential establishes the user's base identity with a secret key $\k$, while context credentials are bound to this master credential through nullifiers derived from $\k$ and a context $\mathsf{ctx}$. The nullifier mechanism prevents sybil attacks by ensuring users can obtain only one credential per context.
 
 \subsubsection{Detailed Construction}
-% Keep your existing figure and protocol descriptions
-% They look good but could benefit from more explanatory text
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsection{Security Analysis}
+
+
 
 We analyze the security of T-SIRIS in terms of four key properties: unforgeability, sybil resistance, anonymity
 
@@ -352,8 +454,39 @@ We analyze the security of T-SIRIS in terms of four key properties: unforgeabili
 
 
 
+\begin{figure}\label{threshold-construction-ABC}
+    \caption{ABC System}
+    \begin{center}
+    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
+    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
+    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
+    \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}), \; \text{Return } (\osk, \opk) = (\sk, (\vk, \ck))$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
+    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\k_1,\usk) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
+    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
+    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)}$ \\[1em]
+    & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
+    If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
+    \multicolumn{3}{l}{$\k_1 \sample \Z_p, \usk \sample \Z_p\;, \cm_1 = \CMCom([0,0,0,\k_1];\usk)$} \\[1em]
+     & $\xrightarrow{\;\; \pirzero(\cm_1) \;\;}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
+     \multicolumn{3}{r}{$\k_2 \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
+     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
+    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \k_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
+    \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
+    \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
+    $\underline{\mathsf{Show}(\cred)}$ && $\underline{\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)}$ \\[1em]
+    \multicolumn{3}{r}{Send empty access policy $\phi = \bot$} \\[0.5em]
+    \multicolumn{3}{l}{Parse $\cred = (\sigma, \cm, \usk, \opk)$} \\[0.5em]
+    \multicolumn{3}{l}{\quad Sample $\Delta_\usk, \Delta_u \sample \Z_p$} \\[1em]
+    \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \Delta_\usk, \Delta_u)$} \\[1em]
+    \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \Delta_\usk), \; \usk' = \usk + \Delta_\usk$} \\[1em]
+    \multicolumn{3}{l}{\quad Compute $\Pi_\phi$} \\[1em]
+    & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
+    \end{tabular}
+    \end{center}
+\end{figure}
 
-\label{sec:threshold-construction}
 
 \begin{figure}
     \caption{T-ABC System with Master Credential and Nullifier}
