@@ -921,11 +921,11 @@ Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator
 The algorithms are defined as follows
 
 \begin{itemize}
-    \item $\mathsf{VRF.Eval}(sk, x) \to y$: $y = g_3^{1/(sk+x)}$
+    \item $\mathsf{dVRF.Eval}(sk, x) \to y$: $y = g_3^{1/(sk+x)}$
     
-    \item $\mathsf{VRF.Prove}(\cm_1, \cm_2, sk, x, y) \to \pi$: Run protocol ~\ref{pok-committed-inverse-linear-relation}, output $\pi, \cm_y$
+    \item $\mathsf{dVRF.Prove}(\cm_1, \cm_2, sk, x, y) \to \pi$: Run protocol ~\ref{pok-committed-inverse-linear-relation}, output $\pi, \cm_y$
     
-    \item $\mathsf{VRF.Verify}(\cm_1, \cm_2, y, \pi) \to \{0,1\}$: Output 1 if $\pi$ verifies $\cm_1, \cm_2, y$ correctly per the $\Sigma$-protocol \ref{pok-committed-inverse-linear-relation}, else 0.
+    \item $\mathsf{dVRF.Verify}(\cm_1, \cm_2, y, \pi) \to \{0,1\}$: Output 1 if $\pi$ verifies $\cm_1, \cm_2, y$ correctly per the $\Sigma$-protocol \ref{pok-committed-inverse-linear-relation}, else 0.
 \end{itemize}
 
 
@@ -935,7 +935,7 @@ The algorithms are defined as follows
 \begin{theorem}[Correctness]
 The deterministic nullifier VRF is correct: for all $\lambda \in \mathbb{N}$, $\mathsf{pp} \in \mathsf{Setup}(1^\lambda)$, $(\mathsf{sk}, \mathsf{pk}) \in \mathsf{VRF.Gen}(\mathsf{pp})$, $x \in \mathbb{Z}_p$, and $\cm_2 = g_2^{x} g^{r_2}$:
 \[
-\Pr[\mathsf{VRF.Verify}(\cm_1, \cm_2, \mathsf{VRF.Eval}(\mathsf{sk}, x), \mathsf{VRF.Prove}(\cm_1, \cm_2, sk, x, y)) = 1] = 1
+\Pr[\mathsf{dVRF.Verify}(\cm_1, \cm_2, \mathsf{dVRF.Eval}(\mathsf{sk}, x), \mathsf{dVRF.Prove}(\cm_1, \cm_2, sk, x, y)) = 1] = 1
 \]
 \end{theorem}
 
@@ -944,7 +944,7 @@ Correctness follows directly from the completeness of Protocol~\ref{pok-committe
 \end{proof}
 
 \begin{theorem}[Uniqueness]
-Under the binding property of Pedersen commitments and the discrete logarithm assumption, for any $\cm_1$ and $\cm_2$, there exists at most one $y \in \mathbb{G}$ such that $\mathsf{VRF.Verify}(\cm_1, \cm_2, y, \pi) = 1$ for any $\pi$.
+Under the binding property of Pedersen commitments and the discrete logarithm assumption, for any $\cm_1$ and $\cm_2$, there exists at most one $y \in \mathbb{G}$ such that $\mathsf{dVRF.Verify}(\cm_1, \cm_2, y, \pi) = 1$ for any $\pi$.
 \end{theorem}
 
 \begin{proof}[Sketch]
@@ -1002,11 +1002,11 @@ The advantage is bounded by the $q$-DDHI advantage plus the negligible HVZK simu
 Here, the output is a commitment $\cm_y = g_3^{1/(sk + x)} g^{r_3}$, randomized per presentation, with an auxiliary commitment $\cm_4$ for verification.
 
 \begin{itemize}
-    \item $\mathsf{VRF.Eval}(sk, x) \to \cm_y$: Sample $r_3 \sample \Z_p^*$, compute $\cm_y = g_3^{1/(sk+x)}g^{r_3}$, sample $r_4 \sample \Z_p^*$ compute $\cm_4 = g_3g^{r_3 \cdot (sk+x) + r_4}$ return $\cm_y, \cm_4$
+    \item $\mathsf{pVRF.Eval}(sk, x) \to \cm_y$: Sample $r_3 \sample \Z_p^*$, compute $\cm_y = g_3^{1/(sk+x)}g^{r_3}$, sample $r_4 \sample \Z_p^*$ compute $\cm_4 = g_3g^{r_3 \cdot (sk+x) + r_4}$ return $\cm_y, \cm_4$
     
-    \item $\mathsf{VRF.Prove}(\cm_1, \cm_2, \cm_y, \cm_4, sk, x, r_1, \ldots, r_4) \to \pi$: Run protocol ~\ref{pok-committed-inverse-linear-relation}, output $\pi$
+    \item $\mathsf{pVRF.Prove}(\cm_1, \cm_2, \cm_y, \cm_4, sk, x, r_1, \ldots, r_4) \to \pi$: Run protocol ~\ref{pok-committed-inverse-linear-relation}, output $\pi$
     
-    \item $\mathsf{VRF.Verify}(\cm_1, \cm_2, \cm_y, \cm_4, \pi) \to \{0,1\}$: Output 1 if $\pi$ verifies $\cm_1, \cm_2, \cm_y, \cm_4$ correctly per the $\Sigma$-protocol \ref{prot:committed-nullifier}, else 0.
+    \item $\mathsf{pVRF.Verify}(\cm_1, \cm_2, \cm_y, \cm_4, \pi) \to \{0,1\}$: Output 1 if $\pi$ verifies $\cm_1, \cm_2, \cm_y, \cm_4$ correctly per the $\Sigma$-protocol \ref{prot:committed-nullifier}, else 0.
 \end{itemize}
 
 
