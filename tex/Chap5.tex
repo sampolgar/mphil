@@ -21,18 +21,18 @@ CanDID~\cite{maram2021candid} pioneered Sybil-resistant identity with legacy cre
 CanDID deduplicates a user attribute, e.g. social security number using MPC, storing a unique value in a table $T_{\text{Dedup}}$. Users create a master credential from legacy data via oracles, then request context-specific credentials. Its limitations include:
 
 \begin{itemize}
-    \item \textbf{Deduplication:} MPC deduplication is slow and reveals a pseudonym to issuers, enabling pseudonym linking. T-SIRIS uses CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. This is anonymous and many times faster than tACT~\cite{rabaninejad_attribute-based_2024} (see Section~\ref{sec:perf}).
+    \item \textbf{Deduplication:} MPC deduplication is slow and reveals a pseudonym to issuers, enabling pseudonym linking. T-SIRIS uses CRBN, computing a nullifier $y = g^{1/(s + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. This is anonymous and many times faster than tACT~\cite{rabaninejad_attribute-based_2024} (see Section~\ref{sec:perf}).
 
-    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and $5\times$ faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
+    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(s + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and $5\times$ faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
     
     \item \textbf{Context Credential Issuance:} CanDID requires issuer interaction for each context credential, e.g., ``over 18.’’ T-SIRIS users receive credentials from different issuers and use ZKPs to prove predicates $\phi(\vec{m}) = m_1 \geq 18$ based on the attributes in their set of credentials, allowing flexibility and dynamic verification scenarios without interacting with an issuer each time. 
     
-    \item \textbf{Sybil Resistance:} CanDID tracks public keys, risking linkability. T-SIRIS embeds $k$ in all credentials, using CRBN with ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(k + \text{ctx})}\}$ for unlinkable Sybil resistance.
+    \item \textbf{Sybil Resistance:} CanDID tracks public keys, risking linkability. T-SIRIS embeds $s$ in all credentials, using CRBN with ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(s + \text{ctx})}\}$ for unlinkable Sybil resistance.
 \end{itemize}
 
 Both systems use a master-context credential hierarchy, but T-SIRIS allows different issuers for context credentials and supports flexible ZKP-based predicates.
 
-\subsubsection*{S3ID/tACT} \cite{rabaninejad_attribute-based_2024} uses tACT, based on Shacham-Waters signatures, for Sybil resistance and threshold issuance. Both T-SIRIS and S3ID embed a user key $k$ in credentials. T-SIRIS improves in:
+\subsubsection*{S3ID/tACT} \cite{rabaninejad_attribute-based_2024} uses tACT, based on Shacham-Waters signatures, for Sybil resistance and threshold issuance. Both T-SIRIS and S3ID embed a user key $s$ in credentials. T-SIRIS improves in:
 \begin{itemize}
     \item \textbf{Efficiency:} CRBN and Schnorr ZKPs avoid pairings, offering up to $44.1\times$ faster verification for $n=64$ attributes (see Section~\ref{sec:perf}).
     \item \textbf{Predicate Support:} S3ID’s Groth-Sahai proofs limit predicate expressiveness. T-SIRIS’s MIMC-ABC supports complex computation over group exponents e.g. Schnorr proofs and Range Proofs (see Chapter~\ref{chap:proofs}).
@@ -51,16 +51,16 @@ SSI requires unlinkability, Sybil resistance, and efficiency. Approaches include
 Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign identity (SSI) by combining efficiency, expressiveness, and security in a multi-issuer setting. Built on the Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) from Chapter~\ref{chap3} and the Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}, T-SIRIS outperforms existing systems like CanDID~\cite{maram2021candid} and S3ID~\cite{rabaninejad_attribute-based_2024}. Below, we outline our contributions, aligning them with S3ID’s claims to highlight T-SIRIS’s improvements.
 
 \begin{enumerate}
-    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(k + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and many times faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
+    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(s + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and many times faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
     
     \item \textbf{Expressive Predicate Proofs:} T-SIRIS supports complex predicates (e.g., $\phi(\vec{m}) = m_1 \geq 18 \wedge m_2 \in S$) via MIMC-ABC and Schnorr-based zero-knowledge proofs (ZKPs). Unlike S3ID’s Groth-Sahai proofs, which limit expressiveness, T-SIRIS enables range proofs and set membership with sublinear complexity, enhancing flexibility for SSI applications (see Chapter~\ref{chap6}).
     
     \item \textbf{Provably Secure Multi-issuer SSI:} T-SIRIS provides formal security definitions and proofs for unforgeability, Sybil resistance, strong unlinkability, and identity binding, secure against $t-1$ malicious issuers in a $t$-out-of-$N$ threshold model. Our proofs, based on the $q$-DDHI assumption for CRBN and SDLP for MIMC-ABC, extend S3ID’s tACT-based security to multi-issuer settings with identity binding (see Section~\ref{sec:security}).
     
-    \item \textbf{Non-transferability and Identity Binding:} T-SIRIS embeds a user key $k$ in all credentials, ensuring only the owner can use them, similar to S3ID. Additionally, MIMC-ABC binds credentials from multiple issuers to a single identifier $\text{id} \in \mathbb{Z}_p$, enabling proofs of shared identity without revealing it. This strengthens S3ID’s non-transferability by supporting multi-issuer scenarios (see Section~\ref{sec:construction}).
+    \item \textbf{Non-transferability and Identity Binding:} T-SIRIS embeds a user key $s$ in all credentials, ensuring only the owner can use them, similar to S3ID. Additionally, MIMC-ABC binds credentials from multiple issuers to a single identifier $\text{id} \in \mathbb{Z}_p$, enabling proofs of shared identity without revealing it. This strengthens S3ID’s non-transferability by supporting multi-issuer scenarios (see Section~\ref{sec:construction}).
 \end{enumerate}
 
-\textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency (CRBN vs. tACT) and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(k + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
+\textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency (CRBN vs. tACT) and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(s + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
 
 
 \begin{table}[ht]
@@ -164,21 +164,21 @@ The protocol outputs $([x]_i, y)$ for each $P_i \in QUAL$, where $x = \sum_{j \i
 A $(t,n)$-threshold DKG scheme consists of the following probabilistic polynomial-time algorithms:
 
 \begin{itemize} 
-\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{pp}, \mathsf{vk}, \{[k_2]_i, \mathsf{vk}_i\}_{i \in [n]}):$ On input security parameter $\lambda$, threshold parameter $t < n$, and number of parties $n$, outputs public parameters $\mathsf{pp}$, a verification key $\mathsf{vk} = g^{k_2}$, and for each party $i$, a share $[k_2]_i$ of $k_2$ along with an individual verification key $\mathsf{vk}_i$.
+\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{pp}, \mathsf{vk}, \{[s_2]_i, \mathsf{vk}_i\}_{i \in [n]}):$ On input security parameter $\lambda$, threshold parameter $t < n$, and number of parties $n$, outputs public parameters $\mathsf{pp}$, a verification key $\mathsf{vk} = g^{s_2}$, and for each party $i$, a share $[s_2]_i$ of $s_2$ along with an individual verification key $\mathsf{vk}_i$.
 
-\item $\mathsf{ShareProve}(\mathsf{pp}, [k_2]_i) \to \pi_i:$ Generates a proof $\pi_i$ that the share $[k_2]_i$ is valid.
+\item $\mathsf{ShareProve}(\mathsf{pp}, [s_2]_i) \to \pi_i:$ Generates a proof $\pi_i$ that the share $[s_2]_i$ is valid.
 
-\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k_2]_i, \pi_i) \to \{0,1\}:$ Verifies that a share $[k_2]_i$ is valid with respect to verification key $\mathsf{vk}_i$ using proof $\pi_i$.
+\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [s_2]_i, \pi_i) \to \{0,1\}:$ Verifies that a share $[s_2]_i$ is valid with respect to verification key $\mathsf{vk}_i$ using proof $\pi_i$.
 
-\item $\mathsf{Reconstruct}([k_2]_{i_1}, \dots, [k_2]_{i_{t+1}}) \to k_2:$ Takes $t+1$ distinct valid shares and reconstructs the secret $k_2$.
+\item $\mathsf{Reconstruct}([s_2]_{i_1}, \dots, [s_2]_{i_{t+1}}) \to s_2:$ Takes $t+1$ distinct valid shares and reconstructs the secret $s_2$.
 \end{itemize}
 
 The scheme satisfies the following security properties:
 
 \begin{itemize}
-\item \textbf{Correctness:} For any $(\mathsf{pp}, \mathsf{vk}, \{[k_2]_i, \mathsf{vk}_i\}_{i \in [n]}) \leftarrow \mathsf{DistKeyGen}(1^{\lambda}, t, n)$, any subset $S \subset [n]$ of size $|S| = t+1$, and $k_2 \leftarrow \mathsf{Reconstruct}(\{[k_2]_i\}_{i \in S})$, it holds that $\mathsf{vk} = g^{k_2}$.
+\item \textbf{Correctness:} For any $(\mathsf{pp}, \mathsf{vk}, \{[s_2]_i, \mathsf{vk}_i\}_{i \in [n]}) \leftarrow \mathsf{DistKeyGen}(1^{\lambda}, t, n)$, any subset $S \subset [n]$ of size $|S| = t+1$, and $s_2 \leftarrow \mathsf{Reconstruct}(\{[s_2]_i\}_{i \in S})$, it holds that $\mathsf{vk} = g^{s_2}$.
 
-\item \textbf{Secrecy:} Any adversary corrupting up to $t$ parties learns no information about $k_2$ beyond what can be derived from the verification key $\mathsf{vk}$.
+\item \textbf{Secrecy:} Any adversary corrupting up to $t$ parties learns no information about $s_2$ beyond what can be derived from the verification key $\mathsf{vk}$.
 
 \item \textbf{Robustness:} Even if up to $t$ parties behave maliciously, the honest parties can still successfully generate and verify shares.
 \end{itemize}
@@ -190,9 +190,9 @@ The scheme satisfies the following security properties:
 A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
 \begin{itemize}
 \item $\mathsf{Setup}(1^{\lambda}) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp} = (G, p, g)$ where $G$ is a cyclic group of prime order $p$ with generator $g$.
-\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: Generates a verification key $\mathsf{vk} = g^k$ and for each party $i$, a share $[k]_i$ of the secret key $k$ along with verification key $\mathsf{vk}_i = g^{[k]_i}$.
+\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: Generates a verification key $\mathsf{vk} = g^k$ and for each party $i$, a share $[k]_i$ of the secret key $s$ along with verification key $\mathsf{vk}_i = g^{[k]_i}$.
 \item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k]_i) \to \{0,1\}$: Verifies that share $[k]_i$ is consistent with verification key $\mathsf{vk}_i$.
-\item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: Reconstructs the secret key $k$ from $t+1$ valid shares.
+\item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: Reconstructs the secret key $s$ from $t+1$ valid shares.
 \end{itemize}
 \end{definition}
 
@@ -207,11 +207,11 @@ A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
 \item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: 
   Executes the distributed key generation process:
   \begin{enumerate}
-    \item All $n$ parties jointly generate a secret key $k$ such that any subset of $t+1$ parties can reconstruct $k$.
+    \item All $n$ parties jointly generate a secret key $s$ such that any subset of $t+1$ parties can reconstruct $s$.
     \item Outputs the global verification key $\mathsf{vk} = g^k$.
     \item Each party $i$ receives:
       \begin{itemize}
-        \item A share $[k]_i$ of the secret key $k$, and
+        \item A share $[k]_i$ of the secret key $s$, and
         \item A verification key $\mathsf{vk}_i = g^{[k]_i}$ to verify its share.
       \end{itemize}
   \end{enumerate}
@@ -224,10 +224,10 @@ A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
   \end{itemize}
 
 \item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: 
-  Reconstructs the secret key $k$ using a subset of $t+1$ valid shares $\{[k]_{i_j}\}_{j=1}^{t+1}$. 
+  Reconstructs the secret key $s$ using a subset of $t+1$ valid shares $\{[k]_{i_j}\}_{j=1}^{t+1}$. 
   \begin{itemize}
-    \item Applies Lagrange interpolation over the valid shares to compute $k$.
-    \item Outputs the reconstructed secret key $k$.
+    \item Applies Lagrange interpolation over the valid shares to compute $s$.
+    \item Outputs the reconstructed secret key $s$.
   \end{itemize}
 \end{itemize}
 \end{definition}
@@ -236,7 +236,7 @@ A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
 The Simple DKG construction satisfies the following properties:
 \begin{itemize}
 \item \textbf{Correctness}: For any execution of $\mathsf{DistKeyGen}$ producing shares $\{[k]_i\}_{i \in [n]}$, any subset $S \subset [n]$ of size $|S| = t+1$, and $k' \leftarrow \mathsf{Reconstruct}(\{[k]_i\}_{i \in S})$, it holds that $g^{k'} = \mathsf{vk}$.
-\item \textbf{Secrecy}: Any adversary controlling at most $t$ parties learns no information about the secret key $k$ beyond what can be derived from the public verification keys.
+\item \textbf{Secrecy}: Any adversary controlling at most $t$ parties learns no information about the secret key $s$ beyond what can be derived from the public verification keys.
 \item \textbf{Binding}: It is computationally infeasible for an adversary to produce a valid share $[k]_i$ that is inconsistent with the verification key $\mathsf{vk}_i$.
 \end{itemize}
 \end{theorem}
@@ -289,7 +289,7 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
     \item $\mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell) \to (\ck, \vk, (\mathsf{sk}_i, \mathsf{vk}_i)_{i \in [n]}):$ Takes input the security parameter, $t$ the corruption threshold, $n$ is number of nodes, $\ell$ is the credential message length. Outputs $\ck, \vk$ the commitment and verification keys generated with the secrets and $\sk_i, \vk_i$ the shared keys to distribute to $n$ nodes. let $\mathcal{X}$ and $\psi_k $ be $t$ degree polynomials:
     \begin{itemize}
         \item For the shared $x$ values: $\mathcal{X} \sample \Z_p[X], x \gets \mathcal{X}(0)$, $\{[x]_i \gets \mathcal{X}(i)\}_{i\in [n]}$
-        \item For the $k$ shared $y$ values: $\{\psi_k \sample \Z_p[X], y_k \gets \psi_k(0)\}_{k \in [\ell]}$, $\{[y_k]_i \gets \psi_k(i)\}_{k \in [\ell], i \in [n]}$
+        \item For the $s$ shared $y$ values: $\{\psi_k \sample \Z_p[X], y_k \gets \psi_k(0)\}_{k \in [\ell]}$, $\{[y_k]_i \gets \psi_k(i)\}_{k \in [\ell], i \in [n]}$
         \item using the secret, non-shared values, trusted setup party computes $\vk \gets \tilde{g}^x, \ck \gets \CMSetup(1^{\lambda}, \ell, \vec{y})$ and parses $\ck$ as $(g, \vec{g}, \tilde{g}, \vec{\tilde{g}})$. Note that $g_k = g^{y_k}, \tilde{g}_k = \tilde{g}^{y_k}$
         \item computes shared secret values $\{\sk_i \gets ([x]_i, ([y_k]_i))_{k\in[\ell]}\}_{i \in [n]}, \{\vk \gets (\tilde{g}^{[x]_i}, (\tilde{g}^{[y_k]_i})_{k\in[\ell]})\}_{i \in [n]}$
         \item $\mathsf{Return } $ $ \ck, \vk, \{\sk_i, \vk_i\}_{i \in [n]}$
@@ -552,23 +552,23 @@ The Credential $\cred$ is a rerandomizable threshold signature over a commitment
 
 \subsubsection*{Registration}
 Since we are optimizing for a private, accountable system, we make a small trade-off in privacy during Master Credential generation to satisfy the efficiency and private accountability requirements of an organization or government deploying this system today. We note that we can swap our methods for complete privacy using credential oracles like \cite{zhang_deco_2020, celi_distefano_2025, baldimtsi_zklogin_2024, ritzdorf_tls-n_2018} with a reduction in security and accountability.
-During Master Credential registration, we enforce the user's Master Credential to be issued in a semi-trusted process where the user verifies their identity to the registration authority during its issuance. This enables Sybil resistance on the user identifier, stronger security for their VRF key $k$ discussed below \ref{t-siris:vrf-key-k-gen}, which is used to attach other credentials to it. The Registration Authority keeps track of user identities and can request their revocation from the Accountability Authority with techniques from \cite{damgard_balancing_2020}. At the end of registration, the user has a master credential $\credm = (\sigmam, \cmm, \vkm)$, including a rerandomizable, threshold-signature over commitment.
+During Master Credential registration, we enforce the user's Master Credential to be issued in a semi-trusted process where the user verifies their identity to the registration authority during its issuance. This enables Sybil resistance on the user identifier, stronger security for their VRF key $s$ discussed below \ref{t-siris:vrf-key-k-gen}, which is used to attach other credentials to it. The Registration Authority keeps track of user identities and can request their revocation from the Accountability Authority with techniques from \cite{damgard_balancing_2020}. At the end of registration, the user has a master credential $\credm = (\sigmam, \cmm, \vkm)$, including a rerandomizable, threshold-signature over commitment.
 
 \subsubsection{Multi-Party Protocol for VRF Key Generation}\label{t-siris:vrf-key-k-gen}
-The VRF key $k$ is embedded in the master credential and used to generate nullifiers for every context credential. Therefore, $k$ must be generated in a way that prevents the user from stealing someone else's $k$ and embedding it in their master credential (and therefore generating their nullifiers and abusing the system), as well as ensuring the issuers can't modify or create it maliciously to attempt to break anonymity later.
-In the single issuer protocol, the user commits to their $k_1$, $\cm_1 = \CMCom([k_1];r)$\footnote{$\cm$ contains more than just the VRF key $\k$, we simplify in this explanation for brevity} and shares with the issuer along with a proof of its opening. Issuer verifies the proof and generates $k_2$, commits to it without randomness, $\cm_2 = \CMCom([k_2];0)$ and returns $\cm_2, k_2$ to the user. The user aggregates $\cm = \cm_1 \cdot \cm_2$ and computes $k = k_1 + k_2$ and now has a fully formed $\cm = \CMCom([k_1 + k_2];r)$.
+The VRF key $s$ is embedded in the master credential and used to generate nullifiers for every context credential. Therefore, $s$ must be generated in a way that prevents the user from stealing someone else's $s$ and embedding it in their master credential (and therefore generating their nullifiers and abusing the system), as well as ensuring the issuers can't modify or create it maliciously to attempt to break anonymity later.
+In the single issuer protocol, the user commits to their $s_1$, $\cm_1 = \CMCom([s_1];r)$\footnote{$\cm$ contains more than just the VRF key $\k$, we simplify in this explanation for brevity} and shares with the issuer along with a proof of its opening. Issuer verifies the proof and generates $s_2$, commits to it without randomness, $\cm_2 = \CMCom([s_2];0)$ and returns $\cm_2, s_2$ to the user. The user aggregates $\cm = \cm_1 \cdot \cm_2$ and computes $s =  s_1 + s_2$ and now has a fully formed $\cm = \CMCom([s_1 + s_2];r)$.
 We adjust slightly for the threshold scenario. 
-The user computes $k_1$, $\cm_1 = \CMCom([k_1];r)$ and a proof of its opening.
-The issuers runs DKG with a subset  $|S| \geq t$ of nodes to produce $\vk = g^{k_2}$ and each node computes shared $\{k_{2_i}\}_{i \in S}$ and shares with the user (For efficiency, the issuers can precompute these values in bulk and retain a pool to choose from $k_2$).
-The user computes $k_2$ by combining $|S| \geq t$ with $\mathsf{DKG.Combine(\{k_{2_i}\}_{i \in S})}$, the user then computes $\cm = \CMCom([k_1 + k_2];r)$ and runs a sigma protocol to prove its correctness during credential generation. 
+The user computes $s_1$, $\cm_1 = \CMCom([s_1];r)$ and a proof of its opening.
+The issuers runs DKG with a subset  $|S| \geq t$ of nodes to produce $\vk = g^{s_2}$ and each node computes shared $\{k_{2_i}\}_{i \in S}$ and shares with the user (For efficiency, the issuers can precompute these values in bulk and retain a pool to choose from $s_2$).
+The user computes $s_2$ by combining $|S| \geq t$ with $\mathsf{DKG.Combine(\{s_{2_i}\}_{i \in S})}$, the user then computes $\cm = \CMCom([s_1 + s_2];r)$ and runs a sigma protocol to prove its correctness during credential generation. 
 \[
-\mathcal{R}: \left\{ 
-(\cm_1, \cm, \vk),(k_1, k_2, k, r) 
+\mathcal{R}_{\mathsf{DKG}}: \left\{ 
+(\cm_1, \cm_s, \vk),(s_1, s_2, s, r) 
 \middle| 
 \begin{array}{lcl}
-    \cm_1 = \CMCom([k_1];r) \; \wedge \; \\
-    \vk = g^{k_2} \; \wedge \; \\
-    \cm = \CMCom([k_1 + k_2];r)
+    \cm_{s_1} = \CMCom([s_1];r) \; \wedge \; \\
+    \vk_{s_2} = g^{s_2} \; \wedge \; \\
+    \cm_s = \CMCom([s_1 + s_2];r)
 \end{array} \right\}
 \]
 The issuer learns the user's identity during registration but never learns the complete VRF key - the user maintains anonymity against a malicious issuer and the authority maintains unforgeability against a malicious user.
@@ -580,31 +580,31 @@ A context credential issuer may be the same threshold committee, but may also be
 \mathcal{R}_{\phi}: \left\{ 
 \begin{array}{l}
 (\sigmam, \cmm, \cmc), \\
-(id, k, \ctxm, \ctxc, r_m, r_c) 
+(id, s, \ctxm, \ctxc, r_m, r_c) 
 \end{array}
 \middle| 
 \begin{array}{lcl}
     \RSVer(\sigmam, \cmm, \vkm) = 1 \; \wedge \; \\
-    \cmm = \CMCom([id, \ctxm, k, \ldots]; r_m) \; \wedge \ctxm = \texttt{"master"} \; \wedge \; \\
+    \cmm = \CMCom([id, \ctxm, s, \ldots]; r_m) \; \wedge \ctxm = \texttt{"master"} \; \wedge \; \\
     \cmc = \CMCom([id, \ctxc, \ldots]; r_c) \; \wedge \ctxc = \texttt{"DMV"} \; \\
 \end{array} \right\}
 \]
 The Context Credential issuer verifies the correctness of $\Pi_\phi$ and runs their signing protocol over $\cmc$.
 
 \subsubsection*{Sybil Resistance}
-In the above scenario, to enforce sybil resistance of the user's driver license, the DMV authority could request to retain $id$ in their system and check that value against another user with $id$ requesting a credential, upholding accountability but breaking the user's anonymity and open forgability vectors, breaking system security. Rather, the user generates an anonymous deterministic (pseudorandom) nullifier with the scheme \ref{subsec:deterministic-nullifier} as $\nullifier = g^{1/k + ctx} \gets \mathsf{dVRF.Eval}(k, ctx)$. The nullifier's proof of correctness $\pi \gets \mathsf{dVRF.Prove}(\cmm, \cmc, k, ctx, \nullifier)$, outlined here: \ref{sec-pok-committed-inv-linear-relation}, ensures it was generated by $k$ in the master credential and $\ctxc$ from the Context Credential. To prevent replay attacks, $\nullifier$ is an input into the context credential issuance process $\pi$ is combined with the previous $\Sigma$-protocol. 
+In the above scenario, to enforce sybil resistance of the user's driver license, the DMV authority could request to retain $id$ in their system and check that value against another user with $id$ requesting a credential, upholding accountability but breaking the user's anonymity and open forgability vectors, breaking system security. Rather, the user generates an anonymous deterministic (pseudorandom) nullifier with the scheme \ref{subsec:deterministic-nullifier} as $\nullifier = g^{1/s + ctx} \gets \mathsf{dVRF.Eval}(s, ctx)$. The nullifier's proof of correctness $\pi \gets \mathsf{dVRF.Prove}(\cmm, \cmc, s, ctx, \nullifier)$, outlined here: \ref{sec-pok-committed-inv-linear-relation}, ensures it was generated by $s$ in the master credential and $\ctxc$ from the Context Credential. To prevent replay attacks, $\nullifier$ is an input into the context credential issuance process $\pi$ is combined with the previous $\Sigma$-protocol. 
 \[
 \mathcal{R}_{\phi}: \left\{ 
 \begin{array}{l}
 (\sigmam, \cmm, \cmc, \nullifier), \\
-(id, k, \ctxm, \ctxc, r_m, r_c) 
+(id, s, \ctxm, \ctxc, r_m, r_c) 
 \end{array}
 \middle| 
 \begin{array}{lcl}
     \RSVer(\sigmam, \cmm, \vkm) = 1 \; \wedge \; \\
-    \cmm = \CMCom([id, \ctxm, k, \ldots]; r_m) \; \wedge \ctxm = \texttt{"master"} \; \wedge \; \\
+    \cmm = \CMCom([id, \ctxm, s, \ldots]; r_m) \; \wedge \ctxm = \texttt{"master"} \; \wedge \; \\
     \cmc = \CMCom([id, \ctxc, \ldots]; r_c) \; \wedge \ctxc = \texttt{"DMV"} \; \wedge \; \\
-    \textcolor{blue}{\nullifier = g^{1/k + ctxc}}
+    \textcolor{blue}{\nullifier = g^{1/s + ctxc}}
 \end{array} \right\}
 \]
 
@@ -615,28 +615,50 @@ The current instantiation uses an interactive three-move $\Sigma$-protocols and 
 
 
 \subsubsection*{Revocation}
-A popular efficient accountable-privacy pattern for revocation is seen in anonymous payments \cite{damgard_balancing_2020} and private identity systems \cite{wang2023hades}: on registration, a user encrypts a secret key with a separate (preferably threshold) authority, e.g. Audit Authority and stores the encryption on the registration system within the original user profile. Should it require revocation, the Registration System provides the encryption and reason for revocation to the auditors, the auditors then decrypt it and add the key to a revocation list such as an accumulator that enables efficient zero-knowledge non-membership proofs \cite{jaques_allosaur_2024, galbraith_dynamic_2022} which cost 7.4ms for proof generation and 11.2ms for proof verification, adding some overhead but yet still practical. We can extend this pattern to enable revocation of individual context credentials - the auditor receives the request to revoke a specific context for an identity, the auditor decrypts $k$ and computes $\nullifier = g^{1/(k+ctx)}$ and includes that in an accumulator.
+A popular efficient accountable-privacy pattern for revocation is seen in anonymous payments \cite{damgard_balancing_2020} and private identity systems \cite{wang2023hades}: on registration, a user encrypts a secret key with a separate (preferably threshold) authority, e.g. Audit Authority and stores the encryption on the registration system within the original user profile. Should it require revocation, the Registration System provides the encryption and reason for revocation to the auditors, the auditors then decrypt it and add the key to a revocation list such as an accumulator that enables efficient zero-knowledge non-membership proofs \cite{jaques_allosaur_2024, galbraith_dynamic_2022} which cost 7.4ms for proof generation and 11.2ms for proof verification, adding some overhead but yet still practical. We can extend this pattern to enable revocation of individual context credentials - the auditor receives the request to revoke a specific context for an identity, the auditor decrypts $s$ and computes $\nullifier = g^{1/(s + ctx)}$ and includes that in an accumulator.
+
+
+\begin{enumerate}
+    \item $\mathsf{OrgKeyGen}(1^{\lambda}, \ell, t, n) \to (\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{\{s_2\}_i\}_m$ for $i \in |n| ) $
+    \item $\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam)$
+    \item $(\ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}) \gets \mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell, \BG)$
+    \item Generate a pool of arbitrary size VRF key shares $\{\{s_2\}_i, \vk_{s_2}\}_m = \{\{s_2\}_i, \vk_{s_2}\}_1, \ldots, \{\{s_2\}_i, \vk_{s_2}\}_m$ for $i \in |n|$ and $m$ is arbitrary size. The pool can be replenished periodically by the committee.
+    \item Returns $(\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{\{s_2\}_i\}_m$ for $i \in |n| )$
+\end{enumerate}
+
+Obtain, Issue
+Obtain: user interacts to compute VRF key s then uses that in its credential request as one of the many commitments.
+\begin{enumerate}
+    \item User computes $s_1, r_s \sample \Z_p$, $\cm_{s_1} = \CMCom([s_1];r_s)$
+    \item User interacts with the threshold to receive a subset of $\{s_{2_i}\}_{i \in S}$ shares $|S| \geq t$ and $\vk_{s_2}$, combines $s_2 \gets \mathsf{DKG.Combine}(\{s_{2_i}\}_{i \in S})$ and verifies $g^{s_2} = \vk$. 
+    \item User computes $\cm_s = \CMCom([s_1 + s_2];r_s)$ and proof of correctness $\Pi^{\mathcal{R}_{\mathsf{DKG}}}(\cm_{s_1}, \cm_{s_2}, \cm_s, \vk_{s_2})$
+\end{enumerate}
 
 
 
 
+
+\begin{enumerate}
+    \item 
+\end{enumerate}
 
 
 \begin{figure}\label{threshold-construction-ABC}
     \caption{tABC System}
     \begin{center}
     \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
-    \multicolumn{3}{l}{$\underline{\mathsf{tOrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$ and threshold parameters $n, t$} \\[1em]
+    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$ and threshold parameters $n, t$} \\[1em]
     \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; (\ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}) \gets \mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell, \BG)$} \\[1em]
     \multicolumn{3}{l}{$\pcreturn \text{ public keys } (\ck, \vk). \text{ Each node receives their key share } (\sk_i, \vk_i)$} \\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
-    \multicolumn{3}{l}{$\pirzero(\cmm) = \zkpok\{(\k_1,\uskm) \mid \cmm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
-    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cmm, \id, \ctx, \exp, \osk)}$ \\[1em]
-    \multicolumn{3}{l}{$\k_1, \uskm \sample \Z_p\;, \cmm_1 = \CMCom([0,0,0,\k_1];\uskm)$} \\[1em]
+    \multicolumn{3}{l}{$\pircom(\cmm) = \zkpok\{(\s_1,\uskm) \mid \cmm = g_1^0g_2^0g_3^0g_4^{\s_1}g^{\usk} \}$} \\[1em]
+    $\mathsf{Obtain}(\opk)$ && $\mathsf{Issue}(\pirzero, \cmm, \id, \ctx, \exp, \osk)$ \\[0.2em]
+    \hline \\ 
+    \multicolumn{3}{l}{$\s_1, \uskm \sample \Z_p\;, \cmm_1 = \CMCom([0,0,0,\s_1];\uskm)$} \\[1em]
      & $\xrightarrow{\;\; \pirzero(\cmm_1) \;\;}$ & If $\pirzero(\cmm_1)$ fails, return $\bot$ \\[1em]
-     \multicolumn{3}{r}{$\{\k_2\}_{i \in t} \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
-     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
-    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \k_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
+     \multicolumn{3}{r}{$\{\s_2\}_{i \in t} \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\s_2];0)$ where $\ctx$="master"} \\[1em]
+     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\s_1 + \s_2];\usk)$} \\[1em]
+    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \s_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
     \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
     \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
     \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
