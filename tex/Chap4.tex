@@ -5,7 +5,7 @@ Anonymous credential systems enable users to prove identity attributes while pre
 The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries and building blocks, in Section \ref{subsec:deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
 
 \section{Introduction}\label{sec-vrf-introduction}
-Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu2022utt, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu2022utt}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
+Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu_utt_2022, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu_utt_2022}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
 
 
 \begin{figure}
@@ -156,7 +156,7 @@ DY VRF \cite{hutchison_verifiable_2005} &
 \ding{55} & 
 Pairing & 3x slower 
 \\
-CanDID \cite{maram2021candid} & 
+CanDID \cite{maram_candid_2020} & 
 \ding{51} & 
 \ding{55} & 
 \ding{51} & 
@@ -177,7 +177,7 @@ SyRA \cite{crites_syra_2024} &
 \ding{55} & 
  Sigma+Pairing & ~4x slower 
 \\
-UTT Nullifier \cite{tomescu2022utt} & 
+UTT Nullifier \cite{tomescu_utt_2022} & 
 \ding{51} & 
 \ding{51} & 
 \ding{51}  & 
@@ -218,9 +218,9 @@ Previous systems have addressed aspects of hierarchical credential binding and s
         
     \item \textbf{Pairing-based systems} like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024} implement hierarchical credentials but suffer from efficiency issues due to their reliance on pairings and S3ID uses Groth Sahai proofs which are less efficient than $\Sigma$-protocols.
     
-    \item \textbf{UTT}~\cite{tomescu2022utt} uses a similar approach to ours for anonymous payments, creating serial numbers (nullifiers) from a registration credential. However, UTT relies on bilinear pairings, introducing substantial computational overhead.
+    \item \textbf{UTT}~\cite{tomescu_utt_2022} uses a similar approach to ours for anonymous payments, creating serial numbers (nullifiers) from a registration credential. However, UTT relies on bilinear pairings, introducing substantial computational overhead.
     
-    \item \textbf{CanDID}~\cite{maram2021candid} clearly defines the master/context credential relationship but compromises privacy by maintaining mappings between credential public keys, enabling linkability across interactions.
+    \item \textbf{CanDID}~\cite{maram_candid_2020} clearly defines the master/context credential relationship but compromises privacy by maintaining mappings between credential public keys, enabling linkability across interactions.
 
 \end{itemize}
 
@@ -1081,7 +1081,7 @@ We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks
 DY $^1$ \cite{hutchison_verifiable_2005}                     & yes & 1.27 &  -      & 2.2   &  -     \\
 Us (Prime Order DY) \ref{sec-dy-pf}                                   & no  & 0.41 & 3.1x   & 0.70  & 3.1x  \\
 \midrule
-DY Anonymous \cite{tomescu2022utt}                            & yes & 5.91 &   -     & 6.47  &   -    \\
+DY Anonymous \cite{tomescu_utt_2022}                            & yes & 5.91 &   -     & 6.47  &   -    \\
 Us (Anonymous + Deterministic) \ref{pok-committed-inverse-linear-relation} & no  & 1.08 & 5.5x   & 1.41  & 4.6x  \\
 Us (Anonymous + Probabilistic) ~\ref{prot:committed-nullifier} & no  & 2.01 & 2.9x   & 1.65  & 3.9x  \\
 \bottomrule
@@ -1168,7 +1168,7 @@ Beyond sybil resistance and revocation, the CRBN supports diverse applications, 
 \end{itemize}
 
 \subsection{Discussion}
-The CRBN’s pairing-free design and zero-knowledge proofs provide efficiency and privacy advantages over pairing-based alternatives (e.g., UTT~\cite{tomescu2022utt}), as shown in Section~\ref{sec:performance-vrf}. Its flexibility supports both deterministic (sybil resistance) and committed (revocation) variants, addressing diverse needs in anonymous credential systems.
+The CRBN’s pairing-free design and zero-knowledge proofs provide efficiency and privacy advantages over pairing-based alternatives (e.g., UTT~\cite{tomescu_utt_2022}), as shown in Section~\ref{sec:performance-vrf}. Its flexibility supports both deterministic (sybil resistance) and committed (revocation) variants, addressing diverse needs in anonymous credential systems.
 
 \subsection{Conclusion}
 The CRBN instantiates a versatile, efficient nullifier mechanism for the MIMC system, enabling sybil-resistant credential binding and privacy-preserving revocation. Its applications extend to emerging use cases like ZK airdrops and persistent identities, positioning it as a foundational tool for next-generation privacy-preserving identity frameworks.

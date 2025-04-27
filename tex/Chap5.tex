@@ -1,7 +1,7 @@
 \mychapter{Threshold Sybil-Resistant Identity System}\label{chap6}
 
 \section{Introduction}\label{sec:threshold-intro}
-Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram2021candid} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context.
+Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram_candid_2020} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context.
 
 This chapter presents T-SIRIS, a threshold Sybil-resistant identity system built on our multi-issuer multi-credential anonymous credential system (MIMC-ABC) from Chapter~\ref{chap3} and Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}. T-SIRIS uses a $t$-out-of-$N$ threshold issuance model, secure against $t-1$ malicious issuers. We compare T-SIRIS with CanDID and S3ID~\cite{rabaninejad_attribute-based_2024}, which uses threshold anonymous counting tokens (tACT), showing improvements in efficiency and functionality.
 
@@ -15,7 +15,7 @@ Traditional Attribute-Based Anonymous Credential systems (ABCs) are based on a c
 
 Existing systems struggle to balance privacy, efficiency, and functionality. 
 
-CanDID~\cite{maram2021candid} pioneered Sybil-resistant identity with legacy credential oracles, but relies on costly multi-party computation (MPC) among committee nodes for deduplication and requires interactive issuance for context credentials, contradicting self-sovereign principles. Each transaction requires communication with committee members, introducing privacy vulnerabilities where a single malicious node can link different user transactions.
+CanDID~\cite{maram_candid_2020} pioneered Sybil-resistant identity with legacy credential oracles, but relies on costly multi-party computation (MPC) among committee nodes for deduplication and requires interactive issuance for context credentials, contradicting self-sovereign principles. Each transaction requires communication with committee members, introducing privacy vulnerabilities where a single malicious node can link different user transactions.
 
 \subsubsection*{CanDID}
 CanDID deduplicates a user attribute, e.g. social security number using MPC, storing a unique value in a table $T_{\text{Dedup}}$. Users create a master credential from legacy data via oracles, then request context-specific credentials. Its limitations include:
@@ -48,7 +48,7 @@ SSI requires unlinkability, Sybil resistance, and efficiency. Approaches include
 \subsection{Contributions}
 \label{sec:tsiris_contributions}
 
-Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign identity (SSI) by combining efficiency, expressiveness, and security in a multi-issuer setting. Built on the Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) from Chapter~\ref{chap3} and the Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}, T-SIRIS outperforms existing systems like CanDID~\cite{maram2021candid} and S3ID~\cite{rabaninejad_attribute-based_2024}. Below, we outline our contributions, aligning them with S3ID’s claims to highlight T-SIRIS’s improvements.
+Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign identity (SSI) by combining efficiency, expressiveness, and security in a multi-issuer setting. Built on the Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) from Chapter~\ref{chap3} and the Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}, T-SIRIS outperforms existing systems like CanDID~\cite{maram_candid_2020} and S3ID~\cite{rabaninejad_attribute-based_2024}. Below, we outline our contributions, aligning them with S3ID’s claims to highlight T-SIRIS’s improvements.
 
 \begin{enumerate}
     \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(s + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and many times faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
@@ -71,7 +71,7 @@ Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign 
 \toprule
 \textbf{System} & \textbf{Sybil Resist.} & \textbf{Threshold} & \textbf{Non-Interact.}$^{\dagger}$ & \textbf{Non-Transfer.}$^{\ddagger}$ & \textbf{Complex Pred.}$^{\S}$ & \textbf{M.I. Anon.}$^{\P}$ \\
 \midrule
-CanDID~\cite{maram2021candid} & \ding{51}$^{\text{a}}$ & \ding{51} & \ding{55} & \ding{55} & \ding{55} & \ding{55} \\
+CanDID~\cite{maram_candid_2020} & \ding{51}$^{\text{a}}$ & \ding{51} & \ding{55} & \ding{55} & \ding{55} & \ding{55} \\
 SyRA~\cite{crites_syra_2024} & \ding{51} & \ding{55} & \ding{51} & \ding{55} & \ding{55} & \ding{55} \\
 S3ID~\cite{rabaninejad_attribute-based_2024} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{55} \\
 Coconut~\cite{sonnino_coconut_2020} & \ding{55} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
@@ -248,7 +248,7 @@ The Simple DKG construction satisfies the following properties:
 \section{Threshold Rerandomizable Signature for ABCs}
 \label{sec:threshold-construction}
 
-We adopt the threshold PS signature scheme from \cite{tomescu2022utt} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
+We adopt the threshold PS signature scheme from \cite{tomescu_utt_2022} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
 
 
 \subsection{Overview}
@@ -407,6 +407,8 @@ A tSIRIS system consists of the following probabilistic polynomial-time (PPT) al
     \item $(\mathsf{tShow}(\mathsf{cred}, \usk, \phi), \mathsf{Verify}(\mathsf{cred}', \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a credential $\cred = (\sigma, \cm, \usk)$ and predicate for verification $\phi$. $\mathsf{RS.Verify}$ takes input the rerandomized credential $\cred'$ and proof $\pi$ it satisfies $\phi$. The verifier outputs 1 if valid, 0 otherwise.
 \end{itemize}
 \end{definition}
+
+
 
 
 \begin{definition}[Threshold Unforgeability]
@@ -622,90 +624,37 @@ The current instantiation uses an interactive three-move $\Sigma$-protocols and 
 A popular efficient accountable-privacy pattern for revocation is seen in anonymous payments \cite{damgard_balancing_2020} and private identity systems \cite{wang2023hades}: on registration, a user encrypts a secret key with a separate (preferably threshold) authority, e.g. Audit Authority and stores the encryption on the registration system within the original user profile. Should it require revocation, the Registration System provides the encryption and reason for revocation to the auditors, the auditors then decrypt it and add the key to a revocation list such as an accumulator that enables efficient zero-knowledge non-membership proofs \cite{jaques_allosaur_2024, galbraith_dynamic_2022} which cost 7.4ms for proof generation and 11.2ms for proof verification, adding some overhead but yet still practical. We can extend this pattern to enable revocation of individual context credentials - the auditor receives the request to revoke a specific context for an identity, the auditor decrypts $s$ and computes $\nullifier = g^{1/(s + ctx)}$ and includes that in an accumulator.
 
 
+\subsubsection*{OrgKeyGen}
 
+$\mathsf{OrgKeyGen}(1^{\lambda}, \ell, t, n) \to (\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{[s_2]_i\}_m$ for $i \in |n|, m$ is arbitrarily large$ ) $: The trusted setup runs the following algorithms and distributes the key shares to the threshold nodes.
+    \begin{itemize}
+        \item $\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam)$
+        \item $(\ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}) \gets \mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell, \BG)$
+        \item Generate a pool of arbitrary size VRF key shares $\{\{s_2\}_i, \vk_{s_2}\}_m = \{\{s_2\}_i, \vk_{s_2}\}_1, \ldots, \{\{s_2\}_i, \vk_{s_2}\}_m$ for $i \in |n|$ and $m$ is arbitrary size. The committee can replenish the pool periodically.
+        \item Returns $(\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{[s_2]_i\}_m$ for $i \in |n| )$
+    \end{itemize}
 
+\subsubsection*{(Obtain, Issue)}
+The user and issuers interact, user executes Obtain with their attributes to compute the outputs for issuing. Issue is run by the threshold nodes to issue the signature shares.
+\subsubsection*{Obtain:}
+$\mathsf{Obtain}(\attrs)$
 \begin{enumerate}
-    \item User computes $s_1, r_s \sample \Z_p$, $\cm_{s_1} = \CMCom([s_1];r_s)$
-    \item User interacts with the threshold to receive a subset of $\{s_{2_i}\}_{i \in S}$ shares $|S| \geq t$ and $\vk_{s_2}$, combines $s_2 \gets \mathsf{DKG.Combine}(\{s_{2_i}\}_{i \in S})$ and verifies $g^{s_2} = \vk_{s_2}$. 
-    \item User computes $\cm_s = \CMCom([s_1 + s_2];r_s)$ and proof of correctness $\Pi^{\mathcal{R}_{\mathsf{DKG}}}(\cm_{s_1},  \vk_{s_2}, \cm_s)$
-    \item $\mathsf{tPrepare}(\ck, h, \attrs) \to (\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h):$
+    \item User samples $s_1, r_s \sample \Z_p$, $\cm_{s_1} = \CMCom([s_1];r_s)$
+    \item User interacts with the threshold to receive $h$ and a subset of $[s_{2_i}]_{i \in S}$ shares $|S| \geq t$ and $\vk_{s_2}$, user combines $s_2 \gets \mathsf{DKG.Combine}([s_{2_i}]_{i \in S})$ and verifies $g^{s_2} = \vk_{s_2}$. 
+    \item User runs $\mathsf{tPrepare}(\ck, h, \attrs) \to (\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h)$, which includes the proof the user combined $s$ correctly. $\cm_s = \CMCom([s_1 + s_2];r_s) = h^{s_1 + s_2}g^{r_s}$ and proof of correctness $\Pi^{\mathcal{R}_{\mathsf{DKG}}}(\cm_{s_1},  \vk_{s_2}, \cm_s)$
+    \item inputs all $\cm_k$ for $\mathsf{Issue}$
 \end{enumerate}
 
-\subsubsection{Issue}
+\subsubsection{Issue:}
+$\mathsf{Issue}(\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h) \to \sigma$: A subset of $|S|$ issuers receive signing requests from the user. 
 \begin{enumerate}
-    \item $\mathsf{tShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$
-    \item $\mathsf{tShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$
+    \item $|S|$ issuers run $\mathsf{tShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$
+    \item User receives $[\sigma^*]_i$ and runs $\mathsf{tShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ If output is $1$ for $\geq t$ shares, User aggregates.
     \item $\mathsf{tAggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$
 \end{enumerate}
 
-
-
-
-
-
-
-The Construction
-\begin{itemize}
-    \item $\mathsf{OrgKeyGen}(1^{\lambda}, \ell, t, n) \to (\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{\{s_2\}_i\}_m$ for $i \in |n| ) $
-    \begin{itemize}
-        \item $\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam)$
-    \item $(\ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}) \gets \mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell, \BG)$
-    \item Generate a pool of arbitrary size VRF key shares $\{\{s_2\}_i, \vk_{s_2}\}_m = \{\{s_2\}_i, \vk_{s_2}\}_1, \ldots, \{\{s_2\}_i, \vk_{s_2}\}_m$ for $i \in |n|$ and $m$ is arbitrary size. The committee can replenish the pool periodically.
-    \item Returns $(\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{\{s_2\}_i\}_m$ for $i \in |n| )$
-    \end{itemize}
-
-    \item $(\mathsf{Obtain}, \mathsf{Issue})$
-    \begin{center}
-        \begin{tabular}{l@{\hspace{3.5em}}c@{\hspace{3.5em}}l}
-            \multicolumn{3}{l}{$\pircom(\cmm) = \zkpok\{(\s_1,\uskm) \mid \cmm = g_1^0g_2^0g_3^0g_4^{\s_1}g^{\usk} \}$} \\[1em]
-            $\mathsf{Obtain}(\opk)$ && $\mathsf{Issue}(\pirzero, \cmm, \id, \ctx, \exp, \osk)$ \\[0.2em]
-            \hline \\ 
-            \multicolumn{3}{l}{$\s_1, \uskm \sample \Z_p\;, \cmm_1 = \CMCom([0,0,0,\s_1];\uskm)$} \\[1em]
-             & $\xrightarrow{\;\; \pirzero(\cmm_1) \;\;}$ & If $\pirzero(\cmm_1)$ fails, return $\bot$ \\[1em]
-             \multicolumn{3}{r}{$\{\s_2\}_{i \in t} \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\s_2];0)$ where $\ctx$="master"} \\[1em]
-             \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\s_1 + \s_2];\usk)$} \\[1em]
-            If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \s_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
-            \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
-            \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
-            \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
-        \end{tabular}
-        \end{center}
-\end{itemize}
-
-
-
-
-
-\begin{figure}\label{threshold-construction-ABC}
-    \caption{tABC System}
-    \begin{center}
-    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
-    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$ and threshold parameters $n, t$} \\[1em]
-    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; (\ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}) \gets \mathsf{tDistKeyGen}(1^{\lambda}, t+1, n, \ell, \BG)$} \\[1em]
-    \multicolumn{3}{l}{$\pcreturn \text{ public keys } (\ck, \vk). \text{ Each node receives their key share } (\sk_i, \vk_i)$} \\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
-    \multicolumn{3}{l}{$\pircom(\cmm) = \zkpok\{(\s_1,\uskm) \mid \cmm = g_1^0g_2^0g_3^0g_4^{\s_1}g^{\usk} \}$} \\[1em]
-    $\mathsf{Obtain}(\opk)$ && $\mathsf{Issue}(\pirzero, \cmm, \id, \ctx, \exp, \osk)$ \\[0.2em]
-    \hline \\ 
-    \multicolumn{3}{l}{$\s_1, \uskm \sample \Z_p\;, \cmm_1 = \CMCom([0,0,0,\s_1];\uskm)$} \\[1em]
-     & $\xrightarrow{\;\; \pirzero(\cmm_1) \;\;}$ & If $\pirzero(\cmm_1)$ fails, return $\bot$ \\[1em]
-     \multicolumn{3}{r}{$\{\s_2\}_{i \in t} \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\s_2];0)$ where $\ctx$="master"} \\[1em]
-     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\s_1 + \s_2];\usk)$} \\[1em]
-    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \s_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
-    \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
-    \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
-    $\underline{\mathsf{Show}(\cred)}$ && $\underline{\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)}$ \\[1em]
-    \multicolumn{3}{r}{Send empty access policy $\phi = \bot$} \\[0.5em]
-    \multicolumn{3}{l}{Parse $\cred = (\sigma, \cm, \usk, \opk)$} \\[0.5em]
-    \multicolumn{3}{l}{\quad Sample $\Delta_\usk, \Delta_u \sample \Z_p$} \\[1em]
-    \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \Delta_\usk, \Delta_u)$} \\[1em]
-    \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \Delta_\usk), \; \usk' = \usk + \Delta_\usk$} \\[1em]
-    \multicolumn{3}{l}{\quad Compute $\Pi_\phi$} \\[1em]
-    & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
-    \end{tabular}
-    \end{center}
-\end{figure}
+\subsubsection*{(Show, Verify)}
+$\mathsf{Show}$ and $\mathsf{Verify}$ follow from the non-threshold $\ABC$ system \ref{construction-ABC}. The user runs $\RSRand(\sigma, \cm) \to \sigma', \cm'$ then runs $\RSVer(\vk, \cm', \sigma')$. Before rerandomization, the commitment is without randomness $\cm = \CMCom([\attrs]; 0)$ and the user rerandomizes it before verification.
 
 
 

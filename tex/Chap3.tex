@@ -22,7 +22,7 @@ This chapter advances the state of anonymous credentials with:
 
 \section{System Model and Definitions}
 
-Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends the single-issuer Attribute-Based Anonymous Credential (ABC) framework from Chapter 2 to support credentials from multiple, mutually distrusting issuers, bound to a single identity. The ABC system (Section 2.4) uses a variant of rerandomizable Pointcheval-Sanders signatures~\cite{sako_short_2016} and position-binding Pedersen commitments~\cite{tomescu2022utt} to enable expressive predicate proofs over attributes. MIMC-ABC builds on this by introducing multi-issuer key generation and a cryptographic identity binding mechanism, ensuring all credentials verifiably belong to the same user without revealing their identity.
+Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends the single-issuer Attribute-Based Anonymous Credential (ABC) framework from Chapter 2 to support credentials from multiple, mutually distrusting issuers, bound to a single identity. The ABC system (Section 2.4) uses a variant of rerandomizable Pointcheval-Sanders signatures~\cite{sako_short_2016} and position-binding Pedersen commitments~\cite{tomescu_utt_2022} to enable expressive predicate proofs over attributes. MIMC-ABC builds on this by introducing multi-issuer key generation and a cryptographic identity binding mechanism, ensuring all credentials verifiably belong to the same user without revealing their identity.
 
 \subsection{MIMC-ABC Syntax}
 
@@ -96,7 +96,7 @@ This ensures that credentials presented together must share a single, private $\
 
 \section{Construction}
 
-Our MIMC-ABC system constructs credentials as rerandomizable Pointcheval-Sanders signatures from \cite{tomescu2022utt} over position-binding Pedersen commitments, extending the single-issuer ABC system (Section 2.4) to bind credentials from multiple issuers to a shared, private identifier. We leverage the algebraic structure of these primitives and $\Sigma$-protocols to prove credential validity and identity consistency efficiently, supporting predicates over an arbitrary number of attributes.
+Our MIMC-ABC system constructs credentials as rerandomizable Pointcheval-Sanders signatures from \cite{tomescu_utt_2022} over position-binding Pedersen commitments, extending the single-issuer ABC system (Section 2.4) to bind credentials from multiple issuers to a shared, private identifier. We leverage the algebraic structure of these primitives and $\Sigma$-protocols to prove credential validity and identity consistency efficiently, supporting predicates over an arbitrary number of attributes.
 
 \subsection{Intuition}
 
@@ -249,7 +249,7 @@ The identity binding advantage scales linearly with $n$ and $m$, reflecting the 
 
 \section{Performance Evaluation}
 
-We evaluate MIMC-ABC to quantify the overhead of privacy-preserving multi-issuer credential verification, comparing it against non-private and single-issuer baselines. Unlike prior multi-issuer systems (e.g., CanDID~\cite{maram2021candid}, ZKcreds~\cite{rosenberg_zk-creds_2022}), MIMC-ABC balances strong identity binding with practical efficiency, leveraging our signature optimization \ref{rerandsig_g2}. Our benchmarks focus on verification time—the critical path in authentication—across three scenarios: non-private, private single-issuer with batch signature aggregation, and private multi-issuer.
+We evaluate MIMC-ABC to quantify the overhead of privacy-preserving multi-issuer credential verification, comparing it against non-private and single-issuer baselines. Unlike prior multi-issuer systems (e.g., CanDID~\cite{maram_candid_2020}, ZKcreds~\cite{rosenberg_zk-creds_2022}), MIMC-ABC balances strong identity binding with practical efficiency, leveraging our signature optimization \ref{rerandsig_g2}. Our benchmarks focus on verification time—the critical path in authentication—across three scenarios: non-private, private single-issuer with batch signature aggregation, and private multi-issuer.
 
 \subsection{Methodology}
 

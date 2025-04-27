@@ -64,7 +64,7 @@ Despite these advances, current attribute-based anonymous credential (ABC) syste
 
 This chapter addresses these limitations through four key contributions:
 \begin{enumerate}
-    \item \textbf{Extended Rerandomizable Signature Scheme:} We build upon the foundations in \cite{tomescu2022utt} to develop a rerandomizable signature scheme over commitments, proven secure in the Algebraic Group Model (AGM) and satisfies the Anonymous Credential System model from \cite{fuchsbauer_structure-preserving_2019}.
+    \item \textbf{Extended Rerandomizable Signature Scheme:} We build upon the foundations in \cite{utt} to develop a rerandomizable signature scheme over commitments, proven secure in the Algebraic Group Model (AGM) and satisfies the Anonymous Credential System model from \cite{fuchsbauer_structure-preserving_2019}.
     
     \item \textbf{Optimized Verification Construction:} Our optimized signature variant reduces show/verify costs by X\% compared to previous approaches
 
@@ -311,7 +311,7 @@ Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indist
 
 \subsection{Dual-Group Construction}
 
-We instantiate a rerandomizable vector commitment scheme in the bilinear group setting as per the construction in \cite{tomescu2022utt} to enable efficient integration with our signature scheme. Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$.
+We instantiate a rerandomizable vector commitment scheme in the bilinear group setting as per the construction in \cite{tomescu_utt_2022} to enable efficient integration with our signature scheme. Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$.
 
 \begin{itemize}
     \item $\mathsf{Setup}(1^\lambda, 1^n) \to \mathsf{ck}$:
@@ -401,7 +401,7 @@ A full proof can be found in the appendix \ref{appendix:commitmentreduction}
 % % % % % % % % % % 
 \newpage
 \section{Rerandomizable Signatures over Commitments}\label{sec:rerandsig_g1}
-We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu2022utt}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is the first complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions (we note that \cite{tomescu2022utt} presents a proof sketch).
+We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu_utt_2022}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is the first complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions (we note that \cite{tomescu_utt_2022} presents a proof sketch).
 
 
 \begin{definition}[Rerandomizable Signature over Commitments]
@@ -678,7 +678,7 @@ For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\att
 
 
 \subsection{Syntax}
-\begin{definition}[ABC System]
+\begin{definition}[ABC System]\label{chap2_abc_system_definition}
 An Attribute-based Anonymous Credential system consists of the following probabilistic polynomial-time (PPT) algorithms:
 \begin{itemize}
 \item $\mathsf{Setup}(\lambda) \to (\mathsf{ppar})$: Takes a security parameter $\lambda$ and outputs public parameters $\mathsf{ppar}$.
@@ -1090,7 +1090,7 @@ We implemented and compared five anonymous credential schemes:
     \item BBS+ (2006) \cite{hutchison_constant-size_2006}: The original BBS+ signature scheme
     \item BBS+ (2016) \cite{camenisch_anonymous_2016}: An optimized version with improved verification
     \item PS (2016) \cite{sako_short_2016}: The Pointcheval-Sanders signature scheme adapted for credentials
-    \item PS-UTT G1 \cite{tomescu2022utt}: The UTT variant with signatures in $\mathbb{G}_1$
+    \item PS-UTT G1 \cite{tomescu_utt_2022}: The UTT variant with signatures in $\mathbb{G}_1$
     \item PS-UTT G2 (Our work): Our optimized variant with signatures in $\mathbb{G}_2$
 \end{itemize}
 
@@ -1112,7 +1112,7 @@ Our implementation is available in our open-source repository https://github.com
 
 \subsection{G2 Signature Optimization Analysis}\
 
-Our G2 signature variant \ref{rerandsig_g2} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu2022utt}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation, we prove correctness below \ref{rerandsig_g2}.  Table~\ref{tab:g1-g2-comparison} presents a direct comparison between the two variants.
+Our G2 signature variant \ref{rerandsig_g2} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu_utt_2022}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation, we prove correctness below \ref{rerandsig_g2}.  Table~\ref{tab:g1-g2-comparison} presents a direct comparison between the two variants.
 The optimization reduces Show + Verify algorithms by more than 10\% which becomes important when multiple credentials are verified together.
 
 \begin{table}[htbp]
@@ -1198,7 +1198,7 @@ We now present a comprehensive comparison of our PS-UTT G2 signature variant aga
 \caption{Performance of Anonymous Credential Operations (time in ms), $n$ is attribute count}
 \begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
 \toprule
-$n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu2022utt} \ref{sec:rerandsig_g1} & Our Improved \ref{rerandsig_g2} \\
+$n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu_utt_2022} \ref{sec:rerandsig_g1} & Our Improved \ref{rerandsig_g2} \\
 \midrule
 \multicolumn{6}{c}{\textbf{Obtain}}  \\
 \midrule
@@ -1261,7 +1261,7 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 \begin{enumerate}
     \item \textbf{Optimized}: Our PS-UTT G2 variant achieves the best Show+Verify performance (10-16\% faster than PS-UTT G1 and up to 83\% faster than BBS+ 2006), optimizing the operation that occurs most frequently in practice. While the Issue operation is more costly, credentials are issued once but verified many times.
     
-    \item \textbf{Evolution of Efficiency}: The original constructions \cite{hutchison_constant-size_2006, sako_short_2016} required proof of knowledge for $\mathbb{G}_T$ points, resulting in slower operations. Later optimizations \cite{camenisch_anonymous_2016, tomescu2022utt} shifted proof of knowledge work to $\G_1$ reducing Show+Verify time by up to 6×.
+    \item \textbf{Evolution of Efficiency}: The original constructions \cite{hutchison_constant-size_2006, sako_short_2016} required proof of knowledge for $\mathbb{G}_T$ points, resulting in slower operations. Later optimizations \cite{camenisch_anonymous_2016, tomescu_utt_2022} shifted proof of knowledge work to $\G_1$ reducing Show+Verify time by up to 6×.
     
     \item \textbf{Favorable Scaling Properties}: While all schemes exhibit approximately linear scaling with attribute count, our PS-UTT G2 is the most efficient.
 \end{enumerate}

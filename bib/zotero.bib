@@ -1,4 +1,32 @@
 
+@article{tomescu_utt_2022,
+	title = {{UTT}: {Decentralized} {Ecash} with {Accountable} {Privacy}},
+	abstract = {We present UnTraceable Transactions (UTT), a system for decentralized ecash with accountable privacy. UTT is the first ecash system that obtains three critical properties: (1) it provides decentralized trust by implementing the ledger, bank, auditor, and registration authorities via threshold cryptography and Byzantine Fault Tolerant infrastructure; (2) it balances accountability and privacy by implementing anonymity budgets: users can anonymously send payments, but only up to a limited amount of currency per month. Past this point, transactions can either be made public or subjected to customizable auditing rules; (3) by carefully choosing cryptographic building blocks and co-designing the cryptography and decentralization, UTT is tailored for high throughput and low latency. With a combination of optimized cryptographic building blocks and vertical scaling (optimistic concurrency control), UTT can provide almost 1,000 payments with accountable privacy per second, with latencies of around 100 milliseconds and less. Through horizontal scaling (multiple shards), UTT can scale to tens of thousands of such transactions per second. With 60 shards we measure over 10,000 transactions with accountable privacy per second.},
+	language = {en},
+	author = {Tomescu, Alin and Bhat, Adithya and Applebaum, Benny and Abraham, Ittai and Gueta, Guy and Pinkas, Benny and Yanai, Avishay},
+	year = {2022},
+}
+
+@incollection{dunkelman_formal_2016,
+	address = {Cham},
+	title = {Formal {Treatment} of {Privacy}-{Enhancing} {Credential} {Systems}},
+	volume = {9566},
+	copyright = {http://www.springer.com/tdm},
+	isbn = {978-3-319-31300-9 978-3-319-31301-6},
+	url = {http://link.springer.com/10.1007/978-3-319-31301-6_1},
+	abstract = {Privacy-enhancing attribute-based credentials (PABCs) are the core ingredient to privacy-friendly authentication systems, allowing users to obtain credentials on attributes and prove possession of these credentials in an unlinkable fashion while revealing only a subset of the attributes. To be useful in practice, however, PABCs typically need additional features such as i) revocation, ii) pooling prevention by binding credentials to users secret keys, iii) pseudonyms as privacy-friendly user public keys, iv) proving equality of attributes without revealing their values, v) or advanced issuance where attributes can be blindly carried over into new credentials. Provably secure solutions exist for most of these features in isolation, but it is unclear how they can be securely combined into a full-ﬂedged PABC system, or even which properties such a system would aim to fulﬁll. We provide a formal treatment of PABC systems supporting the mentioned features by deﬁning their syntax and security properties, resulting in the most comprehensive deﬁnitional framework for PABCs so far. Unlike previous eﬀorts, our deﬁnitions are not targeted at one speciﬁc use-case; rather, we try to capture generic properties that can be useful in a variety of scenarios. We believe that our deﬁnitions can also be used as a starting point for diverse application-dependent extensions and variations of PABCs. We present and prove secure a generic and modular construction of a PABC system from simpler building blocks, allowing for a “plug-and-play” composition based on diﬀerent instantiations of the building blocks. Finally, we give secure instantiations for each of the building blocks, including in particular instantiations based on CL- and Brands-signatures which are the core of the Idemix and U-Prove protocols.},
+	language = {en},
+	urldate = {2024-07-02},
+	booktitle = {Selected {Areas} in {Cryptography} – {SAC} 2015},
+	publisher = {Springer International Publishing},
+	author = {Camenisch, Jan and Krenn, Stephan and Lehmann, Anja and Mikkelsen, Gert Laessoe and Neven, Gregory and Pedersen, Michael Ostergaard},
+	editor = {Dunkelman, Orr and Keliher, Liam},
+	year = {2016},
+	doi = {10.1007/978-3-319-31301-6_1},
+	note = {Series Title: Lecture Notes in Computer Science},
+	pages = {3--24},
+}
+
 @inproceedings{ritzdorf_tls-n_2018,
 	address = {San Diego, CA},
 	title = {{TLS}-{N}: {Non}-repudiation over {TLS} {Enabling} {Ubiquitous} {Content} {Signing}},
@@ -1449,7 +1477,7 @@ Usr\_lan: en},
 	pages = {1--1},
 }
 
-@article{kepkowski_privacy_nodate,
+@article{kepkowski_privacy_nodate-1,
 	title = {Privacy enhancing technologies for identity and access management},
 	language = {en},
 	author = {Kepkowski, Michal},
@@ -2568,46 +2596,6 @@ In this SoK, we categorize the main traditional and decentralized financial appl
 	author = {Chase, Melissa},
 }
 
-@incollection{dunkelman_formal_2016,
-	address = {Cham},
-	title = {Formal {Treatment} of {Privacy}-{Enhancing} {Credential} {Systems}},
-	volume = {9566},
-	copyright = {http://www.springer.com/tdm},
-	isbn = {978-3-319-31300-9 978-3-319-31301-6},
-	url = {http://link.springer.com/10.1007/978-3-319-31301-6_1},
-	abstract = {Privacy-enhancing attribute-based credentials (PABCs) are the core ingredient to privacy-friendly authentication systems, allowing users to obtain credentials on attributes and prove possession of these credentials in an unlinkable fashion while revealing only a subset of the attributes. To be useful in practice, however, PABCs typically need additional features such as i) revocation, ii) pooling prevention by binding credentials to users secret keys, iii) pseudonyms as privacy-friendly user public keys, iv) proving equality of attributes without revealing their values, v) or advanced issuance where attributes can be blindly carried over into new credentials. Provably secure solutions exist for most of these features in isolation, but it is unclear how they can be securely combined into a full-ﬂedged PABC system, or even which properties such a system would aim to fulﬁll. We provide a formal treatment of PABC systems supporting the mentioned features by deﬁning their syntax and security properties, resulting in the most comprehensive deﬁnitional framework for PABCs so far. Unlike previous eﬀorts, our deﬁnitions are not targeted at one speciﬁc use-case; rather, we try to capture generic properties that can be useful in a variety of scenarios. We believe that our deﬁnitions can also be used as a starting point for diverse application-dependent extensions and variations of PABCs. We present and prove secure a generic and modular construction of a PABC system from simpler building blocks, allowing for a “plug-and-play” composition based on diﬀerent instantiations of the building blocks. Finally, we give secure instantiations for each of the building blocks, including in particular instantiations based on CL- and Brands-signatures which are the core of the Idemix and U-Prove protocols.},
-	language = {en},
-	urldate = {2024-07-02},
-	booktitle = {Selected {Areas} in {Cryptography} – {SAC} 2015},
-	publisher = {Springer International Publishing},
-	author = {Camenisch, Jan and Krenn, Stephan and Lehmann, Anja and Mikkelsen, Gert Læssøe and Neven, Gregory and Pedersen, Michael Østergaard},
-	editor = {Dunkelman, Orr and Keliher, Liam},
-	year = {2016},
-	doi = {10.1007/978-3-319-31301-6_1},
-	note = {Series Title: Lecture Notes in Computer Science},
-	pages = {3--24},
-}
-
-@incollection{dunkelman_formal_2016-1,
-	address = {Cham},
-	title = {Formal {Treatment} of {Privacy}-{Enhancing} {Credential} {Systems}},
-	volume = {9566},
-	copyright = {http://www.springer.com/tdm},
-	isbn = {978-3-319-31300-9 978-3-319-31301-6},
-	url = {http://link.springer.com/10.1007/978-3-319-31301-6_1},
-	abstract = {Privacy-enhancing attribute-based credentials (PABCs) are the core ingredient to privacy-friendly authentication systems, allowing users to obtain credentials on attributes and prove possession of these credentials in an unlinkable fashion while revealing only a subset of the attributes. To be useful in practice, however, PABCs typically need additional features such as i) revocation, ii) pooling prevention by binding credentials to users secret keys, iii) pseudonyms as privacy-friendly user public keys, iv) proving equality of attributes without revealing their values, v) or advanced issuance where attributes can be blindly carried over into new credentials. Provably secure solutions exist for most of these features in isolation, but it is unclear how they can be securely combined into a full-ﬂedged PABC system, or even which properties such a system would aim to fulﬁll. We provide a formal treatment of PABC systems supporting the mentioned features by deﬁning their syntax and security properties, resulting in the most comprehensive deﬁnitional framework for PABCs so far. Unlike previous eﬀorts, our deﬁnitions are not targeted at one speciﬁc use-case; rather, we try to capture generic properties that can be useful in a variety of scenarios. We believe that our deﬁnitions can also be used as a starting point for diverse application-dependent extensions and variations of PABCs. We present and prove secure a generic and modular construction of a PABC system from simpler building blocks, allowing for a “plug-and-play” composition based on diﬀerent instantiations of the building blocks. Finally, we give secure instantiations for each of the building blocks, including in particular instantiations based on CL- and Brands-signatures which are the core of the Idemix and U-Prove protocols.},
-	language = {en},
-	urldate = {2024-07-02},
-	booktitle = {Selected {Areas} in {Cryptography} – {SAC} 2015},
-	publisher = {Springer International Publishing},
-	author = {Camenisch, Jan and Krenn, Stephan and Lehmann, Anja and Mikkelsen, Gert Læssøe and Neven, Gregory and Pedersen, Michael Østergaard},
-	editor = {Dunkelman, Orr and Keliher, Liam},
-	year = {2016},
-	doi = {10.1007/978-3-319-31301-6_1},
-	note = {Series Title: Lecture Notes in Computer Science},
-	pages = {3--24},
-}
-
 @misc{benarroch_sok_2024,
 	title = {{SoK}: {Programmable} {Privacy} in {Distributed} {Systems}},
 	shorttitle = {{SoK}},
@@ -2906,13 +2894,6 @@ In this SoK, we categorize the main traditional and decentralized financial appl
 	abstract = {Eﬃcient zero-knowledge proofs of knowledge (ZK-PoK) are basic building blocks of many practical cryptographic applications such as identiﬁcation schemes, group signatures, and secure multiparty computation. Currently, ﬁrst applications that critically rely on ZK-PoKs are being deployed in the real world. The most prominent example is Direct Anonymous Attestation (DAA), which was adopted by the Trusted Computing Group (TCG) and implemented as one of the functionalities of the cryptographic Trusted Platform Module (TPM) chip.},
 	language = {en},
 	author = {Bangerter, Endre and Barzan, Stefania and Krenn, Stephan and Sadeghi, Ahmad-Reza and Schneider, Thomas and Tsay, Joe-Kai},
-}
-
-@article{tomescu_utt_nodate,
-	title = {{UTT}: {Decentralized} {Ecash} with {Accountable} {Privacy}},
-	abstract = {We present UnTraceable Transactions (UTT), a system for decentralized ecash with accountable privacy. UTT is the first ecash system that obtains three critical properties: (1) it provides decentralized trust by implementing the ledger, bank, auditor, and registration authorities via threshold cryptography and Byzantine Fault Tolerant infrastructure; (2) it balances accountability and privacy by implementing anonymity budgets: users can anonymously send payments, but only up to a limited amount of currency per month. Past this point, transactions can either be made public or subjected to customizable auditing rules; (3) by carefully choosing cryptographic building blocks and co-designing the cryptography and decentralization, UTT is tailored for high throughput and low latency. With a combination of optimized cryptographic building blocks and vertical scaling (optimistic concurrency control), UTT can provide almost 1,000 payments with accountable privacy per second, with latencies of around 100 milliseconds and less. Through horizontal scaling (multiple shards), UTT can scale to tens of thousands of such transactions per second. With 60 shards we measure over 10,000 transactions with accountable privacy per second.},
-	language = {en},
-	author = {Tomescu, Alin and Bhat, Adithya and Applebaum, Benny and Abraham, Ittai and Gueta, Guy and Pinkas, Benny and Yanai, Avishay},
 }
 
 @misc{noauthor_federated_nodate,
