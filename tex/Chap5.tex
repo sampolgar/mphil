@@ -852,6 +852,7 @@ Table \ref{tab:perf-comp-vary-n} presents the performance of key operations with
 \subsection{Threshold Identity System}
 \begin{itemize}
     \item Dedup contains 
+    User submits tACT token to the issuers, who verify the token and compare it against their database TDedup and reject if token  TDedup.
     - Token Request
     - Issue
     - Aggregate, Unblind (produces token, 
@@ -859,6 +860,14 @@ Table \ref{tab:perf-comp-vary-n} presents the performance of key operations with
     - Commit to key k
     - Verify
     - 
+
+    \item MicroCred
+MicroCred: User interacts with the issuers to obtain micro-credentials {si}L  i=1 on her attributes {ai}L  i=1 .
+
+
+    \item AppCred
+    AppCred: For an application with a unique message, the user locally aggregates micro-credentials encapsulating a subset of attributes required by the application and, as a result, shows the succinct application credential value to the verifying entity. In addition, the user generates a tag under the registered key k on the unique application message to enable limiting double submissions by the verifier. The whole AppCred phase is executed locally on the user’s device and is devoid of any interactions involving the issuers.
+    
 \end{itemize}
 
 
