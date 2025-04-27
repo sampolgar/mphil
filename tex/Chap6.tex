@@ -1,43 +1,50 @@
-\mychapter{Open Source Anonymous Credentials Benchmark Framework}
+\mychapter{Open Source Anonymous Credentials Benchmark Library}
 Anonymous Credentials serve as the backbone of privacy-preserving identity systems. 
 
-Since their inception, Anonymous Credentials have primarily been academic works; however, with the increasing need for governments and organizations to migrate identity infrastructure, for example, in the US, 13 states have interoperable mobile driving licenses \cite{aamva_jurisdiction_nodate} with 30 more states in consideration, in addition to the EU's eIDAS framework requiring all member states to have such infrastructure by 2026 \cite{european_parliament_meps_2024}. 
+Since their inception, Anonymous Credentials have primarily been academic works; however, with the increasing need for governments and organizations to migrate secure digital identity infrastructure, for example, in the US, 13 states have interoperable mobile digital driving licenses \cite{aamva_jurisdiction_nodate} with 30 more states in consideration, in addition to the EU's eIDAS framework requiring all member states to have such infrastructure by 2026 \cite{european_parliament_meps_2024}. In light of this, there are products from Microsoft \cite{microsoft_microsoft_2025}, AWS \cite{aws_verifiable_nodate}, and \cite{dock_labs_dock_nodate} enabling this technology in addition to standardisation efforts at W3C \cite{w3c_verifiable_2025, w3c_decentralized_2022}
 
-Previous deployments like IBM's Idemix \cite{camenisch_design_2002} based on CL-Signatures \cite{camenisch_design_2002, cimato_signature_2003} and Microsoft's U-Prove \cite{dunkelman_formal_2016} based on Brands' signatures \cite{brands_rethinking_2000}, were deployed in pilot programs \cite{dunkelman_formal_2016}, and proved that functional feasibility was possible, though their implementations were based on early constructions and lacked efficient credential verification procedures required for the expected user experience needed for large-scale uptake.
+Therefore, the urgent question is, what is this technology's privacy/security cost? There are constant trade-offs between privacy, security, functionality, and efficiency. Improving privacy and security comes at the expense of functionality and efficiency, and vice versa. To answer this, we have built an Open-Source Anonymous Credentials Benchmark Library and (thus far) built 6 different schemes with the goal of fair comparison. We show why previous benchmark analyses are not fair and furthermore we show our analysis of using efficient practical cryptography libraries.  
 
-As for previous evaluations, there is minimal academic or professional work that benchmarks Anonymous Credential operations and, in particular, operations that real-world identity systems would incorporate. 
-A 2016 paper \cite{habib_evaluation_2016} does so for the previous SOTA Idemix and U-Prove - providing benchmarks for 
+Previous deployments like IBM's Idemix \cite{camenisch_design_2002} and IRMA \cite{fischer-hubner_towards_2013} based on CL-Signatures \cite{camenisch_design_2002, cimato_signature_2003}, Hyperledger Fabric based on BBS+ \cite{hutchison_constant-size_2006}, Microsoft's U-Prove \cite{dunkelman_formal_2016} based on Brands' signatures \cite{brands_rethinking_2000}, were deployed in pilot programs \cite{dunkelman_formal_2016}, and proved that these systems were secure, private and feature-rich, but inefficient for widespread adoption. Their implementations were based on early constructions we label as "previous generation" and lacked efficient credential verification procedures required for the expected user experience needed for large-scale uptake, which we illustrate below.
+
+\paragraph{IRMA, Idemix and U-Prove}
+
+IRMA \cite{fischer-hubner_towards_2013} presents the Show+Verify for credential with 3 attributes costs about 1.3seconds (Intel Core i7-8650U CPU with 16 GB of RAM GNU/Linux) in \cite{zhang_passo_2021}
+
+\cite{habib_evaluation_2016}: presents a more thorough evaluation of the Show+Verify algorithms:
 Idemix presents Show + Verify algorithm for 1,2,3 credentials as 110ms, 220ms, 450ms
 U-Prove presents Show + Verify algorithm for 1,2,3 credentials as 180ms, 460ms, 600ms
+Furthermore, they show functionality use-case like selective disclosure (400ms for 1 attribute selective disclosure and 670ms for 2 attributes selective disclosure) and committed attribute equality (120ms). 
+
+The gap we see here is that 
 - doesn't take batch verification into account.
+- selective disclosure costs minimal overhead. (under 1ms)
+- attribute equality costing minimal overhead (under 1ms)
+- Newer schemes \cite{camenisch_anonymous_2016, tomescu_utt_2022} reduce pairing operations in the signature construction itself, coupled with cryptography library improvements reduce all metrics significantly. 
+This hasn't been illustrated properly. 
 
-
- \cite{habib_evaluation_2016}
-They show that selective disclosure costs 400ms for 1 attribute selective disclosure and 670ms for 2 attributes selective disclosure. We show infact selective disclosure costs minimal overhead. (under 1ms)
-They show attribute equality costs 120ms where we show attribute equality costing minimal overhead (under 1ms)
-
-Show that Selective Disclosure adds minimal overhead to credential Show+Verify
-
-
-
-El Passo \cite{zhang_passo_2021}
-based on IRMA \cite{fischer-hubner_towards_2013}
+There is a gap in practical evaluation analysis for newer state-of-the-art constructions which we provide benchmarks for.
 
 
 
 
+\textbf{ABC Comparison}
+My table showing comparison of Anonymous Credential Schemes
+- The newer schemes reduce the number of pairings resulting in efficiencies. 
 
-https://hackmd.io/@je-UlHlgS6SReG8Ji1vg4Q/Byxlg3aOi
-
-
-
-
-
-
+\textbf{Threshold}
+Do a Table comparing Threshold Keys from TACT, Us, and BBS+
 
 
 
 
+\textbf{Crypto Library Optimizations}
+Do a Table showing 
+Single Pairing
+Miller Loop + Final Exponentiation
+G1 Exponentiation, Addition
+G2 Exponentiation, Addition
+GT Exponentiation, Addition
 
 
 
