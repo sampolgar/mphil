@@ -669,7 +669,7 @@ $\mathsf{Issue}(\nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}}, \{\cm_k, \Pi^{\ma
 \begin{enumerate}
     \item $|S|$ issuers run 
     \begin{enumerate}
-        \item $\ZKVerify(\cmm, \cmc, \nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}})$ and $\ZKVerify(\{\cm_k, \Pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]})$\footnote{Both proofs use the same verifier challenge, they are separated here to aid understanding}
+        \item $\ZKVerify(\cmm, \cmc, \nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}})$ and $\ZKVerify(\{\cm_k, \Pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]})$\footnote{Both proofs use the same verifier challenge, they are separated here to aid understanding}. The $\cm_k$ committing to $\ctx$ opens to the same index of $\cmc$ which the issuers will verify.
         \item $\mathsf{tShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$
     \end{enumerate}
     \item User receives $[\sigma^*]_i$ and runs $\mathsf{tShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ If output is $1$ for $\geq t$ shares, User aggregates.
@@ -759,24 +759,6 @@ Unlinkability in T-SIRIS ensures that multiple presentations of credentials from
 
 The threshold setting strengthens this property by distributing trust: even if $t-1$ issuers collude, they cannot link credential presentations without breaking the underlying cryptographic assumptions of the rerandomizable signature scheme or the commitment scheme.
 \end{proof}
-
-\subsection{Note on Deduplication Consistency}
-\label{subsec:dedup-consistency}
-
-For sybil resistance to be effective in a distributed threshold setting, the deduplication table $\mathcal{T}$ must be maintained consistently across all issuers. In our implementation, we leverage a permissioned distributed ledger shared among the threshold nodes to maintain an append-only record of all nullifiers. Before issuing a credential, each node verifies that the presented nullifier is not already in $\mathcal{T}$. 
-
-The consensus protocol of the underlying ledger ensures that even in the presence of up to $t-1$ malicious issuers, the honest majority will maintain a consistent view of the nullifier list, preventing double-issuance attacks. This approach maintains privacy since the nullifiers themselves reveal no information about user identities, while ensuring system-wide agreement on uniqueness.
-
-
-
-
-
-
-
-
-
-
-
 
 
 
