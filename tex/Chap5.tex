@@ -637,7 +637,7 @@ $\mathsf{OrgKeyGen}(1^{\lambda}, \ell, t, n) \to (\BG, \ck, \vk, \{\sk_i, \vk_i\
 \subsubsection*{(Obtain, Issue)}
 The user and issuers interact, user executes Obtain with their attributes to compute the outputs for issuing. Issue is run by the threshold nodes to issue the signature shares.
 \subsubsection*{Obtain:}
-$\mathsf{Obtain}(\attrs)$
+$\mathsf{ObtainMaster}(\attrs)$
 \begin{enumerate}
     \item User samples $s_1, r_s \sample \Z_p$, $\cm_{s_1} = \CMCom([s_1];r_s)$
     \item User interacts with the threshold to receive $h$ and a subset of $[s_{2_i}]_{i \in S}$ shares $|S| \geq t$ and $\vk_{s_2}$, user combines $s_2 \gets \mathsf{DKG.Combine}([s_{2_i}]_{i \in S})$ and verifies $g^{s_2} = \vk_{s_2}$. 
@@ -645,10 +645,33 @@ $\mathsf{Obtain}(\attrs)$
     \item inputs all $\cm_k$ for $\mathsf{Issue}$
 \end{enumerate}
 
-\subsubsection{Issue:}
-$\mathsf{Issue}(\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h) \to \sigma$: A subset of $|S|$ issuers receive signing requests from the user. 
+\subsubsection{IssueMaster:}
+$\mathsf{IssueMaster}(\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h) \to \sigma$: A subset of $|S|$ issuers receive signing requests from the user. 
 \begin{enumerate}
     \item $|S|$ issuers run $\mathsf{tShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$
+    \item User receives $[\sigma^*]_i$ and runs $\mathsf{tShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ If output is $1$ for $\geq t$ shares, User aggregates.
+    \item $\mathsf{tAggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$
+\end{enumerate}
+
+
+\subsubsection*{(ObtainMaster, IssueMaster)}
+The user and issuers interact, user executes Obtain with their attributes to compute the outputs for issuing. Issue is run by the threshold nodes to issue the signature shares.
+\subsubsection*{ObtainContext:}
+$\mathsf{ObtainContext}(\attrs, \credm, \phi)$
+\begin{enumerate}
+    \item User samples $\Delta_r, \Delta_u \sample \Z_p$, rerandomizes $\RSRand(\sigmam, \cmm) \to \sigmam', \cmm'$
+    \item User computes $\nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}}$, $\nullifier \gets \mathsf{dVRF.Eval}(s, \ctx)$ and $\Pi^{\mathsf{R}_{\mathsf{credc}}} \gets \mathsf{dVRF.Prove}(\cmm, \cmc, s, \ctx, \nullifier)$, during the same execution with the verifier, user computes  $\mathsf{tPrepare}$ to output $(\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h)$
+    \item inputs all $\cm_k$ for $\mathsf{Issue}$
+\end{enumerate}
+
+\subsubsection{IssueContext:}
+$\mathsf{Issue}(\nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}}, \{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k \in [\ell]}, h) \to \sigma$: A subset of $|S|$ issuers receive signing requests from the user. 
+\begin{enumerate}
+    \item $|S|$ issuers run 
+    \begin{enumerate}
+        \item $\ZKVerify(\cmm, \cmc, \nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}})$ and $\ZKVerify(\{\cm_k, \Pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]})$\footnote{Both proofs use the same verifier challenge, they are separated here to aid understanding}
+        \item $\mathsf{tShareSign}(\ck, \mathsf{sk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, h) \to [\sigma^*]_i:$
+    \end{enumerate}
     \item User receives $[\sigma^*]_i$ and runs $\mathsf{tShareVer}(\ck, \mathsf{vk}_i, \{\cm_k, \pi_k^{\mathsf{zkpok}}\}_{k \in [\ell]}, [\sigma^*]_i; h) \to \{0,1\}:$ If output is $1$ for $\geq t$ shares, User aggregates.
     \item $\mathsf{tAggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$
 \end{enumerate}
@@ -657,28 +680,117 @@ $\mathsf{Issue}(\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)\}_{k 
 $\mathsf{Show}$ and $\mathsf{Verify}$ follow from the non-threshold $\ABC$ system \ref{construction-ABC}. The user runs $\RSRand(\sigma, \cm) \to \sigma', \cm'$ then runs $\RSVer(\vk, \cm', \sigma')$. Before rerandomization, the commitment is without randomness $\cm = \CMCom([\attrs]; 0)$ and the user rerandomizes it before verification.
 
 
-
-
-
 \section{Security Analysis}
 \label{sec:threshold-security}
 
-\subsection{Security Properties}
-\begin{itemize}
-    \item \textbf{Unforgeability}: Reduction to threshold signature security and MIMC-ABC unforgeability
-    \item \textbf{Sybil Resistance}: Reduction to nullifier uniqueness (Chapter~\ref{sec:nullifier})
-    \item \textbf{Anonymity}: Preserved from MIMC-ABC with threshold enhancement
-    \item \textbf{Strong Unlinkability}: Inherited from underlying components
-\end{itemize}
+We analyze the security of T-SIRIS by demonstrating how it inherits and extends the security properties of its component schemes when deployed in a threshold setting with up to $t-1$ malicious issuers.
 
-\subsection{Security Theorems}
+\subsection{Unforgeability}
+
 \begin{theorem}[Unforgeability]
 If the threshold signature scheme is EUF-CMA secure and the MIMC-ABC system is unforgeable, then $\mathsf{T\text{-}SIRIS}$ is unforgeable against up to $t-1$ malicious issuers.
 \end{theorem}
 
+\begin{proof}[Sketch]
+The unforgeability of T-SIRIS reduces to the security of two underlying components:
+
+\begin{enumerate}
+    \item \textbf{Threshold signature unforgeability:} The threshold PS signature construction in Section \ref{threshold-ps-construction} inherits the EUF-CMA security of the standard PS signature scheme from Chapter \ref{chap2}. With at most $t-1$ corrupted issuers, an adversary cannot forge a valid signature without the participation of at least one honest issuer.
+    
+    \item \textbf{Credential verification unforgeability:} The verification of credential predicates reduces to the unforgeability of the MIMC-ABC system (Chapter \ref{chap3}), which prevents adversaries from proving false statements about credential attributes.
+\end{enumerate}
+
+Since both underlying components are secure under their respective assumptions, a successful attack against T-SIRIS would require breaking at least one of these primitives, which occurs with at most negligible probability.
+\end{proof}
+
+\subsection{Sybil Resistance}
+
 \begin{theorem}[Sybil Resistance]
-If the nullifier scheme from Chapter~\ref{chap4} satisfies uniqueness, then $\mathsf{T\text{-}SIRIS}$ is sybil-resistant.
+If the deterministic nullifier scheme from Chapter~\ref{chap4} satisfies uniqueness, then $\mathsf{T\text{-}SIRIS}$ is sybil-resistant.
 \end{theorem}
+
+\begin{proof}[Sketch]
+The sybil resistance of T-SIRIS directly reduces to the uniqueness property of the deterministic Credential Relationship Binding Nullifier (CRBN) scheme presented in Section \ref{subsec:deterministic-nullifier}. 
+
+For each user-context pair $(s, \mathsf{ctx})$, where $s$ is the master credential key and $\mathsf{ctx}$ is the context identifier, the deterministic nullifier $y = g^{1/(s + \mathsf{ctx})}$ has proven uniqueness under the $q$-DDHI assumption. The deduplication mechanism ensures this nullifier is used only once per context.
+
+Even in a threshold setting where some issuers are corrupted, as long as the deduplication table is consistently maintained across honest issuers, no user can obtain multiple credentials for the same context without breaking the cryptographic assumptions of the nullifier scheme.
+\end{proof}
+
+\subsection{Threshold Anonymity}
+
+\begin{theorem}[Threshold Anonymity]
+$\mathsf{T\text{-}SIRIS}$ provides threshold anonymity if the MIMC-ABC system is anonymous and the CRBN scheme preserves anonymity, even when up to $t-1$ issuers are corrupted.
+\end{theorem}
+
+\begin{proof}[Sketch]
+Threshold anonymity combines two aspects:
+
+\begin{enumerate}
+    \item \textbf{Credential anonymity:} From the MIMC-ABC system (Chapter \ref{chap3}), credential presentations reveal nothing about the user's identity beyond what is explicitly proven. The rerandomization of signatures ensures presentations are unlinkable.
+    
+    \item \textbf{Nullifier anonymity:} The CRBN scheme (Chapter \ref{chap4}) ensures that nullifiers reveal nothing about the user's identity or master credential. For revocation purposes, the committed nullifier variant provides additional unlinkability.
+\end{enumerate}
+
+In the threshold setting, these properties are preserved because:
+\begin{itemize}
+    \item No subset of fewer than $t$ issuers can reconstruct the master secret key
+    \item The zero-knowledge proofs reveal nothing beyond statement validity
+    \item The credential presentations use fresh randomness each time
+\end{itemize}
+
+Through a standard hybrid argument, we can show that the adversary's advantage in distinguishing between different users' credential presentations is negligible, even with up to $t-1$ corrupted issuers.
+\end{proof}
+
+\subsection{Unlinkability}
+
+\begin{theorem}[Unlinkability]
+$\mathsf{T\text{-}SIRIS}$ provides unlinkability if the CRBN scheme satisfies the unlinkability property and the rerandomizable signature scheme satisfies rerandomization indistinguishability.
+\end{theorem}
+
+\begin{proof}[Sketch]
+Unlinkability in T-SIRIS ensures that multiple presentations of credentials from the same user cannot be linked, even across different verifiers or sessions. This property builds on:
+
+\begin{enumerate}
+    \item \textbf{Signature rerandomization:} Each credential presentation uses fresh randomness, making signatures statistically independent and computationally indistinguishable from newly issued signatures.
+    
+    \item \textbf{Committed nullifiers:} For ongoing presentations, we use the committed nullifier variant $\mathsf{cm}_y = g_3^{1/(s + \mathsf{ctx})} g^r$ with fresh randomness $r$, ensuring unlinkability while maintaining verifiability.
+\end{enumerate}
+
+The threshold setting strengthens this property by distributing trust: even if $t-1$ issuers collude, they cannot link credential presentations without breaking the underlying cryptographic assumptions of the rerandomizable signature scheme or the commitment scheme.
+\end{proof}
+
+\subsection{Note on Deduplication Consistency}
+\label{subsec:dedup-consistency}
+
+For sybil resistance to be effective in a distributed threshold setting, the deduplication table $\mathcal{T}$ must be maintained consistently across all issuers. In our implementation, we leverage a permissioned distributed ledger shared among the threshold nodes to maintain an append-only record of all nullifiers. Before issuing a credential, each node verifies that the presented nullifier is not already in $\mathcal{T}$. 
+
+The consensus protocol of the underlying ledger ensures that even in the presence of up to $t-1$ malicious issuers, the honest majority will maintain a consistent view of the nullifier list, preventing double-issuance attacks. This approach maintains privacy since the nullifiers themselves reveal no information about user identities, while ensuring system-wide agreement on uniqueness.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \newpage
 \section{Performance Evaluation}
