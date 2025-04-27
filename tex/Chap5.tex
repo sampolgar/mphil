@@ -777,15 +777,124 @@ The threshold setting strengthens this property by distributing trust: even if $
 \newpage
 \section{Performance Evaluation}
 
+We evaluate the performance of T-SIRIS and its underlying cryptography by first benchmarking individual cryptographic operations from the threshold signature scheme, comparing it to the Threshold signature scheme from TACT \cite{rabaninejad_attribute-based_2024}. We then evaluate the performance of T-SIRIS by comparing it to S3ID, the Threshold Identity system constructed from TACT.
+
+We implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. Our comparison is fair in that we executed our cryptography \cite{polgar_anonymous_2025} and the code from \cite{arkworks_contributors_arkworks_2022} with the same pairing curve (BLS12-381), on the same computer (MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2) with the same curve library (arkworks). All measurements represent the average of 100 independent trials with standard deviations below 5\%. 
+
+\subsection{Threshold Signature Evaluation}
+We first analyze the performance of the core cryptographic primitives: our threshold PS-UTT signature scheme versus the threshold anonymous counting token (TACT) scheme used in S3ID \cite{rabaninejad_attribute-based_2024}, a state-of-the-art Sybil Resistant, Threshold Anonymous Credential system with orthogonal techniques but different cryptography.
+
+\begin{table}[!htbp]
+\centering
+\caption[Threshold ABC Performance Comparison, fixed number of nodes, varying attribute length]{Performance Comparison for fixed $ N = 16, t = 9 $, varying $n$ (milliseconds)}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=16} & \textbf{n=64} & \textbf{Speedup (n=64)} \\
+\midrule
+$\mathsf{tPrepare}$ & PS-UTT & 1.65 & 6.16 & 22.71 & 6.0$\times$ \\
+Token Request       & TACT   & 8.55 & 37.15 & 135.91 & \\
+\midrule
+$\mathsf{tShareSign}$      & PS-UTT & 20.95 & 63.40 & 244.22 & -3.98$\times^\dagger$ \\
+Issue             & TACT   & 3.09 & 14.14 & 61.34 & \\
+\midrule
+$\mathsf{tAggregate}$ & PS-UTT & 0.99 & 1.10 & 1.46 & 36.0$\times$ \\
+(Aggregate, Unblind)                     & TACT   & 3.92 & 15.04 & 52.55 & \\
+\midrule
+$\mathsf{Rerand, ZKP.Prove}$         & PS-UTT & 1.26 & 1.35 & 1.61 & 25.2$\times$ \\
+Prove             & TACT   & 7.90 & 15.78 & 40.56 & \\
+\midrule
+$\mathsf{RS.Ver}$         & PS-UTT & 1.71 & 1.82 & 1.68 & 44.1$\times$ \\
+Verify             & TACT   & 11.20 & 26.64 & 74.07 & \\
+\bottomrule
+\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
+\end{tabular}
+\label{tab:perf-comp-vary-n}
+\end{table}
+
+\vspace{-0.5em}
+
+\begin{table}[htbp]
+\centering
+\caption[Threshold ABC Performance Comparison, fixed attribute length, varying number of nodes]{Performance Comparison for $n = 16$ (milliseconds)}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Operation} & \textbf{Scheme} & \textbf{N=4, t=3} & \textbf{N=16, t=9} & \textbf{N=64, t=33} & \textbf{Speedup (N=64)} \\
+\midrule
+$\mathsf{tPrepare}$ & PS-UTT & 5.97 & 6.16 & 5.88 & 6.1$\times$ \\
+Token Request              & TACT   & 33.84 & 37.15 & 36.11 & \\
+\midrule
+$\mathsf{tShareSign}$         & PS-UTT & 21.19 & 63.40 & 283.72 & -20.99$\times^\dagger$ \\
+Issue              & TACT   & 13.68 & 14.14 & 13.52 & \\
+\midrule
+$\mathsf{tAggregate}$ & PS-UTT & 0.51 & 1.10 & 4.89 & 8.4$\times$ \\
+(Aggregate, Unblind)                     & TACT   & 6.46 & 15.04 & 41.02 & \\
+\midrule
+$\mathsf{Rerand, ZKP.Prove}$         & PS-UTT & 1.33 & 1.35 & 1.33 & 10.9$\times$\\
+Prove              & TACT   & 14.67 & 15.78 & 14.55 & \\
+\midrule
+$\mathsf{RS.Ver}$        & PS-UTT & 1.69 & 1.82 & 1.69 & 14.8$\times$ \\
+Verify              & TACT   & 23.51 & 26.64 & 25.03 & \\
+\bottomrule
+\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
+\end{tabular}
+\label{tab:perf-comp-vary-N}
+
+\end{table}
+
+
+Table \ref{tab:perf-comp-vary-n} presents the performance of key operations with varying attribute counts $(n)$ while maintaining a fixed threshold configuration $(N=16, t=9)$. Table \ref{tab:perf-comp-vary-N} presents the same operations with varying threshold size $(N, t)$ while maintaining consistent attribute count $n = 16$. 
+
+
+
+
+
+
+\subsection{Threshold Identity System}
+\begin{itemize}
+    \item Dedup contains 
+    - Token Request
+    - Issue
+    - Aggregate, Unblind (produces token, 
+    - Prove
+    - Commit to key k
+    - Verify
+    - 
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 We want to show a few things in this section.
 We want to show that the credential itself is far more efficient with both attribute length and node number.
 We also want to show that our deduplication is much faster.
+Does tact run issuance on different servers? I'm computing everything on one computer on a single thread.
 
 
 
 
 First, we compare the threshold anonymous counting token TACT with our Threshold ABC system. 
 Then we compare their S3ID system (based on TACT) with our Threshold Identity System based on our ABC system and MIMC-ABC. 
+
 
 
 \subsection{Threshold Rerandomizable Signature for ABCs}
@@ -824,62 +933,6 @@ We evaluate performance with a fixed $N = 16$ (number of Threshold Nodes) and $t
 \end{itemize}
 
 
-
-\begin{table}[!htbp]
-\centering
-\caption[Threshold ABC Performance Comparison, fixed number of nodes, varying attribute length]{Performance Comparison for fixed $ N = 16, t = 9 $, varying $n$ (milliseconds)}
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=16} & \textbf{n=64} & \textbf{Speedup (n=64)} \\
-\midrule
-Token Request & PS-UTT & 1.65 & 6.16 & 22.71 & 6.0$\times$ \\
-              & TACT   & 8.55 & 37.15 & 135.91 & \\
-\midrule
-Issue         & PS-UTT & 20.95 & 63.40 & 244.22 & -3.98$\times^\dagger$ \\
-              & TACT   & 3.09 & 14.14 & 61.34 & \\
-\midrule
-(Aggregate, Unblind) & PS-UTT & 0.99 & 1.10 & 1.46 & 36.0$\times$ \\
-                     & TACT   & 3.92 & 15.04 & 52.55 & \\
-\midrule
-Prove         & PS-UTT & 1.26 & 1.35 & 1.61 & 25.2$\times$ \\
-              & TACT   & 7.90 & 15.78 & 40.56 & \\
-\midrule
-Verify        & PS-UTT & 1.71 & 1.82 & 1.68 & 44.1$\times$ \\
-              & TACT   & 11.20 & 26.64 & 74.07 & \\
-\bottomrule
-\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
-\end{tabular}
-\label{tab:perf-comp-vary-n}
-\end{table}
-
-
-\begin{table}[htbp]
-\centering
-\caption[Threshold ABC Performance Comparison, fixed attribute length, varying number of nodes]{Performance Comparison for $n = 16$ (milliseconds)}
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{N=4, t=3} & \textbf{N=16, t=9} & \textbf{N=64, t=33} & \textbf{Speedup (N=64)} \\
-\midrule
-Token Request & PS-UTT & 5.97 & 6.16 & 5.88 & 6.1$\times$ \\
-              & TACT   & 33.84 & 37.15 & 36.11 & \\
-\midrule
-Issue         & PS-UTT & 21.19 & 63.40 & 283.72 & -20.99$\times^\dagger$ \\
-              & TACT   & 13.68 & 14.14 & 13.52 & \\
-\midrule
-(Aggregate, Unblind) & PS-UTT & 0.51 & 1.10 & 4.89 & 8.4$\times$ \\
-                     & TACT   & 6.46 & 15.04 & 41.02 & \\
-\midrule
-Prove         & PS-UTT & 1.33 & 1.35 & 1.33 & 10.9$\times$\\
-              & TACT   & 14.67 & 15.78 & 14.55 & \\
-\midrule
-Verify        & PS-UTT & 1.69 & 1.82 & 1.69 & 14.8$\times$ \\
-              & TACT   & 23.51 & 26.64 & 25.03 & \\
-\bottomrule
-\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
-\end{tabular}
-\label{tab:perf-comp-vary-N}
-
-\end{table}
 
 
 
