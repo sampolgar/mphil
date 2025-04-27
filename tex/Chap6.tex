@@ -1,7 +1,50 @@
 \mychapter{Open Source Anonymous Credentials Benchmark Framework}
-Anonymous Credentials serve as the backbone of privacy-preserving identity systems. Since their inception, they've primarily been academic works; however, with the ongoing migration of governments and organizations to digital identity systems, more practical implementations and large-scale deployments are occurring. 
+Anonymous Credentials serve as the backbone of privacy-preserving identity systems. 
+
+Since their inception, Anonymous Credentials have primarily been academic works; however, with the increasing need for governments and organizations to migrate identity infrastructure, for example, in the US, 13 states have interoperable mobile driving licenses \cite{aamva_jurisdiction_nodate} with 30 more states in consideration, in addition to the EU's eIDAS framework requiring all member states to have such infrastructure by 2026 \cite{european_parliament_meps_2024}. 
+
+Previous deployments like IBM's Idemix \cite{camenisch_design_2002} based on CL-Signatures \cite{camenisch_design_2002, cimato_signature_2003} and Microsoft's U-Prove \cite{dunkelman_formal_2016} based on Brands' signatures \cite{brands_rethinking_2000}, were deployed in pilot programs \cite{dunkelman_formal_2016}, and proved that functional feasibility was possible, though their implementations were based on early constructions and lacked efficient credential verification procedures required for the expected user experience needed for large-scale uptake.
+
+As for previous evaluations, there is minimal academic or professional work that benchmarks Anonymous Credential operations and, in particular, operations that real-world identity systems would incorporate. 
+A 2016 paper \cite{habib_evaluation_2016} does so for the previous SOTA Idemix and U-Prove - providing benchmarks for 
+Idemix presents Show + Verify algorithm for 1,2,3 credentials as 110ms, 220ms, 450ms
+U-Prove presents Show + Verify algorithm for 1,2,3 credentials as 180ms, 460ms, 600ms
+- doesn't take batch verification into account.
+
+
+ \cite{habib_evaluation_2016}
+They show that selective disclosure costs 400ms for 1 attribute selective disclosure and 670ms for 2 attributes selective disclosure. We show infact selective disclosure costs minimal overhead. (under 1ms)
+They show attribute equality costs 120ms where we show attribute equality costing minimal overhead (under 1ms)
+
+Show that Selective Disclosure adds minimal overhead to credential Show+Verify
+
+
+
+El Passo \cite{zhang_passo_2021}
+based on IRMA \cite{fischer-hubner_towards_2013}
+
+
+
+
+
+https://hackmd.io/@je-UlHlgS6SReG8Ji1vg4Q/Byxlg3aOi
+
+
+
+
+
+
+
+
+
+
+
+
 
 The Anonymous Credential field lacks standardized fair comparisons between the leading schemes (particularly BBS+ \cite{hutchison_constant-size_2006} and PS \cite{sako_short_2016}) and their newer variants \cite{camenisch_anonymous_2016}, \cite{tomescu_utt_2022}. Previous evaluations attempt to compare different schemes - although they might use consistent security parameters, variation in programming languages of the implementations (Python, C++, Rust), their underlying cryptography libraries (Arkworks, Ethereum PyEcc), and use of optimizations such as like Multi-Scalar Multiplication, Miller Loop Pairings, and Batch Techniques make fair comparison difficult to quantify. 
+
+
+
 Our first contribution is to show the key cryptographic operations for ABC systems and present the most efficient scheme in terms of the most used operation (Show + Verify). 
 Our second contribution is demonstrating the gap between theoretical and practical cryptography by implementing speedup techniques for critical operations and demonstrating our practical analysis. Our analysis is useful outside of Anonymous Credentials.
 \begin{enumerate}

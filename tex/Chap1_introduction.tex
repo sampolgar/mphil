@@ -1,5 +1,9 @@
 \mychapter{Introduction}
 
+(sam - speak about the business impact of verifying identity, KYC/AML simultaneously which is what my Thesis is about, e.g. response times / limits https://www.nngroup.com/articles/response-times-3-important-limits/ 
+
+
+
 The rapid digitization of society has elevated digital identity systems to a cornerstone of online trust, processing billions of verifications daily~\cite{noauthor_happy_2021, pang_zanzibar_2019}. Yet, traditional centralized systems, while meeting regulatory needs~\cite{eltayeb_crucial_2024}, are plagued by privacy and security vulnerabilities, with data breaches compromising billions of users~\cite{zhang_data_2022}. The European Union’s eIDAS framework, mandating a digital identity wallet for every citizen by 2026~\cite{noauthor_regulation_2024}, underscores the urgent need for secure, privacy-preserving alternatives. Moving to privacy-preserving digital identities reveals several functionality gaps; tensions between privacy and accountability in identity systems will hinder the functionality expectations of the new digital identity architecture. 
 
 Decentralized Identity (DID) systems, as outlined by W3C standards, empower users to control their credentials~\cite{soltani_survey_2021}, yet many implementations falter in balancing privacy with accountability~\cite{maram_candid_2020}. Anonymous Credential Systems (ACS) offer a cryptographic solution, enabling privacy-preserving authentication~\cite{chaum_untraceable_1981, hutchison_signature_2004, dunkelman_formal_2016, security_team_computer_science_dept_ibm_zurich_cryptographic_2010}. However, challenges persist in achieving sybil resistance, revocation, and expressive authentication while integrating real-world identity data~\cite{crites_syra_2024, rosenberg_zk-creds_2022}. Current systems either fall short or are inefficient for real-world deployment. 
@@ -155,3 +159,63 @@ Introduction
 acknowledgments 
 Lovesh Harshandani for the G2 signature trick
 UTT paper for their paper
+
+
+
+Motiviations
+The attention economy
+What are companies loosing because of this?
+What are users loosing because of this?
+I need to sell my research to the people! Why it's so important
+
+https://www.ipification.com/blog/how-mobile-apps-can-cut-the-drop-off-rate-in-sign-in-process/
+- one-second delay in page load time causes a 7\% loss in conversions.
+- 43\% of users simply abandon an onboarding process due to the friction related to proving the identity and/ or verifying their phone number, and that’s before they even start using the service.
+
+
+
+NN Group:
+0.1 second is the limit  is about the limit for having the user feel that the system is reacting instantaneously, meaning that no special feedback is necessary except to display the result.
+
+
+
+
+\textbf{Signicat}
+The fifth edition of Signicat’s regular report, The Battle to Onboard: The Growing Power of Consumer Demands, is based on a survey of 7600 consumers across Europe including Belgium, Denmark, Finland, France, Germany, Lithuania, the Netherlands, Norway, Poland, Spain, Sweden, the UK, Estonia and Ukraine. Consumers were asked to report their experiences and expectations of financial services onboarding in the last year.
+
+
+\cite{signicat_battle_2022}
+-68\% of consumers abandoned an application – up from 63\% in 2020, 38\% in 2019. Abandonment rate close to 80\% for 25-34 year olds.
+- 92\% of consumers are concerned about data privacy.
+
+Financial service providers must comply with Know Your Customer (KYC) and Anti Money Laundering (AML) rules which requires them to gain access to and check a consumer’s personal information.
+
+Key findings include:
+
+Ease of application: Nearly a third (30 per cent) of respondents said that they found the application process “complicated.”
+Speed of abandonment: The average time that a consumer would typically abandon an online application for a financial product was 18 minutes and 53 seconds. This is seven minutes quicker than the 26 minutes on average it took for a consumer to abandon in 2020.
+
+Reasons to abandon: The time to apply (21 per cent), the amount of personal information required (21 per cent) and changing their mind (21 per cent) are the main reasons applications are abandoned.
+
+Importance of onboarding methods: 38 per cent of respondents report abandoning an application for a financial product because they did not have the right identity credentials, such as a passport or digital identity.
+
+
+https://www.veriff.com/identity-verification/guides/9-tips-for-successful-verification 
+Online fraud involves tricking victims into harmful actions, leading to lost money, personal information, or other damage. Unlike other cybercrimes, it relies on victims voluntarily taking these actions. In the U.S., cybercrime incidents, including online fraud, have risen sharply, from 467,000 in 2019 to over 880,000 in 2023. During this period, monetary losses have also surged, jumping from \$3.5 billion to \$12.5 billion.
+
+
+
+
+
+% Use Cases 
+\cite{dzurenda_real-world_2022}
+% used:  • Public transport: a user has a valid ticket and applies for a discount since she is a child, student, or senior.  • Driving, renting, or sharing a car: a user having a valid driving license in the B category can rent or drive a car, or ask for a car-sharing service [1]. • Access control systems: a user can request access to her office or lab as an employee, student, or professor [16, 17], access for students with IRMA3. • Club membership: a user can prove his membership and valid payment for a membership fee [10].  • Vehicular communication: Neven et al. [22] presented how to implement ABCs in Cooperative Intelligent Transport Systems (C-ITS) and use credentials to increase privacy in vehicular communication. Fuentes et al. [13] show how ABCs techniques such as Idemix fit into various C-ITS use cases. Various attributes can be used as privacy-preserving tokens for spreading road condition notifications, an emergency vehicle approaching, vehicle, car insurance and financial services, fleet membership etc. • Parking: a user proving his membership in the parking zone (or a parking lot) and the valid payment for parking is allowed to enter his car into the parking area. This scenario has been considered at workplaces. [15, 32]. • Legal restrictions: a user can prove that he is older than 18/21 without disclosing his birthdate, e.g., age verification with IRMA4. • Electronic identification: a user holding an electronic identity card issued by a competent state institution can prove she is provided with a set of attributes (i.e., age range, E.U. citizenship, etc.) to any E.U. officer [1]. • Smart Health: de Fuentes et al. [21] present how ABCs can be used in various e-healthcare services, e.g., pedestrian crossing time depending on the agility level of users that is proven by various attributes such as reduced mobility, vision problems etc. • Vaccination certificates: the certificate can provide a secure record of vaccinations for people traveling internationally. With privacy-preserving certificates, everyone can prove their health status without being identified.
+
+
+
+
+
+Future Work
+
+% One of the current trends is to develop Post-Quantum (PQ) ABC schemes. PQABCs are usually developed from PQ Group Signature (GS) primitives or Attribute-Based Signatures (ABS) schemes. In 2012, Camenisch et al. [9] presented the lattice-based constructions for Anonymous Attribute (AA) tokens, where users use issued attribute-containing credentials that reveal only a subset of their attributes. In 2018, Boschini [4] introduced a lattice-based AA token scheme with short zero-knowledge proofs. The size of AA tokens from lattices is 17.77 MB. In 2019, Yang et al. [35] introduced latticebased zero-knowledge arguments with standard soundness and the designs of privacy-preserving methods based on lattices. Recently, some work also aims at decentralization and using blockchain technology within ABCs. For instance, in 2018, Sonnino, et al. [31] presented a Coconut scheme that supports distributed threshold issuance, public and private attributes, re-randomization, and multiple unlinkable selective attribute revelations. Coconut integrates with blockchains by using a smart contract library fo
+% Chainspace and Ethereum. Further, in 2020, Singh et al. [30] proposed a novel user-centric and privacy-preserving scheme with self-blindable credentials that are verifiable on the blockchain. Making ABCs resistant to quantum cryptanalysis by using PQbased constructions and using decentralization for mitigating the deployment of TTPs are still open problems and will be future research directions in these technologies.
