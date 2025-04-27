@@ -1,44 +1,22 @@
 \mychapter{Open Source Anonymous Credentials Benchmark Framework}
+Anonymous Credentials serve as the backbone of privacy-preserving identity systems. Since their inception, they've primarily been academic works; however, with the ongoing migration of governments and organizations to digital identity systems, more practical implementations and large-scale deployments are occurring. 
 
-We developed the first standardized tooling for fair comparison of anonymous credential schemes, addressing inconsistencies in previous academic evaluations. This framework enables both researchers and industry practitioners to make informed implementation decisions based on quantitative performance metrics rather than unfair practical claims or purely theoretical analysis, accelerating both research and adoption.
+The Anonymous Credential field lacks standardized fair comparisons between the leading schemes (particularly BBS+ \cite{hutchison_constant-size_2006} and PS \cite{sako_short_2016}) and their newer variants \cite{camenisch_anonymous_2016}, \cite{tomescu_utt_2022}. Previous evaluations attempt to compare different schemes - although they might use consistent security parameters, variation in programming languages of the implementations (Python, C++, Rust), their underlying cryptography libraries (Arkworks, Ethereum PyEcc), and use of optimizations such as like Multi-Scalar Multiplication, Miller Loop Pairings, and Batch Techniques make fair comparison difficult to quantify. 
+Our first contribution is to show the key cryptographic operations for ABC systems and present the most efficient scheme in terms of the most used operation (Show + Verify). 
+Our second contribution is demonstrating the gap between theoretical and practical cryptography by implementing speedup techniques for critical operations and demonstrating our practical analysis. Our analysis is useful outside of Anonymous Credentials.
+\begin{enumerate}
+    \item First, we show that implementing a Schnorr protocol to prove knowledge of committed exponents scales sublinearly in the size of the attribute length (contrary to the theoretical analyses in most literature) - importantly, before making claims on performance enhancements against previous "linear" schemes, it's imperative for new schemes to compare under these assumptions rather than pure theoretic. 
 
+    \item Second, we show a batch verification technique for multiple individual schnorr proofs improving verification time by 50\%. Demonstrate a batch verification method of individual schnorr proofs (useful in the threshold system where a user commits to each message individually, the verifier can create random linear combination and verify that $(ps_utt_ts_src_signer_batch_verify)$
 
-
-
-
-
-
-We developed the first standardized open-source tooling to fairly compare anonymous credential schemes, tackling inconsistencies in previous academic evaluations. This framework empowers researchers and industry practitioners to make informed implementation decisions using quantitative performance metrics, moving beyond unfair practical claims or purely theoretical analysis. By enabling reliable and consistent assessments, it accelerates both research advancements and practical adoption of privacy-preserving technologies.
-
-
-
-
-
-
-
-
-Anonymous credential systems support privacy-preserving identity solutions for applications like decentralized identity management and Sybil-resistant voting. Practitioners face challenges in choosing their best  because theoretical analyses often do not match real-world performance. Our benchmarks show that schnorr protocols scale sublinearly with optimized Multi-Scalar Multiplication and pairing-based credentials improve operations with  Miller-Loop implementations, 
-
-
-We created an open-source library in Rust to solve this. It implements and tests top anonymous credential systems, giving practitioners clear data and insights on how these systems work in practice. The library acts as a standard tool to study system performance in cases like decentralized identity and private authentication.
+    \item third, we show that pairing-based credentials significantly improve with optimized Miller-Loop implementations. Transforming a pairing equality check from this to this means a speedup of X. 
+\end{enumerate}
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-Anonymous credential systems play a crucial role in privacy-preserving identity solutions, yet practitioners often struggle to select the most suitable system for their needs. This challenge arises from a disconnect between theoretical complexity analyses and the performance observed in practical deployments. Our research has revealed key empirical insights, such as sublinear scaling of Schnorr protocols with Multi-Scalar Multiplication optimizations and significant speedups in pairing-based operations via Miller-Loop enhancements, that underscore the limitations of relying solely on theoretical models.
-
-In this chapter, we present a use case-driven performance profiling approach to evaluate our open-source anonymous credentials library. We analyze its behavior under realistic workloads by applying the library to practitioner-relevant scenarios—including decentralized identity management, Sybil-resistant voting mechanisms, and privacy-preserving authentication. This method maps critical performance metrics, such as latency, throughput, and proof size, to functional requirements, offering actionable insights for system selection. The chapter is structured as follows: Section 6.2 describes our evaluation methodology, Section 6.3 presents the empirical results, Section 6.4 discusses their implications, and Section 6.5 outlines future research directions.
 
 
 
