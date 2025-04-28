@@ -1321,30 +1321,38 @@ Benchmark these schemes against SPS-EQ and zk-creds for efficient anonymous cred
 
 
 
-% \subsubsection{Case Study: Credential Expiration Verification}
+\subsection{Use-Case Case Study}
 
-% To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
+To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
 
-% \begin{table}[htbp]
-% \centering
-% \caption{Performance Comparison for Credential Expiration Verification}
-% \label{tab:expiry-comparison}
-% \begin{tabular}{lrrr}
-% \toprule
-% \textbf{Approach} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
-% \midrule
-% Simple Possession & 2 & 2 & 424B \\
-% Expiry (ZK-Creds) & 50 & \multirow{3}{*}{$\left\}5\text{ ms}\right.$} & \multirow{3}{*}{744B} \\
-% Linkable Show (ZK-Creds) & 41 &  &  \\
-% Rate Limiting (ZK-Creds) & 58 &  &  \\
-% \textbf{Our Approach} & \textbf{1.3} & \textbf{2.0} & \textbf{512B} \\
-% \bottomrule
-% \end{tabular}
-% \end{table}
 
-% Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
 
-% Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
+\begin{table}[htbp]
+\centering
+\caption{Performance Comparison for Credential Operations}
+\label{tab:expiry-comparison}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Approach} & \textbf{Scheme} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
+\midrule
+Simple Possession & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
+& Us & 2 & 2 & \\
+\midrule
+Expiry & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
+& Us & 2 & 2 & \\
+\midrule
+Linkable Show & \cite{rosenberg_zk-creds_2022} & 41 &  &  \\
+& Us & 2 & 2 & \\
+\midrule
+Rate Limiting & \cite{rosenberg_zk-creds_2022} & 58 &  &  \\
+& Us & 2 & 2 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
+
+Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
 
 
 
