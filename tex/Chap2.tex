@@ -135,45 +135,6 @@ where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access 
 \]
 \end{definition}
 
-\begin{definition}[Commitment Scheme]\label{def:commitmentscheme}
-A commitment scheme $\mathsf{Com}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ where:
-\begin{itemize}
-    \item $\mathsf{Setup}(1^\lambda) \rightarrow \mathsf{ck}$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a commitment key $\mathsf{ck}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{ck}$.
-    
-    \item $\mathsf{Commit}(\mathsf{ck}, m) \rightarrow (\mathsf{cm}, r)$: is a probabilistic algorithm that takes as input the commitment key $\mathsf{ck}$ and a message $m \in \mathcal{M}$. It outputs a commitment $\mathsf{cm}$ and an opening value $r$.
-    
-    \item $\mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m, r) \rightarrow b$: is a deterministic algorithm that takes as input the commitment key $\mathsf{ck}$, a commitment $\mathsf{cm}$, a message $m$, and an opening value $r$. It outputs a bit $b \in \{0,1\}$, where 1 indicates a valid opening and 0 indicates an invalid opening.
-\end{itemize}
-\end{definition}
-
-\begin{definition}[Correctness]
-A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is correct if for all $\lambda \in \mathbb{N}$, all commitment keys $\mathsf{ck} \in [\mathsf{Setup}(1^\lambda)]$, and all messages $m \in \mathcal{M}$:
-$$\Pr[(\mathsf{cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, m) : \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m, r) = 1] = 1.$$
-\end{definition}
-
-\begin{definition}[Hiding]
-A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is hiding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-$$\left|\Pr\left[\begin{array}{l}
-    \mathsf{ck} \sample \mathsf{Setup}(1^\lambda) \\
-    (m_0, m_1) \sample \mathcal{A}(\mathsf{ck}) \\
-    b \sample \{0,1\} \\
-    (\mathsf{cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, m_b) \\
-    b' \sample \mathcal{A}(\mathsf{ck}, \mathsf{cm})
-\end{array} : b' = b\right] - \frac{1}{2}\right| \leq \negl(\lambda)$$
-\end{definition}
-
-\begin{definition}[Binding]
-A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
-$$\Pr\left[\begin{array}{l}
-    \mathsf{ck} \sample \mathsf{Setup}(1^\lambda) \\
-    (\mathsf{cm}, m_0, m_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck})
-\end{array} : \begin{array}{l}
-    m_0 \neq m_1 \land \\
-    \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m_0, r_0) = 1 \land \\
-    \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m_1, r_1) = 1
-\end{array}\right] \leq \negl(\lambda)$$
-\end{definition}
-
 \subsubsection{Zero-Knowledge Proofs}
 A zero-knowledge proof (ZKP) enables a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ that a statement $x \in L$ holds for some language $L$, without revealing the witness $w$. Formally, an interactive proof system $(\mathcal{P}, \mathcal{V})$ for $L$ satisfies:
 \begin{itemize}
@@ -238,38 +199,88 @@ where $Q$ is the set of queries made to $\mathcal{O}_{x,y}$ with access to $x,y$
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-% % % % % % % % % % 
-% 
-% Randomizable Vector Commitments
-% 
-% % % % % % % % % % 
-
-
-\newpage
-\section{Pedersen Commitment Scheme for a vector of messages}\label{sec:commitment}
+\subsection{Dual-Group Pedersen Commitments}\label{sec:commitment}
 In this section, we introduce a specialized extension of Pedersen commitments that supports vector messages, rerandomizability, and position binding. Our main contribution is a security proof in the Algebraic Group Model (AGM) that establishes position binding based on the Symmetric Discrete Logarithm Problem (SDLP).
 
-\subsection{Extended Properties}
+
+\begin{definition}[Commitment Scheme]\label{def:commitmentscheme}
+A commitment scheme $\mathsf{Com}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ where:
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda) \rightarrow \mathsf{ck}$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a commitment key $\mathsf{ck}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{ck}$.
+    
+    \item $\mathsf{Commit}(\mathsf{ck}, m) \rightarrow (\mathsf{cm}, r)$: is a probabilistic algorithm that takes as input the commitment key $\mathsf{ck}$ and a message $m \in \mathcal{M}$. It outputs a commitment $\mathsf{cm}$ and an opening value $r$.
+    
+    \item $\mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m, r) \rightarrow b$: is a deterministic algorithm that takes as input the commitment key $\mathsf{ck}$, a commitment $\mathsf{cm}$, a message $m$, and an opening value $r$. It outputs a bit $b \in \{0,1\}$, where 1 indicates a valid opening and 0 indicates an invalid opening.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Correctness]
+A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is correct if for all $\lambda \in \mathbb{N}$, all commitment keys $\mathsf{ck} \in [\mathsf{Setup}(1^\lambda)]$, and all messages $m \in \mathcal{M}$:
+$$\Pr[(\mathsf{cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, m) : \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m, r) = 1] = 1.$$
+\end{definition}
+
+\begin{definition}[Hiding]
+A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is hiding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\left|\Pr\left[\begin{array}{l}
+    \mathsf{ck} \sample \mathsf{Setup}(1^\lambda) \\
+    (m_0, m_1) \sample \mathcal{A}(\mathsf{ck}) \\
+    b \sample \{0,1\} \\
+    (\mathsf{cm}, r) \sample \mathsf{Commit}(\mathsf{ck}, m_b) \\
+    b' \sample \mathcal{A}(\mathsf{ck}, \mathsf{cm})
+\end{array} : b' = b\right] - \frac{1}{2}\right| \leq \negl(\lambda)$$
+\end{definition}
+
+\begin{definition}[Binding]
+A commitment scheme $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ is binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    \mathsf{ck} \sample \mathsf{Setup}(1^\lambda) \\
+    (\mathsf{cm}, m_0, m_1, r_0, r_1) \sample \mathcal{A}(\mathsf{ck})
+\end{array} : \begin{array}{l}
+    m_0 \neq m_1 \land \\
+    \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m_0, r_0) = 1 \land \\
+    \mathsf{Open}(\mathsf{ck}, \mathsf{cm}, m_1, r_1) = 1
+\end{array}\right] \leq \negl(\lambda)$$
+\end{definition}
+
+
+
+\subsubsection{Dual-Group Construction}
+
+We instantiate a rerandomizable commitment scheme to a vector of messages in the bilinear group setting as per the construction in \cite{tomescu_utt_2022} to enable efficient integration with our signature scheme. Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$.
+
+\begin{itemize}
+    \item $\mathsf{Setup}(1^\lambda, 1^n) \to \mathsf{ck}$:
+    Sample generators $(g, \tilde{g}) \sample \G_1 \times \G_2$.
+    For $i \in [1,n]$: Sample $y_i \sample \Z_p$, compute $(g_i, \tilde{g}_i) \gets (g^{y_i}, \tilde{g}^{y_i})$.
+    Return $\mathsf{ck} \gets (g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
+    
+    \item $\mathsf{Commit}(\mathsf{ck}, \attrs) \to (\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$:
+    Parse $\mathsf{ck}$ as $(g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
+    Sample $r \sample \Z_p$.
+    Compute $\mathsf{cm} \gets g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} \gets \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
+    Return $(\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$.
+    
+    \item $\mathsf{Open}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \attrs, r) \to \{0,1\}$:
+    Check if $\mathsf{cm} = g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} = \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
+    Additionally, verify $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$.
+    Return 1 if all checks pass, 0 otherwise.
+    
+    \item $\mathsf{Rerand}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \Delta_r) \to ({\mathsf{cm}}', \widetilde{\mathsf{cm}}', r')$:
+    Compute ${\mathsf{cm}}' \gets \mathsf{cm} \cdot g^{\Delta_r}$ and $\widetilde{\mathsf{cm}}' \gets \widetilde{\mathsf{cm}} \cdot \tilde{g}^{\Delta_r}$.
+    Set $r' \gets r + \Delta_r$.
+    Return $({\mathsf{cm}}', \widetilde{\mathsf{cm}}', r')$.
+\end{itemize}
+
+This construction preserves the message vector while updating the randomness, making rerandomized commitments computationally indistinguishable from fresh commitments to the same message.
+
+
+
+
+
+
+
+
+\section{Rerandomizable Position Binding Pedersen Commitments}
 
 Building on the standard commitment scheme defined in Section \ref{def:commitmentscheme}, we extend it with the following properties:
 
@@ -309,80 +320,350 @@ Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indist
 \end{definition}
 
 
-\subsection{Dual-Group Construction}
 
-We instantiate a rerandomizable vector commitment scheme in the bilinear group setting as per the construction in \cite{tomescu_utt_2022} to enable efficient integration with our signature scheme. Let $\G_1, \G_2$ be cyclic groups of prime order $p$ with an efficient Type-3 pairing $e: \G_1 \times \G_2 \to \G_T$.
+\subsection{Security Analysis}
+\begin{theorem}
+In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG = (\G_1, \G_2, \G_T, e, p, g, \tilde{g})$, then the commitment scheme satisfies position binding. For any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
 
-\begin{itemize}
-    \item $\mathsf{Setup}(1^\lambda, 1^n) \to \mathsf{ck}$:
-    Sample generators $(g, \tilde{g}) \sample \G_1 \times \G_2$.
-    For $i \in [1,n]$: Sample $y_i \sample \Z_p$, compute $(g_i, \tilde{g}_i) \gets (g^{y_i}, \tilde{g}^{y_i})$.
-    Return $\mathsf{ck} \gets (g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
-    
-    \item $\mathsf{Commit}(\mathsf{ck}, \attrs) \to (\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$:
-    Parse $\mathsf{ck}$ as $(g, (g_1,\ldots,g_n), \tilde{g}, (\tilde{g}_1,\ldots,\tilde{g}_n))$.
-    Sample $r \sample \Z_p$.
-    Compute $\mathsf{cm} \gets g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} \gets \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
-    Return $(\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$.
-    
-    \item $\mathsf{Open}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \attrs, r) \to \{0,1\}$:
-    Check if $\mathsf{cm} = g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} = \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$.
-    Additionally, verify $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$.
-    Return 1 if all checks pass, 0 otherwise.
-    
-    \item $\mathsf{Rerand}(\mathsf{ck}, (\mathsf{cm}, \widetilde{\mathsf{cm}}), \Delta_r) \to ({\mathsf{cm}}', \widetilde{\mathsf{cm}}', r')$:
-    Compute ${\mathsf{cm}}' \gets \mathsf{cm} \cdot g^{\Delta_r}$ and $\widetilde{\mathsf{cm}}' \gets \widetilde{\mathsf{cm}} \cdot \tilde{g}^{\Delta_r}$.
-    Set $r' \gets r + \Delta_r$.
-    Return $({\mathsf{cm}}', \widetilde{\mathsf{cm}}', r')$.
-\end{itemize}
+$$\mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A}, \mathsf{Com}}(\lambda) \leq n \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B}, BG}(\lambda),$$
 
-This construction preserves the message vector while updating the randomness, making rerandomized commitments computationally indistinguishable from fresh commitments to the same message.
+where $n$ is the message vector length.
+\end{theorem}
+
+\begin{proof}[Proof Sketch]
+We construct a reduction where an algorithm $\mathcal{B}$ solves the Symmetric Discrete Logarithm Problem (SDLP) by leveraging an algebraic adversary $\mathcal{A}$ that breaks the position binding property of the commitment scheme.
+
+\begin{enumerate}
+    \item \textbf{Setup: SDLP Challenger $\mathcal{C}$.} An external SDLP challenger provides $\mathcal{B}$ with an SDLP instance $(g^x, \tilde{g}^x) \in \G_1 \times \G_2$, where $g$ and $\tilde{g}$ are generators of groups $\G_1$ and $\G_2$ (respectively) of prime order $p$, and $x \sample \Z_p$ is a random, unknown exponent that $\mathcal{B}$ aims to compute.
+
+    \item \textbf{Reduction Algorithm $\mathcal{B}$.} $\mathcal{B}$ takes the SDLP instance and constructs a commitment key $\mathsf{ck}$ to feed to $\mathcal{A}$ as follows:
+
+        \begin{enumerate}
+        \item \textbf{Choose a random position.} Sample $i^* \sample [1, n]$ uniformly at random, where $n$ is the number of positions in the commitment scheme. This $i^*$ is $\mathcal{B}$'s guess for where $\mathcal{A}$ will break position binding.
+        
+        \item \textbf{Construct the commitment key $\mathsf{ck}$.}
+        \begin{itemize}
+            \item For position $i^*$, embed the SDLP instance: 
+            $$(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x).$$
+            \item For all other positions $j \neq i^*$: Sample $y_j \sample \Z_p$ independently, set $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$.
+            \item Output $\mathsf{ck} = (g, (g_1, \ldots, g_n), \tilde{g}, (\tilde{g}_1, \ldots, \tilde{g}_n))$.
+        \end{itemize}
+        
+        \item \textbf{Invoke the adversary.} $\mathcal{B}$ Runs $\mathcal{A}$ with input $\mathsf{ck}$: 
+        $$\mathcal{A}(\mathsf{ck}) \rightarrow (\mathsf{cm}, \widetilde{\mathsf{cm}}, i, \attrs_0, \attrs_1, r_0, r_1).$$
+        Here, $\mathcal{A}$ outputs a position binding break at position $i$, meaning $\attrs_0[i] \neq \attrs_1[i]$, and $\attrs_0[j] = \attrs_1[j]$ for all $j \neq i$, with $\mathsf{cm}$ opening to both $(\attrs_0, r_0)$ and $(\attrs_1, r_1)$.
+    \end{enumerate}
+
+    
+      \item  \textbf{Adversary $\mathcal{A}$.} Since $\mathcal{A}$ is algebraic, it provides explicit representations of its outputs:
+        \begin{itemize}
+            \item For $\mathsf{cm} \in \G_1$: 
+            $$\mathsf{cm} = g^{\alpha} \prod_{k=1}^n g_k^{\beta_k}$$
+            where $\alpha, \beta_1, \ldots, \beta_n \in \Z_p$ are known to $\mathcal{B}$.
+            \item For $\widetilde{\mathsf{cm}} \in \G_2$: 
+            $$\widetilde{\mathsf{cm}} = \tilde{g}^{\tilde{\alpha}} \prod_{k=1}^n \tilde{g}_k^{\tilde{\beta}_k}$$
+            where $\tilde{\alpha}, \tilde{\beta}_1, \ldots, \tilde{\beta}_n \in \Z_p$ are known to $\mathcal{B}$.
+        \end{itemize}
+        The opening conditions hold:
+        \begin{itemize}
+            \item $\mathsf{cm} = g^{r_0} \prod_{k=1}^n g_k^{m_{0,k}} = g^{r_1} \prod_{k=1}^n g_k^{m_{1,k}}$
+            \item $\widetilde{\mathsf{cm}} = \tilde{g}^{r_0} \prod_{k=1}^n \tilde{g}_k^{m_{0,k}} = \tilde{g}^{r_1} \prod_{k=1}^n \tilde{g}_k^{m_{1,k}}$
+            \item $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$.
+        \end{itemize}
+
+
+        \item 
+\textbf{Extraction by $\mathcal{B}$.} $\mathcal{B}$ uses $\mathcal{A}$'s output to solve for $x$:
+
+\begin{enumerate}
+        \item \textbf{Check the position.} If $i \neq i^*$, abort. If $i = i^*$, proceed.
+        
+        \item \textbf{Substitute generators and equate exponents.} Substitute into $\mathsf{cm}$: $g_k = g^{y_k}$ for $k \neq i^*$, and $g_{i^*} = g^x$. From the opening condition:
+        $$\mathsf{cm} = g^{r_0} \prod_{k=1}^n g_k^{m_{0,k}} = g^{r_0} \cdot \prod_{k \neq i^*} g^{y_k m_{0,k}} \cdot g^{x m_{0,i^*}},$$
+        and similarly:
+        $$\mathsf{cm} = g^{r_1} \cdot \prod_{k \neq i^*} g^{y_k m_{1,k}} \cdot g^{x m_{1,i^*}}.$$
+        Equate the exponents of $g$:
+        $$r_0 + \sum_{k \neq i^*} y_k m_{0,k} + x m_{0,i^*} = r_1 + \sum_{k \neq i^*} y_k m_{1,k} + x m_{1,i^*}.$$
+        
+        \item \textbf{Simplify the equation.} Since $\attrs_0[j] = \attrs_1[j]$ for $j \neq i$, we have $m_{0,k} = m_{1,k}$ for all $k \neq i^*$. Cancel these terms:
+        $$r_0 + x m_{0,i^*} = r_1 + x m_{1,i^*}.$$
+        Rearrange:
+        $$x (m_{0,i^*} - m_{1,i^*}) = r_1 - r_0.$$
+        
+        \item \textbf{Solve for $x$.} Since $i = i^*$ and $\attrs_0[i^*] \neq \attrs_1[i^*]$, it follows that $m_{0,i^*} \neq m_{1,i^*}$. Thus:
+        $$x = \frac{r_1 - r_0}{m_{0,i^*} - m_{1,i^*}} \mod p.$$
+        Output $x$ as the solution to the SDLP instance.
+    \end{enumerate}
+
+    \textbf{Success Probability.} $\mathcal{B}$ succeeds when $i = i^*$, which occurs with probability $1/n$. If $\mathcal{A}$ breaks position binding with probability $\epsilon$, then $\mathcal{B}$ solves SDLP with probability $\epsilon / n$.
+
+\textbf{Pairing Check.} The condition $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$ ensures consistency across $\G_1$ and $\G_2$, but $\mathcal{B}$ relies solely on the $\G_1$ equations for extraction.
+\end{enumerate}
+
+
+
+
+
+
+
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \begin{proof}[Proof Sketch]
+% We embed an SDLP instance $(g^x, \tilde{g}^x)$ at a random position and use the adversary’s position binding break to extract the discrete logarithm $x$. Given an SDLP instance $(g^x, \tilde{g}^x) \in \G_1 \times \G_2$, $\mathcal{B}$ constructs a commitment key $\mathsf{ck}$:
+% \begin{enumerate}
+%     \item Choose $i^* \sample [1,n]$ uniformly.
+%     \item Set $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$; for $j \neq i^*$, sample $y_j \sample \Z_p$ and set $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$.
+%     \item Output $\mathsf{ck} = (g, (g_1, \ldots, g_n), \tilde{g}, (\tilde{g}_1, \ldots, \tilde{g}_n))$.
+% \end{enumerate}
+
+% Run $\mathcal{A}(\mathsf{ck})$, which outputs $(\mathsf{cm}, \widetilde{\mathsf{cm}}, i, \attrs_0, \attrs_1, r_0, r_1)$ breaking position binding at position $i$, where $\attrs_0[i] \neq \attrs_1[i]$ and $\attrs_0[j] = \attrs_1[j]$ for $j \neq i$. 
+
+% Since $\mathcal{A}$ is algebraic, it provides representations:
+% \begin{enumerate}
+%     \item $\mathsf{cm} = g^{\alpha} \prod_{k=1}^n g_k^{\beta_k}$
+%     \item $\widetilde{\mathsf{cm}} = \tilde{g}^{\tilde{\alpha}} \prod_{k=1}^n \tilde{g}_k^{\tilde{\beta}_k}$
+% \end{enumerate}
+
+% From $\mathsf{Open}$, we have:
+% \begin{enumerate}
+%     \item $\mathsf{cm} = g^{r_0} \prod_{k=1}^n g_k^{m_{0,k}} = g^{r_1} \prod_{k=1}^n g_k^{m_{1,k}}$
+%     \item $\widetilde{\mathsf{cm}} = \tilde{g}^{r_0} \prod_{k=1}^n \tilde{g}_k^{m_{0,k}} = \tilde{g}^{r_1} \prod_{k=1}^n \tilde{g}_k^{m_{1,k}}$
+%     \item $e(\mathsf{cm}, \tilde{g}) = e(g, \widetilde{\mathsf{cm}})$
+% \end{enumerate}
+
+% Substituting $g_k = g^{y_k}$ (and $g_{i^*} = g^x$), equate exponents in $\G_1$:
+
+% $$r_0 + \sum_{k \neq i} y_k m_{0,k} + x m_{0,i} = r_1 + \sum_{k \neq i} y_k m_{1,k} + x m_{1,i}.$$
+
+% Since $m_{0,k} = m_{1,k}$ for $k \neq i$, this simplifies to:
+
+% $$r_0 + x m_{0,i} = r_1 + x m_{1,i} \implies x (m_{0,i} - m_{1,i}) = r_1 - r_0.$$
+
+% If $i = i^*$, solve:
+
+% $$x = \frac{r_1 - r_0}{m_{0,i^*} - m_{1,i^*}} \mod p,$$
+
+% where $m_{0,i^*} \neq m_{1,i^*}$ ensures division is defined. The pairing check confirms consistency across $G_1$ and $G_2$. $\mathcal{B}$ succeeds with probability $\epsilon / n$, where $\epsilon$ is $\mathcal{A}$'s advantage, completing the reduction.
+% \end{proof}
+
+
+
+
+
+
+
+
+
 
 
 \subsection{Security Analysis}
+Our dual-group Pedersen commitment scheme satisfies the following properties:
 
-We now prove that our construction satisfies position binding in the Algebraic Group Model (AGM).
+\begin{itemize}
+    \item \textbf{Perfect Hiding:} For any $\attrs \in \Z_p^n$, $\mathsf{Commit}(\mathsf{ck}, \attrs)$ outputs $(\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$ where $\mathsf{cm} = g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} = \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$. Since $r \sample \Z_p$ is uniform, $\mathsf{cm}$ and $\widetilde{\mathsf{cm}}$ are uniformly distributed in $\G_1$ and $\G_2$, revealing no information about $\attrs$.
 
-\begin{proof}[Sketch]
-We construct a reduction algorithm $\mathcal{B}$ that uses an adversary $\mathcal{A}$ against position binding to solve the SDLP problem \ref{sdlp}. $\mathcal{B}$ receives an SDLP instance $(g^x, \tilde{g}^x)$ and embeds it at a random position $i^* \in [1,n]$ in the commitment key:
+    \item \textbf{Position Binding:} Under the SDLP assumption in the AGM, the scheme is position binding. The reduction embeds an SDLP instance at a random position, using the adversary’s algebraic break to extract the solution with advantage scaled by $1/n$.
 
-\begin{enumerate}
-    \item $\mathcal{B}$ sets $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$
-    \item For all $j \neq i^*$, $\mathcal{B}$ generates $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ with $y_j \sample \Z_p$
-    \item When $\mathcal{A}$ outputs a position binding break $(\mathsf{cm}, i, \attrs_0, \attrs_1, r_0, r_1)$, if $i = i^*$, then $\mathcal{B}$ can solve for $x$
-\end{enumerate}
+    \item \textbf{Rerandomizability:} The $\mathsf{Rerand}$ algorithm outputs $(\mathsf{cm}', \widetilde{\mathsf{cm}}', r') = (\mathsf{cm} \cdot g^{\Delta_r}, \widetilde{\mathsf{cm}} \cdot \tilde{g}^{\Delta_r}, r + \Delta_r)$, which is a valid commitment to the same $\attrs$. Since $\Delta_r \sample \Z_p$ is uniform, the distribution matches a fresh commitment, satisfying rerandomizability perfectly by construction.
 
-Since $\mathcal{A}$ is algebraic, $\mathcal{B}$ knows the representation of $\mathsf{cm}$ in terms of the group generators. When $i = i^*$ and $\mathcal{A}$ successfully breaks position binding, we have:
-\[
-    g^{r_0}g_1^{m_{0,1}}\cdots g_{i^*}^{m_{0,i^*}}\cdots g_n^{m_{0,n}} = g^{r_1}g_1^{m_{1,1}}\cdots g_{i^*}^{m_{1,i^*}}\cdots g_n^{m_{1,n}}
-\]
-
-Since $m_{0,j} = m_{1,j}$ for all $j \neq i^*$ and $m_{0,i^*} \neq m_{1,i^*}$, after simplification we get:
-\[
-    g^{r_0} (g^x)^{m_{0,i^*}} = g^{r_1} (g^x)^{m_{1,i^*}}
-\]
-
-Solving for $x$ yields:
-\[
-    x = \frac{r_1 - r_0}{m_{0,i^*} - m_{1,i^*}} \mod p
-\]
-
-The reduction succeeds whenever $i = i^*$ (probability $1/n$) and $\mathcal{A}$ breaks position binding, giving the stated bound.
-\end{proof}
-
-The hiding property follows directly from the perfect hiding of Pedersen commitments, while binding follows from the discrete logarithm assumption. For completeness, this construction also satisfies the standard homomorphic properties of Pedersen commitments, enabling efficient aggregation and zero-knowledge proofs in our credential system.
-
-A full proof can be found in the appendix \ref{appendix:commitmentreduction}
-
-% % % % % % % % % % 
-% 
-% END Randomizable Vector Commitments
-% 
-% % % % % % % % % % 
+    \item \textbf{Binding:} Position binding implies standard binding, as any break of standard binding (distinct $\attrs_0 \neq \attrs_1$) violates position binding at some position.
+\end{itemize}
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% We now prove that our construction satisfies position binding in the Algebraic Group Model (AGM).
+
+% \begin{proof}[Sketch]
+% We construct a reduction algorithm $\mathcal{B}$ that uses an adversary $\mathcal{A}$ against position binding to solve the SDLP problem \ref{sdlp}. $\mathcal{B}$ receives an SDLP instance $(g^x, \tilde{g}^x)$ and embeds it at a random position $i^* \in [1,n]$ in the commitment key:
+
+% \begin{enumerate}
+%     \item $\mathcal{B}$ sets $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$
+%     \item For all $j \neq i^*$, $\mathcal{B}$ generates $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ with $y_j \sample \Z_p$
+%     \item When $\mathcal{A}$ outputs a position binding break $(\mathsf{cm}, i, \attrs_0, \attrs_1, r_0, r_1)$, if $i = i^*$, then $\mathcal{B}$ can solve for $x$
+% \end{enumerate}
+
+% Since $\mathcal{A}$ is algebraic, $\mathcal{B}$ knows the representation of $\mathsf{cm}$ in terms of the group generators. When $i = i^*$ and $\mathcal{A}$ successfully breaks position binding, we have:
+% \[
+%     g^{r_0}g_1^{m_{0,1}}\cdots g_{i^*}^{m_{0,i^*}}\cdots g_n^{m_{0,n}} = g^{r_1}g_1^{m_{1,1}}\cdots g_{i^*}^{m_{1,i^*}}\cdots g_n^{m_{1,n}}
+% \]
+
+% Since $m_{0,j} = m_{1,j}$ for all $j \neq i^*$ and $m_{0,i^*} \neq m_{1,i^*}$, after simplification we get:
+% \[
+%     g^{r_0} (g^x)^{m_{0,i^*}} = g^{r_1} (g^x)^{m_{1,i^*}}
+% \]
+
+% Solving for $x$ yields:
+% \[
+%     x = \frac{r_1 - r_0}{m_{0,i^*} - m_{1,i^*}} \mod p
+% \]
+
+% The reduction succeeds whenever $i = i^*$ (probability $1/n$) and $\mathcal{A}$ breaks position binding, giving the stated bound.
+% \end{proof}
+
+% The hiding property follows directly from the perfect hiding of Pedersen commitments, while binding follows from the discrete logarithm assumption. For completeness, this construction also satisfies the standard homomorphic properties of Pedersen commitments, enabling efficient aggregation and zero-knowledge proofs in our credential system.
+
+% A full proof can be found in the appendix \ref{appendix:commitmentreduction}
+
+
+
+% \subsection{Pedersen Commitment Reduction}\label{appendix:commitmentreduction}
+% \begin{theorem}
+%     In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG$, then our Commitment scheme satisfies position binding. Specifically, for any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
+%     \[
+%         \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda) \leq \ell \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\mathbb{G}}(\lambda)
+%     \]
+%     where $\ell$ is the vector length.
+% \end{theorem}
+
+% \begin{proof}
+% We prove via reduction in the AGM. Given an algebraic PPT adversary $\mathcal{A}$ that breaks position binding with non-negligible probability $\epsilon$, we construct a PPT algorithm $\mathcal{B}$ that solves SDLP with probability $\epsilon/\ell$. For clarity, we illustrate with $\ell = 3$; the proof generalizes naturally.
+
+% Algorithm $\mathcal{B}$ works as follows:
+% \begin{enumerate}
+%     \item \textbf{Setup}: On input SDLP instance $(g^x, \tilde{g}^x) \in \mathbb{G}_1 \times \mathbb{G}_2$, $\mathcal{B}$ proceeds to:
+%     \begin{enumerate}
+%         \item Sample $i^* \sample [1,\ell]$ uniformly at random
+%         \item For position $i^*$: set $(g_{i^*}, \tilde{g}_{i^*}) \gets (g^x, \tilde{g}^x)$
+%         \item For positions $j \neq i^*$: sample $y_j \sample \mathbb{Z}_p$, set $(g_j, \tilde{g}_j) \gets (g^{y_j}, \tilde{g}^{y_j})$
+%         \item Give $\mathsf{ck} = ((g_1, g_2, g_3), (\tilde{g}_1, \tilde{g}_2, \tilde{g}_3))$ to $\mathcal{A}$
+%     \end{enumerate}
+    
+%     \item \textbf{Position Binding Break}: Since $\mathcal{A}$ is algebraic, when it outputs $(\mathsf{cm}, i, \vec{m}_0, \vec{m}_1, r_0, r_1)$, it also provides the representation of $\mathsf{cm}$ in terms of the generators:
+%     \begin{itemize}
+%         \item $\mathsf{cm} \in \mathbb{G}_1$ with its algebraic representation
+%         \item $i \in [1,\ell]$ is the position where binding breaks
+%         \item $\vec{m}_0, \vec{m}_1 \in \mathbb{Z}_p^\ell$ differ only at position $i$
+%         \item $r_0, r_1 \in \mathbb{Z}_p$ are opening randomness values
+%     \end{itemize}
+    
+%     \item \textbf{Extracting SDLP}: If $i \neq i^*$, abort. Otherwise:
+%     \begin{enumerate}
+%         \item By the algebraic property of $\mathcal{A}$, we have explicit representations of the commitment openings:
+%         \[
+%             g^{r_0}g_1^{m_{0,1}}g_2^{x \cdot m_{0,2}}g_3^{m_{0,3}} = g^{r_1}g_1^{m_{1,1}}g_2^{x \cdot m_{1,2}}g_3^{m_{1,3}}
+%         \]
+        
+%         \item Since these representations are explicit in the AGM, we can directly compare exponents:
+%         \[
+%             r_0 + y_1m_{0,1} + xm_{0,2} + y_3m_{0,3} = r_1 + y_1m_{1,1} + xm_{1,2} + y_3m_{1,3}
+%         \]
+        
+%         \item Since $\vec{m}_0$ and $\vec{m}_1$ differ only at position $i^*=2$, we have $m_{0,1}=m_{1,1}$ and $m_{0,3}=m_{1,3}$. Terms cancel:
+%         \[
+%             r_0 + xm_{0,2} = r_1 + xm_{1,2}
+%         \]
+        
+%         \item Solve for $x$:
+%         \[
+%             x \equiv \frac{r_1-r_0}{m_{0,2}-m_{1,2}} \pmod{p}
+%         \]
+%         Note: Division is well-defined as $m_{0,2} \neq m_{1,2}$ by assumption.
+%     \end{enumerate}
+% \end{enumerate}
+
+% The reduction succeeds whenever $i = i^*$ and $\mathcal{A}$ succeeds, which occurs with probability $\epsilon/\ell$. This is non-negligible when $\epsilon$ is non-negligible, contradicting the SDLP assumption.
+% \end{proof}
+
+
+
+% We analyze the reduction's properties in detail:
+% \begin{itemize}
+%     \item \textbf{Perfect Simulation:} The commitment key distribution is identical to the real scheme:
+%         \begin{itemize}
+%             \item At position $i^*$: $(g_{i^*}, \tilde{g}_{i^*}) = (g^x, \tilde{g}^x)$ is uniformly distributed in $\G_1 \times \G_2$ by the SDLP instance properties
+%             \item At positions $j \neq i^*$: $(g_j, \tilde{g}_j) = (g^{y_j}, \tilde{g}^{y_j})$ is uniform due to $y_j \sample \Z_p$
+%             \item Therefore, from $\mathcal{A}$'s view, $\mathsf{ck}$ is distributed identically to the real scheme
+%         \end{itemize}
+    
+%     \item \textbf{Extraction Success:} $\mathcal{B}$ successfully extracts the SDLP solution when:
+%         \begin{itemize}
+%             \item $\mathcal{A}$ outputs a valid position binding break (occurs with probability $\epsilon$)
+%             \item The guessed position matches: $i = i^*$ (occurs with probability $1/\ell$)
+%             \item The extraction equation is solvable: $m_{0,i^*} \neq m_{1,i^*}$ (guaranteed by definition of position binding break)
+%         \end{itemize}
+    
+%     \item \textbf{Advantage Analysis:} Combining these probabilities:
+%         \begin{itemize}
+%             \item Events are independent as $i^*$ is chosen before $\mathcal{A}$'s execution
+%             \item $\mathsf{Pr}[\mathcal{B} \text{ succeeds}] = \epsilon \cdot \frac{1}{\ell}$
+%             \item Therefore: $\mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B},\G}(\lambda) \geq \frac{1}{\ell} \cdot \mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A},\mathsf{RVC}}(\lambda)$
+%         \end{itemize}
+% \end{itemize}
+
+% Thus, if $\mathcal{A}$ breaks position binding with non-negligible probability $\epsilon$, then $\mathcal{B}$ solves SDLP with non-negligible probability $\epsilon/\ell$, contradicting the SDLP hardness assumption in $\G$.
 
 
 
@@ -1273,6 +1554,55 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 Benchmark these schemes against SPS-EQ and zk-creds for efficient anonymous credential comparison.
 
 
+
+% \section{Appendix B}\label{app:zkp}
+% \subsection{Zero-Knowledge Proofs and Sigma-Protocols}
+
+% \subsubsection{Interactive Proof Systems}
+% An interactive proof system for a language $L$ involves a prover $\mathcal{P}$ and verifier $\mathcal{V}$, both probabilistic polynomial-time machines. For a statement $x$ and witness $w$ where $x \in L$, it satisfies:
+% \begin{itemize}
+%     \item \textbf{Completeness}: $\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] \geq 1 - \negl(\lambda)$.
+%     \item \textbf{Soundness}: For any $\mathcal{P}^*$, if $x \notin L$, $\Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] \leq \negl(\lambda)$.
+% \end{itemize}
+% In our system, $\mathcal{P}$ is the user proving credential validity, and $\mathcal{V}$ is the verifier.
+
+% \subsubsection{Zero-Knowledge Property}
+% A proof is zero-knowledge if it reveals only that $x \in L$. Formally, for any $\mathcal{V}^*$, there exists a simulator $\mathcal{S}$ such that:
+% \[
+% \{\text{VIEW}_{\mathcal{V}^*}(\mathcal{P}(w), \mathcal{V}^*)(x)\} \approx_c \{\mathcal{S}(x)\}, \quad \forall x \in L.
+% \]
+% This property ensures anonymity in our $\textsf{Show}$ protocol (Section~\ref{sec:anonymity}).
+
+% \subsubsection{Proofs of Knowledge}
+% A proof is a proof of knowledge if an extractor $\mathcal{E}$, with rewind access to $\mathcal{P}^*$, can extract $w$ when $\mathcal{P}^*$ convinces $\mathcal{V}$ with non-negligible probability:
+% \[
+% \Pr[\mathcal{E}^{\mathcal{P}^*}(x) = w : (x, w) \in R] \geq \Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] - \negl(\lambda).
+% \]
+% This supports unforgeability (Section~\ref{sec:unforgeability}), ensuring only users knowing $\textsf{usk}$ can generate valid proofs.
+
+% \subsubsection{Sigma-Protocols}\label{preliminaries-sigmaprotocol}
+% A Sigma-protocol for a relation $R$ is a three-move protocol:
+% \begin{enumerate}
+%     \item $\mathcal{P}(x, w)$ sends commitment $a$.
+%     \item $\mathcal{V}$ sends challenge $e \leftarrow \{0,1\}^t$.
+%     \item $\mathcal{P}$ sends response $z$.
+% \end{enumerate}
+% $\mathcal{V}$ accepts if $\phi(x, a, e, z) = 1$. It satisfies completeness, special soundness, and SHVZK.
+
+% \subsubsection{Example: Schnorr’s Protocol}
+% For $\mathcal{R}_{\mathsf{DL}} = \{(h, w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}$, Schnorr’s protocol proves knowledge of $w$:
+% \begin{itemize}
+%     \item \textbf{Commitment}: $\mathcal{P}$ samples $r \leftarrow \mathbb{Z}_q$, sends $a = g^r$.
+%     \item \textbf{Challenge}: $\mathcal{V}$ sends $e \leftarrow \{0,1\}^t$.
+%     \item \textbf{Response}: $\mathcal{P}$ sends $z = r + e w \mod q$.
+%     \item \textbf{Verification}: $\mathcal{V}$ checks $g^z = a \cdot h^e$.
+% \end{itemize}
+% \textbf{Properties}:
+% \begin{itemize}
+%     \item \textbf{Completeness}: $g^z = g^{r + e w} = g^r \cdot (g^w)^e = a \cdot h^e$.
+%     \item \textbf{Special Soundness}: From $(a, e, z)$ and $(a, e', z')$, $w = (z - z') / (e - e') \mod q$.
+%     \item \textbf{SHVZK}: Simulator samples $z \leftarrow \mathbb{Z}_q$, sets $a = g^z h^{-e}$.
+% \end{itemize}
 
 
 
