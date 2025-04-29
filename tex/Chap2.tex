@@ -762,7 +762,10 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 
 \section{Improving UTT's Construction}
 
+
+
 \subsection{Security against Malicious Issuers}
+Our first improvement to the PS-UTT rerandomizable signature scheme is the addition of algorithm $\mathsf{RS.VerKey}$, which addresses a vulnerability in traditional anonymous credential systems that assume honest issuers. This assumption leaves users exposed to privacy breaches and potential forgeries from malicious credential providers. Through $\mathsf{RS.VerKey}$, we require issuers to prove knowledge of their secret key $\mathsf{sk} = g^x$ and demonstrate the well-formedness of the commitment key $\mathsf{ck} = \{g_i = g^{y_i}, \tilde{g}_i = \tilde{g}^{y_i}\}_{i \in [\ell]}$ via a zero-knowledge Sigma-protocol. This prevents issuers from constructing keys with hidden mathematical relationships that could deanonymize users during credential presentations or enable credential forgery, ensuring that anonymity guarantees remain intact even against adversarial issuers who attempt to subvert the cryptographic foundations of the system.
 
 \begin{itemize}
         \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ is an interactive algorithm run by the issuer and the user requesting a signature that verifies the correctness of the issuer's secret and verification key $(\sk, \vk)$ and commitment key $\ck$. Issuer parses $\ck$ as $\{g^{y_i}, \tilde{g}^{y_i}\}_{i \in  [\ell]}$ and runs a $\Sigma$-protocol \ref{prot:verkey_proof} to prove the correctness of $\vk\text{ and } \ck$
@@ -878,7 +881,51 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
         &\stackrel{?}{=} g^{r_i + y_i \cdot c}          &   &\stackrel{?}{=} \tilde{g}^{r_i + y_i \cdot c}                             & &\stackrel{?}{=} e(T_i, \tilde{g}) \checkmark \\
         &= g^{z_i} \checkmark                           &  &= \tilde{g}^{z_i} \checkmark
         \end{align*}
-\end{proof}
+
+    \item \textbf{Soundness:} There exists a knowledge extractor $\mathcal{E}$ that, given two accepting transcripts $(T_i, \widetilde{T_i}, c, z_i)$ and $(T_i, \widetilde{T_i}, c', z_i')$ with $c \neq c'$, computes $y_i = \frac{z_i - z_i'}{c - c'}$. From the verification equations:
+    \[
+    g^{z_i} = T_i \cdot \ck_i^c \quad \text{and} \quad g^{z_i'} = T_i \cdot \ck_i^{c'},
+    \]
+    subtracting exponents (since $T_i$ is the same in both transcripts) yields $g^{z_i - z_i'} = \ck_i^{c - c'}$, so $\ck_i = g^{\frac{z_i - z_i'}{c - c'}}$. Given $\ck_i = g^{y_i}$, it follows that $y_i = \frac{z_i - z_i'}{c - c'}$.
+    
+    Similarly, from the G2 component verification:
+    \[
+    \tilde{g}^{z_i} = \widetilde{T_i} \cdot \widetilde{\ck}_i^c \quad \text{and} \quad \tilde{g}^{z_i'} = \widetilde{T_i} \cdot \widetilde{\ck}_i^{c'},
+    \]
+    we can derive $\widetilde{\ck}_i = \tilde{g}^{\frac{z_i - z_i'}{c - c'}}$, confirming that $\widetilde{\ck}_i = \tilde{g}^{y_i}$ with the same $y_i$.
+    
+    The pairing check $e(T_i, \tilde{g}) = e(g, \widetilde{T_i})$ ensures that $T_i = g^{r_i}$ and $\widetilde{T_i} = \tilde{g}^{r_i}$ use the same randomness $r_i$, which is crucial for the extractor to obtain consistent discrete logarithms from both group components. This consistency guarantees that the extracted $y_i$ values from G1 and G2 equations are identical, proving soundness
+
+
+    \item \textbf{Zero-Knowledge:} We need to construct a simulator $\mathcal{S}$ that, given challenge $c$, can produce a transcript indistinguishable from a real interaction without knowing the witnesses $y_i$. The simulator works as follows:
+
+    For each $i$, simulator $\mathcal{S}$ Samples $z_i \sample \mathbb{Z}_q$, computes $T_i = g^{z_i} \cdot \ck_i^{-c}$ and $\widetilde{T_i} = \tilde{g}^{z_i} \cdot \widetilde{\ck}_i^{-c}$
+    
+    The simulated transcript $(T_i, \widetilde{T_i}, c, z_i)$, which passes verification:
+    \begin{align*}
+    g^{z_i} &= T_i \cdot \ck_i^c                &     \tilde{g}^{z_i} &= \widetilde{T_i} \cdot \widetilde{\ck}_i^c      \\
+    &= (g^{z_i} \cdot \ck_i^{-c}) \cdot \ck_i^c &      &= (\tilde{g}^{z_i} \cdot \widetilde{\ck}_i^{-c}) \cdot \widetilde{\ck}_i^c     \\
+    &= g^{z_i} \checkmark                       & &= \tilde{g}^{z_i} \checkmark
+    \end{align*}
+    
+    For the pairing check, we need to show:
+    \begin{align*}
+    e(T_i, \tilde{g}) &= e(g, \widetilde{T_i}) \\
+    e(g^{z_i} \cdot \ck_i^{-c}, \tilde{g}) &= e(g, \tilde{g}^{z_i} \cdot \widetilde{\ck}_i^{-c})
+    \end{align*}
+    
+    This equality holds because:
+    \begin{align*}
+    e(g^{z_i} \cdot \ck_i^{-c}, \tilde{g}) &= e(g^{z_i}, \tilde{g}) \cdot e(\ck_i^{-c}, \tilde{g}) \\
+    &= e(g, \tilde{g}^{z_i}) \cdot e(g^{y_i \cdot (-c)}, \tilde{g}) \\
+    &= e(g, \tilde{g}^{z_i}) \cdot e(g, \tilde{g}^{y_i \cdot (-c)}) \\
+    &= e(g, \tilde{g}^{z_i} \cdot \tilde{g}^{y_i \cdot (-c)}) \\
+    &= e(g, \tilde{g}^{z_i} \cdot \widetilde{\ck}_i^{-c}) \\
+    &= e(g, \widetilde{T_i}) \checkmark
+    \end{align*}
+    
+    The distribution of the simulated transcript is identical to that of a real transcript: in both cases, $z_i$ is uniformly distributed in $\mathbb{Z}_q$, which makes $T_i$ and $\widetilde{T_i}$ uniform elements in their respective groups. Therefore, the protocol is zero-knowledge.
+    \end{proof}
 
 
 
