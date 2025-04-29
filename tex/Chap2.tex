@@ -1,6 +1,6 @@
-\mychapter{Efficient Multi-Show Attribute-Based (Anonymous) Credentials (ABC's)}\label{chap2}
+\mychapter{Best-In-Class Attribute-Based Anonymous Credentials from Rerandomizable Signatures}\label{chap2}
 ABC 
-Anonymity Against Malciious Isuser
+Anonymity Against Malicious Issuer
 Secure Key Generation
 
 
@@ -319,23 +319,91 @@ where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 
 
 \subsection{Zero Knowledge Proofs and Sigma-protocols}
-\subsubsection{Zero-Knowledge Proofs}
-A zero-knowledge proof (ZKP) enables a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ that a statement $x \in L$ holds for some language $L$, without revealing the witness $w$. Formally, an interactive proof system $(\mathcal{P}, \mathcal{V})$ for $L$ satisfies:
-\begin{itemize}
-    \item \textbf{Completeness}: If $x \in L$, then $\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] \geq 1 - \negl(\lambda)$.
-    \item \textbf{Soundness}: If $x \notin L$, then for any $\mathcal{P}^*$, $\Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] \leq \negl(\lambda)$.
-    \item \textbf{Zero-Knowledge}: There exists a simulator $\mathcal{S}$ such that for all $x \in L$, the view of any $\mathcal{V}^*$ is computationally indistinguishable from $\mathcal{S}(x)$.
-\end{itemize}
-ZKPs are essential to our anonymous credential system, allowing users to prove credential validity and attribute relations without compromising privacy.
 
-\subsubsection{Sigma-Protocols}
-A Sigma-protocol is a three-move, public-coin ZKP: (1) $\mathcal{P}$ sends a commitment $a$, (2) $\mathcal{V}$ sends a random challenge $e$, and (3) $\mathcal{P}$ responds with $z$. It satisfies:
+\subsubsection{Proof Relations}
+\begin{definition}[Relation]
+Let $\mathcal{R}  = \{((x)(w),crs)\} \subseteq \{0,1\}^* \times \{0,1\}^* \times \{0,1\}^*$ be a binary relation between an input string $x$, a witness string $w$, and a common reference string $crs$. We define $L_R = \{x : \exists w \text{ such that } (x,w,crs) \in R\}$.    
+\end{definition}
+
+\subsubsection{Interactive Zero-Knowledge Proofs}
+\begin{definition}[Interactive Zero-Knowledge Proof]
+    An interactive zero-knowledge protocol describes a system between a prover $P$ and a verifier $V$ that satisfies the following properties:
+
 \begin{itemize}
-    \item \textbf{Completeness}: Honest execution accepts with probability 1.
-    \item \textbf{Special Soundness}: From two accepting transcripts $(a, e, z)$ and $(a, e', z')$ with $e \neq e'$, a witness $w$ can be extracted.
-    \item \textbf{Special Honest-Verifier Zero-Knowledge (SHVZK)}: A simulator can generate transcripts $(a, e, z)$ matching the real distribution for any $e$.
+    \item \textbf{Completeness}: If $(x,w,crs) \in \mathcal{R}$, then $\Pr[(P(w), V)(x, crs) = 1] \geq 1 - \negl(\lambda)$.
+    
+    \item \textbf{Soundness with Knowledge Extraction}: For any prover $P^*$ that convinces $V$ with probability $p(x) > \kappa(x)$ (where $\kappa$ is the knowledge error function), there exists a probabilistic polynomial-time knowledge extractor $\mathcal{E}$ such that given oracle access to $P^*$, $\mathcal{E}$ outputs $w$ satisfying $(w,x,crs) \in R$ within expected time proportional to $\frac{|x|^c}{p(x)-\kappa(x)}$.
+    
+    \item \textbf{Honest Verifier Zero-Knowledge}: There exists a simulator $\mathcal{S}$ such that for all $(x,w,crs) \in R$ and any (possibly malicious) verifier $V^*$, the view of $V^*$ in the real interaction with $P(w)$ is computationally indistinguishable from $\mathcal{S}(x,crs)$.
 \end{itemize}
-We leverage Sigma-protocols to prove knowledge of committed attributes (e.g., $\pircom$ for relation $\rcom$) efficiently. app:zkp for details. %See Appendix~\ref{app:zkp}
+\end{definition}
+
+\begin{remark}[Extractor]
+    A proof is a proof of knowledge if an extractor $\mathcal{E}$, with rewind access to $\mathcal{P}^*$, can extract $w$ when $\mathcal{P}^*$ convinces $\mathcal{V}$ with non-negligible probability:
+\[
+\Pr[\mathcal{E}^{\mathcal{P}^*}(x) = w : (x, w) \in R] \geq \Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] - \negl(\lambda).
+\]
+\end{remark}
+
+\begin{remark}[Zero Knowledge Simulator]
+A proof is zero-knowledge if it reveals only that $x \in L$. Formally, for any $\mathcal{V}^*$, there exists a simulator $\mathcal{S}$ such that:
+\[
+\{\text{VIEW}_{\mathcal{V}^*}(\mathcal{P}(w), \mathcal{V}^*)(x)\} \approx_c \{\mathcal{S}(x)\}, \quad \forall x \in L.
+\]    
+\end{remark}
+
+
+\subsubsection{Sigma-Protocols}\label{preliminaries-sigmaprotocol}
+\begin{definition}[Sigma Protocol]
+    A Sigma-protocol for a relation $R$ is a three-move protocol:
+    \begin{enumerate}
+        \item $\mathcal{P}(x, w)$ sends commitment $a$.
+        \item $\mathcal{V}$ sends challenge $e \leftarrow \{0,1\}^t$.
+        \item $\mathcal{P}$ sends response $z$.
+    \end{enumerate}
+    $\mathcal{V}$ accepts if $\phi(x, a, e, z) = 1$. It satisfies completeness, special soundness, and SHVZK.
+\end{definition}
+
+\subsubsection{Schnorr Sigma Protocol}
+For $\mathcal{R}_{\mathsf{DL}} = \{(h, w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}$, Schnorr’s protocol proves knowledge of $w$:
+\begin{itemize}
+    \item \textbf{Commitment}: $\mathcal{P}$ samples $r \leftarrow \mathbb{Z}_q$, sends $a = g^r$.
+    \item \textbf{Challenge}: $\mathcal{V}$ sends $e \leftarrow \{0,1\}^t$.
+    \item \textbf{Response}: $\mathcal{P}$ sends $z = r + e w \mod q$.
+    \item \textbf{Verification}: $\mathcal{V}$ checks $g^z = a \cdot h^e$.
+\end{itemize}
+\textbf{Properties}:
+\begin{itemize}
+    \item \textbf{Completeness}: $g^z = g^{r + e w} = g^r \cdot (g^w)^e = a \cdot h^e$.
+    \item \textbf{Special Soundness}: From $(a, e, z)$ and $(a, e', z')$, $w = (z - z') / (e - e') \mod q$.
+    \item \textbf{SHVZK}: Simulator samples $z \leftarrow \mathbb{Z}_q$, sets $a = g^z h^{-e}$.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -692,7 +760,194 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 
 
 
-\section{Improving Verification Efficiency of UTT's Rerandomizable Signature Construction}
+\section{Improving UTT's Construction}
+
+\subsection{Security against Malicious Issuers}
+
+\begin{itemize}
+        \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ is an interactive algorithm run by the issuer and the user requesting a signature that verifies the correctness of the issuer's secret and verification key $(\sk, \vk)$ and commitment key $\ck$. Issuer parses $\ck$ as $\{g^{y_i}, \tilde{g}^{y_i}\}_{i \in  [\ell]}$ and runs a $\Sigma$-protocol \ref{prot:verkey_proof} to prove the correctness of $\vk\text{ and } \ck$
+\end{itemize}
+
+\begin{protocol}{Proving Correctness of Issuer Keys}{verkey-proof}\label{prot:verkey_proof}
+\textbf{Common Input:} verification key $\vk = \tilde{g}^x \in \mathbb{G}_2$, commitment key $\ck = (g_1, \dots, g_{\ell}, g, \tilde{g}_1, \dots, \tilde{g}_{\ell}, \tilde{g})$ \\
+\textbf{Prover Input:} Exponents $x, y_1, \dots, y_n \in \mathbb{Z}_q$ such that $\vk = \tilde{g}^x$ and $\tilde{g}_i = \tilde{g}^{y_i}$ for $i \in [\ell]$\\
+\textbf{Relation:} 
+\[
+\mathcal{R}_{\mathsf{verkey}} = \left\{
+\begin{array}{l}
+    (\vk, \ck, \widetilde{\ck}),\\
+    (x, \{y_i\}_{i=1}^\ell)
+\end{array}
+ \middle|
+ \begin{array}{l}
+      \vk = \tilde{g}^x \wedge \{\ck_i = g^{y_i}, \widetilde{\ck}_i = \tilde{g}^{y_i}\}_{i \in [\ell]}       % \{\ck_i = g^{y_i}, \widetilde{\ck}_i = \tilde{g}^{y_i} \wedge e(g^{y_i}, \tilde{g}^{y_i}) = e(g, \tilde{g})\}_{i \in [\ell]}
+ \end{array}
+  \right\}
+\]
+\begin{enumerate}
+    \item \textbf{Commitment:} Prover samples $r_x \sample \mathbb{Z}_q$, $r_1, \dots, r_n \sample \mathbb{Z}_q$ and computes:
+    \[
+    T_{x} = g^{r_x}, \quad \widetilde{T_{x}} = \tilde{g}^{r_x}, \quad T_{i} = g^{r_i}, \quad \widetilde{T_{i}} = \tilde{g}^{r_i} \quad \text{for each } i
+    \]
+    Sends $T_{x}$, $\widetilde{T_{x}}$, $(T_{i}, \widetilde{T_{i}})_{i=1}^n$ to the verifier.
+
+    \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends $c$ to the prover.
+
+    \item \textbf{Response:} Prover computes:
+    \[
+    z_x = r_x + c \cdot x, \quad z_i = r_i + c \cdot y_i \quad \text{for each } i
+    \]
+    Sends $z_x$, $(z_i)_{i=1}^n$ to the verifier.
+
+    \item \textbf{Verification:} Verifier checks:
+    \[
+    \tilde{g}^{z_x} \stackrel{?}{=} \widetilde{T_{x}} \cdot \vk^c \quad \wedge \quad \tilde{g}^{z_i} \stackrel{?}{=} \widetilde{T_{i}} \cdot \tilde{g}_i^c \quad \wedge \quad e(T_{i}, \tilde{g}) \stackrel{?}{=} e(g, \widetilde{T_{i}}) \text{ for each $i$}
+    \]
+\end{enumerate}
+\end{protocol}
+
+\begin{theorem}
+    The $\Sigma$-protocol for $\mathsf{RS.VerKey}$, defined in Protocol \ref{prot:verkey_proof}, is complete, sound, and zero-knowledge, proving knowledge of $x \in \mathbb{Z}_q$ such that $\vk = \tilde{g}^x \in \mathbb{G}_2$, where $\pi_{\vk} = (\widetilde{T_{x}}, c, z_x)$ is the proof transcript.
+\end{theorem}
+
+\begin{proof}[RS.VerKey x]
+    \begin{itemize}
+        \item \textbf{Completeness:} For an honest prover who knows $x$ such that $\vk = \tilde{g}^x$, the prover samples $r_x \sample \mathbb{Z}_q$, computes $\widetilde{T_{x}} = \tilde{g}^{r_x}$, and, upon receiving challenge $c$, responds with $z_x = r_x + c \cdot x$. The verifier checks:
+    \begin{align*}
+        \tilde{g}^{z_x} &\stackrel{?}{=} \widetilde{T_{x}} \cdot \vk^c \\
+        &\stackrel{?}{=} \tilde{g}^{r_x} \cdot \tilde{g}^{xc} \\
+        &\stackrel{?}{=} \tilde{g}^{r_x + xc}\\
+        &=\tilde{g}^{z_x} \checkmark
+    \end{align*} 
+    This holds, proving completeness.
+
+        \item \textbf{Soundness:} There exists a knowledge extractor $\mathcal{E}$ that, given two accepting transcripts $(\widetilde{T_{x}}, c, z_x)$ and $(\widetilde{T_{x}}, c', z_x')$ with $c \neq c'$, computes $x = \frac{z_x - z_x'}{c - c'}$. From the verification equations:
+        \[
+        \tilde{g}^{z_x} = \widetilde{T_{x}} \cdot \vk^c \quad \text{and} \quad \tilde{g}^{z_x'} = \widetilde{T_{x}} \cdot \vk^{c'},
+        \]
+        subtracting exponents (since $\widetilde{T_{x}}$ is the same in both transcripts) yields $\tilde{g}^{z_x - z_x'} = \vk^{c - c'}$, so $\vk = \tilde{g}^{\frac{z_x - z_x'}{c - c'}}$. Given $\vk = \tilde{g}^x$, it follows that $x = \frac{z_x - z_x'}{c - c'}$, proving soundness.
+
+        \item \textbf{Zero-Knowledge:} The simulator $\mathcal{S}$, given challenge $c$, samples $z_x \sample \mathbb{Z}_q$ and sets $\widetilde{T_{x}} = \tilde{g}^{z_x} \cdot \vk^{-c}$. This satisfies the verification equation:
+        \[
+        \tilde{g}^{z_x} = \widetilde{T_{x}} \cdot \vk^c.
+        \]
+        In the real protocol, $\widetilde{T_{x}} = \tilde{g}^{r_x}$ for random $r_x$, and $z_x = r_x + c x$, making $\widetilde{T_{x}} = \tilde{g}^{z_x - c x}$. Since $z_x$ is uniform in $\mathbb{Z}_q$, $\widetilde{T_{x}}$ is uniform in $\mathbb{G}_2$, identical to the real protocol’s distribution, proving honest-verifier zero-knowledge.
+    \end{itemize}
+\end{proof}
+
+
+\begin{theorem}
+    The $\Sigma$-protocol for $\mathsf{RS.VerKey}$, defined in Protocol \ref{prot:verkey_proof}, is complete, sound, and zero-knowledge, proving knowledge of $\{y_i\}_{i \in [\ell]} \in \mathbb{Z}_q$ such that $(\ck_i, \widetilde{\ck}_i)$ both exponentiate the same $y$ such that $(e(\ck_i, \widetilde{\ck}_i) = e(g^{y_i}, \tilde{g}^{y_i}) = e(g, \tilde{g}))$ for each $i \in [\ell]$
+\end{theorem}
+
+\begin{proof}
+    % \begin{itemize}
+    %     \item \textbf{Completeness:} For an honest prover who knows $y_i$ such that $\ck_i$ and $\widetilde{\ck}_i$ commit to the same $y_i$. For each $i$, the prover samples $r_i \sample \Z_q$, computes $T_{i} = g^{r_i}, \widetilde{T}_i = \tilde{g}^{r_i}$, receives challenge $c$, responds with $z_i = c \cdot y_i$. The verifier checks 
+    %     \begin{align*}
+    %     g^{z_i} &\stackrel{?}{=} T_i \cdot \ck_i^c \\
+    %     &\stackrel{?}{=} g^{r_i} \cdot (g^{y_i})^c \\
+    %     &\stackrel{?}{=} g^{r_i} \cdot g^{y_i \cdot c} \\
+    %     &\stackrel{?}{=} g^{r_i + y_i \cdot c} \\
+    %     &= g^{z_i} \checkmark
+    %     \end{align*}
+    
+    % Similarly, for the G2 component:
+    % \begin{align*}
+    %     \tilde{g}^{z_i} &\stackrel{?}{=} \widetilde{T_i} \cdot \widetilde{\ck}_i^c \\
+    %     &\stackrel{?}{=} \tilde{g}^{r_i} \cdot (\tilde{g}^{y_i})^c \\
+    %     &\stackrel{?}{=} \tilde{g}^{r_i} \cdot \tilde{g}^{y_i \cdot c} \\
+    %     &\stackrel{?}{=} \tilde{g}^{r_i + y_i \cdot c} \\
+    %     &= \tilde{g}^{z_i} \checkmark
+    %     \end{align*}
+
+    %     For the pairing check:
+    %     \begin{align*}
+    %     e(T_i, \tilde{g}) &\stackrel{?}{=} e(g, \widetilde{T_i}) \\
+    %     &\stackrel{?}{=} e(g, \tilde{g}^{r_i}) \\
+    %     &\stackrel{?}{=} e(g^{r_i}, \tilde{g}) \\
+    %     &\stackrel{?}{=} e(T_i, \tilde{g}) \checkmark
+    %     \end{align*}
+    %     All verification checks pass, which proves completeness.
+
+    % \end{itemize}
+
+            \begin{align*}
+        g^{z_i} &\stackrel{?}{=} T_i \cdot \ck_i^c      & \tilde{g}^{z_i} &\stackrel{?}{=} \widetilde{T_i} \cdot \widetilde{\ck}_i^c & e(T_i, \tilde{g}) &\stackrel{?}{=} e(g, \widetilde{T_i})     \\
+        &\stackrel{?}{=} g^{r_i} \cdot (g^{y_i})^c      &  &\stackrel{?}{=} \tilde{g}^{r_i} \cdot (\tilde{g}^{y_i})^c                  & &\stackrel{?}{=} e(g, \tilde{g}^{r_i}) \\
+        &\stackrel{?}{=} g^{r_i} \cdot g^{y_i \cdot c}  &   &\stackrel{?}{=} \tilde{g}^{r_i} \cdot \tilde{g}^{y_i \cdot c}             &  &\stackrel{?}{=} e(g^{r_i}, \tilde{g})  \\
+        &\stackrel{?}{=} g^{r_i + y_i \cdot c}          &   &\stackrel{?}{=} \tilde{g}^{r_i + y_i \cdot c}                             & &\stackrel{?}{=} e(T_i, \tilde{g}) \checkmark \\
+        &= g^{z_i} \checkmark                           &  &= \tilde{g}^{z_i} \checkmark
+        \end{align*}
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsubsection{Performance Tradeoffs}
+While our G2 optimization improves verification performance, it introduces a tradeoff in the issuance phase. As shown in our comprehensive evaluation (Table~\ref{abc-performance-combined-table}), the G2 variant incurs approximately 1.3-1.7× higher computational cost during credential issuance compared to the G1 variant.
+
+This tradeoff is well-justified for anonymous credential systems for three reasons:
+\begin{itemize}
+    \item Credentials are typically issued once but verified many times, favoring optimizations that prioritize verification performance.
+    \item Issuance is usually performed by more powerful servers, while verification may happen on resource-constrained devices.
+    \item The absolute increase in issuance time (approximately 1-2ms) remains negligible for typical credential workflows.
+\end{itemize}
+
+\subsubsection{Technical Analysis}
+The performance gain stems from our verification equation restructuring. The G1 variant requires two distinct pairing operations:
+\begin{align}
+e(\sigma_2', \tilde{g}) &= e(\sigma_1', \vk \cdot \widetilde{\cm'}) \\
+e(\cm', \tilde{g}) &= e(g, \widetilde{\cm'})
+\end{align}
+
+Our G2 variant reduces this to a single pairing check:
+\begin{align}
+e(g, \widetilde{\sigma_2}') &= e(\mathsf{vk} \cdot \mathsf{cm}',\widetilde{\sigma_1}')
+\end{align}
+
+We show correctness of the complete construction here.
+
+\subsection{Improve Efficiency by Reducing Pairings}\label{rerandsig_g2}
+In our optimized variant, we redefine the signature as $\widetilde{\sigma} = (\widetilde{\sigma_1}, \widetilde{\sigma_2}) \in \G_2$. The verification process $\Verify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ shows the pairing reduction:
+
+\begin{enumerate}
+    \item Signature verification:
+    \[
+    e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}',\widetilde{\sigma_1}')
+    \]
+    \item Zero-Knowledge Proof Verification
+    \[
+    \mathsf{ZK.Verify}(\pi, \cm') = 1 \quad \mid \quad \pi \gets \mathsf{PoK}\{(r + \Delta_r, m_1,\ldots,m_\ell): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{enumerate}
+
+Correctness stems from the verification equation:
+    \begin{align*}
+        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{\Delta_r})^{\Delta_u}) \\
+        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{\Delta_u} \cdot \tilde{h}^{r_{\Delta} \cdot \Delta_u}) \\
+        &= e(g, \widetilde{\sk}^{\Delta_u}) \cdot e(g, \widetilde{\cm}^{u + \Delta_u}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot \Delta_u}) \\
+        &= e(g^x, \widetilde{h}^{\Delta_u}) \cdot e(g, \widetilde{\cm})^{u + \Delta_u} \cdot e(g,\tilde{h}^{\Delta_u})^{r_{\Delta}} \\
+        &= e(\vk, \widetilde{h}^{\Delta_u}) \cdot e(\cm, \widetilde{h}^{\Delta_u}) \cdot e(g^{r_{\Delta}},\tilde{h}^{\Delta_u}) \\
+        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
+        &= e(\vk \cdot \cm', \sigma_1')  \\
+    \end{align*}
 
 
 
@@ -731,8 +986,8 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 
 
 
-
-\section{Our (Most) Efficient and Expressive ABC from Rerandomizable Signatures}\label{sec:abc}
+% \section{Our (Most) Efficient and Expressive ABC from Rerandomizable Signatures}\label{sec:abc}
+\section{Constructing Best-In-Class ABC from Rerandomizable Signatures}\label{sec:abc}
 
 We construct an Attribute-Based Anonymous Credential System from our Rerandomizable Commitment and Signature schemes and prove its security in the model \cite{fuchsbauer_structure-preserving_2019}; we extend it to support predicate-based zero-knowledge proof verification, allowing users to prove statements about their committed and signed attributes without revealing any additional information.
 
@@ -759,12 +1014,6 @@ An Attribute-based Anonymous Credential system consists of the following probabi
 
 \subsection{Security Model}
 
-
-
-        % \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit:$ verifies the correctness of the issuers secret and verification key $(\sk, \vk)$ and commitment key $\ck$:
-        % \[
-        % \mathcal{R}_{\mathsf{verkey}} = \{\pk = (\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) | sk = g^x \wedge vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
-        % \]
 
 Our Multi-Show Attribute-Based Anonymous Credential is defined by three properties:
 
@@ -1150,7 +1399,6 @@ The advantage thus bounds the adversary's total advantage in the anonymity game 
 
 \section{Performance Evaluation}
 
-\subsection{Experimental Methodology}
 
 We implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. Our experiments were conducted on a MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2. All measurements represent the average of 100 independent trials with standard deviations below 5\%.
 
@@ -1183,7 +1431,7 @@ Our implementation is available in our open-source repository https://github.com
 
 
 
-\subsection{Our Enhancement is 13.4\% Faster}\
+\subsection{Our Enhancement is 13.4\% Faster}
 
 Our G2 signature variant \ref{rerandsig_g2} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu_utt_2022}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation, we prove correctness below \ref{rerandsig_g2}.  Table~\ref{tab:g1-g2-comparison} presents a direct comparison between the two variants.
 The optimization reduces Show + Verify algorithms by more than 10\% which becomes important when multiple credentials are verified together.
@@ -1208,55 +1456,6 @@ The optimization reduces Show + Verify algorithms by more than 10\% which become
 \end{tabular}
 \end{table}
 
-
-\subsubsection{Performance Tradeoffs}
-While our G2 optimization improves verification performance, it introduces a tradeoff in the issuance phase. As shown in our comprehensive evaluation (Table~\ref{abc-performance-combined-table}), the G2 variant incurs approximately 1.3-1.7× higher computational cost during credential issuance compared to the G1 variant.
-
-This tradeoff is well-justified for anonymous credential systems for three reasons:
-\begin{itemize}
-    \item Credentials are typically issued once but verified many times, favoring optimizations that prioritize verification performance.
-    \item Issuance is usually performed by more powerful servers, while verification may happen on resource-constrained devices.
-    \item The absolute increase in issuance time (approximately 1-2ms) remains negligible for typical credential workflows.
-\end{itemize}
-
-\subsubsection{Technical Analysis}
-The performance gain stems from our verification equation restructuring. The G1 variant requires two distinct pairing operations:
-\begin{align}
-e(\sigma_2', \tilde{g}) &= e(\sigma_1', \vk \cdot \widetilde{\cm'}) \\
-e(\cm', \tilde{g}) &= e(g, \widetilde{\cm'})
-\end{align}
-
-Our G2 variant reduces this to a single pairing check:
-\begin{align}
-e(g, \widetilde{\sigma_2}') &= e(\mathsf{vk} \cdot \mathsf{cm}',\widetilde{\sigma_1}')
-\end{align}
-
-We show correctness of the complete construction here.
-
-\subsection{PSUTT  G2 Signature}\label{rerandsig_g2}
-In our optimized variant, we redefine the signature as $\widetilde{\sigma} = (\widetilde{\sigma_1}, \widetilde{\sigma_2}) \in \G_2$. The verification process $\Verify(\widetilde{\vk}, \cm', {\sigma}') \to \bit:$ shows the pairing reduction:
-
-\begin{enumerate}
-    \item Signature verification:
-    \[
-    e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}',\widetilde{\sigma_1}')
-    \]
-    \item Zero-Knowledge Proof Verification
-    \[
-    \mathsf{ZK.Verify}(\pi, \cm') = 1 \quad \mid \quad \pi \gets \mathsf{PoK}\{(r + \Delta_r, m_1,\ldots,m_\ell): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
-    \]
-\end{enumerate}
-
-Correctness stems from the verification equation:
-    \begin{align*}
-        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{\Delta_r})^{\Delta_u}) \\
-        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{\Delta_u} \cdot \tilde{h}^{r_{\Delta} \cdot \Delta_u}) \\
-        &= e(g, \widetilde{\sk}^{\Delta_u}) \cdot e(g, \widetilde{\cm}^{u + \Delta_u}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot \Delta_u}) \\
-        &= e(g^x, \widetilde{h}^{\Delta_u}) \cdot e(g, \widetilde{\cm})^{u + \Delta_u} \cdot e(g,\tilde{h}^{\Delta_u})^{r_{\Delta}} \\
-        &= e(\vk, \widetilde{h}^{\Delta_u}) \cdot e(\cm, \widetilde{h}^{\Delta_u}) \cdot e(g^{r_{\Delta}},\tilde{h}^{\Delta_u}) \\
-        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
-        &= e(\vk \cdot \cm', \sigma_1')  \\
-    \end{align*}
 
 
 
