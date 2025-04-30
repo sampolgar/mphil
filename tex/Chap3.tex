@@ -15,7 +15,96 @@ This chapter advances the state of anonymous credentials with:
     \item A performance evaluation methodology comparing non-private, private single-issuer (with batch verification), and private multi-issuer scenarios, quantifying privacy’s overhead.
 \end{itemize}
 
+\todonote{must update the identity binding show}
 
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw, rounded corners=2pt, minimum width=6cm, minimum height=8.5cm},
+        smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
+        verifierbox/.style={draw, rounded corners=2pt, minimum width=4cm, minimum height=4cm},
+        showbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=4.7cm, minimum height=2.5cm},
+        thick
+    ]
+    
+    % Digital Credential Wallet
+    \node[box] (wallet) at (0,0) {};
+    \node[anchor=south, font=\bfseries] at ($(wallet.north) + (0,0.3)$) {Credential Wallet};
+    
+    % Master Credential
+    \node[smallbox] (master) at (0,2.75) {};
+    \node[anchor=north, font=\small\bfseries] at ($(master.north) + (0,-0.3)$) {Master Credential};
+    
+    \node[anchor=north west, font=\small, align=left] at ($(master.north west) + (0.5,-0.7)$) {
+        \texttt{id : 12345}, \\
+        \texttt{ctx : "passport"}, \\
+        \texttt{exp : "10/11/2026"}, \\
+        \texttt{k : 54321}
+    };
+    
+    % Driver License Credential
+    \node[smallbox] (driver) at (0,0) {};
+    \node[anchor=north, font=\small\bfseries] at ($(driver.north) + (0,-0.3)$) {Driver License};
+    
+    \node[anchor=north west, font=\small, align=left] at ($(driver.north west) + (0.5,-0.7)$) {
+        \texttt{id : 12345}, \\
+        \texttt{ctx : "DMV"}, \\
+        \texttt{exp : "10/11/2028"}
+    };
+
+    % Bank Statement Credential
+    \node[smallbox] (bank) at (0,-2.75) {};
+    \node[anchor=north, font=\small\bfseries] at ($(bank.north) + (0,-0.3)$) {Bank Statement};
+    
+    \node[anchor=north west, font=\small, align=left] at ($(bank.north west) + (0.5,-0.7)$) {
+        \texttt{id : 12345}, \\
+        \texttt{ctx : "bankstatement"}, \\
+        \texttt{date : "10/11/2027"}, \\
+        \texttt{bal : "10,000,000"}
+    };
+    
+    % % Add dividing lines between credentials in wallet
+    % \draw[dashed, thick] ($(wallet.west) + (0.2,1.4)$) -- ($(wallet.east) + (-0.2,1.4)$);
+    % \draw[dashed, thick] ($(wallet.west) + (0.2,-1.4)$) -- ($(wallet.east) + (-0.2,-1.4)$);
+    
+    % Credential Show in the middle (replacing Nullifier Generation)
+    \node[showbox] (show) at (6.5,0) {};
+    \node[anchor=north, font=\bfseries] at ($(show.north) + (0,-0.3)$) {Identity Binding Show};
+    
+    % Add the deterministic nullifier algorithm with section reference
+    \node[font=\small, align=center] at ($(show.north) + (0,-1.3)$) {Sec: \ref{subsec:deterministic-nullifier} $y = g^{1/(k + \text{"DMV"})}$};
+    
+    % Add the probabilistic nullifier algorithm with section reference
+    \node[font=\small, align=center] at ($(show.north) + (0,-2.0)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
+    
+    % Verifier box (replacing the two boxes on the right)
+    \node[verifierbox] (verifier) at (12,0) {};
+    \node[anchor=north, font=\bfseries] at ($(verifier.north) + (0,-0.3)$) {Verifier};
+    
+    % Draw contents for the verifier box
+    \node[font=\small, align=center] at ($(verifier.north) + (0,-2.0)$) {
+        Validates credentials\\
+        Checks signatures\\
+        Verifies proofs
+    };
+
+    % Arrows from wallet edge to credential show
+    \draw[->, thick] ($(wallet.east) + (0,2.75)$) -- ($(show.west) + (0,0.5)$);
+    \draw[->, thick] ($(wallet.east) + (0,0)$) -- (show.west);
+    \draw[->, thick] ($(wallet.east) + (0,-2.75)$) -- ($(show.west) + (0,-0.5)$);
+    
+    % % Arrows from credentials to the credential show
+    % \draw[->, thick] (master.east) -- ++(0.5,0) -- ($(show.west) + (0,0.5)$);
+    % \draw[->, thick] (driver.east) -- (show.west);
+    % \draw[->, thick] (bank.east) -- ++(0.5,0) -- ($(show.west) + (0,-0.5)$);
+    
+    % Arrow from credential show to verifier
+    \draw[->, thick] (show.east) -- (verifier.west);
+    
+    \end{tikzpicture}
+    \caption[Credential Showing Scheme]{A credential showing scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding multiple credentials (passport, driver's license, bank statement) to enable secure and privacy-preserving presentation to verifiers.}
+    \label{fig:credential-show-revised}
+\end{figure}
 
 
 
@@ -245,6 +334,10 @@ If $\mathcal{A}$ outputs $\{\mathsf{cred}_j'\}_j$, $\phi^*$ requiring same $\id$
 
 The identity binding advantage scales linearly with $n$ and $m$, reflecting the number of opportunities to break position-binding. This graceful degradation ensures MIMC-ABC remains secure as the system grows, a key advantage over prior multi-issuer schemes lacking formal binding guarantees.
 
+\section{Identity Binding Application: Improving KYC/AML Identity Verification}
+
+\todonote{Sam to do}
+Speak about the KYC/AML process and why identity binding is necessary
 
 
 \section{Performance Evaluation}

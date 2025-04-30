@@ -13,7 +13,8 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
     \begin{tikzpicture}[
         box/.style={draw, rounded corners=2pt, minimum width=6cm, minimum height=8cm},
         smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=3cm},
-        listbox/.style={draw, rounded corners=2pt, minimum width=5cm, minimum height=3cm},
+        listbox/.style={draw, rounded corners=2pt, minimum width=3cm, minimum height=3cm},
+        nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=4.7cm, minimum height=2.5cm},
         thick
     ]
     
@@ -45,44 +46,51 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
     % Add a dividing line between credentials in wallet
     \draw[dashed] ($(wallet.west) + (0.2,0)$) -- ($(wallet.east) + (-0.2,0)$);
     
+    % Nullifier in the middle
+    \node[nullifierbox] (nullifier) at (6.5,0) {};
+    \node[anchor=north, font=\bfseries] at ($(nullifier.north) + (0,-0.3)$) {Nullifier Generation};
+    
+    % Add the deterministic nullifier algorithm with section reference
+    \node[font=\small, align=center] at ($(nullifier.north) + (0,-1.3)$) {Sec: \ref{subsec:deterministic-nullifier} $y = g^{1/(k + \text{"DMV"})}$};
+    
+    % Add the probabilistic nullifier algorithm with section reference
+    \node[font=\small, align=center] at ($(nullifier.north) + (0,-2.0)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
+    
     % Anonymous User List
-    \node[listbox] (userlist) at (8,2.5) {};
-    \node[anchor=north, font=\bfseries] at ($(userlist.north) + (0,-0.3)$) {Anon. User List};
+    \node[listbox] (userlist) at (12,2.5) {};
+    \node[anchor=north, font=\bfseries] at ($(userlist.north) + (0,-0.3)$) {Issued List};
     
     % Draw horizontal lines in the user list
     \draw ($(userlist.north west) + (0,-0.8)$) -- ($(userlist.north east) + (0,-0.8)$);
     
-    % Formula in the second row of user list
-    \node[font=\small, align=center] at ($(userlist.north) + (0,-1.3)$) {Sec: \ref{subsec:deterministic-nullifier} $ y = g^{1/(k + \text{"DMV"})}$};
+    % Reference to section in the user list but no formula
+    \node[font=\small, align=center] at ($(userlist.north) + (0,-1.3)$) {$y$};
     
     \draw ($(userlist.north west) + (0,-1.8)$) -- ($(userlist.north east) + (0,-1.8)$);
     \draw ($(userlist.north west) + (0,-2.2)$) -- ($(userlist.north east) + (0,-2.2)$);
     \draw ($(userlist.north west) + (0,-2.6)$) -- ($(userlist.north east) + (0,-2.6)$);
     
     % Revocation List
-    \node[listbox] (revlist) at (8,-2.5) {};
+    \node[listbox] (revlist) at (12,-2.5) {};
     \node[anchor=north, font=\bfseries] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
     
     % Draw horizontal lines in the revocation list
     \draw ($(revlist.north west) + (0,-0.8)$) -- ($(revlist.north east) + (0,-0.8)$);
-    
-    % Formula in the second row of revocation list
-    \node[font=\small, align=center] at ($(revlist.north) + (0,-1.3)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
-
-    
-    
+    \node[font=\small, align=center] at ($(revlist.north) + (0,-1.3)$) {$\cm_{y,1}$};
     \draw ($(revlist.north west) + (0,-1.8)$) -- ($(revlist.north east) + (0,-1.8)$);
     \draw ($(revlist.north west) + (0,-2.2)$) -- ($(revlist.north east) + (0,-2.2)$);
     \draw ($(revlist.north west) + (0,-2.6)$) -- ($(revlist.north east) + (0,-2.6)$);
     
-    % Arrows - from wallet to lists, touching the boxes
-    \draw[->, thick] (wallet.east) -- (userlist.west);
-    \draw[->, thick] (wallet.east) -- (revlist.west);
+    % Arrows - update flow through nullifier
+    \draw[->, thick] (wallet.east) -- (nullifier.west);
+    \draw[->, thick] (nullifier.north east) -- (userlist.west);
+    \draw[->, thick] (nullifier.south east) -- (revlist.west);
     
     \end{tikzpicture}
-    \caption[Nullifier Scheme for ]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver’s license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities}.
+    \caption[Nullifier Scheme for ]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities}.
     \label{fig:credential-nullifier-revised}
 \end{figure}
+
 
 
 \subsection{Goals}
