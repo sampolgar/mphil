@@ -15,10 +15,11 @@
 \usepackage{etoolbox}
 % \usepackage[normalem]{ulem}
 \usepackage{booktabs}
-\usepackage{bookmark}
+% \usepackage{bookmark}
 % \usepackage[bookmarks=true]{hyperref} 
 \usepackage{float} %to force my protocol environment to stay where it is
-
+\usepackage{hyperref}
+\usepackage{bookmark}
 \usepackage{array}
 \usepackage[capitalise,noabbrev]{cleveref}
 \usepackage{cite}
@@ -174,39 +175,71 @@ keys
 \patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
 \setcounter{tocdepth}{2}
 \makeatother
-\usepackage{hyperref}
-\usepackage{bookmark}
 
 
+% Add this before the \chapter redefinition
+% \newcounter{chapter}
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
 
-
-
-
-
+% Keep your existing \chapter redefinition
 \makeatletter
-% Simple solution - just reset counters in the chapter command
-\newcounter{mychapter}
-\newcommand{\mychapter}[1]{
+\renewcommand{\chapter}[1]{
   \clearpage
-  \refstepcounter{mychapter}
-  \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
-  \setcounter{section}{0}  % Reset section counter
-  
-  % Manually reset all theorem-like environments
+  \refstepcounter{chapter}
+  \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
+  \setcounter{section}{0}  % Reset section counter for new chapter
   \setcounter{theorem}{0}
   \setcounter{definition}{0}
-  \setcounter{lemma}{0}  
+  \setcounter{lemma}{0}
   \setcounter{proposition}{0}
   \setcounter{corollary}{0}
   \setcounter{example}{0}
   \setcounter{remark}{0}
-  
   \vspace*{2cm}
-  {\centering\Huge\bfseries Chapter \themychapter\par}
+  {\centering\Huge\bfseries Chapter \thechapter\par}
   \vspace{1em}
   {\centering\Huge\bfseries #1\par}
   \vspace{2em}
 }
+\makeatother
+
+\makeatletter
+\newcommand{\chapterstar}[1]{%
+  \clearpage
+  \vspace*{2cm}
+  {\centering\Huge\bfseries #1\par}
+  \vspace{2em}
+}
+\makeatother
+% Ensure section numbering includes chapter
+
+
+
+% \makeatletter
+% % Simple solution - just reset counters in the chapter command
+% \newcounter{mychapter}
+% \newcommand{\mychapter}[1]{
+%   \clearpage
+%   \refstepcounter{mychapter}
+%   \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
+%   % \setcounter{section}{0}  % Reset section counter removed 30/4
+  
+%   % Manually reset all theorem-like environments
+%   \setcounter{theorem}{0}
+%   \setcounter{definition}{0}
+%   \setcounter{lemma}{0}  
+%   \setcounter{proposition}{0}
+%   \setcounter{corollary}{0}
+%   \setcounter{example}{0}
+%   \setcounter{remark}{0}
+  
+%   \vspace*{2cm}
+%   {\centering\Huge\bfseries Chapter \themychapter\par}
+%   \vspace{1em}
+%   {\centering\Huge\bfseries #1\par}
+%   \vspace{2em}
+% }
+% \renewcommand{\thesection}{\thechapter.\arabic{section}}
 
 
 \newtcbtheorem[auto counter]{protocol}{Protocol}{
@@ -656,7 +689,7 @@ keys
 \newcommand{\pirid}{\Pi^{\mathcal{R}_{\id}}}
 
 \newcommand{\pireq}{\Pi^{\mathcal{R}_{\mathsf{eq}}}}
-\newcommand{\req}{{\mathcal{R}_{\mathsf{eq}}}}\
+\newcommand{\req}{{\mathcal{R}_{\mathsf{eq}}}}
 
 
 \newcommand{\zkpok}{{\mathsf{ZKPoK}}}

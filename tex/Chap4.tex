@@ -1,4 +1,4 @@
-\mychapter{Credential Relationship Binding Nullifiers}\label{chap4}
+\chapter{New Nullifier Constructions from the $q$-DDHI and Applications to Accountable Privacy Systems }\label{chap4}
 Anonymous credential systems enable users to prove identity attributes while preserving privacy. In Chapters 2 and 3, we progressed from single-issuer Attribute-Based Anonymous Credentials (ABC) to a Multi-Issuer Multi-Credential (MIMC) system that securely binds credentials from multiple issuers to a single identity. However, practical privacy-preserving protocols, including credential systems, require mechanisms to enforce uniqueness (e.g., preventing sybil attacks) and revocability without compromising anonymity. Nullifiers—cryptographic primitives that represent a user’s action or identity in secrecy—are critical for these purposes, with applications spanning credential binding, anonymous voting, and pseudonymous messaging. This chapter addresses the challenge of designing efficient, privacy-preserving nullifiers using pairing-free Verifiable Random Functions (VRFs), focusing on their application to hierarchical credential binding in the MIMC system while demonstrating their broader utility. Existing VRF constructions, reliant on pairings or RSA, suffer from computational overhead or limited privacy, making them impractical for large-scale anonymous systems. We overcome these limitations with novel Sigma-protocols and prime-order VRFs, achieving significant efficiency and privacy gains.
 
 \subsection*{Chapter Roadmap}
@@ -11,8 +11,8 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
 \begin{figure}
     \centering
     \begin{tikzpicture}[
-        box/.style={draw, rounded corners=2pt, minimum width=6cm, minimum height=8cm},
-        smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=3cm},
+        box/.style={draw, rounded corners=2pt, minimum width=5cm, minimum height=6cm},
+        smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=4cm, minimum height=2.5cm},
         listbox/.style={draw, rounded corners=2pt, minimum width=3cm, minimum height=3cm},
         nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=4.7cm, minimum height=2.5cm},
         thick
@@ -20,10 +20,10 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
     
     % Digital Credential Wallet
     \node[box] (wallet) at (0,0) {};
-    \node[anchor=north, font=\bfseries] at ($(wallet.north) + (0,-0.3)$) {Digital Credential Wallet};
+    \node[anchor=north, font=\bfseries] at ($(wallet.north) + (0,+0.5)$) {Digital Credential Wallet};
     
     % Master Credential
-    \node[smallbox] (master) at (0,1.7) {};
+    \node[smallbox] (master) at (0,1.5) {};
     \node[anchor=north, font=\small\bfseries] at ($(master.north) + (0,-0.3)$) {Master Credential};
     
     \node[anchor=north west, font=\small, align=left] at ($(master.north west) + (0.5,-0.7)$) {
@@ -34,7 +34,7 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
     };
     
     % Context Credential
-    \node[smallbox] (context) at (0,-1.7) {};
+    \node[smallbox] (context) at (0,-1.5) {};
     \node[anchor=north, font=\small\bfseries] at ($(context.north) + (0,-0.3)$) {Context Credential};
     
     \node[anchor=north west, font=\small, align=left] at ($(context.north west) + (0.5,-0.7)$) {
@@ -43,11 +43,8 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
         exp : "10/11/2028"
     };
     
-    % Add a dividing line between credentials in wallet
-    \draw[dashed] ($(wallet.west) + (0.2,0)$) -- ($(wallet.east) + (-0.2,0)$);
-    
     % Nullifier in the middle
-    \node[nullifierbox] (nullifier) at (6.5,0) {};
+    \node[nullifierbox] (nullifier) at (6,0) {};
     \node[anchor=north, font=\bfseries] at ($(nullifier.north) + (0,-0.3)$) {Nullifier Generation};
     
     % Add the deterministic nullifier algorithm with section reference
@@ -57,7 +54,7 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
     \node[font=\small, align=center] at ($(nullifier.north) + (0,-2.0)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
     
     % Anonymous User List
-    \node[listbox] (userlist) at (12,2.5) {};
+    \node[listbox] (userlist) at (11,1.6) {};
     \node[anchor=north, font=\bfseries] at ($(userlist.north) + (0,-0.3)$) {Issued List};
     
     % Draw horizontal lines in the user list
@@ -71,7 +68,7 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
     \draw ($(userlist.north west) + (0,-2.6)$) -- ($(userlist.north east) + (0,-2.6)$);
     
     % Revocation List
-    \node[listbox] (revlist) at (12,-2.5) {};
+    \node[listbox] (revlist) at (11,-1.6) {};
     \node[anchor=north, font=\bfseries] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
     
     % Draw horizontal lines in the revocation list
@@ -273,6 +270,28 @@ We start with the $q$-DDHI assumption and work in two different directions. Firs
 \label{fig:vrf-construction-overview}
 \end{figure}
 
+\subsection{Our Novel Sigma Protocols}
+
+\begin{table}[htbp]
+\centering
+\caption{Our Sigma Protocols and Their Applications}
+\label{tab:nullifier-protocols}
+\begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}}
+\toprule
+\textbf{Sigma Protocol} & \textbf{Application} \\
+\midrule
+DY Prime Order Proof Protocol \ref{protocol-pdy-protocol1} & Efficient VRF \\
+\midrule
+Proving Knowledge of Committed Inverse Exponent  \ref{pok-committed-inverse-exponent} & Generalized $\Sigma$-protocol \\
+\midrule
+Proving Knowledge of Committed Inverse Linear Relation \ref{pok-committed-inverse-linear-relation} & Anonymous Deterministic Nullifier VRF \ref{subsec:deterministic-nullifier}\\
+\midrule
+Proving Knowledge of Committed Nullifier \ref{prot:committed-nullifier} & Anonymous Probabilistic Nullifier VRF \ref{sec-probabilistic-nullifier} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
 
 
 \section{Preliminaries}\label{sec-vrf-preliminaries}
@@ -300,23 +319,9 @@ Informally, no PPT adversary can distinguish $e(g, \tilde{g})^{1/x}$ from a rand
 \end{definition}
 
 
-\subsection{Building Blocks}
-
-\subsubsection{Pedersen Vector Commitments}
-We use position-binding Pedersen Commitments from Chapter 2, which allow committing to a vector of messages while hiding the values. For a message vector $[\id, \ctx, \exp, \k]$ and randomness $\usk$, the commitment is:
-\[
-\cm = \CMCom([m_1, \ldots, m_n];\usk) = g_1^{m_1} \cdots g_n^{m_n} g^\usk
-\]
-
-Pedersen Commitments provide three key properties:
-\begin{itemize}
-    \item \textbf{Hiding}: The commitment reveals no information about the committed values.
-    \item \textbf{Binding}: It's computationally infeasible to open a commitment to different values.
-    \item \textbf{Position-Binding}: Each position in the vector is cryptographically bound to its specific base element, preventing attribute swapping.
-\end{itemize}
 
 
-\subsubsection{Verifiable Random Functions}
+\subsection{Verifiable Random Functions}
 A Verifiable Random Function (VRF) \cite{micali_verifiable_1999, hutchison_verifiable_2005} is a pseudorandom function that provides proofs of correct evaluation. Following \cite{bitansky_verifiable_2020}, a VRF consists of these algorithms:
 
 \begin{definition}[Verifiable Random Function]
@@ -385,7 +390,7 @@ Security relies on the $q$-DBDHI assumption, ensuring $y$ is pseudorandom.
 
 
 
-\subsubsection{Zero-Knowledge Proofs and Sigma-Protocols}
+\subsection{Sigma Protocols and Zero Knowledge Proofs}
 Our credential binding mechanism relies on zero-knowledge proofs, particularly Sigma-protocols, to verify relations between committed values without revealing them.
 
 A Sigma-protocol is a three-move interactive proof system where:
@@ -403,6 +408,18 @@ These protocols satisfy:
 
 
 
+\subsection{Pedersen Commitment Scheme}
+We use position-binding Pedersen Commitments from Chapter 2, which allow committing to a vector of messages while hiding the values. For a message vector $[\id, \ctx, \exp, \k]$ and randomness $\usk$, the commitment is:
+\[
+\cm = \CMCom([m_1, \ldots, m_n];\usk) = g_1^{m_1} \cdots g_n^{m_n} g^\usk
+\]
+
+Pedersen Commitments provide three key properties:
+\begin{itemize}
+    \item \textbf{Hiding}: The commitment reveals no information about the committed values.
+    \item \textbf{Binding}: It's computationally infeasible to open a commitment to different values.
+    \item \textbf{Position-Binding}: Each position in the vector is cryptographically bound to its specific base element, preventing attribute swapping.
+\end{itemize}
 
 
 
@@ -412,7 +429,11 @@ These protocols satisfy:
 
 
 
-\section{Prime-Order VRF from the q-DDHI Assumption}\label{sec:vrf-prime-order}
+
+
+
+
+\section{Efficient Prime-Order Dodis Yampolskiy VRF from the q-DDHI Assumption}\label{sec:vrf-prime-order}
 
 The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF provides an elegant solution for generating unique, pseudorandom nullifiers $y$ and their proofs of correctness $\pi$. We start with the question of removing pairings to improve efficiency. DY consists of $(y, \pi)$:
 \[
@@ -437,7 +458,7 @@ Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \
 
 Security relies on the $q$-DBDHI problem which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g})$, no $\PPT$ adversary can distinguish between $e(g,\tilde{g})^{1/x}$ and a uniform element in $\G_T$ with non-negligible advantage , ensuring the VRF outputs maintain pseudorandomness after the adversary has observed $(x',y',\pi')$ pairs.
 
-\subsubsection{The Prime-Order Group Challenge}
+\subsection{Technical Challenge}
 
 Prime-order groups and standard group operations (without such bilinearity property) cannot be used to directly verify the $1/(sk+x)$ relationship with standard cryptographic operations. For example, given $pk  \cdot g^x = g^{sk+x}$, verification attempts to equate or cancel out fail:
 
@@ -461,7 +482,7 @@ y^{sk + x} = g  \\
 \end{array} \right\}
 \]
 
-\subsection{Construction}\label{sec-dy-pf}
+\subsection{Our Construction}\label{sec-dy-pf}
 
 Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. The message space is $\mathcal{X} = \mathbb{Z}_p$, the output space is $\mathcal{Y} = \mathbb{G}$, and the proof space is $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. The algorithms are defined as follows:
 
@@ -476,7 +497,7 @@ Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator
     Verifying $\VRFVerify(pk, x, \VRFEval(sk, x) \to y) \to 1$ is a naive verification approach without a proof which yeilds a Verifiable Unpredictable Function (VUF), not a VRF because it lacks the mechanism to prove pseudorandomness to a verifier. DY uses pairings to bridge the gap, we replace pairings with a $\Sigma$-protocol. 
 \end{remark}
 
-\subsection{Proof Protocol}
+\subsection{Our Sigma Protocol}
 \begin{protocol}{DY Prime Order Proof Protocol}{}\label{protocol-pdy-protocol1}
 \textbf{Common Input:} $g, pk, y \in \mathbb{G}$, $x \in \mathbb{Z}_p$ \\
 \textbf{Prover Input:} $sk \in \mathbb{Z}_p^*$ with $pk = g^{sk}$, $y = g^{1/(sk + x)}$ \\
@@ -525,36 +546,100 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 \end{proof}
 
 
+\subsection{Performance Evaluation}
 
 
 
 
 
-
-
-
-\section{Anonymous Prime-Order VRFs from the $q$-DDHI}\label{sec:privacy-preserving-vrf}
-
-While our pairing-free VRF construction, presented in Section 3, eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk = g^{sk}$ and input $x$ during verification. This is a limitation for anonymous credential systems, where both the master credential key $sk$ and the context identifier $x$ must remain private to ensure user anonymity. In this section, we address this challenge by developing zero-knowledge proof techniques that enable verification of VRF outputs computed from committed attributes, without revealing sensitive information.
-
-\begin{table}[htbp]
-\centering
-\caption{Our Sigma Protocols and Their Applications}
-\label{tab:nullifier-protocols}
-\begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}}
+We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:chap4_vrf_public_table} compares the baseline Dodis Yampolskiy VRF against our constructions. As our construction does not use bilinear pairings, we present a comparison on BLS12-381 curve as well as more efficient Ed25519 and secp256k1 without a bilinear pairing. Results are available in the figures \ref{fig:chap4_public_vrf}
+\begin{table}[ht]
+\begin{center}
+\caption{VRF Comparison between Original DY and Our Prime Order DY VRF Construction}
+\label{tab:chap4_vrf_public_table}
+\begin{tabular}{l@{\hspace{1em}}l@{\hspace{1em}}c@{\hspace{2em}}c}
 \toprule
-\textbf{Sigma Protocol} & \textbf{Application} \\
+\textbf{Scheme} & \textbf{Curve} & \textbf{Eval + Prove (ms)} & \textbf{Verify (ms)} \\
 \midrule
-DY Prime Order Proof Protocol \ref{protocol-pdy-protocol1} & Efficient VRF \\
+\multirow{3}{*}{Our Prime Order DY VRF \ref{sec-dy-pf}} 
+& Ed25519 & 0.21 & 0.37 \\
+& secp256k1 & 0.25 & 0.42 \\
+& BLS12-381 & 0.41 & 0.71 \\
 \midrule
-Proving Knowledge of Committed Inverse Exponent  \ref{pok-committed-inverse-exponent} & Generalized $\Sigma$-protocol \\
-\midrule
-Proving Knowledge of Committed Inverse Linear Relation \ref{pok-committed-inverse-linear-relation} & Anonymous Deterministic Nullifier VRF \ref{subsec:deterministic-nullifier}\\
-\midrule
-Proving Knowledge of Committed Nullifier \ref{prot:committed-nullifier} & Anonymous Probabilistic Nullifier VRF \ref{sec-probabilistic-nullifier} \\
+Original DY $^1$ \cite{hutchison_verifiable_2005} & BLS12-381 & 1.27 & 2.20 \\
 \bottomrule
 \end{tabular}
+\par\medskip
+\raggedright
+\footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
+\end{center}
 \end{table}
+
+
+\begin{figure}[ht]
+    \centering
+    \begin{minipage}{\textwidth}
+        \centering
+        \includegraphics[width=0.75\textwidth]{figures/chap4_public_vrf_combined.png}
+    \end{minipage}
+    
+    % Bottom row with 2x2 grid of smaller figures
+    \begin{minipage}{0.48\textwidth}
+        \centering
+         \includegraphics[width=\textwidth]{figures/chap4_public_vrf_eval_prove_performance.png}        
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+       \includegraphics[width=\textwidth]{figures/chap4_public_vrf_verify_performance.png}
+    \end{minipage}
+    
+    \caption[Our DY VRF Construction is 3 - 6x more efficient]{DY VRF Performance Comparison - Our Construction is 3 - 6x more efficient}
+    \label{fig:chap4_public_vrf}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Private Nullifiers from the $q$-DDHI}\label{sec:privacy-preserving-vrf}
+
+While our pairing-free VRF construction, presented in Section 3, eliminates the computational overhead of bilinear pairings, it still exposes the public key $pk = g^{sk}$ and input $x$ during verification. This is a limitation for anonymous credential systems, where both the master credential key $sk$ and the context identifier $x$ must remain private to ensure user anonymity. In this section, we address this challenge by developing zero-knowledge proof techniques that enable verification of VRF outputs computed from committed attributes, without revealing sensitive information.
 
 
 
@@ -1146,6 +1231,57 @@ Our evaluation reveals several key findings:
 
     \item \textbf{Inefficiency of Pairing Curve Operations} The non-pairing curve operations are from 1.6x - 2x more efficient
 \end{enumerate}
+
+
+
+
+
+
+
+
+
+
+\begin{figure}[ht]
+    \centering
+    \begin{minipage}{\textwidth}
+        \centering
+        \includegraphics[width=0.75\textwidth]{figures/chap4_private_nullifier_combined.png}
+    \end{minipage}
+    
+    % Bottom row with 2x2 grid of smaller figures
+    \begin{minipage}{0.48\textwidth}
+        \centering
+         \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_eval_prove.png}        
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+       \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_verify.png}
+    \end{minipage}
+    
+    \caption[Our Nullifier Constructions are 3x - 5x more efficient]{Nullifier Performance Comparison - Our Constructions are 3x - 5x more efficient}
+    \label{fig:chap4_public_vrf}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-vrf-instantiation}
