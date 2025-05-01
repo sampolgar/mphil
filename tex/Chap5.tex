@@ -473,7 +473,7 @@ In the above scenario, to enforce sybil resistance of the user's driver license,
 \subsection*{Revocation}
 A popular efficient accountable-privacy pattern for revocation is seen in anonymous payments \cite{damgard_balancing_2020} and private identity systems \cite{wang2023hades}: on registration, a user encrypts a secret key with a separate (preferably threshold) authority, e.g. Audit Authority and stores the encryption on the registration system within the original user profile. Should it require revocation, the Registration System provides the encryption and reason for revocation to the auditors, the auditors then decrypt it and add the key to a revocation list such as an accumulator that enables efficient zero-knowledge non-membership proofs \cite{jaques_allosaur_2024, galbraith_dynamic_2022} which cost 7.4ms for proof generation and 11.2ms for proof verification, adding some overhead but yet still practical. We can extend this pattern to enable revocation of individual context credentials - the auditor receives the request to revoke a specific context for an identity, the auditor decrypts $s$ and computes $\nullifier = g^{1/(s + ctx)}$ and includes that in an accumulator.
 
-\subsection{The Interactive Protocol}
+\subsection{Protocol Details}
 
 \subsubsection*{OrgKeyGen}
 
@@ -745,7 +745,12 @@ tShareSign/Issue we are much slower - we don't use parallel computation and migh
 
 
 
-
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/chap5_tsiris_issue_w_wo_zkp.png}
+    \caption{Enter Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 
 
@@ -920,3 +925,19 @@ Prove+Verify & <3ms & >20ms & >7× faster \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/chap5_tsiris_varyN_varyn_aggregate.png}
+    \caption{Enter Caption}
+    \label{fig:enter-label1}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/chap5_tsiris_against_s3id.png}
+    \caption{Enter Caption}
+    \label{fig:enter-label2}
+\end{figure}
