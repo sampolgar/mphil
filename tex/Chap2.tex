@@ -481,7 +481,7 @@ $$\mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A}, \mathsf{Com}}(\lambda) \
 where $n$ is the message vector length.
 \end{theorem}
 
-\begin{proof}[Proof Sketch]
+\begin{proof}
 We construct a reduction where an algorithm $\mathcal{B}$ solves the Symmetric Discrete Logarithm Problem (SDLP) by leveraging an algebraic adversary $\mathcal{A}$ that breaks the position binding property of the commitment scheme.
 
 \begin{enumerate}
@@ -937,56 +937,46 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 \subsection{Verify Speedup Improvement}
 
-In the original PS-UTT $\G_1$ variant, verification involves two bilinear pairings equality checks:
+In the original UTT $\G_1$ variant, verification involves two bilinear pairings equality checks and a proof of knowledge of the commitment:
 $$
 e\bigl(\sigma_{2}',\tilde g\bigr)
-= e\bigl(\sigma_{1}',\,\vk\cdot\widetilde{\cm'}\bigr),
+= e\bigl(\sigma_{1}',\,\vk\cdot\widetilde{\cm'}\bigr) \quad \wedge 
 \quad
 e\bigl(\cm',\tilde g\bigr)
-= e\bigl(g,\,\widetilde{\cm'}\bigr).
+= e\bigl(g,\,\widetilde{\cm'}\bigr)
+\quad \wedge \quad \mathsf{ZK.Verify}(\pi,\cm')=1
 $$
-By redefining the signature as
-$$
-\widetilde\sigma = \bigl(\widetilde\sigma_1,\widetilde\sigma_2\bigr)\in\G_2,
-$$
-the G2 variant replaces both checks with a single pairing:
-$$
-e\bigl(g,\,\widetilde\sigma_2'\bigr)
-= e\bigl(\vk\cdot\cm',\,\widetilde\sigma_1'\bigr).
-$$
-This reduction eliminates one pairing operation, yielding a $20\%\text{--}40\%$ decrease in verification cost (see Table~\ref{abc-performance-combined-table}).
+Without the second pairing equality, the user must compute the proof of knowledge on $\widetilde{\cm'} \in \G_2$, which comes with its own overhead. That's because the signature is verified with $\widetilde{\cm'} \in \G_2$.
+
+By redefining the signature in $\widetilde\sigma = \bigl(\widetilde\sigma_1,\widetilde\sigma_2\bigr)\in\G_2$ we can compute the proof of knowledge in $\G_1$ directly, reducing one pairing. The overhead of verifying the signature in $\G_2$ is significantly better than the additional pairing yielding a $20\%\text{--}40\%$ decrease in verification cost (see Table~\ref{abc-performance-combined-table}).
 
 \subsubsection*{Verification Procedure}
 
 The optimized verification algorithm $\Verify(\widetilde\vk,\cm',\widetilde\sigma')\to\{0,1\}$ comprises:
-\begin{enumerate}
-  \item \emph{Signature check:}
     $$
-    e\bigl(g,\,\widetilde\sigma_2'\bigr)
-    = e\bigl(\vk\cdot\cm',\,\widetilde\sigma_1'\bigr).
+    e\bigl(g,\,\widetilde\sigma_2'\bigr) = e\bigl(\vk\cdot\cm',\,\widetilde\sigma_1'\bigr) \quad \wedge \quad \mathsf{ZK.Verify}(\pi,\cm')=1
     $$
-  \item \emph{Proof-of-knowledge check:}
-    $$
-    \mathsf{ZK.Verify}(\pi,\cm')=1,
-    \quad
-    \pi\;\biglarrow\;\mathsf{PoK}\bigl\{(r+\Delta_r,m_1,\dots,m_\ell):
-    \cm'=g^{r+\Delta_r}\prod_{i=1}^{\ell}g_i^{m_i}\bigr\}.
-    $$
-\end{enumerate}
+
 Correctness follows by bilinearity:
-$$
-\begin{aligned}
-e\bigl(g,\widetilde\sigma_2'\bigr)
-&= e\bigl(g,(\widetilde\sigma_2\cdot\widetilde\sigma_1^{\Delta_r})^{\Delta_u}\bigr)\\
-&= e\bigl(g,\widetilde\sk^{\Delta_u}\bigr)\;\,
-   e\bigl(g,\widetilde\cm^{u+\Delta_u}\bigr)\;\,
-   e\bigl(g,\tilde h^{r_\Delta\Delta_u}\bigr)\\
-&= e\bigl(g^x,\tilde h^{\Delta_u}\bigr)\;\,
-   e\bigl(g,\widetilde\cm\bigr)^{u+\Delta_u}\;\,
-   e\bigl(g,\tilde h^{\Delta_u}\bigr)^{r_\Delta}\\
-&= e\bigl(\vk\cdot\cm',\widetilde\sigma_1'\bigr).
-\end{aligned}
-$$
+\begin{enumerate}
+    \item Prove $e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}', \widetilde{\sigma_1}')$
+    
+    \begin{align*}
+        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}) \\
+        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{u_\Delta} \cdot \tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g, \widetilde{\sk}^{u_\Delta}) \cdot e(g, \widetilde{\cm}^{u + u_\Delta}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g^x, \widetilde{h}^{u_\Delta}) \cdot e(g, \widetilde{\cm})^{u + u_\Delta} \cdot e(g,\tilde{h}^{u_\Delta})^{r_{\Delta}} \\
+        &= e(\vk, \widetilde{h}^{u_\Delta}) \cdot e(\cm, \widetilde{h}^{u_\Delta}) \cdot e(g^{r_{\Delta}},\tilde{h}^{u_\Delta}) \\
+        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
+        &= e(\vk \cdot \cm', \sigma_1')  \\
+    \end{align*}
+
+    \item then PoK
+    \[
+        \pi \gets \mathsf{PoK}\{(r + \Delta_r, m_1,\ldots,m_\ell): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{enumerate}
+ 
 
 \subsubsection*{Performance Trade–Offs}
 
@@ -1136,7 +1126,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
             \end{pcvstack}
         \end{pchstack}
     \end{pcvstack}
-    \caption{Unforgeability and Anonymity Games for the Basic ABC System}
+    \caption{Unforgeability and Anonymity Games for the ABC System}
     \label{fig:abc-security-games}
 \end{figure}
 

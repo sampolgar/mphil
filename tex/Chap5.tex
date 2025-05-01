@@ -109,144 +109,7 @@ A $(t,n)$ secret sharing scheme $\mathsf{SS}$ consists of the following $\PPT$ a
 
 
 
-\begin{definition}[Distributed Key Generation]
-A $(t,n)$-Distributed Key Generation (DKG) protocol $\mathsf{DKG}$ for discrete-log based cryptosystems is an interactive $\PPT$ protocol executed by $n$ parties over a group $G$ with generator $g$, taking as input a security parameter $1^\lambda$, threshold $t$, and number of parties $n$. At completion, each honest party $P_i$ outputs:
-\begin{itemize}
-    \item A share $[x]_i \in \mathbb{Z}_q$ of a secret $x \in \mathbb{Z}_q$.
-    \item A public key $y = g^x \in G$.
-\end{itemize}
-The protocol satisfies:
-\begin{itemize}
-    \item \textbf{Correctness:} All honest parties output the same $y$, and the shares $([x]_1, \dots, [x]_n)$ held by honest parties form a $(t,n)$-threshold sharing of $x$ such that $y = g^x$.
-    \item \textbf{Uniformity:} The secret $x$ is uniformly distributed in $\mathbb{Z}_q$.
-    \item \textbf{Security:} Against a static adversary corrupting up to $t < n/2$ parties, no information about $x$ is leaked beyond $y$, and correctness holds.
-\end{itemize}
-\end{definition}
-
-
-
-\subsubsection{DKG Construction}
-The $(t,n)$-DKG protocol from \cite{Gennaro2007} operates over a group $G$ with generator $g$, order $q$, and security parameter $\lambda = \log q$, executed by $n$ parties $P_1, \dots, P_n$ with threshold $t < n/2$. It proceeds in two phases:
-\begin{itemize}
-    \item \textbf{Phase 1 (Commitment):} Each party $P_i$:
-        \begin{enumerate}
-            \item Chooses a random secret $z_i \in \mathbb{Z}_q$ and a polynomial $f_i(z)$ of degree $t$ with $f_i(0) = z_i$.
-            \item Uses Pedersen’s VSS to distribute verifiable shares $s_{ij} = f_i(j)$ and commitments $C_{ik} = g^{a_{ik}} h^{b_{ik}}$ (for coefficients $a_{ik}$, blinding $b_{ik}$, and generator $h \in G$) to all parties $P_j$.
-            \item Verifies received shares $s_{ji}$ from others; if invalid, complains to disqualify the sender $P_j$. Let $QUAL$ be the set of non-disqualified parties.
-        \end{enumerate}
-    \item \textbf{Phase 2 (Key Generation):} Each party $P_i \in QUAL$:
-        \begin{enumerate}
-            \item Uses Feldman’s VSS to broadcast commitments $A_{ik} = g^{a_{ik}}$ for the same polynomial $f_i(z)$ from Phase 1.
-            \item Verifies received commitments; if invalid, reconstructs $z_j$ of the faulty $P_j \in QUAL$.
-            \item Computes share $[x]_i = \sum_{j \in QUAL} s_{ji}$ and public key $y = \prod_{j \in QUAL} A_{j0}$, where $A_{j0} = g^{z_j}$.
-        \end{enumerate}
-\end{itemize}
-The protocol outputs $([x]_i, y)$ for each $P_i \in QUAL$, where $x = \sum_{j \in QUAL} z_j$ and $y = g^x$.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\begin{definition}[Distributed Key Generation for VRF] 
-A $(t,n)$-threshold DKG scheme consists of the following probabilistic polynomial-time algorithms:
-
-\begin{itemize} 
-\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{pp}, \mathsf{vk}, \{[s_2]_i, \mathsf{vk}_i\}_{i \in [n]}):$ On input security parameter $\lambda$, threshold parameter $t < n$, and number of parties $n$, outputs public parameters $\mathsf{pp}$, a verification key $\mathsf{vk} = g^{s_2}$, and for each party $i$, a share $[s_2]_i$ of $s_2$ along with an individual verification key $\mathsf{vk}_i$.
-
-\item $\mathsf{ShareProve}(\mathsf{pp}, [s_2]_i) \to \pi_i:$ Generates a proof $\pi_i$ that the share $[s_2]_i$ is valid.
-
-\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [s_2]_i, \pi_i) \to \{0,1\}:$ Verifies that a share $[s_2]_i$ is valid with respect to verification key $\mathsf{vk}_i$ using proof $\pi_i$.
-
-\item $\mathsf{Reconstruct}([s_2]_{i_1}, \dots, [s_2]_{i_{t+1}}) \to s_2:$ Takes $t+1$ distinct valid shares and reconstructs the secret $s_2$.
-\end{itemize}
-
-The scheme satisfies the following security properties:
-
-\begin{itemize}
-\item \textbf{Correctness:} For any $(\mathsf{pp}, \mathsf{vk}, \{[s_2]_i, \mathsf{vk}_i\}_{i \in [n]}) \leftarrow \mathsf{DistKeyGen}(1^{\lambda}, t, n)$, any subset $S \subset [n]$ of size $|S| = t+1$, and $s_2 \leftarrow \mathsf{Reconstruct}(\{[s_2]_i\}_{i \in S})$, it holds that $\mathsf{vk} = g^{s_2}$.
-
-\item \textbf{Secrecy:} Any adversary corrupting up to $t$ parties learns no information about $s_2$ beyond what can be derived from the verification key $\mathsf{vk}$.
-
-\item \textbf{Robustness:} Even if up to $t$ parties behave maliciously, the honest parties can still successfully generate and verify shares.
-\end{itemize}
-\end{definition}
-
-
-
-\begin{definition}[Distributed Key Generation]
-A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
-\begin{itemize}
-\item $\mathsf{Setup}(1^{\lambda}) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp} = (G, p, g)$ where $G$ is a cyclic group of prime order $p$ with generator $g$.
-\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: Generates a verification key $\mathsf{vk} = g^k$ and for each party $i$, a share $[k]_i$ of the secret key $s$ along with verification key $\mathsf{vk}_i = g^{[k]_i}$.
-\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k]_i) \to \{0,1\}$: Verifies that share $[k]_i$ is consistent with verification key $\mathsf{vk}_i$.
-\item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: Reconstructs the secret key $s$ from $t+1$ valid shares.
-\end{itemize}
-\end{definition}
-
-
-Our Simple DKG scheme is defined as follows:
-\begin{definition}[Simple Distributed Key Generation]
-A $(t,n)$-threshold Simple DKG scheme consists of the following algorithms:
-\begin{itemize}
-\item $\mathsf{Setup}(1^{\lambda}) \to \mathsf{pp}$: 
-  Outputs public parameters $\mathsf{pp} = (G, p, g)$ where $G$ is a cyclic group of prime order $p$ with generator $g$.
-  
-\item $\mathsf{DistKeyGen}(1^{\lambda}, t, n) \to (\mathsf{vk}, \{[k]_i, \mathsf{vk}_i\}_{i \in [n]})$: 
-  Executes the distributed key generation process:
-  \begin{enumerate}
-    \item All $n$ parties jointly generate a secret key $s$ such that any subset of $t+1$ parties can reconstruct $s$.
-    \item Outputs the global verification key $\mathsf{vk} = g^k$.
-    \item Each party $i$ receives:
-      \begin{itemize}
-        \item A share $[k]_i$ of the secret key $s$, and
-        \item A verification key $\mathsf{vk}_i = g^{[k]_i}$ to verify its share.
-      \end{itemize}
-  \end{enumerate}
-
-\item $\mathsf{ShareVerify}(\mathsf{pp}, \mathsf{vk}_i, [k]_i) \to \{0,1\}$: 
-  Verifies that the share $[k]_i$ held by party $i$ is consistent with its verification key $\mathsf{vk}_i$.
-  \begin{itemize}
-    \item Returns $1$ if the verification is successful (i.e., $[k]_i$ is valid).
-    \item Returns $0$ otherwise.
-  \end{itemize}
-
-\item $\mathsf{Reconstruct}(\{[k]_{i_j}\}_{j=1}^{t+1}) \to k$: 
-  Reconstructs the secret key $s$ using a subset of $t+1$ valid shares $\{[k]_{i_j}\}_{j=1}^{t+1}$. 
-  \begin{itemize}
-    \item Applies Lagrange interpolation over the valid shares to compute $s$.
-    \item Outputs the reconstructed secret key $s$.
-  \end{itemize}
-\end{itemize}
-\end{definition}
-
-\begin{theorem}[Security Properties]
-The Simple DKG construction satisfies the following properties:
-\begin{itemize}
-\item \textbf{Correctness}: For any execution of $\mathsf{DistKeyGen}$ producing shares $\{[k]_i\}_{i \in [n]}$, any subset $S \subset [n]$ of size $|S| = t+1$, and $k' \leftarrow \mathsf{Reconstruct}(\{[k]_i\}_{i \in S})$, it holds that $g^{k'} = \mathsf{vk}$.
-\item \textbf{Secrecy}: Any adversary controlling at most $t$ parties learns no information about the secret key $s$ beyond what can be derived from the public verification keys.
-\item \textbf{Binding}: It is computationally infeasible for an adversary to produce a valid share $[k]_i$ that is inconsistent with the verification key $\mathsf{vk}_i$.
-\end{itemize}
-\end{theorem}
-
-
-
-
-
-\section{Threshold Rerandomizable Signature for ABCs}
-\label{sec:threshold-construction}
+\subsection{Threshold Rerandomizable Signature}
 
 We adopt the threshold PS signature scheme from \cite{tomescu_utt_2022} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
 
@@ -255,7 +118,8 @@ We adopt the threshold PS signature scheme from \cite{tomescu_utt_2022} using Sh
 We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold, reflecting realistic collusion scenarios in decentralized settings. The adversary cannot break the hard problems our schemes are built upon, and network conditions support standard threshold protocols. Similar to Coconut’s threshold issuance~\cite{sonnino_coconut_2020}, our threshold PS signature scheme distributes trust among $n$ issuers using Shamir secret sharing. However, we extend this foundation by integrating nullifiers from Chapter~\ref{chap4}, enabling sybil resistance—a critical feature for identity systems that Coconut does not address.
 
 Importantly, this threshold construction distributed trust among multiple issuers while preserving the core properties of our underlying building block PS signature scheme - unforgeability and rerandomizability. Additionally, the end-signature algebraic structure is the same, and therefore, the verification algorithm and proof system compatibility are the same.
-\subsection{Definition}
+
+\subsubsection{Definition}
 
 \begin{definition}[PS Threshold Signatures over Pedersen Commitments]
 A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists of the following algorithms:
@@ -344,21 +208,6 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
     \]
 
 \end{itemize}
-
-\subsubsection{Security Properties}
-
-The threshold PS signature scheme preserves the security of the underlying PS signature scheme while distributing trust across multiple parties.
-
-\begin{theorem}[Threshold Unforgeability]
-The scheme is unforgeable against adversaries corrupting up to $t-1$ signers, assuming the hardness of the Discrete Logarithm (DL) problem and the unforgeability of the PS signature scheme.
-\end{theorem}
-
-\begin{theorem}[Rerandomizability]
-Signatures can be rerandomized to prevent linking, with the distribution of rerandomized signatures computationally indistinguishable from fresh signatures on the same message.
-\end{theorem}
-
-Formal proofs are omitted, as they follow from Shamir’s secret sharing security and the PS signature properties in Chapter~\ref{chap2}.
-
 
 
 
@@ -546,9 +395,9 @@ The deduplication table $\mathcal{T}$ should be replicated across all issuers or
 
 
 
-\section{Construction}
+\section{Our Construction}
 
-\subsubsection{Overview}
+\subsection{Overview}
 T-SIRIS operates in two credential issuance phases: master credential issuance and context credential issuance. The master credential establishes the user's base identity with a secret key $\k$, while context credentials are bound to this master credential through nullifiers derived from $\k$ and a context $\mathsf{ctx}$. The nullifier mechanism prevents sybil attacks by ensuring users can obtain only one credential per context.
 
 
@@ -634,7 +483,7 @@ $\mathsf{OrgKeyGen}(1^{\lambda}, \ell, t, n) \to (\BG, \ck, \vk, \{\sk_i, \vk_i\
         \item Returns $(\BG, \ck, \vk, \{\sk_i, \vk_i\}_{i \in [\ell]}, \{[s_2]_i\}_m$ for $i \in |n| )$
     \end{itemize}
 
-\subsubsection*{(Obtain, Issue)}
+\subsubsection*{(ObtainMaster, IssueMaster)}
 The user and issuers interact, user executes Obtain with their attributes to compute the outputs for issuing. Issue is run by the threshold nodes to issue the signature shares.
 \subsubsection*{Obtain:}
 $\mathsf{ObtainMaster}(\attrs)$
@@ -653,9 +502,8 @@ $\mathsf{IssueMaster}(\{\cm_k, \Pi^{\mathcal{R}_{\mathsf{com}}}(\cm_k, m_k, r_k)
     \item $\mathsf{tAggregate}(\ck, ([\sigma^*]_i)_{i \in S}, \{r_k\}_{k \in [\ell]}) \to \sigma:$
 \end{enumerate}
 
-
-\subsubsection*{(ObtainMaster, IssueMaster)}
-The user and issuers interact, user executes Obtain with their attributes to compute the outputs for issuing. Issue is run by the threshold nodes to issue the signature shares.
+\subsubsection*{(ObtainContext, IssueContext)}
+The user and issuers interact, user executes Obtain with their master credential and context attributes to compute the outputs for issuing. Issue is run by the threshold nodes to issue the signature shares.
 \subsubsection*{ObtainContext:}
 $\mathsf{ObtainContext}(\attrs, \credm, \phi)$
 \begin{enumerate}
@@ -680,12 +528,12 @@ $\mathsf{Issue}(\nullifier, \Pi^{\mathsf{R}_{\mathsf{credc}}}, \{\cm_k, \Pi^{\ma
 $\mathsf{Show}$ and $\mathsf{Verify}$ follow from the non-threshold $\ABC$ system \ref{construction-ABC}. The user runs $\RSRand(\sigma, \cm) \to \sigma', \cm'$ then runs $\RSVer(\vk, \cm', \sigma')$. Before rerandomization, the commitment is without randomness $\cm = \CMCom([\attrs]; 0)$ and the user rerandomizes it before verification.
 
 
-\section{Security Analysis}
+\subsection{Security Analysis}
 \label{sec:threshold-security}
 
 We analyze the security of T-SIRIS by demonstrating how it inherits and extends the security properties of its component schemes when deployed in a threshold setting with up to $t-1$ malicious issuers.
 
-\subsection{Unforgeability}
+\subsubsection{Unforgeability}
 
 \begin{theorem}[Unforgeability]
 If the threshold signature scheme is EUF-CMA secure and the MIMC-ABC system is unforgeable, then $\mathsf{T\text{-}SIRIS}$ is unforgeable against up to $t-1$ malicious issuers.
@@ -703,7 +551,7 @@ The unforgeability of T-SIRIS reduces to the security of two underlying componen
 Since both underlying components are secure under their respective assumptions, a successful attack against T-SIRIS would require breaking at least one of these primitives, which occurs with at most negligible probability.
 \end{proof}
 
-\subsection{Sybil Resistance}
+\subsubsection{Sybil Resistance}
 
 \begin{theorem}[Sybil Resistance]
 If the deterministic nullifier scheme from Chapter~\ref{chap4} satisfies uniqueness, then $\mathsf{T\text{-}SIRIS}$ is sybil-resistant.
@@ -717,7 +565,7 @@ For each user-context pair $(s, \mathsf{ctx})$, where $s$ is the master credenti
 Even in a threshold setting where some issuers are corrupted, as long as the deduplication table is consistently maintained across honest issuers, no user can obtain multiple credentials for the same context without breaking the cryptographic assumptions of the nullifier scheme.
 \end{proof}
 
-\subsection{Threshold Anonymity}
+\subsubsection{Threshold Anonymity}
 
 \begin{theorem}[Threshold Anonymity]
 $\mathsf{T\text{-}SIRIS}$ provides threshold anonymity if the MIMC-ABC system is anonymous and the CRBN scheme preserves anonymity, even when up to $t-1$ issuers are corrupted.
@@ -742,7 +590,7 @@ In the threshold setting, these properties are preserved because:
 Through a standard hybrid argument, we can show that the adversary's advantage in distinguishing between different users' credential presentations is negligible, even with up to $t-1$ corrupted issuers.
 \end{proof}
 
-\subsection{Unlinkability}
+\subsubsection{Unlinkability}
 
 \begin{theorem}[Unlinkability]
 $\mathsf{T\text{-}SIRIS}$ provides unlinkability if the CRBN scheme satisfies the unlinkability property and the rerandomizable signature scheme satisfies rerandomization indistinguishability.
@@ -779,10 +627,33 @@ The threshold setting strengthens this property by distributing trust: even if $
 
 We evaluate the performance of T-SIRIS and its underlying cryptography by first benchmarking individual cryptographic operations from the threshold signature scheme, comparing it to the Threshold signature scheme from TACT \cite{rabaninejad_attribute-based_2024}. We then evaluate the performance of T-SIRIS by comparing it to S3ID, the Threshold Identity system constructed from TACT.
 
+% \subsection{Threshold Keys Evaluation}
+
 We implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. Our comparison is fair in that we executed our cryptography \cite{polgar_anonymous_2025} and the code from \cite{arkworks_contributors_arkworks_2022} with the same pairing curve (BLS12-381), on the same computer (MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2) with the same curve library (arkworks). All measurements represent the average of 100 independent trials with standard deviations below 5\%. 
 
 \subsection{Threshold Signature Evaluation}
 We first analyze the performance of the core cryptographic primitives: our threshold PS-UTT signature scheme versus the threshold anonymous counting token (TACT) scheme used in S3ID \cite{rabaninejad_attribute-based_2024}, a state-of-the-art Sybil Resistant, Threshold Anonymous Credential system with orthogonal techniques but different cryptography.
+
+\subsubsection{Scaling by attribute count (n)}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
+    \caption[tUTT our selected construction improves on 4/5 key metrics scaling credential attribute count (n)]{tUTT Construction vs tACT microbenchmarks for fixed $ N = 16, t = 9 $, varying $n$ (ms)}
+    \label{fig:chap4_tutt_tact_microbenchmarks}
+\end{figure}
+
+\subsubsection{Scaling by Threshold Node count (N)}
+
+\subsubsection{Scaling by Threshold Nodes (N)}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
+    \caption[tUTT our selected construction improves on 4/5 key metrics scaling credential attribute count (n)]{tUTT Construction vs tACT microbenchmarks for fixed $ N = 16, t = 9 $, varying $n$ (ms)}
+    \label{fig:chap4_tutt_tact_microbenchmarks}
+\end{figure}
+
+
+
 
 \begin{table}[!htbp]
 \centering
@@ -845,6 +716,20 @@ Verify              & TACT   & 23.51 & 26.64 & 25.03 & \\
 Table \ref{tab:perf-comp-vary-n} presents the performance of key operations with varying attribute counts $(n)$ while maintaining a fixed threshold configuration $(N=16, t=9)$. Table \ref{tab:perf-comp-vary-N} presents the same operations with varying threshold size $(N, t)$ while maintaining consistent attribute count $n = 16$. 
 
 
+prepare/token request is linear, we're 6.1x better
+tShareSign/Issue we are much slower - we don't use parallel computation and might be why?
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -870,6 +755,12 @@ MicroCred: User interacts with the issuers to obtain micro-credentials {si}L  i=
     
 \end{itemize}
 
+For me it would be 
+\begin{itemize}
+    \item Master Cred Issue: tPrepare, tShareSign, tAggregate
+    \item Context Cred Issue: = (1 x Show, Verify) + (1 x Eval+Prove +Verify) for each node
+    \item (Show, Verify): (per cred) Rerand, ZKP.Prove, Verify
+\end{itemize}
 
 
 
