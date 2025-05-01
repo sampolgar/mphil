@@ -111,7 +111,7 @@ A $(t,n)$ secret sharing scheme $\mathsf{SS}$ consists of the following $\PPT$ a
 
 \subsection{Threshold Rerandomizable Signature}
 
-We adopt the threshold PS signature scheme from \cite{tomescu_utt_2022} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
+Our base-building block is the threshold PS signature scheme from \cite{tomescu_utt_2022} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
 
 
 \subsection{Overview}
@@ -142,11 +142,11 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
 
 
 
-\subsubsection{Construction}\label{threshold-ps-construction}
+\subsubsection{Our Construction}\label{threshold-ps-construction}
 
 
 Our threshold PS construction works as follows:
-A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $\cm = \CMCom([\attrs];r)$. The user interacts with signers using a pre-agreed random element $h \in \G_1$, alternatively, \cite{sonnino_coconut_2020} generates this with a hash-to-group of the commitment $h \gets \mathcal{H}(\cm)$. The user sends $\cm$ with $\Pi_{\cm}$ OR $\pi^{\mathsf{zkpok}}$ proving its opening to each signer. Signers verify the proof and return a signature share $[\sigma^*]_i = \mathsf{tPSutt.ShareSign}(\ck, \mathsf{sk}_i, (\mathsf{cm}_k, \pi^{\mathsf{zkpok}}); h)$. The user verifies each share and checks the consistency of the message and proof previously shared $\mathsf{tPSutt.ShareVer}(\ck, \mathsf{vk}_i, (\mathsf{cm}, \pi^{\mathsf{zkpok}}), [\sigma^*]_i; h)$. The user identifies a set $S$ of at least $t+1$ valid shares and aggregates them, outputting their signature $\sigma \leftarrow \mathsf{tPSutt.Aggregate}(\ck, ([\sigma^*]_i)_{i \in S}, r)$ which verifies under the combined  verification key $\mathsf{PSutt.Ver}(\mathsf{vk}, \mathsf{cm}, \sigma) = 1$.
+A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $\cm = \CMCom([\attrs];r)$. The user interacts with signers using a pre-agreed random element $h \in \G_1$, alternatively, \cite{sonnino_coconut_2020} generates this with a hash-to-group of the commitment $h \gets \mathcal{H}(\cm)$. The user sends $\cm$ with $\pircom$ proving its opening to each signer. Signers verify the proof and return a signature share $[\sigma^*]_i = \mathsf{tPSutt.ShareSign}(\ck, \mathsf{sk}_i, (\mathsf{cm}_k, \pircom_k); h)$. The user verifies each share and checks the consistency of the message and proof previously shared $\mathsf{tPSutt.ShareVer}(\ck, \mathsf{vk}_i, (\mathsf{cm}, \pi^{\mathsf{zkpok}}), [\sigma^*]_i; h)$. The user identifies a set $S$ of at least $t+1$ valid shares and aggregates them, outputting their signature $\sigma \leftarrow \mathsf{tPSutt.Aggregate}(\ck, ([\sigma^*]_i)_{i \in S}, r)$ which verifies under the combined  verification key $\mathsf{PSutt.Ver}(\mathsf{vk}, \mathsf{cm}, \sigma) = 1$.
 
 
 \begin{itemize}
@@ -401,15 +401,19 @@ The deduplication table $\mathcal{T}$ should be replicated across all issuers or
 T-SIRIS operates in two credential issuance phases: master credential issuance and context credential issuance. The master credential establishes the user's base identity with a secret key $\k$, while context credentials are bound to this master credential through nullifiers derived from $\k$ and a context $\mathsf{ctx}$. The nullifier mechanism prevents sybil attacks by ensuring users can obtain only one credential per context.
 
 
+\subsubsection*{Freshness}
+The current instantiation uses an interactive three-move $\Sigma$-protocols and as such the challenge guarantees freshness. Our system can be non-interactive via the Fiat-Shamir transform. To prevent replay attacks, the verifiers must store a collection of the public statements and proof from previous verifications. 
+
+
 \subsubsection*{Credential}
 The Credential $\cred$ is a rerandomizable threshold signature over a commitment. The randomness of the commitment acts as a private key, provided the user can verify their credential with their commitment and prove knowledge of the opening of the commitment, they must know the randomness e.g. secret key that created the credential. 
 
 
-\subsubsection*{Registration}
+\subsubsection*{Master Credential Issuance}
 Since we are optimizing for a private, accountable system, we make a small trade-off in privacy during Master Credential generation to satisfy the efficiency and private accountability requirements of an organization or government deploying this system today. We note that we can swap our methods for complete privacy using credential oracles like \cite{zhang_deco_2020, celi_distefano_2025, baldimtsi_zklogin_2024, ritzdorf_tls-n_2018} with a reduction in security and accountability.
 During Master Credential registration, we enforce the user's Master Credential to be issued in a semi-trusted process where the user verifies their identity to the registration authority during its issuance. This enables Sybil resistance on the user identifier, stronger security for their VRF key $s$ discussed below \ref{t-siris:vrf-key-k-gen}, which is used to attach other credentials to it. The Registration Authority keeps track of user identities and can request their revocation from the Accountability Authority with techniques from \cite{damgard_balancing_2020}. At the end of registration, the user has a master credential $\credm = (\sigmam, \cmm, \vkm)$, including a rerandomizable, threshold-signature over commitment.
 
-\subsubsection{Multi-Party Protocol for VRF Key Generation}\label{t-siris:vrf-key-k-gen}
+\subsection{Multi-Party Protocol for Secure Nullifier Key Generation}\label{t-siris:vrf-key-k-gen}
 The VRF key $s$ is embedded in the master credential and used to generate nullifiers for every context credential. Therefore, $s$ must be generated in a way that prevents the user from stealing someone else's $s$ and embedding it in their master credential (and therefore generating their nullifiers and abusing the system), as well as ensuring the issuers can't modify or create it maliciously to attempt to break anonymity later.
 In the single issuer protocol, the user commits to their $s_1$, $\cm_1 = \CMCom([s_1];r)$\footnote{$\cm$ contains more than just the VRF key $\k$, we simplify in this explanation for brevity} and shares with the issuer along with a proof of its opening. Issuer verifies the proof and generates $s_2$, commits to it without randomness, $\cm_2 = \CMCom([s_2];0)$ and returns $\cm_2, s_2$ to the user. The user aggregates $\cm = \cm_1 \cdot \cm_2$ and computes $s =  s_1 + s_2$ and now has a fully formed $\cm = \CMCom([s_1 + s_2];r)$.
 We adjust slightly for the threshold scenario. 
@@ -446,7 +450,7 @@ A context credential issuer may be the same threshold committee, but may also be
 \]
 The Context Credential issuer verifies the correctness of $\Pi_\phi$ and runs their signing protocol over $\cmc$.
 
-\subsubsection*{Sybil Resistance}
+\subsection*{Sybil Resistance with our Nullifier}
 In the above scenario, to enforce sybil resistance of the user's driver license, the DMV authority could request to retain $id$ in their system and check that value against another user with $id$ requesting a credential, upholding accountability but breaking the user's anonymity and open forgability vectors, breaking system security. Rather, the user generates an anonymous deterministic (pseudorandom) nullifier with the scheme \ref{subsec:deterministic-nullifier} as $\nullifier = g^{1/s + ctx} \gets \mathsf{dVRF.Eval}(s, ctx)$. The nullifier's proof of correctness $\pi \gets \mathsf{dVRF.Prove}(\cmm, \cmc, s, ctx, \nullifier)$, outlined here: \ref{sec-pok-committed-inv-linear-relation}, ensures it was generated by $s$ in the master credential and $\ctxc$ from the Context Credential. To prevent replay attacks, $\nullifier$ is an input into the context credential issuance process $\pi$ is combined with the previous $\Sigma$-protocol. 
 \[
 \mathcal{R}_{\phi}: \left\{ 
@@ -465,13 +469,11 @@ In the above scenario, to enforce sybil resistance of the user's driver license,
 
 
 
-\subsubsection*{Freshness}
-The current instantiation uses an interactive three-move $\Sigma$-protocols and as such the challenge guarantees freshness. Our system can be non-interactive via the Fiat-Shamir transform. To prevent replay attacks, the verifiers must store a collection of the public statements and proof from previous verifications. 
 
-
-\subsubsection*{Revocation}
+\subsection*{Revocation}
 A popular efficient accountable-privacy pattern for revocation is seen in anonymous payments \cite{damgard_balancing_2020} and private identity systems \cite{wang2023hades}: on registration, a user encrypts a secret key with a separate (preferably threshold) authority, e.g. Audit Authority and stores the encryption on the registration system within the original user profile. Should it require revocation, the Registration System provides the encryption and reason for revocation to the auditors, the auditors then decrypt it and add the key to a revocation list such as an accumulator that enables efficient zero-knowledge non-membership proofs \cite{jaques_allosaur_2024, galbraith_dynamic_2022} which cost 7.4ms for proof generation and 11.2ms for proof verification, adding some overhead but yet still practical. We can extend this pattern to enable revocation of individual context credentials - the auditor receives the request to revoke a specific context for an identity, the auditor decrypts $s$ and computes $\nullifier = g^{1/(s + ctx)}$ and includes that in an accumulator.
 
+\subsection{The Interactive Protocol}
 
 \subsubsection*{OrgKeyGen}
 
@@ -634,21 +636,39 @@ We implemented all credential schemes using the arkworks library \cite{arkworks_
 \subsection{Threshold Signature Evaluation}
 We first analyze the performance of the core cryptographic primitives: our threshold PS-UTT signature scheme versus the threshold anonymous counting token (TACT) scheme used in S3ID \cite{rabaninejad_attribute-based_2024}, a state-of-the-art Sybil Resistant, Threshold Anonymous Credential system with orthogonal techniques but different cryptography.
 
-\subsubsection{Scaling by attribute count (n)}
+% \subsubsection{Scaling by attribute count (n)}
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
+%     \vspace{2em}
+%     \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
+%     \caption[tUTT our selected construction improves on 4/5 key metrics scaling credential attribute count (n)]{tUTT Construction vs tACT microbenchmarks for fixed $ N = 16, t = 9 $, varying $n$ (ms)}
+%     \label{fig:chap4_tutt_tact_microbenchmarks}
+% \end{figure}
+\subsubsection{Scaling by attribute count ($n$)}
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
-    \caption[tUTT our selected construction improves on 4/5 key metrics scaling credential attribute count (n)]{tUTT Construction vs tACT microbenchmarks for fixed $ N = 16, t = 9 $, varying $n$ (ms)}
-    \label{fig:chap4_tutt_tact_microbenchmarks}
-\end{figure}
+    \caption[tUTT vs tACT microbenchmarks for fixed $N=16, t=9$, varying $n$]{%
+      tUTT Construction vs tACT microbenchmarks for fixed $N=16, t=9$, varying $n$ (ms)%
+    }
+    \vspace{2em}
 
-\subsubsection{Scaling by Threshold Node count (N)}
+    % first block
+    \begin{minipage}[t]{1\linewidth}
+        \centering
+        \textbf{Scales by attributes ($n$)}\\[1em]
+        \includegraphics[width=\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
+    \end{minipage}
 
-\subsubsection{Scaling by Threshold Nodes (N)}
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
-    \caption[tUTT our selected construction improves on 4/5 key metrics scaling credential attribute count (n)]{tUTT Construction vs tACT microbenchmarks for fixed $ N = 16, t = 9 $, varying $n$ (ms)}
+    % extra gap before the next heading
+    \vspace{3em}
+
+    % second block
+    \begin{minipage}[t]{1\linewidth}
+        \centering
+        \textbf{Scales by threshold nodes ($N$)}\\[1em]
+        \includegraphics[width=\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
+    \end{minipage}
     \label{fig:chap4_tutt_tact_microbenchmarks}
 \end{figure}
 
