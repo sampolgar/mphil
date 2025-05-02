@@ -1413,3 +1413,90 @@ The CRBN instantiates a versatile, efficient nullifier mechanism for the MIMC sy
 % New
 % 
 % 
+
+% \section{Proof Protocols}
+% \subsection{Proof of Linear Relations}
+
+% \begin{protocol}{$\pi$ for VRF Prime Order Group}{}\label{pok-linear-relation}
+% \textbf{Relation: }
+% \[
+% \mathcal{R} = \{(\cm), (sk, x, \usk) \mid \cm = g_1^{sk}g_2^{x}g_3^{sk + x}g^{\usk}\}
+% \]
+% \textbf{Common Input:} Generator $g_1,g_2,g_3, g \in \G$, public elements $\cm \G$\\
+% \textbf{Prover Input:} Witness $(sk, x, \usk)$
+% \begin{enumerate}
+%     \item \textbf{Commitment:} Prover samples $a_{sk}, a_{x}, a_{\usk} \sample \Z_q$, computes 
+%     \[
+%     T = g_1^{a_{sk}}g_2^{a_x} g_3^{(a_{sk} + a_x)} 
+%     \]
+%     Sends $T$ to verifier.
+    
+%     \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+%     \item \textbf{Response:} Prover computes:
+%     \[
+%     z_{x} = a_x + c \cdot x \qquad z_{sk} = a_{sk} + c \cdot sk \qquad z_{\usk_1} = a_r + c \cdot \usk
+%     \]
+%     Sends $z_{x}, z_{sk}, z_{r}$ to verifier
+    
+%     \item \textbf{Verification:} Verifier checks:
+%     \[
+%     \cm^c \cdot T \stackrel{?}{=} g_1^{z_{x}} g_2^{z_{sk}} g_3^{(z_x + z_{sk}}) g^{z_{\usk_1}}
+%     \]
+% \end{enumerate}
+% \end{protocol}
+
+
+
+% \begin{protocol}{Proving UTT-based Private Dodis-Yampolskiy VRF Relation}{utt-private-dy-vrf-relation}\label{pok-utt-private-dy-vrf-relation}
+% \textbf{Common Input:} Group generators $g_1, g_2, g_6, g \in \mathbb{G}_1$, $h \in \mathbb{G}_1$, $\tilde{h}, \tilde{w} \in \mathbb{G}_2$, and public statements $\ccm, \rcm \in \mathbb{G}_1$, $\vk \in \mathbb{G}_2$, $y \in \mathbb{G}_T$, $\nul \in \mathbb{G}_1$ \\
+% \textbf{Prover Input:} Witnesses $(\id, \ctx, k, \usk_1, \usk_2, t) \in \mathbb{Z}_q^6$ such that $\ccm = g_1^{\id} g_2^{\ctx} g^{r}$, $\rcm = g_1^{\id} g_6^{k} g^{\usk_2}$, $\vk = \tilde{h}^{k + \ctx} \tilde{w}^{t}$, and $y = e(\nul, \tilde{w})^{t}$ \\
+% \textbf{Relation:}
+% \[
+% \mathcal{R} = \left\{ 
+% \begin{array}{l} (\ccm, \rcm, \vk, y, \nul),\\
+% (\id, \ctx, k, \usk_1, \usk_2, t) 
+% \end{array}
+% \ \middle|\ 
+% \begin{array}{l}
+% \ccm = g_1^{\id} g_2^{\ctx} g^{r} \\
+% \rcm = g_1^{\id} g_6^{k} g^{\usk_2} \\
+% \vk = \tilde{h}^{k + \ctx} \tilde{w}^{t} \\
+% y = e(\nul, \tilde{w})^{t} \\
+% \nul = h^{1/(k + \ctx)}
+% \end{array} \right\}
+% \]
+% \begin{enumerate}
+%     \item \textbf{Commitment:} Prover computes:
+%     \begin{align*}
+%         a_{\id}, a_{\ctx}, a_k, a_{\usk_1}, a_{\usk_2}, a_t &\sample \mathbb{Z}_q &
+%         T_{\ccm} &\gets g_1^{a_{\id}} g_2^{a_{\ctx}} g^{a_{\usk_1}} &
+%         T_{\rcm} &\gets g_1^{a_{\id}} g_6^{a_k} g^{a_{\usk_2}} \\
+%         T_{\vk} &\gets \tilde{h}^{a_k + a_{\ctx}} \tilde{w}^{a_t} &
+%         T_y &\gets e(\nul, \tilde{w})^{a_t}
+%     \end{align*}
+%     Sends $(T_{\ccm}, T_{\rcm}, T_{\vk}, T_y)$ to verifier.
+    
+%     \item \textbf{Challenge:} Verifier samples $c \sample \mathbb{Z}_q$ and sends to prover.
+    
+%     \item \textbf{Response:} Prover computes:
+%     \begin{align*}
+%         z_{\id} &= a_{\id} + c \cdot \id &
+%         z_{\ctx} &= a_{\ctx} + c \cdot \ctx &
+%         z_k &= a_k + c \cdot k \\
+%         z_{\usk_1} &= a_r + c \cdot \usk_1 &
+%         z_{\usk_2} &= a_{\usk_2} + c \cdot \usk_2 &
+%         z_t &= a_t + c \cdot t
+%     \end{align*}
+%     Sends $(z_{\id}, z_{\ctx}, z_k, z_{\usk_1}, z_{\usk_2}, z_t)$ to verifier.
+    
+%     \item \textbf{Verification:} Verifier checks:
+%     \begin{align*}
+%         T_{\ccm} \cdot \ccm^c &\stackrel{?}{=} g_1^{z_{\id}} g_2^{z_{\ctx}} g^{z_{\usk_1}} &
+%         T_{\rcm} \cdot \rcm^c &\stackrel{?}{=} g_1^{z_{\id}} g_6^{z_k} g^{z_{\usk_2}} \\
+%         T_{\vk} \cdot \vk^c &\stackrel{?}{=} \tilde{h}^{z_k + z_{\ctx}} \tilde{w}^{z_t} &
+%         T_y \cdot y^c &\stackrel{?}{=} e(\nul, \tilde{w})^{z_t}
+%     \end{align*}
+% \end{enumerate}
+% \end{protocol}
+

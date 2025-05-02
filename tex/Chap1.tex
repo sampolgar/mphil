@@ -98,6 +98,17 @@ zk-creds is expressive but not as efficient
 
 
 
+The Internet Identity Workshop discussed a problem space summarised by the following problems:
+\begin{enumerate}
+    \item issuing credentials that are both government and privately issued
+    \item retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
+    \item combining traditional digital identity with decentralized identity
+\end{enumerate}
+
+A user has an Identity linked to multiple credentials, such as a driver's license and university card. Users want to authenticate with various Relying Parties (Verifiers) without being linked between multiple uses of the same service (e.g. a user verifying multiple credentials with 1 service such as a bank requiring proof of multiple credentials linked to an identity), and between uses of different services (e.g. a user presenting their drivers license for age verification on multiple services).
+
+Current decentralized identity systems either don't provide this functionality or provide it at the expense of either accountability or privacy. CanDID stores a map between users multi-layered credentials providing a solution to the problem at the expense of the user's privacy. Other credential systems and pseudonym systems prove equality of hidden attributes in a credential such as name or id, which can more-easily be forged and does not support the hierarchical structure leveraging a highly secure and accountable government identity with not-so secure private credentials.
+
 
 
 

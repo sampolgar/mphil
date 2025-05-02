@@ -1,4 +1,4 @@
-\chapter{Improved Constructions of Anonymous Credentials from Rerandomizable Signatures for Credential Wallets}\label{chap2}
+\chapter{Improved Constructions of Anonymous Credentials from New Rerandomizable Signatures for Credential Wallets}\label{chap2}
 
 
 \subsection{Motivation}
@@ -960,10 +960,52 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 \section{Expressive Proof Evaluation}\label{chap2:expressive_proofs}
 
+
+
 <<< INCLUDE TABLE WITH SCHNORR PROOF COST >>>
 <<< INCLUDE METRICS FOR RANGE PROOF, REVOCATION LIST, ARITHMETIC RELATION, BOOLEAN RELATION >>>
 <<< INCLUDE COMPARISON BETWEEN SCHNORR BASED SIGNATURES, SPS-EQ and their proof functionality (as in improved anonymous credentials) and zk-SNARK based credentials>> 
 % Which use‐case predicates (e.g., age‐over‐threshold, multi‐credential aggregation) should we benchmark first to demonstrate both expressiveness and efficiency?
+
+
+- This says there's a major drawback but I prove it's not actually a drawback, it's only theoretical and it doesn't hold in practice.
+
+    A major drawback from such an approach is that the zero-knowledge proof used during showings is of variable-length and may require multiple sub-proofs On the other hand, more recent constructions (e.g., [11,14,24,32,38,46,49]) apply other techniques based on different lines of work to adapt the signature and the message without using Zero-Knowledge Proofs of Knowledge (ZKPoK), providing constant-size showings.
+
+Many schemes spruik the O(1) verification, but is it as efficient as ours? 
+Their computational complexity involves 
+
+
+
+SPS-EQ style
+
+- Efficient Membership/Non-Membership
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1779,4 +1821,45 @@ Benchmark these schemes against SPS-EQ and zk-creds for efficient anonymous cred
 %     \item \textbf{Independent Randomization}: The separation of $u_\Delta$ and $r_\Delta$ creates a natural two-layer randomization strategy, unlike BBS+'s entangled randomized
 % \end{itemize}
 
+
+
+% \begin{figure}
+%     \centering
+% \begin{pcvstack}[boxed]
+%         \procedure[linenumbering]{$\mathrm{Sim}^{\mathsf{\UNF}}_{\MIMCABC, \adv}(\lambda)$}{%
+%             \AdvB \text{ Setup Simulation  } \\
+%             \vk \gets \text{Challenge from } \EUFCMA \text{ game from $\RS$} \\
+%             \ck \gets \text{Challenge from } \POSBINDING \text{ game from $\CM$} \\
+%             \AdvB \text{ Embeds $\vk, \ck$ into $\MIMCABC$ public params $\pp$ and issuer keys $\{\opk_j\}$} \\
+%             \text{Simulating $\mathrm{Game}^{\mathsf{UNF}_{\MIMCABC}}$ setup for $\AdvA$} 
+%             \\
+%             \AdvB \text{ uses real $\OHU, \OCU$ and simulates $\OOBTAIN, \OSHOW$} \\
+%             \AdvA \text{ outputs forgery } \{ \cred_k'^*, \phi^*, \pi^* \} \\
+%             \AdvB \text{ processes the forgery to break the assumption}
+%         }
+%         \procedure[]{$\AdvB$ Simulates $\OOBTAIN(i, j, \vec{m})$}{%
+%             \pcif i \notin \HU, \pcreturn \bot \quad \greyt{// Only honest users can obtain credentials} \\
+%             \t \usk \gets \mathbb{Z}_p \quad \greyt{// Generate fresh randomness for commitment} \\
+%             \t \cm \gets \CMCom(\vec{m}; \usk) \quad \greyt{// Commitment to attributes} \\
+%             \t \pcif j \neq j^*, \\
+%             \t \t \sigma \gets \RSSign(\osk_j, \cm) \quad \greyt{// Sign using known issuer key} \\
+%             \t \pcelse \quad \greyt{// Case: } j = j^* \\
+%             \t \t \sigma \gets \OEUFCMA(\cm) \quad \greyt{// Query EUF-CMA oracle for signature} \\
+%             \t \cred \gets (\sigma, \cm) \quad  \\
+%             \t \CRED_j \gets \CRED_j \cup \{(\cred, \cm, \vec{m}, \usk, i)\} \\
+%             \t \OWNR[\cred] \gets i \\
+%             \pcreturn \cred
+%         }
+%         \procedure[]{$\AdvB$ Simulates $\OSHOW(i, \phi)$}{%
+%             \pcif i \notin \HU, \pcreturn \bot \quad \greyt{// Only honest users can show proofs} \\
+%             \t \text{Let } \creds_i \text{ be the credentials of user } i \text{ in } \HU \\
+%             \t \pcif \phi(\text{attributes in } \creds_i) = 0, \pcreturn \bot \quad \greyt{// Check policy satisfaction} \\
+%             \t \pi \gets \text{ZKSim}(\phi, \{ \cred_k' \}, \{ \cm_k' \}, \text{ Simulate proof without witness})\\
+%             \SHOW \gets \SHOW \cup (i, \phi, \pi) \\
+%             \pcreturn \pi
+%         }
+%     \end{pcvstack}
+%     \caption{Simulated Oracles}
+    
+% \end{figure}
 
