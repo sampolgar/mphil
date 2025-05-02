@@ -1,4 +1,4 @@
-\chapter{Improved Constructions of Anonymous Credentials from New Rerandomizable Signatures for Credential Wallets}\label{chap2}
+```````````````````````````````````````````\chapter{Improved Constructions of Anonymous Credentials from New Rerandomizable Signatures for Credential Wallets}\label{chap2}
 
 
 \subsection{Motivation}
@@ -956,9 +956,103 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 
 
-
+% \begin{tabular}{l|cccccc}
 
 \section{Expressive Proof Evaluation}\label{chap2:expressive_proofs}
+
+\begin{tabular}{|p{2.5cm}|p{2.5cm}|p{3cm}|p{3cm}|p{2cm}|p{3cm}|}
+\hline
+\textbf{Proof System} & \textbf{Expressiveness} & \textbf{Efficiency (Proof Size)} & \textbf{Efficiency (Verification)} & \textbf{Trusted Setup} & \textbf{Key Assumptions} \\
+\hline
+Sigma Protocols & Linear relations, AND/OR & $O(\lambda \cdot k)$ bits & $O(k)$ exponentiations & No & Discrete Log \\
+\hline
+Groth-Sahai & Quadratic relations & $O(1)$ group elements & $O(n)$ pairings & Yes (CRS) & Pairing-based \\
+\hline
+zk-SNARKs & General circuits & $\sim$200 bytes & $O(1)$ pairings & Yes & QAP/RICS \\
+\hline
+\end{tabular}
+
+\vspace{0.3cm}
+\begin{center}
+$\lambda$: security parameter; $k$: number of statements; $n$: relation size.
+\end{center}
+
+Anonymous Credentials requires users to prove knowledge of secrets (e.g. attributes like age, citizenship) without leaking additional information. The "Anonymous" term comes from this fact, the user can remain anonymous while using a credential. Using must mean it is useful.
+
+Proof System Choice and Credential Structure
+The choice of anonymous credential (algebraic structure) will determine which proof system can be used
+The algebraic structure of an anonymous credential will limit which proof system that can be used by a credential. 
+The proof system will determine what kind of statements can be proven in zero knowledge.
+The choice of proof system will determine the efficiency and expressiveness of the proofs.
+
+
+Three categories of expressiveness:
+1. Linear relations: Sigma protocols are very efficient and can prove linear relations 
+
+2. Quadratic Relations:  Groth Sahai proofs can prove quadratic relations
+
+3. General Circuits: zk-SNARKS can 
+
+Expressiveness
+- Sigma Protocols: Prove linear relations (e.g., knowledge of discrete logarithms) and support composition (AND/OR proofs) but also Equality, Bit Composition, Range Proof, Set Membership.
+
+- Groth-Sahai: Handle quadratic relations in bilinear groups, ideal for pairing-based statements.
+
+- zk-SNARKs: Support general arithmetic circuits, covering any NP statement.
+
+\begin{itemize}
+\item \textbf{Schnorr (Sigma Protocols):} These prove statements about discrete logarithms (e.g., ``I know $x$ such that $g^x = h$''). They're limited to linear relations but can be combined (e.g., proving ``$A$ or $B$'' or ``$A$ and $B$''). In your work, this supports selective disclosure and attribute equality efficiently, as seen in PS-UTT22's sublinear scaling with multi-scalar multiplication (Page 92).
+
+\item \textbf{Groth-Sahai:} These extend to quadratic relations in bilinear groups (e.g., pairing equations). They're more expressive for pairing-based cryptography but less so than zk-SNARKs, which handle circuits. They're less efficient than sigma protocols for simple statements due to pairing costs (e.g., $O(n)$ pairings vs. $O(k)$ exponentiations).
+\end{itemize}
+
+
+
+
+
+
+
+Sigma Protocols
+- Motivation
+- 
+
+
+- Limitations (why we would need to use GS proofs)
+
+Groth Sahai
+- Motivation
+
+
+
+- Limitations (why we would need to use zk-SNARKS)
+
+zk-SNARKS
+- Motivation
+
+
+
+
+
+bulletproof?
+Combination
+
+
+
+
+
+Motivate the use-case
+- simple possession (I have a valid credential)
+- I'm over 18
+- My license is not expired
+- My country is in the list
+- My id is equal to this other id
+
+
+
+
+
+
+
 
 
 
@@ -982,7 +1076,19 @@ SPS-EQ style
 - Efficient Membership/Non-Membership
 - 
 
+Expressiveness 
 
+Sigma Protocols
+Range Proof
+Bit Decomposition
+Equality
+AND, OR, NAND, NOT
+
+
+Expressiveness in proof systems
+$\Sigma-$protocols $\subset$ Quadratic GS Proofs $\subset$ Circuit SNARKS
+
+Expressiveness in proof systems refers to the class of statements or relations you can prove without revealing witnesses. 
 
 
 

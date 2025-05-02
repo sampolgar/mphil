@@ -640,9 +640,9 @@ We evaluate performance with fixed threshold parameters ($N=16, t=9$) while vary
 
     \item \textbf{tShareSign (Signature Share Generation):} This is the only operation where tACT outperforms our construction (61.34ms vs. 244.22ms at $n=64$), primarily because tACT doesn't perform zero-knowledge verification of its messages during signing, both for the issuer verifying from the user, and the user verifying the individual signature shares. For completeness, we present both with and without ZKP verification variants of our algorithm.
 
-    \item \textbf{tAggregate (Signature Aggregation):} Our construction achieves remarkable efficiency with $36.0\times$ speedup at $n=64$ (1.46ms vs. 52.55ms), we again leverage multi-scalar multiplication. 
+    \item \textbf{tAggregate (Signature Aggregation):} Our construction achieves  efficiency with $36.0\times$ speedup at $n=64$ (1.46ms vs. 52.55ms), we again leverage multi-scalar multiplication. 
 
-    \item \textbf{Show and Verify:} These operations demonstrate UTT (Ours)'s greatest advantage with nearly constant-time performance regardless of attribute count. At $n=64$, our construction achieves $25.2\times$ speedup for Show (1.61ms vs. 40.56ms) and $44.1\times$ speedup for Verify (1.68ms vs. 74.07ms). This efficiency stems from our Schnorr ZKP approach, which avoids costly pairing checks per attribute or computing over $\G_T$ points.
+    \item \textbf{Show and Verify:} These operations demonstrate our advantage with nearly constant-time performance regardless of attribute count. At $n=64$, our construction achieves $25.2\times$ speedup for Show (1.61ms vs. 40.56ms) and $44.1\times$ speedup for Verify (1.68ms vs. 74.07ms). This efficiency stems from our Schnorr ZKP approach, which avoids costly pairing checks per attribute or computing over $\G_T$ points.
 \end{itemize}
 
 The results in Figure~\ref{fig:chap5_tutt_scale_by_n} clearly illustrate how our construction maintains near-constant verification times regardless of attribute count, while tACT's performance degrades linearly with increasing attributes.
@@ -766,7 +766,7 @@ The one trade-off is in signature share generation (tShareSign), where our const
 \subsection{Threshold Identity System Evaluation}
 \label{sec:threshold-performance}
 
-We now analyze the complete T-SIRIS system's performance. Figure~\ref{fig:tsiris-performance} illustrates how each system operation scales with attribute count across different threshold configurations.
+We now analyze the complete T-SIRIS system's performance. Figure~\ref{fig:chap5_tsiris_performance} illustrates how each system operation scales with attribute count across different threshold configurations.
 
 \begin{figure}[!htb]
     \centering
