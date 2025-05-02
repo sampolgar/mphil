@@ -1,4 +1,4 @@
-\chapter{Sybil-Resistant, Threshold Identity System from Multi Issuer Multi Credential Anonymous Credentials and Nullifier}\label{chap6}
+\chapter{Sybil Resistant Threshold Issued Identity System from Anonymous Credentials and Anonymous Nullifiers}\label{chap6}
 
 \section{Introduction}\label{sec:threshold-intro}
 Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram_candid_2020} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context.
@@ -7,13 +7,11 @@ This chapter presents T-SIRIS, a threshold Sybil-resistant identity system built
 
 
 \subsection*{Chapter Roadmap}
-% The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries and building blocks, in Section \ref{subsec:deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
+The remainder of this chapter is structured as follows: Section \ref{chap5:sec_preliminaries} covers cryptographic preliminaries. Section \ref{chap5:sec_tsiris} presents the T-SIRIS system model and security requirements. Section \ref{chap5:ourconstruction} details our construction and protocols. Section \ref{chap5:sec_perf_eval} evaluates our performance against state-of-the-art alternatives.
 
 \subsection{Motivation and Challenges}
 
 Traditional Attribute-Based Anonymous Credential systems (ABCs) are based on a centralized issuer, which has its own security flaws - a malicious issuer can issue credentials that can't be traced in an anonymous system, undermining the system's integrity. To address this, we distribute security among $N$ nodes, requiring a threshold of at least $t$ nodes to issue a valid credential. 
-
-Existing systems struggle to balance privacy, efficiency, and functionality. 
 
 CanDID~\cite{maram_candid_2020} pioneered Sybil-resistant identity with legacy credential oracles, but relies on costly multi-party computation (MPC) among committee nodes for deduplication and requires interactive issuance for context credentials, contradicting self-sovereign principles. Each transaction requires communication with committee members, introducing privacy vulnerabilities where a single malicious node can link different user transactions.
 
@@ -34,11 +32,9 @@ Both systems use a master-context credential hierarchy, but T-SIRIS allows diffe
 
 \subsubsection*{S3ID/tACT} \cite{rabaninejad_attribute-based_2024} uses tACT, based on Shacham-Waters signatures, for Sybil resistance and threshold issuance. Both T-SIRIS and S3ID embed a user key $s$ in credentials. T-SIRIS improves in:
 \begin{itemize}
-    \item \textbf{Efficiency:} CRBN and Schnorr ZKPs avoid pairings, offering up to $44.1\times$ faster verification for $n=64$ attributes (see Section~\ref{sec:perf}).
-    \item \textbf{Predicate Support:} S3ID’s Groth-Sahai proofs limit predicate expressiveness. T-SIRIS’s MIMC-ABC supports complex computation over group exponents e.g. Schnorr proofs and Range Proofs (see Chapter~\ref{chap:proofs}).
+    \item \textbf{Efficiency:} Our verification is nearly constant as the number of attributes in signatures increases due to efficient Schnorr signatures and Multi-Scalar Multiplication techniques, offering up to $44.1\times$ faster verification for $n=64$ attributes (see Section~\ref{sec:chap5_perf_eval}).
+    \item \textbf{Predicate Support:} S3ID’s Groth-Sahai proofs limit predicate expressiveness or trade expressiveness for efficiency. T-SIRIS’s MIMC-ABC supports complex computation over group exponents with efficient Schnorr proofs.
 \end{itemize}
-
-\subsubsection*{Oracle Integration}
 
 
 \subsubsection*{Managing SSI Features with Privacy Preserving Cryptography}
@@ -51,16 +47,16 @@ SSI requires unlinkability, Sybil resistance, and efficiency. Approaches include
 Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign identity (SSI) by combining efficiency, expressiveness, and security in a multi-issuer setting. Built on the Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) from Chapter~\ref{chap3} and the Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}, T-SIRIS outperforms existing systems like CanDID~\cite{maram_candid_2020} and S3ID~\cite{rabaninejad_attribute-based_2024}. Below, we outline our contributions, aligning them with S3ID’s claims to highlight T-SIRIS’s improvements.
 
 \begin{enumerate}
-    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(s + \text{ctx})} \in \mathbb{G}_1$ with user key $k \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and many times faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ (see Section~\ref{sec:perf}).
+    \item \textbf{Efficient Deduplication and Verification:} T-SIRIS achieves fast deduplication using CRBN, computing a nullifier $y = g^{1/(s + \text{ctx})} \in \mathbb{G}_1$ with user key $s \in \mathbb{Z}_p$ and context $\text{ctx}$. Unlike Coconut~\cite{sonnino_coconut_2020}, which lacks sybil resistance, and CanDID’s MPC-based deduplication, CRBN is pairing-free and many times faster than S3ID’s tACT~\cite{rabaninejad_attribute-based_2024}. Verification scales sublinearly with attributes $n$, achieving up to $44.1\times$ speedup over tACT for $n=64$ 
     
     \item \textbf{Expressive Predicate Proofs:} T-SIRIS supports complex predicates (e.g., $\phi(\vec{m}) = m_1 \geq 18 \wedge m_2 \in S$) via MIMC-ABC and Schnorr-based zero-knowledge proofs (ZKPs). Unlike S3ID’s Groth-Sahai proofs, which limit expressiveness, T-SIRIS enables range proofs and set membership with sublinear complexity, enhancing flexibility for SSI applications (see Chapter~\ref{chap6}).
     
-    \item \textbf{Provably Secure Multi-issuer SSI:} T-SIRIS provides formal security definitions and proofs for unforgeability, Sybil resistance, strong unlinkability, and identity binding, secure against $t-1$ malicious issuers in a $t$-out-of-$N$ threshold model. Our proofs, based on the $q$-DDHI assumption for CRBN and SDLP for MIMC-ABC, extend S3ID’s tACT-based security to multi-issuer settings with identity binding (see Section~\ref{sec:security}).
+    \item \textbf{Provably Secure SSI:} T-SIRIS provides formal security definitions and proofs for unforgeability, Sybil resistance, strong unlinkability, and identity binding, secure against $t-1$ malicious issuers in a $t$-out-of-$N$ threshold model. Our proofs, based on the $q$-DDHI assumption for CRBN and SDLP for MIMC-ABC, extend S3ID’s tACT-based security to multi-issuer settings with identity binding (see Section~\ref{chap3}).
     
-    \item \textbf{Non-transferability and Identity Binding:} T-SIRIS embeds a user key $s$ in all credentials, ensuring only the owner can use them, similar to S3ID. Additionally, MIMC-ABC binds credentials from multiple issuers to a single identifier $\text{id} \in \mathbb{Z}_p$, enabling proofs of shared identity without revealing it. This strengthens S3ID’s non-transferability by supporting multi-issuer scenarios (see Section~\ref{sec:construction}).
+    \item \textbf{Non-transferability and Identity Binding:} T-SIRIS embeds a user identifier $\id$ in all credentials, ensuring only the owner can use them, similar to S3ID. 
 \end{enumerate}
 
-\textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency (CRBN vs. tACT) and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(s + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
+\textbf{Comparison with S3ID/tACT:} S3ID~\cite{rabaninejad_attribute-based_2024} claims efficient deduplication, non-interactive credential generation, unlinkability, and non-transferability using tACT. T-SIRIS achieves these with superior efficiency and expressiveness (Schnorr vs. Groth-Sahai). While S3ID supports single-issuer deduplication, T-SIRIS’s MIMC-ABC enables multi-issuer identity binding, addressing a broader range of SSI use cases. Both systems ensure non-transferability via a private key, but T-SIRIS’s ZKP $\Pi^{\mathcal{R}_{\text{null}}} = \text{ZKPoK}\{(k): y = g^{1/(s + \text{ctx})}\}$ offers stronger unlinkability against colluding issuers.
 
 
 \begin{table}[ht]
@@ -95,7 +91,7 @@ $^{\text{a}}$ Pseudonymous, not fully anonymous. \\
 
 
 
-\section{Preliminaries}
+\section{Preliminaries}\label{chap5:sec_preliminaries}
 
 \begin{definition}[Shamir Secret Sharing]
 A $(t,n)$ secret sharing scheme $\mathsf{SS}$ consists of the following $\PPT$ algorithms over message space $\mathcal{X}$:
@@ -113,13 +109,10 @@ A $(t,n)$ secret sharing scheme $\mathsf{SS}$ consists of the following $\PPT$ a
 
 Our base-building block is the threshold PS signature scheme from \cite{tomescu_utt_2022} using Shamir secret sharing with similarities to \cite{sonnino_coconut_2020} to distribute trust among multiple issuers. The key pair $(\mathsf{sk}, \mathsf{vk})$ is $(t,n)$-secret-shared among the signers, where each signer $i$ holds a share secret key $\mathsf{sk}_i$ and a share verification key $\mathsf{vk}_i$. This enables subsets of at least $t+1$ signers to collaboratively produce a signature that verifies under the combined verification key $\mathsf{vk}$, while ensuring that no subset of $t$ or fewer signers can forge signatures.
 
-
-\subsection{Overview}
 We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold, reflecting realistic collusion scenarios in decentralized settings. The adversary cannot break the hard problems our schemes are built upon, and network conditions support standard threshold protocols. Similar to Coconut’s threshold issuance~\cite{sonnino_coconut_2020}, our threshold PS signature scheme distributes trust among $n$ issuers using Shamir secret sharing. However, we extend this foundation by integrating nullifiers from Chapter~\ref{chap4}, enabling sybil resistance—a critical feature for identity systems that Coconut does not address.
 
 Importantly, this threshold construction distributed trust among multiple issuers while preserving the core properties of our underlying building block PS signature scheme - unforgeability and rerandomizability. Additionally, the end-signature algebraic structure is the same, and therefore, the verification algorithm and proof system compatibility are the same.
 
-\subsubsection{Definition}
 
 \begin{definition}[PS Threshold Signatures over Pedersen Commitments]
 A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists of the following algorithms:
@@ -142,7 +135,7 @@ A PS threshold signature scheme $\mathsf{RS}$ over Pedersen commitments consists
 
 
 
-\subsubsection{Our Construction}\label{threshold-ps-construction}
+\subsubsection{Construction}\label{threshold-ps-construction}
 
 
 Our threshold PS construction works as follows:
@@ -213,7 +206,7 @@ A user with attributes $\attrs = [m_1, \ldots, m_\ell]$ generates a commitment $
 
 
 
-\section{T-SIRIS: Threshold Sybil-Resistant Identity System}
+\section{T-SIRIS: Threshold Sybil-Resistant Identity System}\label{chap5:sec_tsiris}
 \label{sec:tsiris}
 Building on our threshold PS signature scheme, we now present T-SIRIS, a complete threshold sybil-resistant identity system. T-SIRIS integrates threshold issuance, similar to Coconut~\cite{sonnino_coconut_2020}, with credential relationship binding nullifiers (Chapter~\ref{chap4}) to prevent sybil attacks (formalized in Definition [Sybil Resistance]), distinguishing it as a robust SSI solution. T-SIRIS integrates four key components:
 \begin{itemize}
@@ -233,10 +226,6 @@ We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is th
 \end{itemize}
 
 We also assume users may attempt sybil attacks by requesting multiple credentials for the same context. However, the adversary cannot break the underlying cryptographic assumptions (DL and $q$-DDHI).
-
-
-
-\subsection{Definition}
 
 A tSIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$. We use $\RSSetup, \RSRand, \RSVer$ from the rerandomizable signature scheme.
 
@@ -395,7 +384,7 @@ The deduplication table $\mathcal{T}$ should be replicated across all issuers or
 
 
 
-\section{Our Construction}
+\section{Our Construction}\label{chap5:ourconstruction}
 
 \subsection{Overview}
 T-SIRIS operates in two credential issuance phases: master credential issuance and context credential issuance. The master credential establishes the user's base identity with a secret key $\k$, while context credentials are bound to this master credential through nullifiers derived from $\k$ and a context $\mathsf{ctx}$. The nullifier mechanism prevents sybil attacks by ensuring users can obtain only one credential per context.
@@ -624,320 +613,207 @@ The threshold setting strengthens this property by distributing trust: even if $
 
 
 
-\newpage
-\section{Performance Evaluation}
+\section{Performance Evaluation}\label{chap5:sec_perf_eval}
 
-We evaluate the performance of T-SIRIS and its underlying cryptography by first benchmarking individual cryptographic operations from the threshold signature scheme, comparing it to the Threshold signature scheme from TACT \cite{rabaninejad_attribute-based_2024}. We then evaluate the performance of T-SIRIS by comparing it to S3ID, the Threshold Identity system constructed from TACT.
 
-% \subsection{Threshold Keys Evaluation}
 
-We implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. Our comparison is fair in that we executed our cryptography \cite{polgar_anonymous_2025} and the code from \cite{arkworks_contributors_arkworks_2022} with the same pairing curve (BLS12-381), on the same computer (MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2) with the same curve library (arkworks). All measurements represent the average of 100 independent trials with standard deviations below 5\%. 
+We evaluate the performance of T-SIRIS and its underlying cryptography by first benchmarking individual cryptographic operations from our threshold signature scheme, comparing it to the Threshold signature scheme from TACT \cite{rabaninejad_attribute-based_2024}. We then evaluate the performance of T-SIRIS by comparing it to S3ID, the Threshold Identity system constructed from TACT.
 
 \subsection{Threshold Signature Evaluation}
-We first analyze the performance of the core cryptographic primitives: our threshold PS-UTT signature scheme versus the threshold anonymous counting token (TACT) scheme used in S3ID \cite{rabaninejad_attribute-based_2024}, a state-of-the-art Sybil Resistant, Threshold Anonymous Credential system with orthogonal techniques but different cryptography.
+We first analyze the performance of the core cryptographic primitives: our threshold signature scheme versus the threshold anonymous counting token (TACT) scheme used in S3ID \cite{rabaninejad_attribute-based_2024}, a state-of-the-art Sybil Resistant, Threshold Anonymous Credential system with orthogonal techniques but different cryptography.
 
-% \subsubsection{Scaling by attribute count (n)}
-% \begin{figure}[ht]
-%     \centering
-%     \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
-%     \vspace{2em}
-%     \includegraphics[width=1\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
-%     \caption[tUTT our selected construction improves on 4/5 key metrics scaling credential attribute count (n)]{tUTT Construction vs tACT microbenchmarks for fixed $ N = 16, t = 9 $, varying $n$ (ms)}
-%     \label{fig:chap4_tutt_tact_microbenchmarks}
-% \end{figure}
 \subsubsection{Scaling by attribute count ($n$)}
-\begin{figure}[ht]
+We evaluate performance with fixed threshold parameters ($N=16, t=9$) while varying attribute count $n$ from 4 to 128, as shown in Figure~\ref{fig:chap5_tutt_scale_by_n}
+
+\begin{figure}[!htb]
     \centering
-    \caption[tUTT vs tACT microbenchmarks for fixed $N=16, t=9$, varying $n$]{%
-      tUTT Construction vs tACT microbenchmarks for fixed $N=16, t=9$, varying $n$ (ms)%
-    }
-    \vspace{2em}
-
-    % first block
-    \begin{minipage}[t]{1\linewidth}
-        \centering
-        \textbf{Scales by attributes ($n$)}\\[1em]
-        \includegraphics[width=\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
-    \end{minipage}
-
-    % extra gap before the next heading
-    \vspace{3em}
-
-    % second block
-    \begin{minipage}[t]{1\linewidth}
-        \centering
-        \textbf{Scales by threshold nodes ($N$)}\\[1em]
-        \includegraphics[width=\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
-    \end{minipage}
-    \label{fig:chap4_tutt_tact_microbenchmarks}
+    \vspace{-1em}
+    \includegraphics[width=0.9\linewidth]{figures/chap5_tutt_scale_by_n_attributes.png}
+    \caption{Performance comparison when scaling by attribute count ($n$) with fixed $N=16, t=9$}
+    \label{fig:chap5_tutt_scale_by_n}
+    \vspace{-1em}
 \end{figure}
 
 
-
-
-\begin{table}[!htbp]
-\centering
-\caption[Threshold ABC Performance Comparison, fixed number of nodes, varying attribute length]{Performance Comparison for fixed $ N = 16, t = 9 $, varying $n$ (milliseconds)}
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{n=4} & \textbf{n=16} & \textbf{n=64} & \textbf{Speedup (n=64)} \\
-\midrule
-$\mathsf{tPrepare}$ & PS-UTT & 1.65 & 6.16 & 22.71 & 6.0$\times$ \\
-Token Request       & TACT   & 8.55 & 37.15 & 135.91 & \\
-\midrule
-$\mathsf{tShareSign}$      & PS-UTT & 20.95 & 63.40 & 244.22 & -3.98$\times^\dagger$ \\
-Issue             & TACT   & 3.09 & 14.14 & 61.34 & \\
-\midrule
-$\mathsf{tAggregate}$ & PS-UTT & 0.99 & 1.10 & 1.46 & 36.0$\times$ \\
-(Aggregate, Unblind)                     & TACT   & 3.92 & 15.04 & 52.55 & \\
-\midrule
-$\mathsf{Rerand, ZKP.Prove}$         & PS-UTT & 1.26 & 1.35 & 1.61 & 25.2$\times$ \\
-Prove             & TACT   & 7.90 & 15.78 & 40.56 & \\
-\midrule
-$\mathsf{RS.Ver}$         & PS-UTT & 1.71 & 1.82 & 1.68 & 44.1$\times$ \\
-Verify             & TACT   & 11.20 & 26.64 & 74.07 & \\
-\bottomrule
-\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
-\end{tabular}
-\label{tab:perf-comp-vary-n}
-\end{table}
-
-\vspace{-0.5em}
-
-\begin{table}[htbp]
-\centering
-\caption[Threshold ABC Performance Comparison, fixed attribute length, varying number of nodes]{Performance Comparison for $n = 16$ (milliseconds)}
-\begin{tabular}{lccccc}
-\toprule
-\textbf{Operation} & \textbf{Scheme} & \textbf{N=4, t=3} & \textbf{N=16, t=9} & \textbf{N=64, t=33} & \textbf{Speedup (N=64)} \\
-\midrule
-$\mathsf{tPrepare}$ & PS-UTT & 5.97 & 6.16 & 5.88 & 6.1$\times$ \\
-Token Request              & TACT   & 33.84 & 37.15 & 36.11 & \\
-\midrule
-$\mathsf{tShareSign}$         & PS-UTT & 21.19 & 63.40 & 283.72 & -20.99$\times^\dagger$ \\
-Issue              & TACT   & 13.68 & 14.14 & 13.52 & \\
-\midrule
-$\mathsf{tAggregate}$ & PS-UTT & 0.51 & 1.10 & 4.89 & 8.4$\times$ \\
-(Aggregate, Unblind)                     & TACT   & 6.46 & 15.04 & 41.02 & \\
-\midrule
-$\mathsf{Rerand, ZKP.Prove}$         & PS-UTT & 1.33 & 1.35 & 1.33 & 10.9$\times$\\
-Prove              & TACT   & 14.67 & 15.78 & 14.55 & \\
-\midrule
-$\mathsf{RS.Ver}$        & PS-UTT & 1.69 & 1.82 & 1.69 & 14.8$\times$ \\
-Verify              & TACT   & 23.51 & 26.64 & 25.03 & \\
-\bottomrule
-\multicolumn{6}{l}{\small $^\dagger$ TACT is faster; speedup computed as PS-UTT time / TACT time.}
-\end{tabular}
-\label{tab:perf-comp-vary-N}
-
-\end{table}
-
-
-Table \ref{tab:perf-comp-vary-n} presents the performance of key operations with varying attribute counts $(n)$ while maintaining a fixed threshold configuration $(N=16, t=9)$. Table \ref{tab:perf-comp-vary-N} presents the same operations with varying threshold size $(N, t)$ while maintaining consistent attribute count $n = 16$. 
-
-
-prepare/token request is linear, we're 6.1x better
-tShareSign/Issue we are much slower - we don't use parallel computation and might be why?
-
-
-
-
-
-
-
-\begin{figure}
-    \centering
-    \includegraphics[width=1\linewidth]{figures/chap5_tsiris_issue_w_wo_zkp.png}
-    \caption{Enter Caption}
-    \label{fig:enter-label}
-\end{figure}
-
-
-
-
-
-
-
-
-\subsection{Threshold Identity System}
 \begin{itemize}
-    \item Dedup contains 
-    User submits tACT token to the issuers, who verify the token and compare it against their database TDedup and reject if token  TDedup.
-    - Token Request
-    - Issue
-    - Aggregate, Unblind (produces token, 
-    - Prove
-    - Commit to key k
-    - Verify
-    - 
+    \item \textbf{tPrepare (Commitment Generation):} Our construction significantly outperforms tACT, achieving $6.0\times$ faster operation at $n=64$ (22.71ms vs. 135.91ms). This advantage stems from our optimized multi-scalar multiplication (MSM) implementation in Schnorr proofs, allowing sublinear scaling with increasing attribute count.
 
-    \item MicroCred
-MicroCred: User interacts with the issuers to obtain micro-credentials {si}L  i=1 on her attributes {ai}L  i=1 .
+    \item \textbf{tShareSign (Signature Share Generation):} This is the only operation where tACT outperforms our construction (61.34ms vs. 244.22ms at $n=64$), primarily because tACT doesn't perform zero-knowledge verification of its messages during signing, both for the issuer verifying from the user, and the user verifying the individual signature shares. For completeness, we present both with and without ZKP verification variants of our algorithm.
+
+    \item \textbf{tAggregate (Signature Aggregation):} Our construction achieves remarkable efficiency with $36.0\times$ speedup at $n=64$ (1.46ms vs. 52.55ms), we again leverage multi-scalar multiplication. 
+
+    \item \textbf{Show and Verify:} These operations demonstrate UTT (Ours)'s greatest advantage with nearly constant-time performance regardless of attribute count. At $n=64$, our construction achieves $25.2\times$ speedup for Show (1.61ms vs. 40.56ms) and $44.1\times$ speedup for Verify (1.68ms vs. 74.07ms). This efficiency stems from our Schnorr ZKP approach, which avoids costly pairing checks per attribute or computing over $\G_T$ points.
+\end{itemize}
+
+The results in Figure~\ref{fig:chap5_tutt_scale_by_n} clearly illustrate how our construction maintains near-constant verification times regardless of attribute count, while tACT's performance degrades linearly with increasing attributes.
 
 
-    \item AppCred
-    AppCred: For an application with a unique message, the user locally aggregates micro-credentials encapsulating a subset of attributes required by the application and, as a result, shows the succinct application credential value to the verifying entity. In addition, the user generates a tag under the registered key k on the unique application message to enable limiting double submissions by the verifier. The whole AppCred phase is executed locally on the user’s device and is devoid of any interactions involving the issuers.
+\subsubsection{Scaling with Threshold Size ($N$)}
+We now examine performance with fixed attribute count ($n=16$) while varying threshold parameters across $N=4$ ($t=3$), $N=16$ ($t=9$), and $N=64$ ($t=33$). Key observations:
+
+
+
+\begin{figure}[!htb]
+    \centering
+    \vspace{-0.5em}
+    \includegraphics[width=0.9\linewidth]{figures/chap5_tutt_scale_by_N_nodes.png}
+    \caption{Performance comparison when scaling by threshold size ($N$) with fixed $n=16$}
+    \label{fig:chap5_tutt_scale_by_N}
+    \vspace{-0.5em}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{tShareSign Scalability:} Our construction's signing time increases with threshold size (21.19ms for $N=4$ to 283.72ms for $N=64$) due to our threshold key generation and signing approach. This contrasts with tACT's relatively stable performance ($\sim$13-14ms regardless of $N$).
+
+    \item \textbf{Constant-Time Operations:} For user-centric operations (tPrepare, Show, Verify), our construction maintains excellent performance regardless of threshold size. Verify times remain approximately 1.7ms across all $N$ values, compared to tACT's $\sim$25ms.
+
+    \item \textbf{Practical Implications:} These results suggest our construction is particularly well-suited for systems where credentials are frequently shown but rarely issued, as the verification performance advantage (up to $14.8\times$ at $N=64$) directly impacts end-user experience.
+\end{itemize}
+
+
+\begin{figure}[!htb]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        
+        \vspace{0.5em}
+        \scriptsize
+        \begin{tabular}{lccc}
+        \toprule
+        \textbf{Operation} & \textbf{n=4} & \textbf{n=16} & \textbf{n=64} \\
+        \midrule
+        tPrepare (Ours) & 1.65 & 6.16 & 22.71 \\
+        Token Request & 8.55 & 37.15 & 135.91 \\
+        \midrule
+        tShareSign (Ours)$^{\dagger}$ & 20.95 & 63.40 & 244.22 \\
+        Issue & 3.09 & 14.14 & 61.34 \\
+        \midrule
+        tAggregate (Ours) & 0.99 & 1.10 & 1.46 \\
+        (Aggr., Unblind) & 3.92 & 15.04 & 52.55 \\
+        \midrule
+        Show (Ours) & 1.26 & 1.35 & 1.61 \\
+        Prove & 7.90 & 15.78 & 40.56 \\
+        \midrule
+        Verify (Ours) & 1.71 & 1.82 & 1.68 \\
+        Verify & 11.20 & 26.64 & 74.07 \\
+        \bottomrule
+        \end{tabular}
+        \caption{tUTT Performance scaling with attribute count ($n$) for fixed $N=16, t=9$ (ms)}
+        \label{tab:chap5_n_scaling_combined_utt_act}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        
+        \vspace{0.5em}
+        \scriptsize
+        \begin{tabular}{lccc}
+        \toprule
+        \textbf{Operation} & \textbf{N=4} & \textbf{N=16} & \textbf{N=64} \\
+        \midrule
+        tPrepare (Ours) & 5.97 & 6.16 & 5.88 \\
+        Token Request & 33.84 & 37.15 & 36.11 \\
+        \midrule
+        tShareSign (Ours)$^{\dagger}$ & 21.19 & 63.40 & 283.72 \\
+        Issue & 13.68 & 14.14 & 13.52 \\
+        \midrule
+        tAggregate (Ours) & 0.51 & 1.10 & 4.89 \\
+        (Aggr., Unblind) & 6.46 & 15.04 & 41.02 \\
+        \midrule
+        Show (Ours) & 1.33 & 1.35 & 1.33 \\
+        Prove & 14.67 & 15.78 & 14.55 \\
+        \midrule
+        Verify (Ours) & 1.69 & 1.82 & 1.69 \\
+        Verify & 23.51 & 26.64 & 25.03 \\
+        \bottomrule
+        \end{tabular}
+        \caption{tUTT Performance scaling with threshold size ($N$) for fixed $n=16$ (ms)}
+        \label{tab:N_scaling_combined_utt_act}
+    \end{minipage}
     
-\end{itemize}
-
-For me it would be 
-\begin{itemize}
-    \item Master Cred Issue: tPrepare, tShareSign, tAggregate
-    \item Context Cred Issue: = (1 x Show, Verify) + (1 x Eval+Prove +Verify) for each node
-    \item (Show, Verify): (per cred) Rerand, ZKP.Prove, Verify
-\end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-We want to show a few things in this section.
-We want to show that the credential itself is far more efficient with both attribute length and node number.
-We also want to show that our deduplication is much faster.
-Does tact run issuance on different servers? I'm computing everything on one computer on a single thread.
-
-
-
-
-First, we compare the threshold anonymous counting token TACT with our Threshold ABC system. 
-Then we compare their S3ID system (based on TACT) with our Threshold Identity System based on our ABC system and MIMC-ABC. 
-
-
-
-\subsection{Threshold Rerandomizable Signature for ABCs}
-
-
-
-
-\label{sec:threshold-performance-tact}
-We have 2 subsets of tests, our first is where we benchmark the threshold primitive TABC in Token Request, Issue, Aggregate, Unblind, Prove, Verify algorithms, and compare ours against the construction from \cite{rabaninejad_attribute-based_2024}.
-
-The second is its instantiation in an identity system where we combine our benchmark times from our threshold primitive with our other times to estimate and compare against the Dedup, MicroCred, AppCred, VerifyCred algorithms in \cite{rabaninejad_attribute-based_2024}.
-
-We evaluate performance with a fixed $N = 16$ (number of Threshold Nodes) and $t = 9$ (Threshold), varying attribute sizes $n = 4, 16, 64$, as shown in Table~\ref{tab:perf-comp-vary-n}. We set the middleground $N$ with comprehensive results for other $N$ in the appendix \ref{chap5:appendix-tactvspsutt-results}. The $n = 64$ case represents the worst-case scenario for large attribute sets. We then set $n$ (the number of attributes) to 16 and vary $N, t$ and show results in Table ~\ref{tab:perf-comp-vary-N}.
-
-\subsubsection{Key Observations}
-
-\begin{itemize}
-    \item \textbf{Table \ref{tab:perf-comp-vary-n}: Fixed $N = 16, t = 9$, Varying $n$}
-        \begin{itemize}
-        \item Our scheme (PS-UTT) outperforms TACT in \textit{Token Request} ($6.0\times$) and \textit{Aggregate, Unblind} ($36.0\times$) at $n = 64$, leveraging \textit{multi-scalar multiplication} (MSM) in Schnorr proofs for sublinear scaling as explored in benchmarks \ref{fig:schnorr-benchmarks}. 
-        
-        \item In \textit{Prove} and \textit{Verify}, PS-UTT achieves speedups of $25.2\times$ and $44.1\times$ at $n = 64$, respectively, due to optimized Schnorr protocols avoiding TACT's costly pairings. TACT's \textit{Verify} time scales linearly with $n$ due to individual pairing checks per message in its threshold Shacham-Waters (tSW) signature verification.
-        
-        \item TACT excels in \textit{Issue} ($4.0\times$ faster at $n = 64$)
-    \end{itemize}
-
-    \item  \textbf{Table \ref{tab:perf-comp-vary-N}: Fixed $n = 16$, Varying $N,t$}
-        \begin{itemize}
-            \item \textit{Issue:} PS-UTT's time rises from 21.19 ms ($N = 4$) to 283.72 ms ($N = 64$) due to \textit{distributed key generation and threshold signing}, scaling linearly with $N$. 
-            \item \textit{Token Request, Prove, Verify:} PS-UTT maintains consistent performance (e.g., Verify: 1.69-1.82 ms) with speedups of $6.1\times$ to $14.8\times$ at $N = 64$, as these operations are $N$-independent.
-        \end{itemize}
-
-    \item \textbf{Synthesis}
-    PS-UTT scales efficiently with attributes $n$, achieving up to $44.1\times$ speedup in \textit{Verify} at $n = 64$, thanks to \textit{MSM-optimized Schnorr proofs}. However, it scales less favorably with nodes $N$, with \textit{Issue} performance dropping as $N$ grows, unlike TACT’s stable 13-14 ms. PS-UTT suits frequent credential use, while TACT fits large $N$, infrequent issuance scenarios.
-
-\end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Discussion}
-\label{sec:threshold-discussion}
-
-\subsection{Practical Deployment Considerations}
-\begin{itemize}
-    \item Standard threshold infrastructure compatible
-    \item Efficient client-side operations for mobile deployment
-    \item Flexible predicate system for diverse use cases
-\end{itemize}
-
-\subsection{Extensions and Future Work}
-\begin{itemize}
-    \item Post-quantum security considerations
-    \item Dynamic threshold adjustments
-    \item Integration with existing identity infrastructure
-\end{itemize}
-
-\section{Conclusion}
-\label{sec:threshold-conclusion}
-
-We presented the first threshold identity system that efficiently combines sybil resistance, expressive proofs, and revocation capabilities. By leveraging our efficient building blocks from previous chapters, we achieve 2-3× better performance than state-of-the-art systems while supporting strictly more functionality. Our system demonstrates that practical, privacy-preserving decentralized identity is achievable with proper cryptographic design.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Threshold Credential Comparison}
-
-
-
-
-\section{Identity System}
-
-\begin{table}[h]
-\centering
-\caption{System Comparison Summary}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Feature/Operation} & \textbf{Our System} & \textbf{S3ID} & \textbf{Advantage} \\
-\midrule
-Threshold Credential & PS-UTT & TACT & 5-10× faster verify \\
-Deduplication & Nullifier+ZKP & EDDX & ~5× faster \\
-Expressive Proofs & Yes (Ch. 2) & Limited & Richer functionality \\
-Token Request & 1.67-3.08ms & 8.33-16.58ms & 5× faster \\
-Prove+Verify & <3ms & >20ms & >7× faster \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-\begin{figure}
-    \centering
-    \includegraphics[width=1\linewidth]{figures/chap5_tsiris_varyN_varyn_aggregate.png}
-    \caption{Enter Caption}
-    \label{fig:enter-label1}
+    \vspace{-0.5em}
+    \scriptsize
+    % $^{\dagger}$ For this operation, TACT is faster than our construction.
 \end{figure}
 
 
-\begin{figure}
+Figure~\ref{fig:chap5_tutt_scale_by_N} highlights the key trade-off in our design: while tShareSign performance scales less favorably with increasing threshold size, our user-centric operations (particularly Show and Verify) maintain consistently superior performance regardless of committee size.
+
+
+\subsubsection{Performance Analysis Summary}
+Our UTT (Ours) construction demonstrates superior performance in 4 out of 5 key operations, with notable advantages in:
+
+\begin{enumerate}
+    \item \textbf{Verification efficiency:} Near-constant verification time regardless of attribute count, critical for real-world deployment scenarios.
+
+    \item \textbf{Show operation:} Consistently fast credential presentation (1.3-1.6ms), enabling responsive user experiences.
+
+    \item \textbf{Attribute scalability:} Excellent performance with large attribute sets, allowing for richer credential schemas without performance penalties.
+\end{enumerate}
+
+The one trade-off is in signature share generation (tShareSign), where our construction prioritizes security through comprehensive zero-knowledge proofs at the cost of higher computational overhead. However, this operation typically occurs less frequently in practical deployments compared to verification operations.
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Threshold Identity System Evaluation}
+\label{sec:threshold-performance}
+
+We now analyze the complete T-SIRIS system's performance. Figure~\ref{fig:tsiris-performance} illustrates how each system operation scales with attribute count across different threshold configurations.
+
+\begin{figure}[!htb]
     \centering
-    \includegraphics[width=1\linewidth]{figures/chap5_tsiris_against_s3id.png}
-    \caption{Enter Caption}
-    \label{fig:enter-label2}
+    \includegraphics[width=\linewidth]{figures/chap5_tsiris_varyN_varyn_aggregate.png}
+    \caption{T-SIRIS performance scaling with attribute count across operations}
+    \label{fig:chap5_tsiris_performance}
 \end{figure}
+
+The results reveal several important characteristics of our system:
+
+\begin{itemize}
+    \item \textbf{User-side operations} (Obtain Master, Obtain Context, Show) scale linearly with attribute count, with Obtain Master at approximately $60ms$ for 128 attributes, enabling efficient user-side operation.
+        
+    \item \textbf{Issuer operations} (Issue Master, Issue Context) show notably different scaling behavior across threshold configurations. With 64 attributes, Issue Master takes approximately 200ms at N=4, 800ms at N=16, and 3000ms at N=64, highlighting the trade-off between decentralization and issuer-side performance. It's important to note that we do not issue with parallel computation and thus issuance time could be greatly reduced. We are opting for the worst-case scenario.
+    
+    \item \textbf{Verification operation} demonstrates near-constant time performance (approximately 1.7ms) regardless of attribute count or threshold configuration, crucial for high-throughput verification scenarios.
+
+\end{itemize}
+
+These measurements demonstrate that T-SIRIS achieves efficient credential presentation while maintaining acceptable issuance costs even with large threshold committees, making it practical for real-world deployment.
+
+
+\subsection{Threshold Identity System Performance Comparison with S3ID}
+ 
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=\linewidth]{figures/chap5_tsiris_against_s3id.png}
+    \caption{End-to-end performance comparison between T-SIRIS and S3ID}
+    \label{fig:tsiris-vs-s3id}
+\end{figure}
+
+
+We present a performance comparison between T-SIRIS and S3ID. S3ID's algorithm Dedup combines the credential request and issuance process, with sybil resistance and verification. We combined our algorithm benchmarks to compare against this and plotted this figure: ~\ref{fig:tsiris-vs-s3id}.
+
+The comparison reveals several significant advantages of our approach:
+
+\begin{itemize}
+    
+    \item \textbf{Verification efficiency}: T-SIRIS maintains consistent sub-2ms verification time regardless of attribute count, while S3ID's verification time increases linearly, reaching approximately 25ms for just 16 attributes. This 12.5x improvement in verification throughput is critical for large-scale deployments.
+    
+    \item \textbf{Efficient Sybil resistance}: Our CRBN-based nullifier mechanism adds only 2.49ms overhead during credential issuance, approximately 5x faster than S3ID's token-based deduplication approach (12.8ms), while providing equivalent Sybil-resistance guarantees.
+    
+    \item \textbf{Scalable attribute support}: While both systems show linear scaling with attribute count, T-SIRIS demonstrates significantly better slopes across all operations, with the greatest advantage in verification operations (44.1x at 64 attributes).
+\end{itemize}
+
+Even when issuer-side ZKP verification is included (our full security model), T-SIRIS outperforms S3ID in end-to-end credential issuance and verification scenarios. The performance gap widens further at higher attribute counts, making T-SIRIS suitable for complex credential schemas with many attributes and verifying multiple credentials together.
+
+
+

@@ -1,108 +1,61 @@
-\chapter{Improved Constructions of Anonymous Credentials from Rerandomizable Signatures}\label{chap2}
-ABC 
-Anonymity Against Malicious Issuer
-Secure Key Generation
+\chapter{Improved Constructions of Anonymous Credentials from Rerandomizable Signatures for Credential Wallets}\label{chap2}
 
 
-% \begin{table}
-% \begin{center}
-% \caption{Comparison of our construction over previous work.}
-% \label{tab:comparison-chap2}
-% \begin{tabular}{l|cccccc}
-% Features    									& Multi Issuer & Sybil Resistance  & Revocation & Efficient Cred. Chaining$\footnotemark[1]$ & M-ABC$\footnotemark[2]$   & Anonymity$\footnotemark[3]$   \\
-% \hline
+\subsection{Motivation}
 
-% CanDID \cite{maram2021candid}     				& \ding{51}     & \ding{51} 	& \ding{51}  &  \ding{55}     & \ding{55}                     & \ding{55}		\\
-% SyRA \cite{crites_syra_2024}     				& \ding{55}     & \ding{51}    	& \ding{55}  &  \ding{55}     & \ding{55}                     & \ding{51}		\\
-% S3ID \cite{rabaninejad_attribute-based_2024}  & \ding{51}     & \ding{51}    	& \ding{55}  &  \ding{51}     & \ding{55}\footnotemark[4]     & \ding{51}		\\
-% Our Work  										& \ding{51}     & \ding{51}    	& \ding{51}  &  \ding{51}     & \ding{51}                     & \ding{51}		\\
-% \end{tabular}
-% \end{center}
+Digital interactions are shifting toward the self‑sovereign identity (SSI) model, where users control cryptographic credentials in digital wallets. In this paradigm, a wallet is not just a storage container, but a user-controlled agent for issuing, holding, and presenting zero-knowledge proofs of credentials across interoperable systems. Governments and industry are mandating digital wallets (e.g., EU Digital Wallet Regulation \cite{noauthor_regulation_2024}; 13 U.S. jurisdictions issuing mobile driver’s licenses \cite{aamva_jurisdiction_nodate}). Credential Oracles \cite{zhang_deco_2020, celi_distefano_2025} are "feeder services" that generate verifiable data attestations from different sources such as Web 2.0 credentials, bank data, or offline information.  The digital attestations are associated with a user's credential wallet and stored "within" the wallet. Commodity devices—from smartphones to IoT sensors—will sign outputs (photos, logs, transactions) with device keys (e.g., C2PA \cite{c2paorg_content_2024}), turning everyday interactions into verifiable claims. As AI-generated media and deepfakes proliferate, cryptographic provenance becomes critical, exponentially increasing the volume and heterogeneity of credentials that wallets must manage.
 
-% \vspace{1em}
-% \footnotesize
-% $\footnotemark[1]$ Credential Chaining is a user presenting multiple credentials to be verified together for a complex identity statement.
 
-% \footnotesize
-% $\footnotemark[2]$ M-ABC is a Multi-Show Attribute Based Credential, allowing a user to satisfy rich, attribute-based identity statements 
 
-% \footnotesize
-% $\footnotemark[3]$ Anonymity is defined in the Anonymous Credential model, no verifier and issuer (collaborating together) may learn more about the user or their credentials other than what the user discloses and what their credentials verify. Multiple credential verifications are unlinkable.
+\subsection{Problems and Scope}
 
-% \footnotesize
-% $\footnotemark[4]$ While possible in S3ID, they mention 
+The proliferation of credential types, sources, and volume reveals three gaps in existing schemes:
 
-% \footnotesize
-% $\footnotemark[5]$ Multi-issuer means supporting credentials from different authorities that can be cryptographically linked while preserving privacy
-% \end{table}
-
-% How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
-
-% \noindent \textbf{Technical Challenges}
-% \begin{enumerate}
-%     \item Formalizing security in the Algebraic Group Model
-%     \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
-%     \item Ensuring user-anonymity in the presence of malicious issuers without affecting performance
-% \end{enumerate}
-
-% \begin{itemize}
-%     \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
-    % \item Formalized security model for anonymity against colluding credential issuers
-%     \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
-%     \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
-% \end{itemize}
-
-Anonymous credentials represent a fundamental building block for privacy-preserving digital identity, enabling users to prove statements about their attributes without revealing their full identity. Since their introduction by Chaum \cite{chaum_untraceable_1981}, they have evolved from theoretical constructs to practical systems deployed in real-world applications such as U-Prove, Idemix, and PrivacyPass \cite{paquin2011u, camenisch_design_2002, davidson2018privacy}.
-
-The development of anonymous credentials has followed several key advancements:
-\begin{itemize}
-    \item \textbf{Blind Signatures:} Early constructions using blind signatures provided basic privacy but were limited to single-use scenarios to prevent credential reuse.
-    
-    \item \textbf{Multi-Show Capabilities:} The introduction of pairing-based signatures \cite{cimato_signature_2003, hutchison_constant-size_2006} enabled efficient multi-show credentials through signature randomization, allowing users to present the same credential multiple times without being linked.
-    
-    \item \textbf{Attribute-Based Credentials and Expressive Proofs:} Modern systems extend beyond simple possession proofs to enable selective disclosure and complex predicate verification over attributes.
-\end{itemize}
-
-Despite these advances, current attribute-based anonymous credential (ABC) systems face a critical trade-off between expressiveness and efficiency. Systems like SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} and ACT \cite{guo_anonymous_2023} achieve high efficiency but support only limited predicates, while approaches based on zkSNARKs enable rich expressiveness \cite{rosenberg_zk-creds_2022} but at computational cost. Furthermore, many anonymous credential systems assume honest issuers, leaving users vulnerable to privacy breaches from malicious credential providers.
-
-This chapter addresses these limitations through four key contributions:
 \begin{enumerate}
-    \item \textbf{Extended Rerandomizable Signature Scheme:} We build upon the foundations in \cite{utt} to develop a rerandomizable signature scheme over commitments, proven secure in the Algebraic Group Model (AGM) and satisfies the Anonymous Credential System model from \cite{fuchsbauer_structure-preserving_2019}.
-    
-    \item \textbf{Optimized Verification Construction:} Our optimized signature variant reduces show/verify costs by X\% compared to previous approaches
+   \item \textbf{Scalability for wallet-centric architectures.} In the SSI model, wallets will accumulate potentially thousands of heterogeneous credentials (identity documents, transaction receipts, device-signed content, oracle attestations). Presentation must remain succinct even in scenarios where proof aggregation is possible.
 
-    \item \textbf{Optimized Expressive Proofs:} Compared to snarkbased proofs, we show ours reduces show/verify time by X\%
-    
-    \item \textbf{Formalized Security Against Malicious Issuers:} We provide a comprehensive security model that guarantees user privacy even against colluding credential issuers, addressing a critical limitation in existing systems.
-    
-    \item \textbf{Empirical Performance Validation:} We benchmark against state-of-the-art alternatives, and we demonstrate that schnorr proofs, as used in our construction, are, in fact, sub-linear in practice and fully expressive for predicate proofs.
+    \item \textbf{Security against untrusted issuers.} The decentralized ecosystem includes credential oracles, device-embedded signers, and third-party attesters with varying security assumptions. User privacy (unlinkability, anonymity) must hold even when issuers collude or behave arbitrarily, protecting users from tracking by malicious ecosystem participants.
+
+    \item \textbf{Expressive, efficient zero-knowledge proofs.} Users need to prove dynamic policies over attribute sets (e.g., "prove I'm over 18 AND in EU AND my device captured this photo today"). Achieving rich predicate support beyond simple possession proofs, without heavy SNARK primitives, is essential for mobile device feasibility.
+
 \end{enumerate}
 
-These foundations support the multi-issuer, multi-credential system presented in subsequent chapters while maintaining security against malicious issuers and offering practical performance for real-world applications.
+Solving these challenges requires a foundational understanding of how anonymous credentials evolved to address similar scalability and security concerns. While existing systems have made significant progress, none fully address the demands of the SSI wallet-centric ecosystem we've described. To build this next-generation system, we must first examine the architectural decisions and cryptographic innovations that brought us to this point.
 
+Anonymous credentials are a fundamental building block for privacy-preserving digital identity, aligning perfectly with the SSI principle that users should prove attributes without revealing full identity. Since their first inception by Chaum \cite{chaum_untraceable_1981}, they have evolved from theoretical constructs to practical systems deployed in real-world applications such as U-Prove, Idemix, and PrivacyPass \cite{camenisch_design_2002, dunkelman_formal_2016}, but none have been designed explicitly for wallet-centric architectures managing thousands of heterogeneous credentials. 
+
+Despite these advances, current ABC systems face critical gaps that prevent wide-scale deployment in the SSI ecosystem we've outlined.  Systems like SPS-EQ \cite{fuchsbauer_structure-preserving_2019, hanaoka_improved_2022} and ACT \cite{guo_anonymous_2023} achieve high efficiency but support only limited predicates, while approaches based on zkSNARKs enable rich expressiveness \cite{rosenberg_zk-creds_2022} but at computational cost. Furthermore, many anonymous credential systems assume honest issuers, leaving users vulnerable to privacy breaches from malicious credential providers, especially when issuers might be credential oracles.
+
+This chapter develops the cryptographic foundations needed for credential wallets. We address each of the identified challenges through four key contributions that together enable efficient, secure, and expressive anonymous credentials at the scale demanded by the SSI ecosystem:
+
+\begin{enumerate}
+    \item \textbf{Complete Security Proofs for an efficient PS signature variant from UTT:} We provide formal security proofs that were only sketched in \cite{tomescu_utt_2022}:
+    \begin{itemize}
+        \item Position-binding vector commitments under SDLP in the Algebraic Group Model (Section \ref{sec:commitment})
+        \item EUF-CMA security for rerandomizable signatures over commitments under PS-LRSW (Section \ref{sec:formal_treatment_utt_rerand_sig})
+        \item Satisfaction of Anonymous Credential model \cite{fuchsbauer_structure-preserving_2019} security properties—correctness, unforgeability, and anonymity—for multi-show operations (Section \ref{sec:abc})
+    \end{itemize}
+
+    \item \textbf{Fastest Show+Verify Operations:} Our construction achieves 10-16\% faster verification than UTT \cite{tomescu_utt_2022} and outperforms the most popular BBS+ variant \cite{camenisch_anonymous_2016} - we validate through comprehensive benchmarks \ref{sec:performance_evaluation}.
+
+    \item \textbf{Malicious Issuer Security through Key Verification Protocols:} We formalize anonymity guarantees against colluding issuers via mandatory key verification (Section \ref{subsec:malicious_issuer_security_guarantee}), preventing deanonymization attacks through maliciously generated public keys—a vulnerability that existing schemes do not address.
+
+    \item \textbf{Empirical Validation of Schnorr Protocol Efficiency:} Comprehensive benchmarks \ref{fig:schnorr-benchmarks}reveal that Schnorr protocols achieve sublinear complexity for attribute proofs via multi-scalar multiplication, outperforming theoretical predictions and enabling almost constant-size expressive predicate evaluation.
+\end{enumerate}
 
 \subsubsection*{Chapter Roadmap}
-The remainder of this chapter is organized as follows: Section 2.1 presents preliminaries and notation. Section 2.2 introduces our position-binding commitment scheme. Section 2.3 details our rerandomizable signature construction. Section 2.4 presents our attribute-based credential system construction. Section 2.5 provides comprehensive performance evaluations, and Section 2.6 summarizes our findings.
+This chapter develops cryptographic foundations for efficient anonymous credentials in decentralized identity systems. Section \ref{chap2:preliminaries} establishes our mathematical setting with SDLP and PS-LRSW assumptions.
+
+Section \ref{sec:formal_treatment_utt_rerand_sig} provides the first complete security proofs for our rerandomizable signature scheme, proving position-binding under SDLP and EUF-CMA security under PS-LRSW. Section \ref{chap2:extending_utt_construction} presents our key optimization: moving signatures from $\G_1$ to $\G_2$ for 10-16\% faster verification, plus malicious issuer protection through key verification.
+
+Section \ref{chap2:expressive_proofs} demonstrates how Sigma protocols achieve efficient predicate evaluation over complex policies. Section \ref{sec:abc} constructs our complete credential system with security proofs. Section \ref{sec:performance_evaluation} validates our approach through benchmarks, showing state-of-the-art performance with up to 83\% verification speedup.
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\section{Preliminaries}
+\section{Preliminaries}\label{chap2:preliminaries}
 
 
 \subsection{Assumptions}
@@ -412,7 +365,7 @@ For $\mathcal{R}_{\mathsf{DL}} = \{(h, w) \in \mathbb{G} \times \mathbb{Z}_q : h
 
 
 
-\section{Formal Treatment for UTT's Rerandomizable Signature Over Commitments}\label{sec:rerandsig_g1}
+\section{Formal Treatment for UTT's Rerandomizable Signature Over Commitments}\label{sec:formal_treatment_utt_rerand_sig}
 We build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu_utt_2022}. This signature scheme enables our anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. Our main contribution is the first complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions (we note that \cite{tomescu_utt_2022} presents a proof sketch).
 
 
@@ -459,7 +412,7 @@ Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indist
 
 
 
-\subsection{Security Analysis in the AGM}
+\subsection{SDLP and Position Binding Security Analysis in the AGM}
 
 Our dual-group Pedersen commitment scheme satisfies the following properties:
 
@@ -760,11 +713,66 @@ We ensure a forgery must break one underlying assumption, the tight reduction on
 
 
 
-\section{Extending UTT's Construction}
+\section{Extending UTT's Construction}\label{chap2:extending_utt_construction}
 
 
 
-\subsection{Security against Malicious Issuers}
+\subsection{Verify Speedup Improvement}\label{subsec:g2_verify_speedup}
+
+In the original UTT $\G_1$ variant, verification involves two bilinear pairings equality checks and a proof of knowledge of the commitment:
+$$
+e\bigl(\sigma_{2}',\tilde g\bigr)
+= e\bigl(\sigma_{1}',\,\vk\cdot\widetilde{\cm'}\bigr) \quad \wedge 
+\quad
+e\bigl(\cm',\tilde g\bigr)
+= e\bigl(g,\,\widetilde{\cm'}\bigr)
+\quad \wedge \quad \mathsf{ZK.Verify}(\pi,\cm')=1
+$$
+Without the second pairing equality, the user must compute the proof of knowledge on $\widetilde{\cm'} \in \G_2$, which comes with its own overhead. That's because the signature is verified with $\widetilde{\cm'} \in \G_2$.
+
+By redefining the signature in $\widetilde\sigma = \bigl(\widetilde\sigma_1,\widetilde\sigma_2\bigr)\in\G_2$ we can compute the proof of knowledge in $\G_1$ directly, reducing one pairing. The overhead of verifying the signature in $\G_2$ is significantly better than the additional pairing yielding a $20\%\text{--}40\%$ decrease in verification cost (see Table~\ref{abc-performance-combined-table}).
+
+\subsubsection*{Verification Procedure}
+
+The optimized verification algorithm $\Verify(\widetilde\vk,\cm',\widetilde\sigma')\to\{0,1\}$ comprises:
+    $$
+    e\bigl(g,\,\widetilde\sigma_2'\bigr) = e\bigl(\vk\cdot\cm',\,\widetilde\sigma_1'\bigr) \quad \wedge \quad \mathsf{ZK.Verify}(\pi,\cm')=1
+    $$
+
+Correctness follows by bilinearity:
+\begin{enumerate}
+    \item Prove $e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}', \widetilde{\sigma_1}')$
+    
+    \begin{align*}
+        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}) \\
+        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{u_\Delta} \cdot \tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g, \widetilde{\sk}^{u_\Delta}) \cdot e(g, \widetilde{\cm}^{u + u_\Delta}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
+        &= e(g^x, \widetilde{h}^{u_\Delta}) \cdot e(g, \widetilde{\cm})^{u + u_\Delta} \cdot e(g,\tilde{h}^{u_\Delta})^{r_{\Delta}} \\
+        &= e(\vk, \widetilde{h}^{u_\Delta}) \cdot e(\cm, \widetilde{h}^{u_\Delta}) \cdot e(g^{r_{\Delta}},\tilde{h}^{u_\Delta}) \\
+        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
+        &= e(\vk \cdot \cm', \sigma_1')  \\
+    \end{align*}
+
+    \item then PoK
+    \[
+        \pi \gets \mathsf{PoK}\{(r + \Delta_r, m_1,\ldots,m_\ell): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+    \]
+\end{enumerate}
+ 
+
+\subsubsection*{Performance Trade–Offs}
+
+Although the G2 variant reduces verification latency by eliminating one pairing, it increases issuance cost by a factor of $1.3\times$–$1.7\times$ (Table~\ref{abc-performance-combined-table}). This trade–off is justified because:
+\begin{itemize}
+  \item Credentials are issued infrequently but verified repeatedly.
+  \item Issuance occurs on high–capacity servers, while verification may run on resource–constrained devices.
+  \item The absolute increase in issuance latency (1–2\,ms) is negligible in typical workflows.
+\end{itemize}
+
+
+
+
+\subsection{Malicious Issuer Security Guarnatees}\label{subsec:malicious_issuer_security_guarantee}
 Our first improvement to the PS-UTT rerandomizable signature scheme is the addition of algorithm $\mathsf{RS.VerKey}$, which addresses a vulnerability in traditional anonymous credential systems that assume honest issuers. This assumption leaves users exposed to privacy breaches and potential forgeries from malicious credential providers. Through $\mathsf{RS.VerKey}$, we require issuers to prove knowledge of their secret key $\mathsf{sk} = g^x$ and demonstrate the well-formedness of the commitment key $\mathsf{ck} = \{g_i = g^{y_i}, \tilde{g}_i = \tilde{g}^{y_i}\}_{i \in [\ell]}$ via a zero-knowledge Sigma-protocol. This prevents issuers from constructing keys with hidden mathematical relationships that could deanonymize users during credential presentations or enable credential forgery, ensuring that anonymity guarantees remain intact even against adversarial issuers who attempt to subvert the cryptographic foundations of the system.
 
 \begin{itemize}
@@ -935,73 +943,99 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 
 
-\subsection{Verify Speedup Improvement}
 
-In the original UTT $\G_1$ variant, verification involves two bilinear pairings equality checks and a proof of knowledge of the commitment:
-$$
-e\bigl(\sigma_{2}',\tilde g\bigr)
-= e\bigl(\sigma_{1}',\,\vk\cdot\widetilde{\cm'}\bigr) \quad \wedge 
-\quad
-e\bigl(\cm',\tilde g\bigr)
-= e\bigl(g,\,\widetilde{\cm'}\bigr)
-\quad \wedge \quad \mathsf{ZK.Verify}(\pi,\cm')=1
-$$
-Without the second pairing equality, the user must compute the proof of knowledge on $\widetilde{\cm'} \in \G_2$, which comes with its own overhead. That's because the signature is verified with $\widetilde{\cm'} \in \G_2$.
 
-By redefining the signature in $\widetilde\sigma = \bigl(\widetilde\sigma_1,\widetilde\sigma_2\bigr)\in\G_2$ we can compute the proof of knowledge in $\G_1$ directly, reducing one pairing. The overhead of verifying the signature in $\G_2$ is significantly better than the additional pairing yielding a $20\%\text{--}40\%$ decrease in verification cost (see Table~\ref{abc-performance-combined-table}).
 
-\subsubsection*{Verification Procedure}
 
-The optimized verification algorithm $\Verify(\widetilde\vk,\cm',\widetilde\sigma')\to\{0,1\}$ comprises:
-    $$
-    e\bigl(g,\,\widetilde\sigma_2'\bigr) = e\bigl(\vk\cdot\cm',\,\widetilde\sigma_1'\bigr) \quad \wedge \quad \mathsf{ZK.Verify}(\pi,\cm')=1
-    $$
 
-Correctness follows by bilinearity:
-\begin{enumerate}
-    \item Prove $e(g, \widetilde{\sigma_2}') = e(\mathsf{vk} \cdot \mathsf{cm}', \widetilde{\sigma_1}')$
-    
-    \begin{align*}
-        e(g, \widetilde{\sigma_2}') &= e(g, (\widetilde{\sigma_2} \cdot \widetilde{\sigma_1}^{r_\Delta})^{u_\Delta}) \\
-        &= e(g, (\widetilde{\sk} \cdot \widetilde{\cm}^{u})^{u_\Delta} \cdot \tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
-        &= e(g, \widetilde{\sk}^{u_\Delta}) \cdot e(g, \widetilde{\cm}^{u + u_\Delta}) \cdot e(g,\tilde{h}^{r_{\Delta} \cdot u_\Delta}) \\
-        &= e(g^x, \widetilde{h}^{u_\Delta}) \cdot e(g, \widetilde{\cm})^{u + u_\Delta} \cdot e(g,\tilde{h}^{u_\Delta})^{r_{\Delta}} \\
-        &= e(\vk, \widetilde{h}^{u_\Delta}) \cdot e(\cm, \widetilde{h}^{u_\Delta}) \cdot e(g^{r_{\Delta}},\tilde{h}^{u_\Delta}) \\
-        &= e(\vk \cdot \cm \cdot g^{r_{\Delta}}, \sigma_1')  \\
-        &= e(\vk \cdot \cm', \sigma_1')  \\
-    \end{align*}
 
-    \item then PoK
+
+
+
+
+
+
+
+
+
+\section{Expressive Proof Evaluation}\label{chap2:expressive_proofs}
+
+<<< INCLUDE TABLE WITH SCHNORR PROOF COST >>>
+<<< INCLUDE METRICS FOR RANGE PROOF, REVOCATION LIST, ARITHMETIC RELATION, BOOLEAN RELATION >>>
+<<< INCLUDE COMPARISON BETWEEN SCHNORR BASED SIGNATURES, SPS-EQ and their proof functionality (as in improved anonymous credentials) and zk-SNARK based credentials>> 
+% Which use‐case predicates (e.g., age‐over‐threshold, multi‐credential aggregation) should we benchmark first to demonstrate both expressiveness and efficiency?
+
+
+
+
+
+
+
+
+
+\textbf{Predicate Satisfaction:} For credentials with attributes that satisfy a policy $\phi$:
     \[
-        \pi \gets \mathsf{PoK}\{(r + \Delta_r, m_1,\ldots,m_\ell): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}
+    \mathcal{R}_{\phi} = \{(\{\cm_j\}, (\{\attrs_j\})) \mid \forall j: \cm_j \text{ correctly commits to } \attrs_j \wedge
+    \phi(\{\attrs_j\}) = 1 \}
     \]
-\end{enumerate}
- 
+    
+    A predicate $\phi$ is simply a policy statement about attributes that is satisfiable by the supported algebraic constraints in Sigma protocols, noting that sigma protocols are extremely expressive and can  . For example:
 
-\subsubsection*{Performance Trade–Offs}
+    These can be composed to support complex policies while maintaining zero-knowledge properties, revealing nothing beyond the fact that the policy is satisfied.
+    \begin{itemize}
+    \item ``age > 18'' (for a single credential)
+    \item ``has valid driver's license AND passport'' (requiring multiple credentials)
+    \item ``degree = 'Computer Science' AND university in accredited\_list''
+    \end{itemize}
+    
+    The $\Sigma$-protocol allows proving these statements are true without revealing the actual attribute values, only that they satisfy the predicate $\phi$.
 
-Although the G2 variant reduces verification latency by eliminating one pairing, it increases issuance cost by a factor of $1.3\times$–$1.7\times$ (Table~\ref{abc-performance-combined-table}). This trade–off is justified because:
-\begin{itemize}
-  \item Credentials are issued infrequently but verified repeatedly.
-  \item Issuance occurs on high–capacity servers, while verification may run on resource–constrained devices.
-  \item The absolute increase in issuance latency (1–2\,ms) is negligible in typical workflows.
-\end{itemize}
+    The $\Sigma$-protocol framework allows for highly expressive predicates $\phi$ including:
+    \begin{itemize}
+    \item \textbf{Boolean operations:} AND, OR, and NOT compositions of simpler predicates
+    \item \textbf{Arithmetic relations:} Equality, inequality ($<$, $>$, $\leq$, $\geq$), and linear combinations 
+    \item \textbf{Range proofs:} Demonstrating a value lies within a specific range (e.g., ``18 $\leq$ age $<$ 65'')
+    \item \textbf{Set membership:} Proving an attribute belongs to an approved set without revealing which one
+    \end{itemize}
+
+    
+
+\subsubsection*{Predicate Satisfaction}
+We define a predicate $\phi$ as a boolean function over an attribute vector $\attrs$, formally  $\phi: (\mathcal{A}) \rightarrow \{0,1\}$, where $\mathcal{A}$ is the space of the attribute vectors. 
+For a credential with attributes $\attrs = [\id, \k, \ctx, \exp]$, we say that "$\attrs$ satisfies $\phi$", denoted as $\phi(\attrs) = 1$, if the boolean function evaluates to true on the attributes.
+For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\attrs: [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi: age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond legitimately reusing existing credentials.
+
+
+To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
 
 
 
+\begin{table}[htbp]
+\centering
+\caption{Performance Comparison for Credential Operations}
+\label{tab:expiry-comparison}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Approach} & \textbf{Scheme} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
+\midrule
+Simple Possession & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
+& Us & 2 & 2 & \\
+\midrule
+Expiry & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
+& Us & 2 & 2 & \\
+\midrule
+Linkable Show & \cite{rosenberg_zk-creds_2022} & 41 &  &  \\
+& Us & 2 & 2 & \\
+\midrule
+Rate Limiting & \cite{rosenberg_zk-creds_2022} & 58 &  &  \\
+& Us & 2 & 2 & \\
+\bottomrule
+\end{tabular}
+\end{table}
 
+Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
 
-
-
-
-
-
-
-
-
-
-
-
+Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
 
 
 
@@ -1419,74 +1453,6 @@ The advantage thus bounds the adversary's total advantage in the anonymity game 
 
 
 
-\section{Expressive Proof Evaluation}
-
-<<< INCLUDE TABLE WITH SCHNORR PROOF COST >>>
-<<< INCLUDE METRICS FOR RANGE PROOF, REVOCATION LIST, ARITHMETIC RELATION, BOOLEAN RELATION >>>
-
-\textbf{Predicate Satisfaction:} For credentials with attributes that satisfy a policy $\phi$:
-    \[
-    \mathcal{R}_{\phi} = \{(\{\cm_j\}, (\{\attrs_j\})) \mid \forall j: \cm_j \text{ correctly commits to } \attrs_j \wedge
-    \phi(\{\attrs_j\}) = 1 \}
-    \]
-    
-    A predicate $\phi$ is simply a policy statement about attributes that is satisfiable by the supported algebraic constraints in Sigma protocols, noting that sigma protocols are extremely expressive and can  . For example:
-
-    These can be composed to support complex policies while maintaining zero-knowledge properties, revealing nothing beyond the fact that the policy is satisfied.
-    \begin{itemize}
-    \item ``age > 18'' (for a single credential)
-    \item ``has valid driver's license AND passport'' (requiring multiple credentials)
-    \item ``degree = 'Computer Science' AND university in accredited\_list''
-    \end{itemize}
-    
-    The $\Sigma$-protocol allows proving these statements are true without revealing the actual attribute values, only that they satisfy the predicate $\phi$.
-
-    The $\Sigma$-protocol framework allows for highly expressive predicates $\phi$ including:
-    \begin{itemize}
-    \item \textbf{Boolean operations:} AND, OR, and NOT compositions of simpler predicates
-    \item \textbf{Arithmetic relations:} Equality, inequality ($<$, $>$, $\leq$, $\geq$), and linear combinations 
-    \item \textbf{Range proofs:} Demonstrating a value lies within a specific range (e.g., ``18 $\leq$ age $<$ 65'')
-    \item \textbf{Set membership:} Proving an attribute belongs to an approved set without revealing which one
-    \end{itemize}
-
-    
-
-\subsubsection*{Predicate Satisfaction}
-We define a predicate $\phi$ as a boolean function over an attribute vector $\attrs$, formally  $\phi: (\mathcal{A}) \rightarrow \{0,1\}$, where $\mathcal{A}$ is the space of the attribute vectors. 
-For a credential with attributes $\attrs = [\id, \k, \ctx, \exp]$, we say that "$\attrs$ satisfies $\phi$", denoted as $\phi(\attrs) = 1$, if the boolean function evaluates to true on the attributes.
-For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\attrs: [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi: age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond legitimately reusing existing credentials.
-
-
-To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
-
-
-
-\begin{table}[htbp]
-\centering
-\caption{Performance Comparison for Credential Operations}
-\label{tab:expiry-comparison}
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Approach} & \textbf{Scheme} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
-\midrule
-Simple Possession & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
-& Us & 2 & 2 & \\
-\midrule
-Expiry & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
-& Us & 2 & 2 & \\
-\midrule
-Linkable Show & \cite{rosenberg_zk-creds_2022} & 41 &  &  \\
-& Us & 2 & 2 & \\
-\midrule
-Rate Limiting & \cite{rosenberg_zk-creds_2022} & 58 &  &  \\
-& Us & 2 & 2 & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
-
-Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
 
 
 
@@ -1508,9 +1474,7 @@ Importantly, while general-purpose zero-knowledge systems provide flexibility, t
 
 
 
-
-
-\section{Performance Evaluation}
+\section{Performance Evaluation}\label{sec:performance_evaluation}
 
 
 We implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. Our experiments were conducted on a MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2. All measurements represent the average of 100 independent trials with standard deviations below 5\%.
@@ -1718,7 +1682,7 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 \begin{enumerate}
     \item \textbf{Optimized}: Our PS-UTT G2 variant achieves the best Show+Verify performance (10-16\% faster than PS-UTT G1 and up to 83\% faster than BBS+ 2006), optimizing the operation that occurs most frequently in practice. While the Issue operation is more costly, credentials are issued once but verified many times.
     
-    \item \textbf{Evolution of Efficiency}: The original constructions \cite{hutchison_constant-size_2006, sako_short_2016} required proof of knowledge for $\mathbb{G}_T$ points, resulting in slower operations. Later optimizations \cite{camenisch_anonymous_2016, tomescu_utt_2022} shifted proof of knowledge work to $\G_1$ reducing Show+Verify time by up to 6×.
+    \item \textbf{Evolution of Efficiency}: The original constructions \cite{hutchison_constant-size_2006, sako_short_2016} required proof of knowledge for $\mathbb{G}_T$ points, resulting in slower operations. Later optimizations \cite{camenisch_anonymous_2016, tomescu_utt_2022} shifted proof of knowledge work to $\G_1$ reducing Show+Verify time by up to 6x. 
     
     \item \textbf{Favorable Scaling Properties}: While all schemes exhibit approximately linear scaling with attribute count, our PS-UTT G2 is the most efficient.
 \end{enumerate}

@@ -23,50 +23,14 @@ This problem arises because current evaluations use different programming langua
 
     \item Practical Efficiency Optimization Data: Showing the impact of Schnorr proofs using MSM scaling sublinearly rather than linearly as previously thought. 
 
-    \item Use-case experimental data for zero knowledge proof statements
+    \item Random Linear Combination Proof Aggregation (Schnorr proofs, pairings)
+
+    \item Use-case experimental data for zero-knowledge proof statements
 
     Speedup techniques in rust library
     % https://github.com/sampolgar/anonymous-credentials/blob/a7cc7d199b7fe54a5863e20bac44f1aee538a58a/ps_utt_ts/src/credential.rs#L94
     
 \end{enumerate}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 Anonymous Credentials serve as the backbone of privacy-preserving identity systems. 
@@ -142,7 +106,7 @@ We developed the first standardized open-source tooling for fair comparison of a
 
 
 
-\section{Comparing Old and New Generation Anonymous Credentials}
+\section{New Generation Anonymous Credentials}
 The performance comparison in Table \ref{tab:anon_creds_performance_old_gen_vs_new} demonstrates that newer anonymous credential schemes, such as BBS+2016 \cite{camenisch_anonymous_2016} and PS-UTT22 \cite{tomescu_utt_2022}, outperform older schemes like BBS+06 \cite{hutchison_constant-size_2006} and PS16 \cite{sako_short_2016} by shifting zero-knowledge proofs from the target group $(\mathbb{G}_T)$ to the source group ($\mathbb{G}_1)$\footnote{CL04 \cite{hutchison_signature_2004} is included in previous generation}. For 30 attributes, older schemes require computing over 3$\ell$, and 2$\ell$ $\G_T$ points respectively with Show and Verify times of 39.21 ms (BBS+06) and 32.78 ms (PS16). In comparison, newer schemes compute only in $\G_1$ and minimize pairings, achieving times of 5.72 ms and 5.38 ms—speedups of 6.85x and 6.09x, respectively. These improvements maintain full functionality, including selective disclosure and unlinkability, and rely on standard security assumptions, enhancing the practicality of anonymous credentials for digital identity systems.
 
 \begin{table}[h]
