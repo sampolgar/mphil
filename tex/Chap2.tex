@@ -1007,6 +1007,59 @@ Expressiveness
 \end{itemize}
 
 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|l||l}
+        \hline
+        \textbf{Use-Case} & \textbf{ZKP Requirement} \\
+        \hline
+        Prove Valid Credential 
+        & 
+        Signature of Knowledge 
+        &
+        Schnorr
+        \\
+        \hline
+        Age > 18 or Cred NOT Expired 
+        & 
+        Greater/Less Than 
+        &
+        Sigma with Range Proof (Bulletproof)$^1$
+        \\
+        \hline
+        Prove Attribute in a List (Set Membership) 
+        & 
+        Set Membership\\
+        \hline
+        Prove Equality of Attributes 
+        & 
+        Equality of Attributes \\
+        \hline
+        Prove Credential Not Revoked 
+        & 
+        Accumulator Non-Membership Proof \\
+        \hline
+        Selective Disclosure of Attributes 
+        & 
+        Prove specific attributes while hiding others \\
+        \hline
+    \end{tabular}
+    \caption{Use-Cases and Corresponding Zero-Knowledge Proof Requirements}
+    \label{tab:use_cases_zkp}
+    \footnotesize{$^1$This involves an inequality (birthdate < today - 18), which can be expressed as a linear relation using range proofs. No pairings or zk-SNARKs needed.}
+\end{table}
+
+
+
+
+Simple Identity Use-cases
+- show, etc
+
+
+More Complex (Piloted and tested)
+- organisation credentials / education
+- prescription, insurance, health
+- visas, passport, travel documents
 
 
 
@@ -1046,6 +1099,43 @@ Motivate the use-case
 - My license is not expired
 - My country is in the list
 - My id is equal to this other id
+
+
+
+
+Sigma Protocols
+- great for proving simple, linear relationships, like proving you know a secret number (a discrete logarithm) or that a secret number equals another secret number.
+- efficient, don't need trusted setup
+
+Sigma protocols can't efficiently handle equations with a product of unknowns e.g. proving a pairing of 2 values satisfies a condition (Why is this important, why does this give more functionality)?
+
+
+Groth Sahai
+- Pairing-based are needed for proving quadratic relations, common in set membership or non-membership proofs
+
+
+zk-SNARKS
+- General arithmetic circuits that can prove the output of a hash function or a multi-step policy
+
+
+
+Pairing-Based Proofs (e.g., Groth-Sahai): These excel at quadratic relations, common in set membership or non-membership proofs.
+
+zk-SNARKs: These can prove almost anything (arbitrary computations), but they’re heavier and require a trusted setup.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
