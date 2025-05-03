@@ -1,324 +1,339 @@
 \chapter{Introduction}
-Decentralized Identity (Private Accountability Features)
+(To be written properly)
+The thesis focuses on improving Anonymous Credentials and specifically for a few use-cases. We will soon be using digital credential wallets (mandated by the EU) \cite{european_parliament_meps_2024} and similar initiatives globally. 
 
 
-
-\subsection{Chapter 2}
-Make the chapter title more precise
-Make the subsections more obvious - preliminaries 
-
-
-\subsubsection{Motivation}
-Construct the most efficient and expressive Multi-Show ABC
-SPS-EQ is efficient (don't have concrete benchmarks) but proofs are not as expressive
-ACT is efficient, proofs are expressive but slower, but not malicious issuer secure
-zk-creds is expressive but not as efficient
+\subsection{Chapter \ref{chap2}}
+Improved Constructions of Anonymous Credentials from New Rerandomizable Signatures. This chapter is motivated by the proliferation of credential wallets and needing to (quickly and privately) verify credentials. 
+In this chapter I formalize security for a variant of the PS signature \cite{sako_short_2016}, from the UTT paper \cite{tomescu_utt_2022}, I improve it by making it more efficient and improving security (against malicious issuers) and empirically show it is best in class with concrete benchmarks. 
 
 
-\subsubsection{Results/Contributions}
-\begin{enumerate}
-    \item Prove the PSUTT sig excels in the ABC model
-    \item Show it has more functionality than SPS-EQ and TACT and is more efficient than zkSNARK
-    \item Extended the signature with security (anonymity) against malicious issuers
-    \item Our results show we are the most efficient construction.
-\end{enumerate}
+\subsection{Chapter \ref{chap3}}
+Identity Binding Multi Issuer Multi Credential Anonymous Credentials. This chapter is motivated by thinking about what's required from credential wallet architecture to verify multiple credentials together. E.g., you have a driver's license, passport, and bank information in your credential wallet, and need to verify it together and prove it's from the same person. I create the security property "Identity Binding" for this situation. I show benchmarks for two different scenarios, 1) the cost of privacy, 2) the improvement from single issuer.
+1) I compare the two scenarios, verifying credentials without privacy and with privacy and show that privacy preserving credentials doesn't cost much more (in overhead), not what it used to. 2) Our anonymous credential from \ref{chap2} can be aggregated if signed with the same key. I show the efficiency benefit if this is the case. 
+
+\subsection{Chapter \ref{chap4}}
+New Nullifier Constructions from the $q$-DDHI and Applications to Accountable Privacy Systems. A nullifier is a cryptographic object, similar in thought to a signature. It's created by someone, contains a user's secret key and a specific message, and is given to a verifier to prove that the user made the nullifier with a specific message and they own the key public key that did it. A user who spends their coin would make a nullifier from their secret key and the coin's serial number (like in zcash) and give it the bank to be able to spend it. In Anonymous Credentials, a nullifier ensures a user who requests a credential can't request another one, preventing sybil attacks, which is difficult to do when credentials are private and rerandomizable.
+In accountable privacy, nullifiers should be private, so they shouldn't share the public key. 
+I create New Nullifiers from a series of zero-knowledge proof protocols I made. Starting with a non-private one but a faster version of a VRF \cite{hutchison_verifiable_2005}, and then two nullifier constructions. We will use this for Sybil-resistant anonymous credentials. We show ours are super quick and simple compared to the current.
+
+\subsection{Chapter \ref{chap5}}
+Sybil Resistant Threshold Issued Identity System from Anonymous Credentials and Anonymous Nullifiers. In this chapter I add threshold-issuance for credentials and build a sybil-resistant private threshold-issued identity system drawing on the work from \ref{chap2, chap3, chap4} and show it's way more efficient than the other state of the art.
+
+\subsection{Chapter \ref{chap6}}
+Anonymous Credentials Open Source Library - the literature and industry has a gap in implementations for gathering evaluation data for many of these schemes and thus it's hard to determine whether a new scheme has made an improvement or is just using a different technique. I built a few schemes and found many small tricks in the cryptography library make a big difference in concrete implementation efficiency, probably more difference than many "new" papers make theoretically. I wanted to represent this in the Thesis and open-source that for people to use and see.
+
+% \subsubsection{Motivation}
+% Construct the most efficient and expressive Multi-Show ABC
+% SPS-EQ is efficient (don't have concrete benchmarks) but proofs are not as expressive
+% ACT is efficient, proofs are expressive but slower, but not malicious issuer secure
+% zk-creds is expressive but not as efficient
 
 
-
-
-\subsection{Chapter 3}
-\subsubsection{Motivation}
-We can motivate this by the dropout data from online financial applications needing to verify multiple credentials and KYC/AML simultaneously. 
-We show a secure construction to issue and verify credentials together to solve this problem and give benchmarks for different scenarios.
-Introduce Identity Binding security property.
-
-Construct the most efficient and expressive Multi-Show ABC
-SPS-EQ is efficient (don't have concrete benchmarks) but proofs are not as expressive
-ACT is efficient, proofs are expressive but slower, but not malicious issuer secure
-zk-creds is expressive but not as efficient
-
-
-\subsubsection{Contributions}
-\begin{enumerate}
-    \item 
-\end{enumerate}
+% \subsubsection{Results/Contributions}
+% \begin{enumerate}
+%     \item Prove the PSUTT sig excels in the ABC model
+%     \item Show it has more functionality than SPS-EQ and TACT and is more efficient than zkSNARK
+%     \item Extended the signature with security (anonymity) against malicious issuers
+%     \item Our results show we are the most efficient construction.
+% \end{enumerate}
 
 
 
 
+% \subsection{Chapter 3}
+% \subsubsection{Motivation}
+% We can motivate this by the dropout data from online financial applications needing to verify multiple credentials and KYC/AML simultaneously. 
+% We show a secure construction to issue and verify credentials together to solve this problem and give benchmarks for different scenarios.
+% Introduce Identity Binding security property.
+
+% Construct the most efficient and expressive Multi-Show ABC
+% SPS-EQ is efficient (don't have concrete benchmarks) but proofs are not as expressive
+% ACT is efficient, proofs are expressive but slower, but not malicious issuer secure
+% zk-creds is expressive but not as efficient
+
+
+% \subsubsection{Contributions}
+% \begin{enumerate}
+%     \item 
+% \end{enumerate}
+
+
+
+
+% % -68\% of consumers abandoned an application – up from 63\% in 2020, 38\% in 2019. Abandonment rate close to 80\% for 25-34 year olds.
+% % - 92\% of consumers are concerned about data privacy.
+
+
+
+
+
+% \subsection{Chapter 2}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% % Use-Case-First
+
+% % Open with three short vignettes:
+
+% % A citizen at border control presenting a minimal EU wallet credential.
+
+% % An insurance app verifying IoT sensor data (oracle-issued) in real time.
+
+% % A social-media platform checking a signed photo to prevent deepfakes.
+
+% % After each scenario, call out “What this demands from our crypto scheme,” then distill the three core challenges.
+
+% % Problem→Solution Roadmap
+
+% % Problem Statement: “Today’s credentials are too heavyweight, too centralized, and too inflexible.”
+
+% % Emerging Trends: bullet-list the mandates, oracles, and scope expansion.
+
+% % Gap Analysis Table: a compact 2×3 table contrasting “Current Schemes” vs. “Next-Gen Needs” across Storage, Trust Model, Predicate Expressiveness.
+
+% % Teaser: “We propose X, Y, Z” (your three solution pillars).
+
+
+
+
+
+
+
+
+% The Internet Identity Workshop discussed a problem space summarised by the following problems:
+% \begin{enumerate}
+%     \item issuing credentials that are both government and privately issued
+%     \item retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
+%     \item combining traditional digital identity with decentralized identity
+% \end{enumerate}
+
+% A user has an Identity linked to multiple credentials, such as a driver's license and university card. Users want to authenticate with various Relying Parties (Verifiers) without being linked between multiple uses of the same service (e.g. a user verifying multiple credentials with 1 service such as a bank requiring proof of multiple credentials linked to an identity), and between uses of different services (e.g. a user presenting their drivers license for age verification on multiple services).
+
+% Current decentralized identity systems either don't provide this functionality or provide it at the expense of either accountability or privacy. CanDID stores a map between users multi-layered credentials providing a solution to the problem at the expense of the user's privacy. Other credential systems and pseudonym systems prove equality of hidden attributes in a credential such as name or id, which can more-easily be forged and does not support the hierarchical structure leveraging a highly secure and accountable government identity with not-so secure private credentials.
+
+
+
+
+
+
+
+
+
+% (sam - speak about the business impact of verifying identity, KYC/AML simultaneously which is what my Thesis is about, e.g. response times / limits https://www.nngroup.com/articles/response-times-3-important-limits/ 
+
+
+
+% The rapid digitization of society has elevated digital identity systems to a cornerstone of online trust, processing billions of verifications daily~\cite{noauthor_happy_2021, pang_zanzibar_2019}. Yet, traditional centralized systems, while meeting regulatory needs~\cite{eltayeb_crucial_2024}, are plagued by privacy and security vulnerabilities, with data breaches compromising billions of users~\cite{zhang_data_2022}. The European Union’s eIDAS framework, mandating a digital identity wallet for every citizen by 2026~\cite{noauthor_regulation_2024}, underscores the urgent need for secure, privacy-preserving alternatives. Moving to privacy-preserving digital identities reveals several functionality gaps; tensions between privacy and accountability in identity systems will hinder the functionality expectations of the new digital identity architecture. 
+
+% Decentralized Identity (DID) systems, as outlined by W3C standards, empower users to control their credentials~\cite{soltani_survey_2021}, yet many implementations falter in balancing privacy with accountability~\cite{maram_candid_2020}. Anonymous Credential Systems (ACS) offer a cryptographic solution, enabling privacy-preserving authentication~\cite{chaum_untraceable_1981, hutchison_signature_2004, dunkelman_formal_2016, security_team_computer_science_dept_ibm_zurich_cryptographic_2010}. However, challenges persist in achieving sybil resistance, revocation, and expressive authentication while integrating real-world identity data~\cite{crites_syra_2024, rosenberg_zk-creds_2022}. Current systems either fall short or are inefficient for real-world deployment. 
+
+% This thesis delivers a framework for efficient, secure, and decentralized anonymous credential systems, directly addressing these gaps. We focus on decentralized identity as the primary use case, enabling users to prove attributes across multiple issuers (e.g., combining passports and bank statements) without sacrificing privacy or enabling abuse. Our work builds on prior innovations in credential oracles~\cite{zhang_deco_2020}, which allow individuals to create digital identities from existing real-world credentials—such as passports~\cite{rosenberg_zk-creds_2022} or Web2 logins~\cite{baldimtsi_zklogin_2024}—seamlessly integrating them into privacy-preserving architectures. These advancements are not just timely but essential: without them, emerging frameworks like eIDAS risk deploying vulnerable systems, undermining global digital security.
+
+% Our contributions are five-fold:
+% \begin{enumerate}
+%     \item \textbf{Optimized Expressive Proofs}: We enhance the PS signature to support efficient zero-knowledge proofs of complex predicates (e.g., AND/OR/Equality, etc), achieving a $5$-$10\%$ speedup over prior constructions while ensuring anonymity against malicious issuers, proven secure in the Algebraic Group Model (Chapter $2$).
+    
+%     \item \textbf{Multi-Issuer Multi-Credential System (MIMC-ABC)}: We formalize security properties for binding credentials across multiple issuers, constructing a secure system with anonymity guarantees and show illustrate the computational cost of privacy, single issuer, and multi-issuer for a credential system
+%     (Chapter $3$).
+    
+%     \item \textbf{Sybil Resistance}: We introduce multiple novel, pairing-free nullifier schemes that demonstrate speedup ($1.9\times$) and private functionality over existing methods, enabling privacy-preserving accountability (Chapter $4$).
+    
+%     \item \textbf{Threshold Decentralized Identity}: We design a threshold issuance protocol integrating MIMC-ABC and Sybil Resistance, outperforming comparable systems by xxxx across benchmarks (Chapter $5$).
+    
+%     \item \textbf{Open-Source Benchmark Framework}: We provide the first standardized toolkit for fair evaluation of ABC schemes, enhancing reproducibility and practical insight (Chapter $6$).
+% \end{enumerate}
+
+% % These advancements collectively resolve key tensions between privacy, accountability, and efficiency.  Beyond identity, our framework extends to anonymous credential applications like e-cash and anonymous voting, highlighting its versatility. The thesis is organized as follows: Sections~\ref{sec:commitment} and~\ref{sec:pssignature} detail our cryptographic primitives, Section~\ref{sec:sigmaproofs} presents the sigma protocols, Section~\ref{sec:mimc} describes the MIMC system, Section~\ref{sec:idsys} builds the identity system, and Section~\ref{sec:evaluation} provides our evaluation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% \newpage
+% \section{Motivation}
+% \subsubsection*{Overarching Research Problem: }
+% How can we build privacy-preserving credential systems that are simultaneously expressive, efficient, secure against malicious actors, resistant to abuse, and free from centralized trust?
+
+
+% \subsubsection*{Chapter 2: Foundations: } 
+% How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
+
+% \noindent \textbf{Technical Challenges}
+% \begin{enumerate}
+%     \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
+%     \item Ensuring security for malicious issuers without affecting performance
+%     \item Balancing computational overhead with practical usability
+% \end{enumerate}
+
+% \subsubsection*{Chapter 3: Multi-Issuer Multi-Credential System: } 
+% How can users privately combine credentials from multiple, mutually distrusting issuers (e.g., government IDs and bank statements) to prove they belong to the same identity, especially in decentralized settings? Non-private systems easily verify credential consistency, but privacy-preserving approaches struggle to bind credentials securely without a trusted party, aggregate signatures \cite{mir_aggregate_2023} have trouble with revoking individual credentials from an aggregate.
+
+% \noindent \textbf{Technical Challenges}
+% \begin{enumerate}
+%     \item Defining and achieving identity binding across credentials without revealing the user’s identity.
+%     \item Preventing attacks where users mix credentials from different identities (e.g., credential swapping).
+%     \item Maintaining efficiency as the number of issuers and credentials scales.
+% \end{enumerate}
+
+
+
+% \subsubsection*{Chapter 4: Sybil Resistance: } 
+% How can we prevent Sybil attacks—where users create multiple identities to abuse services like voting or payments—in anonymous credential systems without compromising privacy? Traditional nullifier schemes either leak information or are too costly for multi-issuer scenarios.
+
+% \noindent \textbf{Technical Challenges}
+% \begin{enumerate}
+%     \item Creating unique, privacy-preserving bindings (e.g., nullifiers) for credentials without a central authority.
+%     \item Designing efficient nullifiers that scale to multi-issuer, multi-credential settings.
+%     \item Integrating these with zero-knowledge proofs to ensure verification doesn’t reveal identities.
+% \end{enumerate}
+
+
+
+% \subsubsection*{Chapter 5: Threshold Issuance: } 
+% How can we distribute trust in credential issuance to eliminate central points of failure, while preserving the efficiency and security of our anonymous credential system? Centralized issuers risk catastrophic breaches—malicious actors could issue unlimited credentials—yet adapting efficient schemes to a threshold model is complex, especially for multi-credential verification.
+
+% \noindent \textbf{Technical Challenges}
+% \begin{enumerate}
+%     \item Adapting our efficient signature scheme for threshold key generation and signing.
+%     \item Ensuring private, distributed issuance.
+%     \item Security against colluding or malicious threshold issuers
+% \end{enumerate}
+
+% \section{Contributions and Thesis Organization}
+
+% This thesis develops a comprehensive privacy-preserving digital identity framework that enables expressive credential verification, multi-issuer identity binding, and sybil resistance without compromising efficiency or security. My contributions span four interconnected areas:
+
+% \begin{enumerate}
+%     \item \textbf{Foundations: Expressive Predicates for Attribute-Based (Anonymous) Credentials (ABC's)} (Chapter 2)
+%     \begin{itemize}
+%         \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
+%         \item Formalized security model for anonymity against colluding credential issuers
+%         \item Developed a G2-variant optimization reducing verification costs by [X\%]
+%         \item Demonstrated sub-linear practical performance using multi-scalar multiplication techniques
+%         \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
+%         \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
+%     \end{itemize}
+
+%     \item \textbf{Multi-Issuer Multi-Credential System (MIMC-ABC)} (Chapter 3)
+%     \begin{itemize}
+%         \item Formalized security model for multi-issuer identity binding with position-binding commitments
+%         \item Proved unforgeability and anonymity even against colluding credential issuers
+%         \item Demonstrated 30\% performance improvement over comparable schemes for multi-credential verification
+%     \end{itemize}
+    
+%     \item \textbf{Private Accountability: Sybil Resistance} (Chapter 4)
+%         \begin{itemize}
+%             \item Introduced the Credential Relationship Binding Nullifier (CRBN), a pairing-free construction for preventing credential reuse while maintaining privacy
+%             \item Developed a novel zero-knowledge proof of multiplicative inverse enabling efficient verification of nullifier correctness
+%             \item Achieved 33\% faster nullifier evaluation and 60\% faster verification compared to state-of-the-art approaches
+%             \item Formalized security properties (uniqueness, unlinkability, and double-spending prevention) with proofs under the q-Diffie-Hellman Inversion assumption
+%         \end{itemize}
+
+%     \item \textbf{Threshold Sybil Resistant Identity System} (Chapter 5)
+%         \begin{itemize}
+%             \item Designed a threshold issuance protocol eliminating central points of trust while preserving all MIMC-ABC security properties
+%             \item Demonstrated 2-3× performance improvements over comparable threshold anonymous credential systems
+%             \item Integrated the threshold construction with sybil resistance mechanisms from Chapter 4, creating the first fully decentralized system with both properties
+%             \item Provided comprehensive benchmarks across varying threshold parameters to guide real-world deployments
+%         \end{itemize}
+
+%         \item \textbf{Open Source Library}
+%         \begin{itemize}
+%             \item Anonymous Credential Comparison
+%             \item Developed a G2-variant optimization reducing verification costs by [X\%]
+%             \item Demonstrated sub-linear practical performance using multi-scalar multiplication techniques
+%         \end{itemize}
+% \end{enumerate}
+% Collectively, these contributions address the fundamental tension between privacy and accountability in digital identity systems. The techniques developed in this thesis enable the construction of credential systems that simultaneously provide strong privacy guarantees, protection against abuse, expressiveness for complex policy verification, and practical efficiency. The implementations and benchmarks demonstrate that these theoretical advances translate to concrete performance improvements suitable for real-world deployment.
+
+
+
+
+
+
+
+
+% Introduction
+% - Digital Signatures
+% - Rerandomizable Signatures over Committed Attributes
+% - Anonymous Credentials
+% - Multi-Show Attribute-Based Anonymous Credentials
+
+
+% acknowledgments 
+% Lovesh Harshandani for the G2 signature trick
+% UTT paper for their paper
+
+
+
+% Motiviations
+% The attention economy
+% What are companies loosing because of this?
+% What are users loosing because of this?
+% I need to sell my research to the people! Why it's so important
+
+% https://www.ipification.com/blog/how-mobile-apps-can-cut-the-drop-off-rate-in-sign-in-process/
+% - one-second delay in page load time causes a 7\% loss in conversions.
+% - 43\% of users simply abandon an onboarding process due to the friction related to proving the identity and/ or verifying their phone number, and that’s before they even start using the service.
+
+
+
+% NN Group:
+% 0.1 second is the limit  is about the limit for having the user feel that the system is reacting instantaneously, meaning that no special feedback is necessary except to display the result.
+
+
+
+
+% \textbf{Signicat}
+% The fifth edition of Signicat’s regular report, The Battle to Onboard: The Growing Power of Consumer Demands, is based on a survey of 7600 consumers across Europe including Belgium, Denmark, Finland, France, Germany, Lithuania, the Netherlands, Norway, Poland, Spain, Sweden, the UK, Estonia and Ukraine. Consumers were asked to report their experiences and expectations of financial services onboarding in the last year.
+
+
+% \cite{signicat_battle_2022}
 % -68\% of consumers abandoned an application – up from 63\% in 2020, 38\% in 2019. Abandonment rate close to 80\% for 25-34 year olds.
 % - 92\% of consumers are concerned about data privacy.
 
+% Financial service providers must comply with Know Your Customer (KYC) and Anti Money Laundering (AML) rules which requires them to gain access to and check a consumer’s personal information.
 
+% Key findings include:
 
+% Ease of application: Nearly a third (30 per cent) of respondents said that they found the application process “complicated.”
+% Speed of abandonment: The average time that a consumer would typically abandon an online application for a financial product was 18 minutes and 53 seconds. This is seven minutes quicker than the 26 minutes on average it took for a consumer to abandon in 2020.
 
+% Reasons to abandon: The time to apply (21 per cent), the amount of personal information required (21 per cent) and changing their mind (21 per cent) are the main reasons applications are abandoned.
 
-\subsection{Chapter 2}
+% Importance of onboarding methods: 38 per cent of respondents report abandoning an application for a financial product because they did not have the right identity credentials, such as a passport or digital identity.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-% Use-Case-First
-
-% Open with three short vignettes:
-
-% A citizen at border control presenting a minimal EU wallet credential.
-
-% An insurance app verifying IoT sensor data (oracle-issued) in real time.
-
-% A social-media platform checking a signed photo to prevent deepfakes.
-
-% After each scenario, call out “What this demands from our crypto scheme,” then distill the three core challenges.
-
-% Problem→Solution Roadmap
-
-% Problem Statement: “Today’s credentials are too heavyweight, too centralized, and too inflexible.”
-
-% Emerging Trends: bullet-list the mandates, oracles, and scope expansion.
-
-% Gap Analysis Table: a compact 2×3 table contrasting “Current Schemes” vs. “Next-Gen Needs” across Storage, Trust Model, Predicate Expressiveness.
-
-% Teaser: “We propose X, Y, Z” (your three solution pillars).
-
-
-
-
-
-
-
-
-The Internet Identity Workshop discussed a problem space summarised by the following problems:
-\begin{enumerate}
-    \item issuing credentials that are both government and privately issued
-    \item retaining accountability in derived credentials, ensuring derived credentials are fit for purpose and have revocation (Proveable Provenance, Linked Data)
-    \item combining traditional digital identity with decentralized identity
-\end{enumerate}
-
-A user has an Identity linked to multiple credentials, such as a driver's license and university card. Users want to authenticate with various Relying Parties (Verifiers) without being linked between multiple uses of the same service (e.g. a user verifying multiple credentials with 1 service such as a bank requiring proof of multiple credentials linked to an identity), and between uses of different services (e.g. a user presenting their drivers license for age verification on multiple services).
-
-Current decentralized identity systems either don't provide this functionality or provide it at the expense of either accountability or privacy. CanDID stores a map between users multi-layered credentials providing a solution to the problem at the expense of the user's privacy. Other credential systems and pseudonym systems prove equality of hidden attributes in a credential such as name or id, which can more-easily be forged and does not support the hierarchical structure leveraging a highly secure and accountable government identity with not-so secure private credentials.
-
-
-
-
-
-
-
-
-
-(sam - speak about the business impact of verifying identity, KYC/AML simultaneously which is what my Thesis is about, e.g. response times / limits https://www.nngroup.com/articles/response-times-3-important-limits/ 
-
-
-
-The rapid digitization of society has elevated digital identity systems to a cornerstone of online trust, processing billions of verifications daily~\cite{noauthor_happy_2021, pang_zanzibar_2019}. Yet, traditional centralized systems, while meeting regulatory needs~\cite{eltayeb_crucial_2024}, are plagued by privacy and security vulnerabilities, with data breaches compromising billions of users~\cite{zhang_data_2022}. The European Union’s eIDAS framework, mandating a digital identity wallet for every citizen by 2026~\cite{noauthor_regulation_2024}, underscores the urgent need for secure, privacy-preserving alternatives. Moving to privacy-preserving digital identities reveals several functionality gaps; tensions between privacy and accountability in identity systems will hinder the functionality expectations of the new digital identity architecture. 
-
-Decentralized Identity (DID) systems, as outlined by W3C standards, empower users to control their credentials~\cite{soltani_survey_2021}, yet many implementations falter in balancing privacy with accountability~\cite{maram_candid_2020}. Anonymous Credential Systems (ACS) offer a cryptographic solution, enabling privacy-preserving authentication~\cite{chaum_untraceable_1981, hutchison_signature_2004, dunkelman_formal_2016, security_team_computer_science_dept_ibm_zurich_cryptographic_2010}. However, challenges persist in achieving sybil resistance, revocation, and expressive authentication while integrating real-world identity data~\cite{crites_syra_2024, rosenberg_zk-creds_2022}. Current systems either fall short or are inefficient for real-world deployment. 
-
-This thesis delivers a framework for efficient, secure, and decentralized anonymous credential systems, directly addressing these gaps. We focus on decentralized identity as the primary use case, enabling users to prove attributes across multiple issuers (e.g., combining passports and bank statements) without sacrificing privacy or enabling abuse. Our work builds on prior innovations in credential oracles~\cite{zhang_deco_2020}, which allow individuals to create digital identities from existing real-world credentials—such as passports~\cite{rosenberg_zk-creds_2022} or Web2 logins~\cite{baldimtsi_zklogin_2024}—seamlessly integrating them into privacy-preserving architectures. These advancements are not just timely but essential: without them, emerging frameworks like eIDAS risk deploying vulnerable systems, undermining global digital security.
-
-Our contributions are five-fold:
-\begin{enumerate}
-    \item \textbf{Optimized Expressive Proofs}: We enhance the PS signature to support efficient zero-knowledge proofs of complex predicates (e.g., AND/OR/Equality, etc), achieving a $5$-$10\%$ speedup over prior constructions while ensuring anonymity against malicious issuers, proven secure in the Algebraic Group Model (Chapter $2$).
-    
-    \item \textbf{Multi-Issuer Multi-Credential System (MIMC-ABC)}: We formalize security properties for binding credentials across multiple issuers, constructing a secure system with anonymity guarantees and show illustrate the computational cost of privacy, single issuer, and multi-issuer for a credential system
-    (Chapter $3$).
-    
-    \item \textbf{Sybil Resistance}: We introduce multiple novel, pairing-free nullifier schemes that demonstrate speedup ($1.9\times$) and private functionality over existing methods, enabling privacy-preserving accountability (Chapter $4$).
-    
-    \item \textbf{Threshold Decentralized Identity}: We design a threshold issuance protocol integrating MIMC-ABC and Sybil Resistance, outperforming comparable systems by xxxx across benchmarks (Chapter $5$).
-    
-    \item \textbf{Open-Source Benchmark Framework}: We provide the first standardized toolkit for fair evaluation of ABC schemes, enhancing reproducibility and practical insight (Chapter $6$).
-\end{enumerate}
-
-% These advancements collectively resolve key tensions between privacy, accountability, and efficiency.  Beyond identity, our framework extends to anonymous credential applications like e-cash and anonymous voting, highlighting its versatility. The thesis is organized as follows: Sections~\ref{sec:commitment} and~\ref{sec:pssignature} detail our cryptographic primitives, Section~\ref{sec:sigmaproofs} presents the sigma protocols, Section~\ref{sec:mimc} describes the MIMC system, Section~\ref{sec:idsys} builds the identity system, and Section~\ref{sec:evaluation} provides our evaluation.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\section{Motivation}
-\subsubsection*{Overarching Research Problem: }
-How can we build privacy-preserving credential systems that are simultaneously expressive, efficient, secure against malicious actors, resistant to abuse, and free from centralized trust?
-
-
-\subsubsection*{Chapter 2: Foundations: } 
-How can we construct anonymous credential systems that efficiently support expressive proofs—like range proofs, attribute equality, or set membership—while remaining secure against malicious issuers? Existing schemes either verify simple proofs (e.g., possession) efficiently (sps-eq, ACT) or handle complex predicates at high computational cost (zk-creds), often assuming honest issuers (ACT, Coconut). This chapter lays the foundation for a system that overcomes these limitations.
-
-\noindent \textbf{Technical Challenges}
-\begin{enumerate}
-    \item Designing an Anonymous Credential scheme for efficient zero-knowledge proof of complex predicates without using zkSNARK
-    \item Ensuring security for malicious issuers without affecting performance
-    \item Balancing computational overhead with practical usability
-\end{enumerate}
-
-\subsubsection*{Chapter 3: Multi-Issuer Multi-Credential System: } 
-How can users privately combine credentials from multiple, mutually distrusting issuers (e.g., government IDs and bank statements) to prove they belong to the same identity, especially in decentralized settings? Non-private systems easily verify credential consistency, but privacy-preserving approaches struggle to bind credentials securely without a trusted party, aggregate signatures \cite{mir_aggregate_2023} have trouble with revoking individual credentials from an aggregate.
-
-\noindent \textbf{Technical Challenges}
-\begin{enumerate}
-    \item Defining and achieving identity binding across credentials without revealing the user’s identity.
-    \item Preventing attacks where users mix credentials from different identities (e.g., credential swapping).
-    \item Maintaining efficiency as the number of issuers and credentials scales.
-\end{enumerate}
-
-
-
-\subsubsection*{Chapter 4: Sybil Resistance: } 
-How can we prevent Sybil attacks—where users create multiple identities to abuse services like voting or payments—in anonymous credential systems without compromising privacy? Traditional nullifier schemes either leak information or are too costly for multi-issuer scenarios.
-
-\noindent \textbf{Technical Challenges}
-\begin{enumerate}
-    \item Creating unique, privacy-preserving bindings (e.g., nullifiers) for credentials without a central authority.
-    \item Designing efficient nullifiers that scale to multi-issuer, multi-credential settings.
-    \item Integrating these with zero-knowledge proofs to ensure verification doesn’t reveal identities.
-\end{enumerate}
-
-
-
-\subsubsection*{Chapter 5: Threshold Issuance: } 
-How can we distribute trust in credential issuance to eliminate central points of failure, while preserving the efficiency and security of our anonymous credential system? Centralized issuers risk catastrophic breaches—malicious actors could issue unlimited credentials—yet adapting efficient schemes to a threshold model is complex, especially for multi-credential verification.
-
-\noindent \textbf{Technical Challenges}
-\begin{enumerate}
-    \item Adapting our efficient signature scheme for threshold key generation and signing.
-    \item Ensuring private, distributed issuance.
-    \item Security against colluding or malicious threshold issuers
-\end{enumerate}
-
-\section{Contributions and Thesis Organization}
-
-This thesis develops a comprehensive privacy-preserving digital identity framework that enables expressive credential verification, multi-issuer identity binding, and sybil resistance without compromising efficiency or security. My contributions span four interconnected areas:
-
-\begin{enumerate}
-    \item \textbf{Foundations: Expressive Predicates for Attribute-Based (Anonymous) Credentials (ABC's)} (Chapter 2)
-    \begin{itemize}
-        \item Extended rerandomizable signature scheme with formal position-binding security in the Algebraic Group Model
-        \item Formalized security model for anonymity against colluding credential issuers
-        \item Developed a G2-variant optimization reducing verification costs by [X\%]
-        \item Demonstrated sub-linear practical performance using multi-scalar multiplication techniques
-        \item Benchmarked predicate proofs against SOTA showing on average [X\%] improvement
-        \item Provided the first comprehensive benchmarks across BBS+ and PS signature variants
-    \end{itemize}
-
-    \item \textbf{Multi-Issuer Multi-Credential System (MIMC-ABC)} (Chapter 3)
-    \begin{itemize}
-        \item Formalized security model for multi-issuer identity binding with position-binding commitments
-        \item Proved unforgeability and anonymity even against colluding credential issuers
-        \item Demonstrated 30\% performance improvement over comparable schemes for multi-credential verification
-    \end{itemize}
-    
-    \item \textbf{Private Accountability: Sybil Resistance} (Chapter 4)
-        \begin{itemize}
-            \item Introduced the Credential Relationship Binding Nullifier (CRBN), a pairing-free construction for preventing credential reuse while maintaining privacy
-            \item Developed a novel zero-knowledge proof of multiplicative inverse enabling efficient verification of nullifier correctness
-            \item Achieved 33\% faster nullifier evaluation and 60\% faster verification compared to state-of-the-art approaches
-            \item Formalized security properties (uniqueness, unlinkability, and double-spending prevention) with proofs under the q-Diffie-Hellman Inversion assumption
-        \end{itemize}
-
-    \item \textbf{Threshold Sybil Resistant Identity System} (Chapter 5)
-        \begin{itemize}
-            \item Designed a threshold issuance protocol eliminating central points of trust while preserving all MIMC-ABC security properties
-            \item Demonstrated 2-3× performance improvements over comparable threshold anonymous credential systems
-            \item Integrated the threshold construction with sybil resistance mechanisms from Chapter 4, creating the first fully decentralized system with both properties
-            \item Provided comprehensive benchmarks across varying threshold parameters to guide real-world deployments
-        \end{itemize}
-
-        \item \textbf{Open Source Library}
-        \begin{itemize}
-            \item Anonymous Credential Comparison
-            \item Developed a G2-variant optimization reducing verification costs by [X\%]
-            \item Demonstrated sub-linear practical performance using multi-scalar multiplication techniques
-        \end{itemize}
-\end{enumerate}
-Collectively, these contributions address the fundamental tension between privacy and accountability in digital identity systems. The techniques developed in this thesis enable the construction of credential systems that simultaneously provide strong privacy guarantees, protection against abuse, expressiveness for complex policy verification, and practical efficiency. The implementations and benchmarks demonstrate that these theoretical advances translate to concrete performance improvements suitable for real-world deployment.
-
-
-
-
-
-
-
-
-Introduction
-- Digital Signatures
-- Rerandomizable Signatures over Committed Attributes
-- Anonymous Credentials
-- Multi-Show Attribute-Based Anonymous Credentials
-
-
-acknowledgments 
-Lovesh Harshandani for the G2 signature trick
-UTT paper for their paper
-
-
-
-Motiviations
-The attention economy
-What are companies loosing because of this?
-What are users loosing because of this?
-I need to sell my research to the people! Why it's so important
-
-https://www.ipification.com/blog/how-mobile-apps-can-cut-the-drop-off-rate-in-sign-in-process/
-- one-second delay in page load time causes a 7\% loss in conversions.
-- 43\% of users simply abandon an onboarding process due to the friction related to proving the identity and/ or verifying their phone number, and that’s before they even start using the service.
-
-
-
-NN Group:
-0.1 second is the limit  is about the limit for having the user feel that the system is reacting instantaneously, meaning that no special feedback is necessary except to display the result.
-
-
-
-
-\textbf{Signicat}
-The fifth edition of Signicat’s regular report, The Battle to Onboard: The Growing Power of Consumer Demands, is based on a survey of 7600 consumers across Europe including Belgium, Denmark, Finland, France, Germany, Lithuania, the Netherlands, Norway, Poland, Spain, Sweden, the UK, Estonia and Ukraine. Consumers were asked to report their experiences and expectations of financial services onboarding in the last year.
-
-
-\cite{signicat_battle_2022}
--68\% of consumers abandoned an application – up from 63\% in 2020, 38\% in 2019. Abandonment rate close to 80\% for 25-34 year olds.
-- 92\% of consumers are concerned about data privacy.
-
-Financial service providers must comply with Know Your Customer (KYC) and Anti Money Laundering (AML) rules which requires them to gain access to and check a consumer’s personal information.
-
-Key findings include:
-
-Ease of application: Nearly a third (30 per cent) of respondents said that they found the application process “complicated.”
-Speed of abandonment: The average time that a consumer would typically abandon an online application for a financial product was 18 minutes and 53 seconds. This is seven minutes quicker than the 26 minutes on average it took for a consumer to abandon in 2020.
-
-Reasons to abandon: The time to apply (21 per cent), the amount of personal information required (21 per cent) and changing their mind (21 per cent) are the main reasons applications are abandoned.
-
-Importance of onboarding methods: 38 per cent of respondents report abandoning an application for a financial product because they did not have the right identity credentials, such as a passport or digital identity.
-
-
-https://www.veriff.com/identity-verification/guides/9-tips-for-successful-verification 
-Online fraud involves tricking victims into harmful actions, leading to lost money, personal information, or other damage. Unlike other cybercrimes, it relies on victims voluntarily taking these actions. In the U.S., cybercrime incidents, including online fraud, have risen sharply, from 467,000 in 2019 to over 880,000 in 2023. During this period, monetary losses have also surged, jumping from \$3.5 billion to \$12.5 billion.
+% https://www.veriff.com/identity-verification/guides/9-tips-for-successful-verification 
+% Online fraud involves tricking victims into harmful actions, leading to lost money, personal information, or other damage. Unlike other cybercrimes, it relies on victims voluntarily taking these actions. In the U.S., cybercrime incidents, including online fraud, have risen sharply, from 467,000 in 2019 to over 880,000 in 2023. During this period, monetary losses have also surged, jumping from \$3.5 billion to \$12.5 billion.
 
 
 
