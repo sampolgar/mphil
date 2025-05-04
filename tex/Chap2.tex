@@ -955,9 +955,6 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 
 
-
-% \begin{tabular}{l|cccccc}
-
 \section{Expressive Proof Evaluation}\label{chap2:expressive_proofs}
 
 \begin{tabular}{|p{2.5cm}|p{2.5cm}|p{3cm}|p{3cm}|p{2cm}|p{3cm}|}
@@ -1049,6 +1046,77 @@ Expressiveness
     \footnotesize{$^1$This involves an inequality (birthdate < today - 18), which can be expressed as a linear relation using range proofs. No pairings or zk-SNARKs needed.}
 \end{table}
 
+
+```latex
+\section{Comparative Analysis of Zero-Knowledge Proof Systems}
+
+\subsection{Selecting the Optimal Proof System}
+
+The ABC system presented in this chapter primarily employs $\Sigma$-protocols for credential proofs. Here we analyze the comparative advantages of three major proof system classes and justify our implementation choices.
+
+$\Sigma$-protocols excel at proving linear relations—knowledge of discrete logarithms, commitment openings, or equality of committed values—making them ideal for our credential operations. While theoretical analyses suggest linear scaling with attribute count, our empirical measurements (Section~\ref{sec:performance_evaluation}) demonstrate that practical implementations achieve sublinear scaling through Multi-Scalar Multiplication techniques.
+
+\begin{table}[ht]
+\centering
+\caption{Comparison of Zero-Knowledge Proof Systems for Credential Operations}
+\label{tab:proof-system-comparison}
+\begin{tabular}{p{3.5cm}|p{3.5cm}|p{3.5cm}|p{3.5cm}}
+\toprule
+\textbf{Operation} & \textbf{$\Sigma$-Protocols} & \textbf{Pairing-Based (Groth-Sahai)} & \textbf{zk-SNARKs} \\
+\midrule
+\textbf{Valid signature proof} & $\checkmark$ Efficient (linear relation) & $\checkmark$ Possible but unnecessary & $\checkmark$ Possible but excessive \\
+\hline
+\textbf{Attribute equality} & $\checkmark$ Optimal choice & $\checkmark$ Possible but unnecessary & $\checkmark$ Possible but excessive \\
+\hline
+\textbf{Range proofs (age $>$ 18)} & $\checkmark$ Efficient with Bulletproofs & $\checkmark$ Possible but less efficient & $\checkmark$ Possible but complex setup \\
+\hline
+\textbf{Set membership} & $\triangle$ Scales linearly with set size & $\checkmark$ \textbf{Optimal} (quadratic relations) & $\checkmark$ Efficient but complex setup \\
+\hline
+\textbf{Credential non-revocation} & $\triangle$ Linear in revocation list size & $\checkmark$ \textbf{Optimal} with accumulators & $\checkmark$ Efficient but complex setup \\
+\hline
+\textbf{Complex policies} & $\triangle$ Limited to linear compositions & $\triangle$ Limited to quadratic equations & $\checkmark$ \textbf{Required} for arbitrary circuits \\
+\hline
+\textbf{Setup requirement} & $\checkmark$ No trusted setup & $\triangle$ Common reference string & $\triangle$ Trusted setup ceremony \\
+\hline
+\textbf{Proof size} & $\triangle$ Linear in statement size & $\triangle$ Constant but larger & $\checkmark$ Constant and small \\
+\hline
+\textbf{Verification cost} & $\checkmark$ Fast (see Section~\ref{sec:sigma-protocol-analysis}) & $\triangle$ Multiple pairings & $\checkmark$ Very fast \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Justification for $\Sigma$-Protocol Approach}
+
+Our ABC system employs $\Sigma$-protocols because the core credential operations—signature validity, selective disclosure, and attribute equality checks—are all expressible as linear relations. As demonstrated in Section~\ref{sigma-protocol-analysis}, our $\Sigma$-protocol implementation achieves sublinear scaling through Multi-Scalar Multiplication techniques, countering the theoretical linear complexity. This practical efficiency, combined with the absence of trusted setup requirements, makes $\Sigma$-protocols ideal for our wallet-centric architecture where verification performance is critical.
+
+The primary operations in our system involve:
+
+\begin{itemize}
+    \item \textbf{Proving signature validity:} Showing knowledge of signature components $\sigma' = (\sigma_1', \sigma_2')$ such that $e(\sigma_2', \tilde{g}) = e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}}')$
+    
+    \item \textbf{Proving commitment openings:} Demonstrating knowledge of attribute values $(m_1, \ldots, m_\ell)$ and randomness $r$ such that $\mathsf{cm} = g^r \prod_{i=1}^\ell g_i^{m_i}$
+    
+    \item \textbf{Proving predicate satisfaction:} Showing that revealed or hidden attributes satisfy policy conditions like $\phi(m_1, \ldots, m_\ell) = 1$
+\end{itemize}
+
+Each of these operations maps naturally to the linear relation proof capabilities of $\Sigma$-protocols, allowing for efficient verification without the overhead of more complex proof systems.
+
+\subsection{Addressing Limitations and Extension Points}
+
+While our construction handles the most common credential operations efficiently, certain applications would require alternative proof systems:
+
+\begin{itemize}
+    \item \textbf{Large-scale set membership:} For proving an attribute belongs to a large set (e.g., university affiliation among hundreds of institutions), pairing-based approaches using cryptographic accumulators would provide more efficient proofs with constant size, compared to the linear scaling of $\Sigma$-protocols.
+    
+    \item \textbf{Efficient revocation:} Credential revocation against large lists would benefit from pairing-based accumulator techniques that enable constant-size non-membership proofs.
+    
+    \item \textbf{Complex policy compliance:} Proof of arbitrary computation (e.g., hash function evaluation or complex decision trees) would necessitate zk-SNARKs despite their trusted setup requirements.
+\end{itemize}
+
+Our implementation is designed with modularity in mind, allowing future extensions to incorporate these alternative proof systems where the application requirements justify their additional complexity and setup costs.
+
+The empirical results in Section~\ref{sec:performance_evaluation} validate our design choice, demonstrating that for the credential operations most frequently encountered in practical use cases, our $\Sigma$-protocol approach achieves state-of-the-art performance without sacrificing security or expressiveness.
+```
 
 
 
