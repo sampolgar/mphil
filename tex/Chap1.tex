@@ -3,21 +3,24 @@
 \section{The Rise of Digital Identity Wallets and the Need for Secure, Private, Usable Solutions}
 Digital credential wallets, the digital analogue of their physical counterparts, are emerging as essential tools for identity verification in both online and offline contexts. Nations such as India, Singapore, South Korea, Estonia, and Norway have implemented nationwide digital identity systems, while the EU mandates wallets and digital credential issuance across member states by 2026, and the US advances pilots in 13 states.  These systems aim to streamline identity management by using interoperable wallets built on open standards, yet their success depends on resolving a fundamental trilemma: ensuring privacy, security, and usability. Consider the following scenarios
 
-\begin{enumerate}
+\begin{enumerate}\label{chap1_use_cases_kyc_socialmedia_age_and_health}
     \item \textbf{KYC/AML Bank Application}: Opening a bank account requires verifying citizenship, age, government issued credentials, and possibly financial standing (bank balances). Traditional KYC processes are slow and complex, with up to 68\% of users abandoning applications, with additional privacy risks of sharing and storing user personal information
 
     \item \textbf{Social Media Verification:} Accessing social media in Australia will soon require age (over 16) and citizenship verification. A frequent transaction that could leak a childs online movements 
 
-    \item \textbf{Age and Health Status: } Interacting with a medical clinic often requires different criteria to be met, such as a vaccination status, age, insurance status. Current processes require a user to show all information during the process. 
+    \item \textbf{Age and Health Status: } Interacting with a medical clinic often requires different criteria to be met, such as a vaccination status, age, and insurance status. Current processes require a user to show all information during the process. 
 \end{enumerate}
 
-Across these cases, users seek privacy; disclosing only essential information—while verifiers require security, such as authenticity and fraud resistance. Usability demands rapid, cross-device verification of multiple, hetereogenous credentials. Yet, prior systems falter: they expose excessive data, fuel cybercrime, and lack efficiency. The previous generation of anonymous credential frameworks \cite{hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016}, though innovative, met basic needs—verifying a single credential in 50ms—but fail to address the complex, multi-credential demands of the next generation of identity systems. Verifying multiple credentials is either too slow, lack a theoretical framework and security properties, or lack efficient and private mechanisms for sybil resistance and revocation. These gaps are already driving discussions at the Internet Identity Workshop \cite{internet_identity_workshop_internet_2025} and looking for solutions.
+Across these cases, users seek privacy; disclosing only essential information, while verifiers require security, such as authenticity and fraud resistance. Usability demands \emph{fast} verification of multiple, heterogeneous credentials. Yet, prior systems expose user data and fuel cybercrime, or privacy-preserving systems lack efficiency. The previous generation\footnote{We term the "previous generation" as credentials which compute presentation proofs using $\G_T$ points, as this Thesis shows, is significantly slower. We term "new generation" credential frameworks that compute proofs over $\G_1$  \cite{camenisch_anonymous_2016, tessaro_revisiting_2023, tomescu_utt_2022}, demonstrating remarkable efficiency improvements} of anonymous credential frameworks \cite{hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016}, deployed in Microsoft's U-Prove and IBM's Idemix \cite{camenisch_design_2002, dunkelman_formal_2016}, though innovative, met basic needs—verifying a single credential in 50ms—but fail to address the complex, multi-credential and sybil resistant demands of the next generation of identity systems. Verifying multiple credentials is either too slow, lacks a theoretical framework and security properties, or lacks efficient and private mechanisms for sybil resistance and revocation. These gaps are already driving discussions at the Internet Identity Workshop \cite{internet_identity_workshop_internet_2025} and looking for solutions with discussions on how the credential wallet will securely issue and verify credentials from multiple different issuers (government, private, credential oracles); how can an efficient sybil resistance mechanism be incorporated inside a credential wallet.
 
-This thesis develops cryptographic primitives to enable digital credential wallets that are fast, private, and resilient to abuse, paving the way for advanced identity solutions that transcend current limitations and unlock new functionality for secure and private digital interactions.
+This thesis develops cryptographic primitives to enable digital credential wallets that are fast, private, and resilient to abuse, paving the way for advanced identity solutions that solve for the upcoming limitations that credential wallets will pose, and unlock new functionality for secure and private digital interactions.
 
 
 \section{Anonymous Credentials}
 Anonymous credential systems enable privacy-preserving authentication and access control, allowing users to prove specific attributes without revealing their full identity. Anonymous Credentials is the base building block of digital credential wallets, where users manage diverse credentials (e.g., passports, bank statements) to verify identity across scenarios like KYC or age verification. They fulfill two primary roles: ensuring holder authenticity like signature verification (e.g., proving knowledge of a secret key) and enforcing access control (e.g., demonstrating eligibility based on attributes like age $ > 21 $).
+
+% https://eprint.iacr.org/2024/1874.pdf#page=22.70
+Anonymous Credentials are a subset of Verifiable Credentials, defined by W3C  \cite{w3c_verifiable_2025}, as "tamper-evident credential whose authorship can be cryptographically verified", a Verifiable Presentation is a function of a VC which creates "A tamper-evident presentation of information encoded in such a way that authorship of the data can be trusted after a process of cryptographic verification." This Thesis focuses on private Verifiable Presentations that leverage zero-knowledge proofs to privately attest to the data within the Verifiable Credential. 
 
 The Anonymous Credential framework involves three main actors: the \emph{user}, who owns the credential wallet with credentials, their attributes, and their signing/verification keys; the \emph{issuer}, who creates credentials; and the \emph{verifier}, who checks them. Credentials are authenticated data structures that cryptographically bind attributes, ensuring both hiding (privacy) and binding (security). These structures vary by issuance model and underlying cryptographic primitive. Credentials could be issued by a single-issuer as most are issued today, or to protect against malicious issuers, it could be threshold of issuers or even blockchain-based smart contracts. Credentials could be in the form of signatures or even data-structures in a cryptographic accumulator. The choice of cryptographic data structure dictates the proof system, the proof expressiveness, and the verification efficiency.
 
@@ -94,9 +97,7 @@ The Anonymous Credential framework involves three main actors: the \emph{user}, 
     \label{fig:chap1_anon_cred_framework}
 \end{figure}
 
-
-
-Two core interactive processes govern anonymous credentials. In the \emph{obtain/issue} phase, users commit attributes, and issuers sign them, often blindly to preserve a user's privacy. In the \emph{show/verify} phase, users rerandomize credentials and generate zero-knowledge proofs to meet dynamic verification requirements (e.g., proving $ \text{age} > 16 $ without disclosing birthdate). Verifiers check these proofs for validity. Proof systems, such as Sigma protocols, Groth-Sahai, pairing-based methods or zk-SNARKS, balance expressiveness (e.g., proving complex predicates) with efficiency.
+Two core interactive processes govern anonymous credentials. In the \emph{obtain/issue} phase, users commit attributes, and issuers sign them, often blindly to preserve a user's privacy. In the \emph{show/verify} phase, users generate a Verifiable Presentation to meet dynamic verification requirements (e.g., proving $ \text{age} > 16 $ without disclosing birthdate). Verifiers check these proofs for validity. Proof systems, such as Sigma protocols, Groth-Sahai, pairing-based methods or zk-SNARKS, balance expressiveness (e.g., proving complex predicates) with efficiency.
 
 % <<INSERT USER INTERACTING WITH ALL SORTS OF ISSUERS HERE E.g. credential oracles>>
 % <<INSERT USER SHOWING + VERIFYING>>
@@ -105,63 +106,37 @@ Security hinges on two main properties: \emph{unforgeability}, ensured by the bi
 This Thesis addresses each of these and demonstrates our state-of-the-art primitives via qualitative and quantitiave analysis. 
 
 
-\section{Gap Analysis}
 
-\subsubsection{Limitation 1: Fast Anonymous Credentials (under 100ms) }
+\section{Gap Analysis}
+The Trilemma between Privacy, Security, and Usability presents ongoing challenges and limitations. Privacy-preserving systems aim for \emph{Accountable Privacy} within acceptable usability limits. The Trilemma tension arises due to the paradoxical nature of each property. Increasing Privacy and Security often comes at the cost of Usability, and vice versa. The Gap Analysis often articulates the \emph{cost of privacy} system architects must weigh when considering privacy-preserving primitives.
+
+\subsection{Limitation 1: Fast Anonymous Credentials (under 100ms) }\label{subsec:chap1_limitation1}
 
 Anonymous credentials fundamentally operate slower than traditional signature schemes like ECDSA which has long limited their adoption. Benchmarks \cite{habib_evaluation_2016} have shown $\mathsf{Show + Verify}$ time for Anonymous Credential systems IBM's Idemix to be $(110ms, 220ms, 450ms)$ for 1,2,3 credentials, Microsoft's U-Prove to be $(180ms, 460ms, 600ms)$ for 1,2,3 credentials respectively, IRMA \cite{fischer-hubner_towards_2013} at $1300ms$ and zk-creds at $465ms$ \cite{rosenberg_zk-creds_2022}. Consider Alice approaching a turnstyle for the train needing to verify her transport ticket and student status. Non-private signatures would sign and verify under $1ms$, whereas current anonymous credentials benchmarks are beyond the $100ms$ rule applied by user experience experts \cite{jakob_nielsen_powers_2009} and threshold for revenue loss due to webpage loads at Google and Amazon \cite{linden_geeking_2006}. The consequence is users and system architects prioritizing efficiency over privacy and using non-private methods of authentication. 
 
 
-\subsubsection{Limitation 2: Security Against Malicious Issuers}
+\subsection{Limitation 2: Security Against Malicious Issuers}
 Most Anonymous Credential systems deployed today assume honest-but-curious issuers rather than actively malicious ones; such systems claim strong security and privacy guarantees but fail to recognize the threat from maliciously generated signing and verification keys which could allow a signer to secretly embed tracking or de-anonymising algebraic structure into the credential. This would undermine the systems privacy guarantees and prevent widespread adoption. 
 
 
-\subsubsection{Limitation 3: Efficient Expressive Proofs}
-Definition of Limitation: 
-Concrete Example:
-Technical Cause
-Practical Consequences:
+\subsection{Limitation 3: Efficient Expressive Proofs}
+Current Anonymous Credential Benchmarks show computationally expensive expressive proof evaluation. \cite{habib_evaluation_2016} demonstrates Idemix running Show+Verify for a credential with 5 attributes including string equality (120ms) and separately "date greater than" (310ms). zk-creds \cite{rosenberg_zk-creds_2022} demonstrates two use-cases, accessing a website proving over 18 with Show+Verify of 148ms best case or 602ms worst case, and verifying a credential in-person and selectively disclosing age and photo being 103ms best case and 602ms worst case\footnote{zk-creds does not use signed credentials like Idemix and might require recomputing Merkle Tree proof (worst case}. All of which are over the $100ms$ threshold discussed in Limitation 1 \ref{subsec:chap1_limitation1}, hindering realistic uptake of new technology. 
 
 
-Current benchmarks
-Anonymity - Alice proves to a website she is over 18.
-Show: 143ms (best case) 602ms (worst case)
-Verify: 5ms
-
-Entering a bar
-Privacy - Bob is in-person verifying his credential
-Show: 98ms (best case) 557ms (worst case)
-Verify: 5ms
+\subsection{Limitation 4: Secure and Efficient Verification of Multiple Credentials}
+There has been some consideration of the need to securely verify multiple credentials simultaneously while proving that such credentials come from the same user. Credential wallets provide the perfect use-case, our use-cases \ref{chap1_use_cases_kyc_socialmedia_age_and_health} are prototypical but it is easy to see where this functionality can be extended to, especially with content credentials \cite{c2paorg_content_2024} producing a credential for each transaction, photo, or message sent from a device. \cite{dunkelman_formal_2016} includes the functionality in security proofs, but not as an explicit property; furthermore, while it is a theoretical property, no schemes attempt to clearly present benchmarks on practical feasibility. 
 
 
-\subsubsection{Limitation 4: Security Verifying Multiple Credentials}
-Definition of Limitation: 
-Concrete Example:
-Technical Cause
-Practical Consequences:
+\subsection{Limitation 5: Efficient Nullifiers}
+Nullifiers are used in privacy-preserving systems to prove sybil resistance while retaining anonymity. A user generates a nullifier from their key and some input and wants to keep their key secret to uphold anonymity (and prevent tracking through system use). In payment systems, the input might be a coin's serial number \cite{ben_sasson_zerocash_2014, tomescu_utt_2022}, and Identity Systems might use the credential context, e.g., "passport" to ensure a user has only 1 passport, or "2025vote" to enforce sybil-resistant voting. Zerocash \cite{ben_sasson_zerocash_2014} and PLUME \cite{gupta_plume_2022} leverage zk-SNARKS $(50+ms)$ while \cite{tomescu_utt_2022} leverage pairing constructions $(12.38ms)$, all with computational overhead (possibly more than one nullifier can be used in a presentation), which combined with credential verification and expressive proofs will extend Show+Verify times beyond acceptable limits, rendering the cost of privacy too high for practical use. 
 
 
-\subsubsection{Limitation 5: Efficient Nullifiers}
-Definition of Limitation: 
-Concrete Example:
-Technical Cause
-Practical Consequences:
+\subsection{Limitation 6: Efficient Threshold Signatures for Threshold Issued Identity System}
+Current threshold credential schemes for threshold-issued identity systems present with prohibitively slow operations or lack benchmark analysis to conclude otherwise. Threshold BBS+ was proposed \cite{doerner_threshold_2023} and initial benchmarks show signing times of 38 seconds \cite{dock_network_crypto_2025} though the scheme is without identifiable abort, its inclusion would be more expensive. tACT-based systems like S3ID \cite{rabaninejad_attribute-based_2024} show verification times that scale poorly with attribute count. Threshold implementations of SPS-EQ \cite{steinfeld_threshold_2023} may address efficiency, but they lack performance benchmarks. The performance gap, lack of evaluation metrics create and concrete implementations in an identity system create barriers to adoption. 
 
 
-
-
-\subsubsection{Limitation 6: Efficient Threshold Signatures}
-Definition of Limitation: 
-Concrete Example:
-Technical Cause
-Practical Consequences:
-
-
-\subsubsection{Limitation 7: Efficient, Secure, Privacy-Preserving Threshold Identity System}
-Definition of Limitation: 
-Concrete Example:
-Technical Cause
-Practical Consequences:
+\subsection{Limitation 7: Empirical Benchmarks and Open-Source Library}
+Organizations wanting to adopt Anonymous Credential frameworks for integration to their identity systems lack empirical benchmarks across various schemes which would allow them to select a scheme based on its properties and empirical analysis. Furthermore, IT departments benefit from experimenting with code to learn. Some academic implementations include code samples but often are built with different libraries, languages, and enhancements - it's difficult to assess and compare schemes in this environment. 
 
 
 
@@ -170,32 +145,6 @@ Practical Consequences:
 
 
 
-
-
-
-
-
-
-
-Previous deployments like IBM's Idemix \cite{camenisch_design_2002} and IRMA \cite{fischer-hubner_towards_2013} based on CL-Signatures \cite{camenisch_design_2002, cimato_signature_2003}, Hyperledger Fabric \cite{androulaki_hyperledger_2018} based on BBS+ \cite{hutchison_constant-size_2006}, Microsoft's U-Prove \cite{dunkelman_formal_2016} based on Brands' signatures \cite{brands_rethinking_2000}, were deployed in pilot programs \cite{dunkelman_formal_2016}, and proved that these systems were secure, private and feature-rich, but inefficient for widespread adoption. Their implementations were based on early constructions we label as "previous generation" and lacked efficient credential verification procedures required for the expected user experience needed for large-scale uptake, which we illustrate below.
-
-\paragraph{IRMA, Idemix and U-Prove: }
-
-IRMA \cite{fischer-hubner_towards_2013} presents the Show+Verify for credential with 3 attributes costs about 1.3seconds (Intel Core i7-8650U CPU with 16 GB of RAM GNU/Linux) in \cite{zhang_passo_2021}
-
-\cite{habib_evaluation_2016}: presents a more thorough evaluation of the Show+Verify algorithms:
-Idemix presents Show + Verify algorithm for 1,2,3 credentials as 110ms, 220ms, 450ms
-U-Prove presents Show + Verify algorithm for 1,2,3 credentials as 180ms, 460ms, 600ms
-Furthermore, they show functionality use-case like selective disclosure (400ms for 1 attribute selective disclosure and 670ms for 2 attributes selective disclosure) and committed attribute equality (120ms). 
-
-The gap we see here is that 
-- doesn't take batch verification into account.
-- selective disclosure costs minimal overhead. (under 1ms)
-- attribute equality costing minimal overhead (under 1ms)
-- Newer schemes \cite{camenisch_anonymous_2016, tomescu_utt_2022} reduce pairing operations in the signature construction itself, coupled with cryptography library improvements reduce all metrics significantly. 
-This hasn't been illustrated properly. 
-
-There is a gap in practical evaluation analysis for newer state-of-the-art constructions which we provide benchmarks for.
 
 
 

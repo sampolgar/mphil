@@ -6,7 +6,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{verbatim}
 \usepackage{tikz}
-\usetikzlibrary{positioning,shapes,shadows,arrows,fit,calc}
+\usetikzlibrary{positioning,shapes,arrows,fit,calc}
 \usepackage{xspace}
 \usepackage{amssymb}
 \usepackage{mathtools}
@@ -66,7 +66,6 @@ keys
 
 
 
-
 \makeatletter
 \let\llncs@addcontentsline\addcontentsline
 \patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
@@ -75,18 +74,15 @@ keys
 \setcounter{tocdepth}{2}
 \makeatother
 
-
-% Add this before the \chapter redefinition
-% \newcounter{chapter}
-\renewcommand{\thesection}{\thechapter.\arabic{section}}
-
-% Keep your existing \chapter redefinition
+% Create a separate counter system for chapters
 \makeatletter
+\newcounter{realchapter}  % Create a separate counter for real chapters
 \renewcommand{\chapter}[1]{
   \clearpage
-  \refstepcounter{chapter}
-  \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
-  \setcounter{section}{0}  % Reset section counter for new chapter
+  \refstepcounter{realchapter}  % Use our new counter
+  \setcounter{chapter}{\value{realchapter}}  % Synchronize with built-in counter
+  \addcontentsline{toc}{chapter}{\protect\numberline{\therealchapter}#1}
+  \setcounter{section}{0}
   \setcounter{theorem}{0}
   \setcounter{definition}{0}
   \setcounter{lemma}{0}
@@ -94,22 +90,51 @@ keys
   \setcounter{corollary}{0}
   \setcounter{example}{0}
   \setcounter{remark}{0}
-  \vspace*{2cm}
-  {\centering\Huge\bfseries Chapter \thechapter\par}
+  {\centering\Huge\bfseries Chapter \therealchapter\par}
   \vspace{1em}
+  {\centering\Huge\bfseries #1\par}
+  \vspace{2em}
+}
+\renewcommand{\therealchapter}{\arabic{realchapter}}
+\renewcommand{\thesection}{\therealchapter.\arabic{section}}
+
+\newcommand{\chapterstar}[1]{%
+  \clearpage
   {\centering\Huge\bfseries #1\par}
   \vspace{2em}
 }
 \makeatother
 
-\makeatletter
-\newcommand{\chapterstar}[1]{%
-  \clearpage
-  \vspace*{2cm}
-  {\centering\Huge\bfseries #1\par}
-  \vspace{2em}
-}
-\makeatother
+% Keep your existing \chapter redefinition
+% \makeatletter
+% \renewcommand{\chapter}[1]{
+%   \clearpage
+%   \refstepcounter{chapter}
+%   \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
+%   \setcounter{section}{0}  % Reset section counter for new chapter
+%   \setcounter{theorem}{0}
+%   \setcounter{definition}{0}
+%   \setcounter{lemma}{0}
+%   \setcounter{proposition}{0}
+%   \setcounter{corollary}{0}
+%   \setcounter{example}{0}
+%   \setcounter{remark}{0}
+%   % \vspace*{2cm}
+%   {\centering\Huge\bfseries Chapter \thechapter\par}
+%   \vspace{1em}
+%   {\centering\Huge\bfseries #1\par}
+%   \vspace{2em}
+% }
+% \makeatother
+
+% \makeatletter
+% \newcommand{\chapterstar}[1]{%
+%   \clearpage
+%   % \vspace*{2cm}
+%   {\centering\Huge\bfseries #1\par}
+%   \vspace{2em}
+% }
+% \makeatother
 
 
 
@@ -301,7 +326,7 @@ keys
 \newcommand{\redunderline}[1]{\textcolor{red}{\underline{\textcolor{red}{#1}}}} 
 \newcommand{\TBW}{\textcolor{blue}{\textbf{To Be Written...}}}
 \newcommand{\Note}[1]{\textcolor{magenta}{ $\langle \! \langle$ #1 $\rangle \! \rangle$}}
-\newcommand{\todonote}[1]{\todo[inline]{Sam: #1}}
+% \newcommand{\todonote}[1]{\todo[inline]{Sam: #1}}
 \newcommand{\badidea}[1]{\textcolor{red}{#1}}
 \newcommand{\betteridea}[1]{\textcolor{green}{#1}}
 

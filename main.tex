@@ -10,7 +10,6 @@
 \def\showoverflow{1}   % 1 = show overflows
 \def\allow{1}      % 0 = remove todo command
 \def\anonymous{1}      % 1 = anonymous
-
 % \documentclass[envcountsame,runningheads,notitlepage]{llncs}
 \documentclass[envcountsame,runningheads,notitlepage]{llncs}
 \ifnum\fullversion=1
@@ -28,8 +27,7 @@
 \renewcommand{\thecorollary}{\thechapter.\arabic{corollary}}
 \renewcommand{\theexample}{\thechapter.\arabic{example}}
 \renewcommand{\theremark}{\thechapter.\arabic{remark}}
-% ... (rest of your document remains the same)
-  \input{tex/1_titlepage}
+
 
   
 
@@ -58,12 +56,29 @@
 
 
   
-  % \input{tex/2_abstract}
-  % \input{tex/3_attributions}
-  % \input{tex/4_originality}
-  % \input{tex/5_acknowledgements}
+% Add this right before your \tableofcontents command
+\input{tex/1_titlepage}
+    \input{tex/2_abstract}
+  \input{tex/3_attributions}
+  \input{tex/4_originality}
+  \input{tex/5_acknowledgements}
+
+% Add this to your preamble
+\makeatletter
+% Custom TOC formatting
+\renewcommand\tableofcontents{%
+  \clearpage % Force a new page
+  \vspace*{2cm} % Add space at the top
+  {\centering\Huge\bfseries Table of Contents\par} % Format the heading like your chapters
+  \vspace{2em} % Space after the heading
+  \@starttoc{toc}% Include the actual TOC entries
+}
+\makeatother
+
+\tableofcontents
+
+  % \tableofcontents
   
-  \tableofcontents
   \listoffigures
   
   \input{tex/Chap1}
