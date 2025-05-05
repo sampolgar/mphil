@@ -38,7 +38,7 @@ This chapter develops the cryptographic foundations needed for credential wallet
 
     \item \textbf{Fastest Show+Verify Operations:} Our construction achieves 10-16\% faster verification than UTT \cite{tomescu_utt_2022} and outperforms the most popular BBS+ variant \cite{camenisch_anonymous_2016} - we validate through comprehensive benchmarks \ref{sec:performance_evaluation}.
 
-    \item \textbf{Malicious Issuer Security through Key Verification Protocols:} We formalize anonymity guarantees against colluding issuers via mandatory key verification (Section \ref{subsec:malicious_issuer_security_guarantee}), preventing deanonymization attacks through maliciously generated public keys—a vulnerability that existing schemes do not address.
+    \item \textbf{Malicious Issuer Security through Key Verification Protocols:} We formalize anonymity guarantees against malicious issuer via mandatory key verification (Section \ref{subsec:malicious_issuer_security_guarantee}), preventing deanonymization attacks through maliciously generated keys—a vulnerability that existing schemes do not address.
 
     \item \textbf{Empirical Validation of Schnorr Protocol Efficiency:} Comprehensive benchmarks \ref{fig:schnorr-benchmarks}reveal that Schnorr protocols achieve sublinear complexity for attribute proofs via multi-scalar multiplication, outperforming theoretical predictions and enabling almost constant-size expressive predicate evaluation.
 \end{enumerate}
