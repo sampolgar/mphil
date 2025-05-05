@@ -4,20 +4,15 @@
 % \usepackage{wasysym} don't use this, makes errors
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-% \usepackage{hyperref}
 \usepackage{verbatim}
 \usepackage{tikz}
-% \usetikzlibrary{positioning,shapes,shadows,fit,calc,arrows.meta}
 \usetikzlibrary{positioning,shapes,shadows,arrows,fit,calc}
 \usepackage{xspace}
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{pifont}
 \usepackage{etoolbox}
-% \usepackage[normalem]{ulem}
 \usepackage{booktabs}
-% \usepackage{bookmark}
-% \usepackage[bookmarks=true]{hyperref} 
 \usepackage{float} %to force my protocol environment to stay where it is
 \usepackage{hyperref}
 \usepackage{bookmark}
@@ -27,17 +22,17 @@
 \usepackage{multibib}
 \usepackage{url}
 \usepackage{algorithm}
-% \usepackage{algpseudocode}
 \usepackage{paralist}
 \usepackage{mathrsfs}
 \usepackage{relsize}
 \usepackage{stmaryrd}
 \usepackage[textsize=small]{todonotes}
 \usepackage{multirow}
-% \usepackage[lambda,n,operators]{cryptocode}
-% \usepackage{caption} % Removed to avoid warning with llncs class
 \usepackage[skip=10pt plus1pt, indent=40pt]{parskip}
 \usepackage{cancel} 
+\usepackage{amssymb, xcolor, enumitem, mdframed}
+\usepackage[most]{tcolorbox}
+\usepackage{etoolbox}
 \usepackage[
 n,
 advantage,
@@ -61,6 +56,113 @@ keys
 
 \newtoggle{notes}
 \toggletrue{notes} % set to false to remove colored notes from the paper
+
+
+
+
+%--------------------------------------------------------
+% Chapter Environment
+%-----------
+
+
+
+
+\makeatletter
+\let\llncs@addcontentsline\addcontentsline
+\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
+\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
+\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
+\setcounter{tocdepth}{2}
+\makeatother
+
+
+% Add this before the \chapter redefinition
+% \newcounter{chapter}
+\renewcommand{\thesection}{\thechapter.\arabic{section}}
+
+% Keep your existing \chapter redefinition
+\makeatletter
+\renewcommand{\chapter}[1]{
+  \clearpage
+  \refstepcounter{chapter}
+  \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
+  \setcounter{section}{0}  % Reset section counter for new chapter
+  \setcounter{theorem}{0}
+  \setcounter{definition}{0}
+  \setcounter{lemma}{0}
+  \setcounter{proposition}{0}
+  \setcounter{corollary}{0}
+  \setcounter{example}{0}
+  \setcounter{remark}{0}
+  \vspace*{2cm}
+  {\centering\Huge\bfseries Chapter \thechapter\par}
+  \vspace{1em}
+  {\centering\Huge\bfseries #1\par}
+  \vspace{2em}
+}
+\makeatother
+
+\makeatletter
+\newcommand{\chapterstar}[1]{%
+  \clearpage
+  \vspace*{2cm}
+  {\centering\Huge\bfseries #1\par}
+  \vspace{2em}
+}
+\makeatother
+
+
+
+
+
+
+
+% \makeatletter
+% % Simple solution - just reset counters in the chapter command
+% \newcounter{mychapter}
+% \newcommand{\mychapter}[1]{
+%   \clearpage
+%   \refstepcounter{mychapter}
+%   \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
+%   % \setcounter{section}{0}  % Reset section counter removed 30/4
+  
+%   % Manually reset all theorem-like environments
+%   \setcounter{theorem}{0}
+%   \setcounter{definition}{0}
+%   \setcounter{lemma}{0}  
+%   \setcounter{proposition}{0}
+%   \setcounter{corollary}{0}
+%   \setcounter{example}{0}
+%   \setcounter{remark}{0}
+  
+%   \vspace*{2cm}
+%   {\centering\Huge\bfseries Chapter \themychapter\par}
+%   \vspace{1em}
+%   {\centering\Huge\bfseries #1\par}
+%   \vspace{2em}
+% }
+% \renewcommand{\thesection}{\thechapter.\arabic{section}}
+
+
+% \newcounter{mychapter}
+% \newcommand{\mychapter}[1]{
+%   \clearpage
+%   \refstepcounter{mychapter}
+%   \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
+%   \setcounter{section}{0}  % Reset section counter for new chapter
+%   \vspace*{2cm}
+%   {\centering\Huge\bfseries Chapter \themychapter\par}
+%   \vspace{1em}
+%   {\centering\Huge\bfseries #1\par}
+%   \vspace{2em}
+% }
+
+
+%--------------------------------------------------------
+% Chapter Environment
+%--------------------------------------------------------
+
+
 
 
 %--------------------------------------------------------
@@ -105,8 +207,6 @@ keys
 \newcommand{\revtokenver}{\mathsf{REV.TokenVer}}
 
 \newcommand{\rt}{\mathsf{rt}}
-
-% \newcommand{\tilcm}{\tilde{\mathsf{cm}}}
 \newcommand{\tilcm}{\tilde{cm}}
 
 
@@ -161,86 +261,7 @@ keys
 %--------------------------------------------------------
 % Protocol Environment
 %--------------------------------------------------------
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath, amssymb, xcolor, enumitem, mdframed}
-\usepackage[most]{tcolorbox}
 
-
-\usepackage{etoolbox}
-
-
-\makeatletter
-\let\llncs@addcontentsline\addcontentsline
-\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
-\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
-\patchcmd{\maketitle}{\addcontentsline}{\llncs@addcontentsline}{}{}
-\setcounter{tocdepth}{2}
-\makeatother
-
-
-% Add this before the \chapter redefinition
-% \newcounter{chapter}
-\renewcommand{\thesection}{\thechapter.\arabic{section}}
-
-% Keep your existing \chapter redefinition
-\makeatletter
-\renewcommand{\chapter}[1]{
-  \clearpage
-  \refstepcounter{chapter}
-  \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
-  \setcounter{section}{0}  % Reset section counter for new chapter
-  \setcounter{theorem}{0}
-  \setcounter{definition}{0}
-  \setcounter{lemma}{0}
-  \setcounter{proposition}{0}
-  \setcounter{corollary}{0}
-  \setcounter{example}{0}
-  \setcounter{remark}{0}
-  \vspace*{2cm}
-  {\centering\Huge\bfseries Chapter \thechapter\par}
-  \vspace{1em}
-  {\centering\Huge\bfseries #1\par}
-  \vspace{2em}
-}
-\makeatother
-
-\makeatletter
-\newcommand{\chapterstar}[1]{%
-  \clearpage
-  \vspace*{2cm}
-  {\centering\Huge\bfseries #1\par}
-  \vspace{2em}
-}
-\makeatother
-% Ensure section numbering includes chapter
-
-
-
-% \makeatletter
-% % Simple solution - just reset counters in the chapter command
-% \newcounter{mychapter}
-% \newcommand{\mychapter}[1]{
-%   \clearpage
-%   \refstepcounter{mychapter}
-%   \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
-%   % \setcounter{section}{0}  % Reset section counter removed 30/4
-  
-%   % Manually reset all theorem-like environments
-%   \setcounter{theorem}{0}
-%   \setcounter{definition}{0}
-%   \setcounter{lemma}{0}  
-%   \setcounter{proposition}{0}
-%   \setcounter{corollary}{0}
-%   \setcounter{example}{0}
-%   \setcounter{remark}{0}
-  
-%   \vspace*{2cm}
-%   {\centering\Huge\bfseries Chapter \themychapter\par}
-%   \vspace{1em}
-%   {\centering\Huge\bfseries #1\par}
-%   \vspace{2em}
-% }
-% \renewcommand{\thesection}{\thechapter.\arabic{section}}
 
 
 \newtcbtheorem[auto counter]{protocol}{Protocol}{
@@ -272,35 +293,6 @@ keys
 
 
 
-%--------------------------------------------------------
-% Construction Environment
-%--------------------------------------------------------
-
-% \newtcbtheorem[auto counter]{construction}{Construction }{
-%     colback=white,
-%     colframe=black,
-%     fonttitle=\bfseries,
-%     coltitle=black,
-%     attach boxed title to top center={yshift=-2mm},
-%     boxed title style={
-%         colframe=black,
-%         colback=white,
-%         boxrule=0.5mm,
-%     },
-%     enhanced,
-%     sharp corners,
-%     % Add internal padding
-%     top=12pt,
-%     bottom=12pt,
-%     left=12pt,
-%     right=12pt,
-%     % Add spacing between paragraphs
-%     before skip=2em,
-%     after skip=2em,
-%     % Increase line spacing within the box
-%     before upper={\setlength{\baselineskip}{2em}},
-% }{construct}
-
 
 %--------------------------------------------------------
 % Editorial
@@ -310,7 +302,6 @@ keys
 \newcommand{\TBW}{\textcolor{blue}{\textbf{To Be Written...}}}
 \newcommand{\Note}[1]{\textcolor{magenta}{ $\langle \! \langle$ #1 $\rangle \! \rangle$}}
 \newcommand{\todonote}[1]{\todo[inline]{Sam: #1}}
-% \usepackage[textsize=small]{todonotes}
 \newcommand{\badidea}[1]{\textcolor{red}{#1}}
 \newcommand{\betteridea}[1]{\textcolor{green}{#1}}
 
@@ -343,14 +334,11 @@ keys
 \newcommand{\equivStat}{\ensuremath{\overset{\mathsf{stat}}{\equiv}}\xspace}
 \newcommand{\equivComp}{\ensuremath{\overset{\mathsf{comp}}{\equiv}}\xspace}
 \newcommand{\view}{\ensuremath{\textsc{View}}\xspace}
-% \newcommand{\state}{\ensuremath{\mathsf{st}}\xspace}
-% \newcommand{\st}{\state}
 \newcommand{\Hyb}{\ensuremath{\mathsf{Hyb}}\xspace}
 \newcommand{\Exp}{\ensuremath{\mathsf{Exp}}\xspace}
 \newcommand{\myGame}{\ensuremath{\mathsf{Game}}\xspace}
 \newcommand{\Event}{\ensuremath{\mathsf{E}}\xspace}
 \newcommand{\Span}{\ensuremath{\mathsf{Span}}}
-% \newcommand{\prob}[1]{{\Pr}\left[\,{#1}\,\right]}
 \newcommand{\probb}[2]{{\Pr}_{#1}\left[\,{#2}\,\right]}
 \newcommand{\Dx}{\mathcal{D}}
 \newcommand{\Hx}{\mathcal{H}}
@@ -398,7 +386,6 @@ keys
 \newcommand{\setK}{\mathcal{K}}
 \newcommand{\setN}{\mathcal{N}}
 \newcommand{\keyspace}{\mathcal{K}}
-% \newcommand{\key}{\textsf{k}\xspace} /
 
 
 %--------------------------------------------------------
@@ -492,26 +479,6 @@ keys
 \newcommand{\mynot}{\ensuremath{\mathsf{not}}\xspace}
 \newcommand{\Input}{\ensuremath{\mathsf{Input}}\xspace}
 % \newcommand{\pp}{\ensuremath{\mathsf{pp}}\xspace}
-
-
-
-% \newcounter{mychapter}
-% \newcommand{\mychapter}[1]{
-%   \clearpage
-%   \refstepcounter{mychapter}
-%   \addcontentsline{toc}{chapter}{\protect\numberline{\themychapter}#1}
-%   \setcounter{section}{0}  % Reset section counter for new chapter
-%   \vspace*{2cm}
-%   {\centering\Huge\bfseries Chapter \themychapter\par}
-%   \vspace{1em}
-%   {\centering\Huge\bfseries #1\par}
-%   \vspace{2em}
-% }
-
-
-%--------------------------------------------------------
-% New from NDSS paper
-%--------------------------------------------------------
 
 
 
@@ -775,9 +742,7 @@ keys
 \todo[author=sam,inline,color=blue!25]{#1}}
 
 
-% \usepackage[utf8]{inputenc}
-% \usepackage{amsmath, amssymb, xcolor, enumitem, mdframed}
-\usepackage[most]{tcolorbox}
+
 
 
 \newcommand{\labs}{\left |}

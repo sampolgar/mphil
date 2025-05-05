@@ -176,7 +176,7 @@ This construction preserves the message vector while updating the randomness, ma
 
 
 
-\subsection{Rerandomizable Signature over Commitments}\label{sec:commitment}
+\subsection{Rerandomizable Signature over Commitments}\label{sec:rerandsig_commitment}
 
 
 
@@ -1008,7 +1008,7 @@ Expressiveness
 \end{itemize}
 
 
-\begin{table}[h]
+\begin{table}[!ht]
     \centering
     \begin{tabular}{|l|l||l}
         \hline
@@ -1086,12 +1086,12 @@ $\Sigma$-protocols excel at proving linear relations—knowledge of discrete log
 \hline
 \textbf{Proof size} & $\triangle$ Linear in statement size & $\triangle$ Constant but larger & $\checkmark$ Constant and small \\
 \hline
-\textbf{Verification cost} & $\checkmark$ Fast (see Section~\ref{sec:sigma-protocol-analysis}) & $\triangle$ Multiple pairings & $\checkmark$ Very fast \\
+\textbf{Verification cost} & $\checkmark$ Fast (see  & $\triangle$ Multiple pairings & $\checkmark$ Very fast \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Justification for $\Sigma$-Protocol Approach}
+\subsection{Justification for Sigma-Protocol Approach}
 
 Our ABC system employs $\Sigma$-protocols because the core credential operations—signature validity, selective disclosure, and attribute equality checks—are all expressible as linear relations. As demonstrated in Section~\ref{sigma-protocol-analysis}, our $\Sigma$-protocol implementation achieves sublinear scaling through Multi-Scalar Multiplication techniques, countering the theoretical linear complexity. This practical efficiency, combined with the absence of trusted setup requirements, makes $\Sigma$-protocols ideal for our wallet-centric architecture where verification performance is critical.
 
@@ -1432,7 +1432,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
 
 \paragraph{Intuition:} An ABC system is correct if, when all parties follow the protocol honestly, a user can successfully prove a true statement about their credential to a verifier. Specifically, for all honestly generated public parameters, keys, credentials, and predicates satisfied by the user's attributes, the verification process accepts the proof with overwhelming probability.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
     \centering
     \begin{pcvstack}[boxed, center, space=1em]
         \begin{pchstack}
@@ -1476,7 +1476,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
     \label{fig:abc-security-games}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[!ht]
     \centering
     \begin{pchstack}[boxed]
         \begin{pcvstack}
@@ -1712,7 +1712,7 @@ The reduction algorithm $\mathcal{B}$ proceeds as follows: $\AdvB$ receives a PS
 
 
 \begin{theorem}[Anonymity]
-    The $\ABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{app:zkp} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
+    The $\ABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{preliminaries-sigmaprotocol} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
 \end{theorem}
 
 
@@ -1822,7 +1822,7 @@ Our implementation is available in our open-source repository \cite{polgar_anony
 
 \subsection{Our Construction Improves on Key Credential Operations}
 
-Our G2 signature variant \ref{rerandsig_g2} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu_utt_2022}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation. 
+Our G2 signature variant \ref{subsec:g2_verify_speedup} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu_utt_2022}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation. 
 
 
 \begin{figure}
@@ -1931,7 +1931,7 @@ We now present a comprehensive comparison of our construction against four state
 \caption{Performance of Anonymous Credential Operations (time in ms), $n$ is attribute count}
 \begin{tabular}{@{}p{1.2cm}*{5}{>{\centering\arraybackslash}p{1.6cm}}@{}}
 \toprule
-$n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu_utt_2022} \ref{sec:rerandsig_g1} & Our Construction \\
+$n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \cite{sako_short_2016} & \cite{tomescu_utt_2022} \ref{subsec:g2_verify_speedup} & Our Construction \\
 \midrule
 \multicolumn{6}{c}{\textbf{Obtain}}  \\
 \midrule

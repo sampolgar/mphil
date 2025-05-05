@@ -1,7 +1,7 @@
 \chapter{Introduction}
 
 \section{The Rise of Digital Identity Wallets and the Need for Secure, Private, Usable Solutions}
-Digital credential wallets, the digital analogue of their physical counterparts, are emerging as essential tools for identity verification in both online and offline contexts. Nations such as India, Singapore, South Korea, Estonia, and Norway have implemented nationwide digital identity systems, while the EU mandates adoption across member states by 2026, and the US advances pilots in 13 states.  These systems aim to streamline identity management, yet their success depends on resolving a fundamental trilemma: ensuring privacy, security, and usability. Consider the following scenarios
+Digital credential wallets, the digital analogue of their physical counterparts, are emerging as essential tools for identity verification in both online and offline contexts. Nations such as India, Singapore, South Korea, Estonia, and Norway have implemented nationwide digital identity systems, while the EU mandates wallets and digital credential issuance across member states by 2026, and the US advances pilots in 13 states.  These systems aim to streamline identity management by using interoperable wallets built on open standards, yet their success depends on resolving a fundamental trilemma: ensuring privacy, security, and usability. Consider the following scenarios
 
 \begin{enumerate}
     \item \textbf{KYC/AML Bank Application}: Opening a bank account requires verifying citizenship, age, government issued credentials, and possibly financial standing (bank balances). Traditional KYC processes are slow and complex, with up to 68\% of users abandoning applications, with additional privacy risks of sharing and storing user personal information
@@ -109,7 +109,7 @@ This Thesis addresses each of these and demonstrates our state-of-the-art primit
 
 \subsubsection{Limitation 1: Fast Anonymous Credentials (under 100ms) }
 
-Anonymous credentials fundamentally operate slower than traditional signature schemes like ECDSA which has long limited their adoption. Benchmarks \cite{habib_evaluation_2016} have shown $\mathsf{Show + Verify}$ time for Anonymous Credential systems IBM's Idemix to be $(110ms, 220ms, 450ms)$ for 1,2,3 credentials, Microsoft's U-Prove to be $(180ms, 460ms, 600ms)$ for 1,2,3 credentials respectively, IRMA \cite{fischer-hubner_towards_2013} at $1300ms$ and zk-creds at $465ms$ \cite{rosenberg_zk-creds_2022}. Consider Alice approaching a turnstyle for the train needing to verify her transport ticket and student status. Non-private signatures would sign and verify under $1ms$, whereas current anonymous credentials benchmarks are beyond the $100ms$ rule applied by user experience experts \cite{jakob_nielsen_powers_2009} and threshold for revenue loss due to  at Google and Amazon \cite{linden_geeking_2006}. The consequence is users and system architects prioritizing efficiency over privacy and using non-private methods of authentication. 
+Anonymous credentials fundamentally operate slower than traditional signature schemes like ECDSA which has long limited their adoption. Benchmarks \cite{habib_evaluation_2016} have shown $\mathsf{Show + Verify}$ time for Anonymous Credential systems IBM's Idemix to be $(110ms, 220ms, 450ms)$ for 1,2,3 credentials, Microsoft's U-Prove to be $(180ms, 460ms, 600ms)$ for 1,2,3 credentials respectively, IRMA \cite{fischer-hubner_towards_2013} at $1300ms$ and zk-creds at $465ms$ \cite{rosenberg_zk-creds_2022}. Consider Alice approaching a turnstyle for the train needing to verify her transport ticket and student status. Non-private signatures would sign and verify under $1ms$, whereas current anonymous credentials benchmarks are beyond the $100ms$ rule applied by user experience experts \cite{jakob_nielsen_powers_2009} and threshold for revenue loss due to webpage loads at Google and Amazon \cite{linden_geeking_2006}. The consequence is users and system architects prioritizing efficiency over privacy and using non-private methods of authentication. 
 
 
 \subsubsection{Limitation 2: Security Against Malicious Issuers}
@@ -121,6 +121,17 @@ Definition of Limitation:
 Concrete Example:
 Technical Cause
 Practical Consequences:
+
+
+Current benchmarks
+Anonymity - Alice proves to a website she is over 18.
+Show: 143ms (best case) 602ms (worst case)
+Verify: 5ms
+
+Entering a bar
+Privacy - Bob is in-person verifying his credential
+Show: 98ms (best case) 557ms (worst case)
+Verify: 5ms
 
 
 \subsubsection{Limitation 4: Security Verifying Multiple Credentials}
@@ -371,79 +382,79 @@ Gap Identification
 - 
 
 
-My Contributions
+% My Contributions
 
-\begin{figure}
-    \centering
-        \begin{tikzpicture}[
-            box/.style={
-                rectangle,
-                draw=black,
-                thick,
-                minimum width=4cm,
-                minimum height=6cm,
-            },
-            title/.style={
-                rectangle,
-                draw=none,
-                thick,
-                minimum width=3.8cm,
-                minimum height=0.7cm,
-                align=center,
-                font=\bfseries
-            },
-            item/.style={
-                rectangle,
-                draw=black,
-                text width=3.6cm,
-                minimum height=1cm,
-                align=center
-            },
-            arrow/.style={->, >=stealth, thick}
-        ]
+% \begin{figure}
+%     \centering
+%         \begin{tikzpicture}[
+%             box/.style={
+%                 rectangle,
+%                 draw=black,
+%                 thick,
+%                 minimum width=4cm,
+%                 minimum height=6cm,
+%             },
+%             title/.style={
+%                 rectangle,
+%                 draw=none,
+%                 thick,
+%                 minimum width=3.8cm,
+%                 minimum height=0.7cm,
+%                 align=center,
+%                 font=\bfseries
+%             },
+%             item/.style={
+%                 rectangle,
+%                 draw=black,
+%                 text width=3.6cm,
+%                 minimum height=1cm,
+%                 align=center
+%             },
+%             arrow/.style={->, >=stealth, thick}
+%         ]
         
-        % Outer boxes
-        \node[box] (box1) at (0,0) {};
-        \node[box] (box2) at (4.5,0) {};
-        \node[box] (box3) at (9,0) {};
-        \node[box] (box4) at (13.5,0) {};
+%         % Outer boxes
+%         \node[box] (box1) at (0,0) {};
+%         \node[box] (box2) at (4.5,0) {};
+%         \node[box] (box3) at (9,0) {};
+%         \node[box] (box4) at (13.5,0) {};
         
-        % Box titles - removed draw=black
-        \node[title] (t1) at (0,2.5) {Issuance Models};
-        \node[title] (t2) at (4.5,2.5) {Credential Structures};
-        \node[title] (t3) at (9,2.5) {Proof Systems};
-        \node[title] (t4) at (13.5,2.5) {Verification Properties};
+%         % Box titles - removed draw=black
+%         \node[title] (t1) at (0,2.5) {Issuance Models};
+%         \node[title] (t2) at (4.5,2.5) {Credential Structures};
+%         \node[title] (t3) at (9,2.5) {Proof Systems};
+%         \node[title] (t4) at (13.5,2.5) {Verification Properties};
         
-        % Connecting arrows
-        \draw[arrow] (box1.east) -- (box2.west);
-        \draw[arrow] (box2.east) -- (box3.west);
-        \draw[arrow] (box3.east) -- (box4.west);
+%         % Connecting arrows
+%         \draw[arrow] (box1.east) -- (box2.west);
+%         \draw[arrow] (box2.east) -- (box3.west);
+%         \draw[arrow] (box3.east) -- (box4.west);
         
-        % Items for box 1 - removed bullet points and centered text
-        \node[item] (i11) at (0,1.3) {Single Issuer\\(centralized authority)};
-        \node[item] (i12) at (0,0) {Threshold Issuer\\(t-of-n security model)};
-        \node[item] (i13) at (0,-1.3) {Blockchain/Smart Contract\\(decentralized)};
+%         % Items for box 1 - removed bullet points and centered text
+%         \node[item] (i11) at (0,1.3) {Single Issuer\\(centralized authority)};
+%         \node[item] (i12) at (0,0) {Threshold Issuer\\(t-of-n security model)};
+%         \node[item] (i13) at (0,-1.3) {Blockchain/Smart Contract\\(decentralized)};
         
-        % Items for box 2 - removed bullet points and centered text
-        \node[item] (i21) at (4.5,1.3) {Rerandomizable Signatures\\(PS-UTT, BBS+)};
-        \node[item] (i22) at (4.5,0) {Structure-Preserving\\Signatures (SPS-EQ)};
-        \node[item] (i23) at (4.5,-1.3) {Merkle Tree/Set Membership\\(zk-creds)};
+%         % Items for box 2 - removed bullet points and centered text
+%         \node[item] (i21) at (4.5,1.3) {Rerandomizable Signatures\\(PS-UTT, BBS+)};
+%         \node[item] (i22) at (4.5,0) {Structure-Preserving\\Signatures (SPS-EQ)};
+%         \node[item] (i23) at (4.5,-1.3) {Merkle Tree/Set Membership\\(zk-creds)};
         
-        % Items for box 3 - removed bullet points and centered text
-        \node[item] (i31) at (9,1.3) {Sigma Protocols\\(linear relations)};
-        \node[item] (i32) at (9,0) {Groth-Sahai/Pairing\\(quadratic relations)};
-        \node[item] (i33) at (9,-1.3) {Circuit-based SNARKs\\(arbitrary computation)};
+%         % Items for box 3 - removed bullet points and centered text
+%         \node[item] (i31) at (9,1.3) {Sigma Protocols\\(linear relations)};
+%         \node[item] (i32) at (9,0) {Groth-Sahai/Pairing\\(quadratic relations)};
+%         \node[item] (i33) at (9,-1.3) {Circuit-based SNARKs\\(arbitrary computation)};
         
-        % Items for box 4 - removed bullet points and centered text
-        \node[item] (i41) at (13.5,1.3) {Performance\\(proof size, verify time)};
-        \node[item] (i42) at (13.5,0) {Expressiveness\\(what can be proven)};
+%         % Items for box 4 - removed bullet points and centered text
+%         \node[item] (i41) at (13.5,1.3) {Performance\\(proof size, verify time)};
+%         \node[item] (i42) at (13.5,0) {Expressiveness\\(what can be proven)};
         
-        \end{tikzpicture}
+%         \end{tikzpicture}
         
   
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
+%     \caption{Anonymous Credentials Framework}
+%     \label{fig:enter-label}
+% \end{figure}
 
 
 
@@ -617,7 +628,7 @@ In accountable privacy, nullifiers should be private, so they shouldn't share th
 I create New Nullifiers from a series of zero-knowledge proof protocols I made. Starting with a non-private one but a faster version of a VRF \cite{hutchison_verifiable_2005}, and then two nullifier constructions. We will use this for Sybil-resistant anonymous credentials. We show ours are super quick and simple compared to the current.
 
 \subsection{Chapter \ref{chap5}}
-Sybil Resistant Threshold Issued Identity System from Anonymous Credentials and Anonymous Nullifiers. In this chapter I add threshold-issuance for credentials and build a sybil-resistant private threshold-issued identity system drawing on the work from \ref{chap2, chap3, chap4} and show it's way more efficient than the other state of the art.
+Sybil Resistant Threshold Issued Identity System from Anonymous Credentials and Anonymous Nullifiers. In this chapter I add threshold-issuance for credentials and build a sybil-resistant private threshold-issued identity system drawing on the work from \ref{chap2}, \ref{chap3}, \ref{chap4} and show it's way more efficient than the other state of the art.
 
 \subsection{Chapter \ref{chap6}}
 Anonymous Credentials Open Source Library - the literature and industry has a gap in implementations for gathering evaluation data for many of these schemes and thus it's hard to determine whether a new scheme has made an improvement or is just using a different technique. I built a few schemes and found many small tricks in the cryptography library make a big difference in concrete implementation efficiency, probably more difference than many "new" papers make theoretically. I wanted to represent this in the Thesis and open-source that for people to use and see.
