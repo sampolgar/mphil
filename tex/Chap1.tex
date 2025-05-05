@@ -1,5 +1,28 @@
 \chapter{Introduction}
 
+\section{The Rise of Digital Identity Wallets and the Need for Secure, Private, Usable Solutions}
+Digital credential wallets, the digital analogue of their physical counterparts, are emerging as essential tools for identity verification in both online and offline contexts. Nations such as India, Singapore, South Korea, Estonia, and Norway have implemented nationwide digital identity systems, while the EU mandates adoption across member states by 2026, and the US advances pilots in 13 states.  These systems aim to streamline identity management, yet their success depends on resolving a fundamental trilemma: ensuring privacy, security, and usability.
+
+Consider the following scenarios
+\begin{enumerate}
+    \item \textbf{KYC/AML Bank Application}: Opening a bank account requires verifying citizenship, age, government issued credentials, and possibly financial standing (bank balances). Traditional KYC processes are slow and complex, with up to 68\% of users abandoning applications, with additional privacy risks of sharing and storing user personal information
+
+    \item \textbf{Social Media Verification:} Accessing social media in Australia will soon require age (over 16) and citizenship verification. A frequent transaction that could leak a childs online movements 
+
+    \item \textbf{Age and Health Status: } Interacting with a medical clinic often requires different criteria to be met, such as a vaccination status, age, insurance status. Current processes require a user to show all information during the process. 
+\end{enumerate}
+
+Across these cases, users seek privacy; disclosing only essential information—while verifiers require security, such as authenticity and fraud resistance. Usability demands rapid, cross-device verification of multiple, hetereogenous credentials. Yet, prior systems falter: they expose excessive data, fuel cybercrime, and lack efficiency. The previous generation of anonymous credential frameworks \cite{hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016}, though innovative, met basic needs—verifying a single credential in 50ms—but fail to address the complex, multi-credential demands of the next generation of identity systems. Verifying multiple credentials is either too slow, lack a theoretical framework and security properties, or lack efficient and private mechanisms for sybil resistance and revocation. These gaps are already driving discussions at the Internet Identity Workshop \cite{internet_identity_workshop_internet_nodate} and looking for solutions.
+
+They are either too slow - verifying multiple credentials for a complex scenario can increase verification time, lack the security properties to verify multiple credentials together, or lack private efficient primitives for sybil resistance and revocation - these use-cases are already in planning at the Internet Identity Workshop \cite{internet_identity_workshop_internet_nodate} and in-search of solutions.
+
+This thesis develops cryptographic primitives to enable digital credential wallets that are fast, private, and resilient to abuse, paving the way for advanced identity solutions that transcend current limitations and unlock new functionality for secure and private digital interactions.
+
+
+\section{Anonymous Credentials}
+
+
+
 
 What are the theme's we're seeing? 
 
@@ -138,15 +161,77 @@ Gap Identification
 
 My Contributions
 
-
-
-
-
-
-
-
-
-
+\begin{figure}
+    \centering
+        \begin{tikzpicture}[
+            box/.style={
+                rectangle,
+                draw=black,
+                thick,
+                minimum width=4cm,
+                minimum height=6cm,
+            },
+            title/.style={
+                rectangle,
+                draw=none,
+                thick,
+                minimum width=3.8cm,
+                minimum height=0.7cm,
+                align=center,
+                font=\bfseries
+            },
+            item/.style={
+                rectangle,
+                draw=black,
+                text width=3.6cm,
+                minimum height=1cm,
+                align=center
+            },
+            arrow/.style={->, >=stealth, thick}
+        ]
+        
+        % Outer boxes
+        \node[box] (box1) at (0,0) {};
+        \node[box] (box2) at (4.5,0) {};
+        \node[box] (box3) at (9,0) {};
+        \node[box] (box4) at (13.5,0) {};
+        
+        % Box titles - removed draw=black
+        \node[title] (t1) at (0,2.5) {Issuance Models};
+        \node[title] (t2) at (4.5,2.5) {Credential Structures};
+        \node[title] (t3) at (9,2.5) {Proof Systems};
+        \node[title] (t4) at (13.5,2.5) {Verification Properties};
+        
+        % Connecting arrows
+        \draw[arrow] (box1.east) -- (box2.west);
+        \draw[arrow] (box2.east) -- (box3.west);
+        \draw[arrow] (box3.east) -- (box4.west);
+        
+        % Items for box 1 - removed bullet points and centered text
+        \node[item] (i11) at (0,1.3) {Single Issuer\\(centralized authority)};
+        \node[item] (i12) at (0,0) {Threshold Issuer\\(t-of-n security model)};
+        \node[item] (i13) at (0,-1.3) {Blockchain/Smart Contract\\(decentralized)};
+        
+        % Items for box 2 - removed bullet points and centered text
+        \node[item] (i21) at (4.5,1.3) {Rerandomizable Signatures\\(PS-UTT, BBS+)};
+        \node[item] (i22) at (4.5,0) {Structure-Preserving\\Signatures (SPS-EQ)};
+        \node[item] (i23) at (4.5,-1.3) {Merkle Tree/Set Membership\\(zk-creds)};
+        
+        % Items for box 3 - removed bullet points and centered text
+        \node[item] (i31) at (9,1.3) {Sigma Protocols\\(linear relations)};
+        \node[item] (i32) at (9,0) {Groth-Sahai/Pairing\\(quadratic relations)};
+        \node[item] (i33) at (9,-1.3) {Circuit-based SNARKs\\(arbitrary computation)};
+        
+        % Items for box 4 - removed bullet points and centered text
+        \node[item] (i41) at (13.5,1.3) {Performance\\(proof size, verify time)};
+        \node[item] (i42) at (13.5,0) {Expressiveness\\(what can be proven)};
+        
+        \end{tikzpicture}
+        
+  
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 
 
@@ -185,39 +270,39 @@ Heterogeneous issuer trust models: Managing credentials from different trust fra
 
 
 
-# High-Level Feedback on Component-Based Introduction Structure
+% # High-Level Feedback on Component-Based Introduction Structure
 
-Your approach using component-based introduction with use cases is excellent - it makes abstract cryptographic concepts accessible while establishing a clear taxonomy. Here's my feedback:
+% Your approach using component-based introduction with use cases is excellent - it makes abstract cryptographic concepts accessible while establishing a clear taxonomy. Here's my feedback:
 
-## Strengths of Your Approach
-- Using framework components as subheadings creates perfect alignment with your diagram
-- Concrete use cases will help ground theoretical concepts
-- The 4-part structure creates a natural progression from issuance to verification
+% ## Strengths of Your Approach
+% - Using framework components as subheadings creates perfect alignment with your diagram
+% - Concrete use cases will help ground theoretical concepts
+% - The 4-part structure creates a natural progression from issuance to verification
 
-## Suggested Enhancements
+% ## Suggested Enhancements
 
-1. **Start with a practical motivating scenario** before introducing the framework - perhaps a brief vignette showing the privacy challenges in digital identity that anonymous credentials solve
+% 1. **Start with a practical motivating scenario** before introducing the framework - perhaps a brief vignette showing the privacy challenges in digital identity that anonymous credentials solve
 
-2. **Add interconnection emphasis** - explicitly show how choices in one component constrain or enable options in subsequent components (e.g., how blockchain issuance naturally leads to certain credential structures)
+% 2. **Add interconnection emphasis** - explicitly show how choices in one component constrain or enable options in subsequent components (e.g., how blockchain issuance naturally leads to certain credential structures)
 
-3. **Include tension points** - highlight the fundamental trade-offs between privacy, efficiency, and expressiveness that drive design choices across components
+% 3. **Include tension points** - highlight the fundamental trade-offs between privacy, efficiency, and expressiveness that drive design choices across components
 
-4. **Create a clear transition bridge** between your framework introduction and your contributions - identify specific gaps in existing approaches that your work addresses
+% 4. **Create a clear transition bridge** between your framework introduction and your contributions - identify specific gaps in existing approaches that your work addresses
 
-## Structure Recommendation
+% ## Structure Recommendation
 
-1. **Opening Problem Statement**: Digital identity privacy challenges
-2. **Framework Introduction**: Brief overview of the four components
-3. **Component Deep Dives**: (Your subheadings)
-   - **Issuance Models**: From centralized to decentralized trust
-   - **Credential Structures**: How attributes are cryptographically bound
-   - **Proof Systems**: The privacy-efficiency-expressiveness triangle
-   - **Verification Properties**: What guarantees can be achieved
-4. **System Taxonomy**: Show how existing systems map to your framework
-5. **Gap Identification**: What combinations remain underexplored?
-6. **Your Contributions**: How your work addresses these gaps
+% 1. **Opening Problem Statement**: Digital identity privacy challenges
+% 2. **Framework Introduction**: Brief overview of the four components
+% 3. **Component Deep Dives**: (Your subheadings)
+%    - **Issuance Models**: From centralized to decentralized trust
+%    - **Credential Structures**: How attributes are cryptographically bound
+%    - **Proof Systems**: The privacy-efficiency-expressiveness triangle
+%    - **Verification Properties**: What guarantees can be achieved
+% 4. **System Taxonomy**: Show how existing systems map to your framework
+% 5. **Gap Identification**: What combinations remain underexplored?
+% 6. **Your Contributions**: How your work addresses these gaps
 
-This structure not only introduces anonymous credentials but positions your framework itself as a contribution - a novel way to categorize and understand the design space.
+% This structure not only introduces anonymous credentials but positions your framework itself as a contribution - a novel way to categorize and understand the design space.
 
 
 
