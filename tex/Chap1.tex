@@ -1,4 +1,306 @@
 \chapter{Introduction}
+
+
+What are the theme's we're seeing? 
+
+Firstly, SSI is becoming mainstream. There are implementations from Microsoft, Amazon, 
+There are mature standards, the EU is moving ahead to mandate this. they've been doing pilots, building infrastructure, they have over 20 usecases for this
+Argentina or someone is using credential wallets on-chain. India has been using a credential wallet for some time. 
+This is magnificent. We have the technology primitives and standards.
+But what's next? What happens when we move to this? 
+Is the cryptography ready? 
+Will users experience a feature gap? Is there any effieincy concerns? 
+What are the upsides? - the upsides for users is having credentials in one place, potentially connected. Verifying identity will be fast, and private. Reduced data breaches as you will hold your data rather than your data being held on any number of external services. The upsides for businesses is that for e.g. identity verification is fast, they don't hold user information. 
+
+We focus our research on preparing the industry for the next step.
+1. efficient credential use. Just building the most efficient credential for the Show+Verify. Using the most efficient and expressive proofs so users can privately prove their attributes. and keeping their things secure.
+2. next we focus on a use-case, identity verification for complex verification scenarios where a multitude of credentials might be needed where a user has heaps of credentials in their wallets. How we can think about security in this model, we thought about it and came up with identity binding security property. Then we demonstrated how fast it is to verify many credentials together, both publicly, and privately showing the cost of adding privacy really isn't much. 
+3. We built the fastest nullifiers which enable these private systems to be sybil resistant, meaning a user can't get more than 1 credential for a given context. This is surprising hard when the credential is anonymous, so we created novel protocols to hide the inputs and optionally hide the outputs but still enable provable uniqueness with hidden values.
+4. We strengthen the security of our credential with threshold issuance, then built a threshold issued identity system with our previous enhancements and show it's really best in class for security, privacy, and efficiency. 
+5. all work was open sourced as an open source library, primarily to show these primitives and etc. 
+
+
+\section{The Privacy-Security-Usability Challenge}
+Digital identity systems today face a fundamental trilemma: balancing privacy protection, security guarantees, and practical usability. Consider the everyday scenario of proving you're over 21 at a venue:
+
+Privacy: You shouldn't need to reveal your exact birthdate, name, or address
+Security: The venue must be certain the credential is authentic and belongs to you
+Usability: Verification should be quick, work across devices, and require minimal technical knowledge
+
+Anonymous credentials resolve this trilemma by allowing users to prove specific attributes without revealing others or enabling tracking. However, their design requires navigating complex trade-offs across four critical components:
+
+\section{The Anonymous Credential Framework}
+% What is the role of an Anonymous Credential
+Anonymous Credentials have two main roles: first, to verify the authenticity of the holder. Second is access control, what rights does this user or service or bot have. Authenticity is generally determined by a successful authentication, for example, a user with a credential proves they know the secret key by giving their public key. Or the user can prove they know the Merkle proof and the root of their membership in a merkle tree. 
+
+% Who are the main actors?
+There are three main actors in an Anonymous Credential System, a User, an Issuer, and a Verifier. 
+The user has attributes wanting to be put in a credential, (or the issuer has them), the issuer issues the credential, and the verifier verifies it. 
+
+% What are the main components?
+The Anonymous Credential itself has four main components, which we illustrate here for clarity and to put our contributions into perspective. 
+
+A credential proves authentication and access control to a verifier. 
+There are usually two processes when verifying attribute-based credentials. 
+
+The Credential itself is an authenticated data structure that cryptographically binds a user's attributes and hides them from the world. The data structure can be authenticated in different ways. For example, it can be in the format of a signature from an authority which can be "blind"-issued, meaning the issuer doesn't see the attributes but can sign without seeing and optionally be proven certain relations exist in the hidden attributes. Additionally, in a decentralized setting where a system wants protection against a set of malicious nodes, signatures can be threshold issued to avoid such fate.
+Credentials may be in the form of an accumulator, a different authenticated data structure. The accumulator may be hosted by a blockchain, users proving set membership in the accumulator (or non-membership) may deduce their authentication and their access rights may be proven from the committed data within the authenticated data structure
+
+Anonymous Credentials come in different flavours, each with a different tradeoff. If signatures, signatures can be issued by a single issuer, or a threshold of issuers, or a blockchain. 
+
+
+
+% The main Protocol Algorithms / Interactions
+Anonymous Credentials have two main algorithm processes.
+
+Obtain, Issue
+Obtain is run by a user, the user may prepare the messages for their credential. They may "commit" to their attributes, which in our Thesis means they run a commitment algorithm and output a hiding and binding cryptographic commitment. 
+
+Issue is run by an issuer, a threshold of them, or even in the case of zk-creds, it's blockchain/smart contract operating a merkel tree.
+
+
+The magnificent thing about anonymous credentials and zero-knowledge proofs is the fact that verification can be somewhat dynamic. The verifier creates a verification statement requirement, such as "the user has a valid credential, their age is over 21, their expiry is bigger than today, etc". The user can generate their proofs in accordance to the criteria while also hiding their credentials. 
+
+Show is an algorithm run by a user to prepare their credential/s for verification. For a signature-based credential, this involves rerandomizing, which generates an indistinguishable version of their original signature, which, by some cryptographic miracle (mainly homomorphism of the underlying credential structure as is the case in BBS+, PS, SPS-EQ), the user generates their proof containing whatever is needed to verify the statement. They may also need to prove membership or non-membership of an accumulator in which they will generate the accumulator membership proof and prove, generally in the same computation, that their credential satisfies all relations within the same computation. 
+
+Verify
+The verifier receives 
+
+
+
+There are many anonymous credential constructions from the literature, each with their own tradeoffs. Most importantly, the choice of anonymous credential determines the authenticated data structure (e.g. the commitment it uses) which determines the proof system compatibility, which determines the expressiveness and efficiency of using the anonymous credential. Which we call the Show+Verify algorithm. 
+
+% How it's secure
+The two main security properties in ABCs is that the credential itself must be unforgeable, and the user must be anonymous. 
+Unforgeability reduces to the underlying cryptographic primitives, if it's a signature, is the signature unforgeable? But perhaps that's not enough, if it's a multi-attribute, the the authenticated data structure must have its own unforgeable properties. For example, if it's a commitment, then a malicious user changing messages in the commitment could have catastrophic consequences, e.g. a user changing a birthdate with an expiry. So the underlying cryptographic message holder must also have it's own security properties, e.g. in commitments it is binding. Unforgeability also reduces to the soundness of the proof system. We use sigma protocols and the soundness extractor to reduce unforgeability of the anonymous credential. . Or different structures like Anonymous Counting Tokens, or Verifiable Random Functions that meet the same anonymous credential security properties.
+
+Now for Anonymity, a system is defined as Anonymous if an adversary is given one credential and two verification proofs (which both verify successfully) and cannot tell which proof is geninune and which proof is made up. That formally suggests that the proof, when used for a genuine authentication cannot leak information about the user. Anonymity in an attribute based credential generally reduces to the hiding property of a commitment scheme and the zero knowledge 
+
+
+
+Issuers
+issuers may be single issuers, threshold issuers, or, in the case of the accumulator, even a blockchain/smart contract.
+Issuers historically are organisations like the government issuing a passport, the DMV issuing a drivers license. Infact, these are all issuers with cryptographic keys and nowadays all have chips that can be read and verified with public keys. 
+Issuers nowadays also include Credential Oracles which are expanding in popularity, modern anonymous credential systems and credential wallets will need to support credential oracles and there are now unique and interesting problems. How to manage a credential wallet with a multitude of heterogenous credentials, some issued by credential oracles, some issued by governments, etc. How to retain accountability of these systems. We look at ways of solving this problem with Identity Binding. 
+
+
+The credential choice filters down through the commitment choice, the proof system that the commitment can be used with, and thus the expressiveness and efficiency of the proofs themselves. 
+Sigma protocols are proofs of the relations of exponents and are extremely efficient and can be used for many credential requirements like . The proof system limits the computation that can be achieved, with sigma protocols, the exponent must be used, and the exponent must be extractable for reducing the scheme securely. Therefore, algebraic-free computation like a hash function, or anything using a hash primitive for messages generally can't be used. For such extensions, zk-SNARKS trade efficiency with general computation compatibility. However, we focus on the efficient requirements of operating a credential wallet with the efficiency, usability. 
+Groth Sahai or pairing based proofs are generally optimised for set membership because of the pairing-based nature of accumultaors but can also be incorporated with sigma protocols with some overhead. SPS-EQ and those type of credentials use set commitments and pairing-based proofs 
+
+zk-SNARKS 
+
+
+
+
+\subsection{Credential Issuance}
+\begin{itemize}
+    \item 
+    \item Single Issuer, Threshold Issuers, Blockchain/Smart Contract
+    \item Anonymity against malicious issuers
+    \item 
+\end{itemize}
+
+
+\subsection{The Credential Structure}
+How attributes are cryptographically bound to an Authenticated Data Structure.
+How this impacts the choice of Proof System, which impacts the expressiveness and efficiency
+\begin{itemize}
+    \item Pedersen Commitments
+    \item Polynomial/Set Commitments
+    \item Hashed Commitments 
+\end{itemize}
+
+
+\subsection{The Proof System}
+\begin{itemize}
+    \item Proving Validity of the Authenticated Data Structure
+    \item Sigma, Pairing-based, 
+\end{itemize}
+
+: The privacy-efficiency-expressiveness triangle
+
+
+\subsection{Use Cases}
+
+Credential Wallet
+Using multiple heterogenous credentials together
+Generating nullifiers from anonymous credentials for sybil resistance
+Threshold Issuance
+
+Gap Identification
+
+- Cross-credential proofs with efficiency
+- Efficiency challenges of previous anonymous credential constructions (especially when considering in the new world we might be verifying multiple credentials together)
+- Heterogeneous issuer trust models: Managing credentials from different trust frameworks
+- 
+
+
+My Contributions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Use Case}
+One overarching use case is a user and their credential wallet.
+Component specific examples
+
+Issuance Models: Show how the wallet must handle credentials from centralized authorities (government), threshold systems (university consortium), and blockchain (professional certification) - highlighting compatibility challenges
+Credential Structures: Demonstrate how different credential formats create storage and management challenges when a user needs to prove "identity + qualification + certification" in a single transaction
+Proof Systems: Illustrate the complexity when a user needs to prove "I'm over 21, qualified in field X, and certified by organization Y" across heterogeneous credentials
+Verification Properties: Show performance bottlenecks when verifying multiple credentials on mobile devices with battery/processing constraints
+
+Gap Identification - where my chapters fit into the 4 blocks
+
+Scale challenges: Traditional systems weren't designed for wallets managing dozens or hundreds of credentials
+Cross-credential proofs: The need to prove statements across different credential types
+Efficiency on constrained devices: Mobile-first verification requirements
+Heterogeneous issuer trust models: Managing credentials from different trust frameworks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# High-Level Feedback on Component-Based Introduction Structure
+
+Your approach using component-based introduction with use cases is excellent - it makes abstract cryptographic concepts accessible while establishing a clear taxonomy. Here's my feedback:
+
+## Strengths of Your Approach
+- Using framework components as subheadings creates perfect alignment with your diagram
+- Concrete use cases will help ground theoretical concepts
+- The 4-part structure creates a natural progression from issuance to verification
+
+## Suggested Enhancements
+
+1. **Start with a practical motivating scenario** before introducing the framework - perhaps a brief vignette showing the privacy challenges in digital identity that anonymous credentials solve
+
+2. **Add interconnection emphasis** - explicitly show how choices in one component constrain or enable options in subsequent components (e.g., how blockchain issuance naturally leads to certain credential structures)
+
+3. **Include tension points** - highlight the fundamental trade-offs between privacy, efficiency, and expressiveness that drive design choices across components
+
+4. **Create a clear transition bridge** between your framework introduction and your contributions - identify specific gaps in existing approaches that your work addresses
+
+## Structure Recommendation
+
+1. **Opening Problem Statement**: Digital identity privacy challenges
+2. **Framework Introduction**: Brief overview of the four components
+3. **Component Deep Dives**: (Your subheadings)
+   - **Issuance Models**: From centralized to decentralized trust
+   - **Credential Structures**: How attributes are cryptographically bound
+   - **Proof Systems**: The privacy-efficiency-expressiveness triangle
+   - **Verification Properties**: What guarantees can be achieved
+4. **System Taxonomy**: Show how existing systems map to your framework
+5. **Gap Identification**: What combinations remain underexplored?
+6. **Your Contributions**: How your work addresses these gaps
+
+This structure not only introduces anonymous credentials but positions your framework itself as a contribution - a novel way to categorize and understand the design space.
+
+
+
+
+
+
+
+% Gaps Your Thesis Addresses
+
+% Wallet-Centric Architecture Scalability (Ch. 2)
+
+% Traditional schemes weren't designed for managing potentially thousands of heterogeneous credentials
+% Your PS-UTT G2 variant achieves 10-16\% faster verification than previous approaches
+
+
+% Security Against Malicious Issuers (Ch. 2)
+
+% Your key verification protocol prevents deanonymization attacks through maliciously generated keys
+
+
+% Multi-Issuer Identity Binding (Ch. 3)
+
+% Your MIMC-ABC system enables users to privately combine credentials from multiple issuers while proving they belong to the same identity
+% Performance evaluations show multi-issuer verification remains efficient (18.67ms vs. 6.77ms baseline)
+
+
+% Efficient Privacy-Preserving Sybil Resistance (Ch. 4)
+
+% Your pairing-free Nullifier construction provides 3-6x more efficient nullifiers than existing approaches
+
+
+% Threshold Sybil-Resistant Identity System (Ch. 5)
+
+% T-SIRIS combines MIMC-ABC and CRBN for threshold issuance with Sybil resistance
+% Outperforms S3ID with 44.1× faster verification for large attribute sets
+
+
+% Proof System Efficiency Beyond Theory (Ch. 6)
+
+% Your benchmark library demonstrates Schnorr protocols achieve sublinear scaling through MSM optimizations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (To be written properly)
 The thesis focuses on improving Anonymous Credentials and specifically for a few use-cases. We will soon be using digital credential wallets (mandated by the EU) \cite{european_parliament_meps_2024} and similar initiatives globally. 
 

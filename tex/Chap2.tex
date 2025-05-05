@@ -957,6 +957,10 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 \section{Expressive Proof Evaluation}\label{chap2:expressive_proofs}
 
+
+
+
+
 \begin{tabular}{|p{2.5cm}|p{2.5cm}|p{3cm}|p{3cm}|p{2cm}|p{3cm}|}
 \hline
 \textbf{Proof System} & \textbf{Expressiveness} & \textbf{Efficiency (Proof Size)} & \textbf{Efficiency (Verification)} & \textbf{Trusted Setup} & \textbf{Key Assumptions} \\
@@ -1055,6 +1059,8 @@ Expressiveness
 The ABC system presented in this chapter primarily employs $\Sigma$-protocols for credential proofs. Here we analyze the comparative advantages of three major proof system classes and justify our implementation choices.
 
 $\Sigma$-protocols excel at proving linear relations—knowledge of discrete logarithms, commitment openings, or equality of committed values—making them ideal for our credential operations. While theoretical analyses suggest linear scaling with attribute count, our empirical measurements (Section~\ref{sec:performance_evaluation}) demonstrate that practical implementations achieve sublinear scaling through Multi-Scalar Multiplication techniques.
+
+
 
 \begin{table}[ht]
 \centering
