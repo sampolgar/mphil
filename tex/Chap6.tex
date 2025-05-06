@@ -1,36 +1,35 @@
 \chapter{Open Source Anonymous Credentials Benchmark Library}\label{chap6}
+Anonymous Credentials lack a standardized, practical evaluation tool which will hinder adoption progress. I introduce an open-source library in Rust that benchmarks state-of-the-art Attribute-Based Anonymous Credential (ABC) schemes under consistent conditions. The field suffers from inconsistent comparisons—varying languages (e.g., Python, C++, Rust) and libraries (e.g., Arkworks, Ethereum PyEcc)—making it hard to assess schemes like BBS+ and PS fairly. Our work bridges this gap, offering practitioners a tool to understand functional differences and performance trade-offs while revealing how cryptographic optimizations enhance efficiency beyond theoretical predictions.
 
+\section{Core Contributions}
+My primary contribution is an open-source Rust library that implements and benchmarks leading ABC schemes (e.g., BBS+, PS, and their variants), providing a standardized framework for fair comparisons. Unlike prior evaluations, which lack consistency, our library ensures identical conditions—same hardware, security parameters, and libraries—highlighting the most efficient scheme for the critical ``Show + Verify'' operation (e.g., PS-UTT22 at 5.38 ms for 30 attributes, a 6.09x speedup over PS16). This tool also serves as an educational resource, helping practitioners explore constructions and select schemes for use cases like decentralized identity or Sybil-resistant voting.
 
-
-\subsection{Core Research Problem}
-The central challenge we’re solving is: How can we establish a fair, standardized, and practical performance evaluation framework for Attribute-Based Anonymous Credential (ABC) schemes to accelerate their real-world adoption? 
-
-There are two major gaps in the current literature:
+My second contribution demonstrates the gap between theoretical and practical cryptography through three optimizations:
 \begin{enumerate}
-    \item Efficiency Comparisons: What are the real performance differences between older and newer anonymous credential schemes when tested under identical conditions (e.g., same hardware, security parameters, and libraries)?
-
-    \item Impact of Optimizations: How do cryptographic library optimizations—like Multi-Scalar Multiplication (MSM), batch verification, or Miller-Loop pairing optimizations—affect the practical efficiency of these schemes compared to their theoretical complexity?
+    \item \textbf{Schnorr Proofs with Multi-Scalar Multiplication (MSM):} I show that Schnorr proofs, often criticized as linear in attribute size, scale sublinearly in practice using MSM, challenging theoretical assumptions and boosting efficiency in New Generation Anonymous Credential schemes using $\G_1$ Schnorr proofs.
     
-\end{enumerate}
-This problem arises because current evaluations use different programming languages (Python, C++, Rust), libraries (Arkworks, Ethereum PyEcc), and optimization choices, creating incomparable results. Consistent benchmarks are needed to compare and select a scheme fairly. 
-
-
-
-\subsection{Core Contributions}
-
-\begin{enumerate}
-    \item Rich Experimental Data for the most popular state-of-the-art ABCs and an Open-source Anonymous Credentials Benchmark Library written in Rust for ongoing fair comparisons. 
-
-    \item Practical Efficiency Optimization Data: Showing the impact of Schnorr proofs using MSM scaling sublinearly rather than linearly as previously thought. 
-
-    \item Random Linear Combination Proof Aggregation (Schnorr proofs, pairings)
-
-    \item Use-case experimental data for zero-knowledge proof statements
-
-    Speedup techniques in rust library
-    % https://github.com/sampolgar/anonymous-credentials/blob/a7cc7d199b7fe54a5863e20bac44f1aee538a58a/ps_utt_ts/src/credential.rs#L94
+    \item \textbf{Batch Verification:} This batching technique aggregates multiple Schnorr proofs, cutting verification time by 50\% (e.g., useful in threshold systems), via random linear combinations—a practical speedup for multi-credential scenarios.
     
+    \item \textbf{Optimized Pairings:} By leveraging Miller-Loop optimizations, I show pairing computation cost can be reduced,  improving pairing-based credential performance.
 \end{enumerate}
+
+These findings, validated in our library, extend beyond ABCs, offering insights for broader cryptographic applications.
+
+
+% Anonymous credential systems promise privacy-preserving identity solutions, yet practitioners often lack accessible tools to understand the practical differences between constructions like Schnorr-based proofs and pairing-based systems. Existing literature focuses heavily on theoretical complexity, leaving an educational gap in functional implementation details—such as what systems can or cannot do in real-world scenarios and how they perform under specific use cases. To address this, we developed an open-source library framework in Rust, implementing state-of-the-art (SOTA) anonymous credential constructions and benchmarking them against each other.
+
+% This library serves as a standardized toolkit, enabling practitioners to explore how different systems handle use cases like decentralized identity or Sybil-resistant voting. By providing empirical performance data alongside functional insights, it clarifies trade-offs that theoretical analyses often overlook. For example, while academic papers may emphasize asymptotic complexity, our benchmarks reveal how optimizations shift these boundaries in practice, making the library a valuable educational and practical resource.
+
+% Open-Source Benchmarking Framework
+
+% We developed the first standardized open-source tooling for fair comparison of anonymous credential schemes, tackling inconsistencies in previous academic evaluations. This framework empowers researchers and industry practitioners to make informed implementation decisions using quantitative performance metrics, moving beyond unfair practical claims or purely theoretical analysis. By enabling reliable and consistent assessments, it accelerates both research advancements and practical adoption of privacy-preserving technologies.
+
+
+\section{Standardized Anonymous Credential Benchmarking}
+
+
+
+The Anonymous Credential field lacks standardized fair comparisons between the leading schemes (particularly BBS+ \cite{hutchison_constant-size_2006} and PS \cite{sako_short_2016}) and their newer variants \cite{camenisch_anonymous_2016}, \cite{tomescu_utt_2022}. Previous evaluations attempt to compare different schemes - although they might use consistent security parameters, variation in programming languages of the implementations (Python, C++, Rust), their underlying cryptography libraries (Arkworks, Ethereum PyEcc), and use of optimizations such as like Multi-Scalar Multiplication, Miller Loop Pairings, and Batch Techniques make fair comparison difficult to quantify. 
 
 
 Anonymous Credentials serve as the backbone of privacy-preserving identity systems. 
@@ -41,73 +40,11 @@ Therefore, the urgent question is, what is this technology's privacy/security co
 
 Previous deployments like IBM's Idemix \cite{camenisch_design_2002} and IRMA \cite{fischer-hubner_towards_2013} based on CL-Signatures \cite{camenisch_design_2002, cimato_signature_2003}, Hyperledger Fabric \cite{androulaki_hyperledger_2018} based on BBS+ \cite{hutchison_constant-size_2006}, Microsoft's U-Prove \cite{dunkelman_formal_2016} based on Brands' signatures \cite{brands_rethinking_2000}, were deployed in pilot programs \cite{dunkelman_formal_2016}, and proved that these systems were secure, private and feature-rich, but inefficient for widespread adoption. Their implementations were based on early constructions we label as "previous generation" and lacked efficient credential verification procedures required for the expected user experience needed for large-scale uptake, which we illustrate below.
 
-\paragraph{IRMA, Idemix and U-Prove: }
 
-IRMA \cite{fischer-hubner_towards_2013} presents the Show+Verify for credential with 3 attributes costs about 1.3seconds (Intel Core i7-8650U CPU with 16 GB of RAM GNU/Linux) in \cite{zhang_passo_2021}
-
-\cite{habib_evaluation_2016}: presents a more thorough evaluation of the Show+Verify algorithms:
-Idemix presents Show + Verify algorithm for 1,2,3 credentials as 110ms, 220ms, 450ms
-U-Prove presents Show + Verify algorithm for 1,2,3 credentials as 180ms, 460ms, 600ms
-Furthermore, they show functionality use-case like selective disclosure (400ms for 1 attribute selective disclosure and 670ms for 2 attributes selective disclosure) and committed attribute equality (120ms). 
-
-The gap we see here is that 
-- doesn't take batch verification into account.
-- selective disclosure costs minimal overhead. (under 1ms)
-- attribute equality costing minimal overhead (under 1ms)
-- Newer schemes \cite{camenisch_anonymous_2016, tomescu_utt_2022} reduce pairing operations in the signature construction itself, coupled with cryptography library improvements reduce all metrics significantly. 
-This hasn't been illustrated properly. 
-
-There is a gap in practical evaluation analysis for newer state-of-the-art constructions which we provide benchmarks for.
-
-
-
-For Anonymous Credential and Privacy-Preserving Identity there is no library to help people learn the differences between constructions, what they can use or can't use and how they differ from a practical / functional implementation standpoint. 
-
-Our contributions
-1. built opensource library framework for SOTA anonymous credentials and benchmarked against each other in rust
-2. Demonstrate that schnorr proofs which are usually "slandered" in academic papers for being linear in the size of the proven attributed are in-fact sublinear in practice due to MSM techniques
-3. we show the speedup from batch / windowing schnorr proofs 
-4. Show the computation reduction in pairings when using miller loop intermediate computation rather than computing and epxonentiating GT points
-
-
-
-The Anonymous Credential field lacks standardized fair comparisons between the leading schemes (particularly BBS+ \cite{hutchison_constant-size_2006} and PS \cite{sako_short_2016}) and their newer variants \cite{camenisch_anonymous_2016}, \cite{tomescu_utt_2022}. Previous evaluations attempt to compare different schemes - although they might use consistent security parameters, variation in programming languages of the implementations (Python, C++, Rust), their underlying cryptography libraries (Arkworks, Ethereum PyEcc), and use of optimizations such as like Multi-Scalar Multiplication, Miller Loop Pairings, and Batch Techniques make fair comparison difficult to quantify. 
-
-
-
-Our first contribution is to show the key cryptographic operations for ABC systems and present the most efficient scheme in terms of the most used operation (Show + Verify). 
-Our second contribution is demonstrating the gap between theoretical and practical cryptography by implementing speedup techniques for critical operations and demonstrating our practical analysis. Our analysis is useful outside of Anonymous Credentials.
-\begin{enumerate}
-    \item First, we show that implementing a Schnorr protocol to prove knowledge of committed exponents scales sublinearly in the size of the attribute length (contrary to the theoretical analyses in most literature) - importantly, before making claims on performance enhancements against previous "linear" schemes, it's imperative for new schemes to compare under these assumptions rather than pure theoretic. 
-
-    \item Second, we show a batch verification technique for multiple individual schnorr proofs improving verification time by 50\%. Demonstrate a batch verification method of individual schnorr proofs (useful in the threshold system where a user commits to each message individually, the verifier can create random linear combination and verify that $(ps_utt_ts_src_signer_batch_verify)$
-
-    \item third, we show that pairing-based credentials significantly improve with optimized Miller-Loop implementations. Transforming a pairing equality check from this to this means a speedup of X. 
-\end{enumerate}
-
-
-
-\section{Bridging the Gap with an Open-Source Library}
-
-Anonymous credential systems promise privacy-preserving identity solutions, yet practitioners often lack accessible tools to understand the practical differences between constructions like Schnorr-based proofs and pairing-based systems. Existing literature focuses heavily on theoretical complexity, leaving an educational gap in functional implementation details—such as what systems can or cannot do in real-world scenarios and how they perform under specific use cases. To address this, we developed an open-source library framework in Rust, implementing state-of-the-art (SOTA) anonymous credential constructions and benchmarking them against each other.
-
-This library serves as a standardized toolkit, enabling practitioners to explore how different systems handle use cases like decentralized identity or Sybil-resistant voting. By providing empirical performance data alongside functional insights, it clarifies trade-offs that theoretical analyses often overlook. For example, while academic papers may emphasize asymptotic complexity, our benchmarks reveal how optimizations shift these boundaries in practice, making the library a valuable educational and practical resource.
-
-Open-Source Benchmarking Framework
-
-We developed the first standardized open-source tooling for fair comparison of anonymous credential schemes, tackling inconsistencies in previous academic evaluations. This framework empowers researchers and industry practitioners to make informed implementation decisions using quantitative performance metrics, moving beyond unfair practical claims or purely theoretical analysis. By enabling reliable and consistent assessments, it accelerates both research advancements and practical adoption of privacy-preserving technologies.
-
-
-
-
-
-
-
-
-
-
-\section{New Generation Anonymous Credentials}
+\section{The Efficiency of New Generation Anonymous Credentials}
 The performance comparison in Table \ref{tab:anon_creds_performance_old_gen_vs_new} demonstrates that newer anonymous credential schemes, such as BBS+2016 \cite{camenisch_anonymous_2016} and PS-UTT22 \cite{tomescu_utt_2022}, outperform older schemes like BBS+06 \cite{hutchison_constant-size_2006} and PS16 \cite{sako_short_2016} by shifting zero-knowledge proofs from the target group $(\mathbb{G}_T)$ to the source group ($\mathbb{G}_1)$\footnote{CL04 \cite{hutchison_signature_2004} is included in previous generation}. For 30 attributes, older schemes require computing over 3$\ell$, and 2$\ell$ $\G_T$ points respectively with Show and Verify times of 39.21 ms (BBS+06) and 32.78 ms (PS16). In comparison, newer schemes compute only in $\G_1$ and minimize pairings, achieving times of 5.72 ms and 5.38 ms—speedups of 6.85x and 6.09x, respectively. These improvements maintain full functionality, including selective disclosure and unlinkability, and rely on standard security assumptions, enhancing the practicality of anonymous credentials for digital identity systems.
+
+
 
 \begin{table}[!ht]
 \centering
@@ -129,64 +66,6 @@ PS-UTT22 & $\mathbb{G}_1$ & 1.59  & 3.79 & 5.38 & 6.09x over PS16 \\
 \end{table}
 
 
-\textbf{Threshold}
-Do a Table comparing Threshold Keys from TACT, Us, and BBS+
-
-
-
-
-\textbf{Crypto Library Optimizations}
-Do a Table showing 
-Single Pairing
-Miller Loop + Final Exponentiation
-G1 Exponentiation, Addition
-G2 Exponentiation, Addition
-GT Exponentiation, Addition
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{ABC Performance Comparison}
 
 
 \begin{table}[htbp]\label{abc-performance-combined-table-chap6}
@@ -266,36 +145,17 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 
 
 
+\subsection{Schnorr Proofs with Multi-Scalar Multiplication (MSM) are Sublinear}\label{sigma-protocol-analysis}
 
+$\Sigma$-protocols, such as Schnorr proofs, are often characterized as having linear complexity with respect to the number of attributes. However, by leveraging multi-scalar multiplication (MSM)—an optimized algorithm widely available in cryptographic libraries—we demonstrate that these proofs achieve sublinear scaling in practice. MSM efficiently computes sums of scalar multiplications in elliptic curve groups, reducing the computational cost of proof generation and verification compared to naive approaches. This positively impacts the performance of Anonymous Credential schemes that leverage $\Sigma$-protocols. Figure \ref{fig:schnorr-benchmarks} provides benchmark results, illustrating the sublinear scaling as the number of attributes increases.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Practical Proof Analysis}
-\subsection{Sigma Protocols}\label{sigma-protocol-analysis}
-Many schemes refer to sigma protocol as having linear size proofs. 
-While this is true in theory, using multi-scalar-multiplication, a popular algorithm in many cryptographic libraries, we show that sigma protocols are, in fact, sublinear rather than linear when message size doubles.
-
-These findings support the hypothesis that practical efficiency is substantially better than theoretical complexity would suggest when using MSM in Schnorr protocols and thus the proof protocols in PS and BBS+ based anonymous credentials are sublinear in practice.
-
-\begin{figure}
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=0.75\linewidth]{schnorr_msm_no_msm.png}
     \caption{Schnorr Protocol - Practical Benchmarks with Multi-Scalar Multiplication}
     \label{fig:schnorr-benchmarks}
 \end{figure}
+
 
 
 
@@ -313,37 +173,12 @@ These findings support the hypothesis that practical efficiency is substantially
 
 
 
-\subsection{Use-Case Case Study}
-
-To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
 
 
 
-\begin{table}[htbp]
-\centering
-\caption{Performance Comparison for Credential Operations}
-\label{tab:expiry-comparison-2}
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Approach} & \textbf{Scheme} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
-\midrule
-Simple Possession & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
-& Us & 2 & 2 & \\
-\midrule
-Expiry & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
-& Us & 2 & 2 & \\
-\midrule
-Linkable Show & \cite{rosenberg_zk-creds_2022} & 41 &  &  \\
-& Us & 2 & 2 & \\
-\midrule
-Rate Limiting & \cite{rosenberg_zk-creds_2022} & 58 &  &  \\
-& Us & 2 & 2 & \\
-\bottomrule
-\end{tabular}
-\end{table}
+\section{Impact and Conclusion}
+This chapter delivers a standardized, accessible tool that empowers researchers and practitioners to evaluate ABC schemes empirically, accelerating their real-world adoption in digital identity systems (e.g., EU eIDAS, US mobile licenses). By debunking theoretical inefficiencies and showcasing practical gains—like sublinear Schnorr proofs and halved verification times—we provide a clearer picture of privacy/security costs. Future work could expand the library with more schemes and optimizations, enhancing its value. In summary, our contributions standardize comparisons, educate users, and optimize performance, paving the way for efficient, privacy-preserving identity solutions.
 
-Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
 
-Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
 
 

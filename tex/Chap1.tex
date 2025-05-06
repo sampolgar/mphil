@@ -141,6 +141,59 @@ Organizations wanting to adopt Anonymous Credential frameworks for integration t
 
 \section{Contributions}
 
+
+\begin{figure}[!htb]
+    \centering
+    
+   \begin{tikzpicture}[
+    % Node styles with reduced sizes
+    chapter/.style={
+        draw,
+        rounded corners,
+        minimum width=3.8cm,         % Reduced from 4.5cm
+        minimum height=1.6cm,        % Reduced from 2cm
+        align=center,
+        font=\small                  % Reduced font size
+    },
+    benchmark/.style={
+        draw,
+        rounded corners,
+        minimum width=14cm,          % Reduced from 16.5cm
+        minimum height=0.9cm,        % Reduced from 1.2cm
+        align=center,
+        font=\small                  % Reduced font size
+    },
+    % Arrow style
+    arrow/.style={thick, ->, >=stealth}
+    ]
+
+    % Top row chapters - same horizontal positions but tighter
+    \node[chapter] (ch2) at (0,0) {\textbf{Chapter \ref{chap2}}\\Fast and Expressive\\Anonymous Credentials};
+    
+    \node[chapter] (ch3) at (5,0) {\textbf{Chapter \ref{chap3}}\\Identity Binding\\Multi-Issuer\\Multi-Credential\\System};
+    
+    \node[chapter] (ch5) at (10,0) {\textbf{Chapter \ref{chap5}}\\Threshold-Issued,\\Sybil-Resistant\\Identity System};
+    
+    % Bottom row - Chapter 4 with reduced vertical gap
+    \node[chapter] (ch4) at (0,-1.8) {\textbf{Chapter \ref{chap4}}\\New Nullifier\\Constructions from\\the q-DDHI};
+    
+    % Chapter 6 with reduced vertical gap
+    \node[benchmark] (ch6) at (5,-3.2) {\textbf{Chapter \ref{chap6}:} Open Source Anonymous Credentials Benchmark Library};
+    
+    % Arrows connecting chapters
+    \draw[arrow] (ch2) -- (ch3);
+    \draw[arrow] (ch3) -- (ch5);
+    
+    % Draw arrow from Chapter 4 to Chapter 5's bottom edge
+    \draw[arrow] (ch4.east) -- ++(8.1,0) -- ++(0,0.3) -- (ch5.south);
+    
+    \end{tikzpicture}
+    
+    \caption{Contribution Roadmap}
+    \label{fig:chap1_contribution_roadmap}
+\end{figure}
+
+
 \subsection{Chapter \ref{chap2}: Fast and Expressive Anonymous Credentials from New Rerandomizable Signatures}
 This chapter directly targets the security-privacy-usability trilemma by improving the base building block, the credential construction itself. I address \textbf{limitations 1, 2, and 3}, by constructing the most efficient Anonymous Credential for Verifiable Presentations (according to my research and benchmarks) by enhancing a variant \cite{tomescu_utt_2022} of the PS signature \cite{sako_short_2016} with Show+Verify time of 5.37ms for a credential with 30 attributes. I also provide empirical, fair benchmarks against the state-of-the-art schemes \cite{hutchison_constant-size_2006, camenisch_anonymous_2016, sako_short_2016, tomescu_utt_2022} using the same cryptography libraries and coding language to ensure comparison takes into account the cryptography itself. Additionally, I included security against malicious issuers by adapting the framework in \cite{fuchsbauer_structure-preserving_2019}, and proved my construction of Rerandomizable Signatures secure in the Anonymous Credential model from \cite{fuchsbauer_structure-preserving_2019}. I also demonstrate that the proof system, $\Sigma$-protocols, excels in satisfying the efficiency-expressive tradeoff. 
 
@@ -157,3 +210,6 @@ This chapter constructs a Threshold-Issued, Sybil-Resistant identity system addr
 
 \subsection{Chapter \ref{chap6}: Open Source Anonymous Credential Library}
 To bridge the gap in standardized evaluations, we develop an open-source library benchmarking state-of-the-art credential schemes under consistent conditions. This resolves \textbf{limitation 7}, giving practitioners the tools to test different constructions and work with empirical data. This library also reveals practical efficiency gains from cryptography library functions like Multi-Scalar Multiplication, Miller-Loop Pairing computation.
+
+
+
