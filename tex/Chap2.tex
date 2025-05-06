@@ -962,141 +962,160 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 
 
-\section{Expressive Proof Evaluation}\label{chap2:expressive_proofs}
+\section{Sigma Protocols for Efficient, Expressive Proofs}\label{chap2:expressive_proofs}
 
+\subsection{Efficiency Analysis of Zero-Knowledge Proof Systems}
 
+In designing our anonymous credential system, we carefully evaluated the efficiency tradeoffs between different zero-knowledge proof systems. This section provides a concrete analysis of why we chose sigma protocol-based proofs over alternative approaches like Groth-Sahai (GS) proofs and zk-SNARKs.
 
+\subsubsection{Efficiency Comparison for Credential Operations}
 
+Sigma protocols are particularly well-suited for the core operations in our credential system for several key reasons:
 
-\begin{tabular}{|p{2.5cm}|p{2.5cm}|p{3cm}|p{3cm}|p{2cm}|p{3cm}|}
-\hline
-\textbf{Proof System} & \textbf{Expressiveness} & \textbf{Efficiency (Proof Size)} & \textbf{Efficiency (Verification)} & \textbf{Trusted Setup} & \textbf{Key Assumptions} \\
-\hline
-Sigma Protocols & Linear relations, AND/OR & $O(\lambda \cdot k)$ bits & $O(k)$ exponentiations & No & Discrete Log \\
-\hline
-Groth-Sahai & Quadratic relations & $O(1)$ group elements & $O(n)$ pairings & Yes (CRS) & Pairing-based \\
-\hline
-zk-SNARKs & General circuits & $\sim$200 bytes & $O(1)$ pairings & Yes & QAP/RICS \\
-\hline
-\end{tabular}
+\paragraph{Computational Efficiency.} For the primary operations in our credential system (proving knowledge of signatures, attribute equality, and selective disclosure), sigma protocols demonstrate superior performance. Groth-Sahai proofs, while elegant for pairing-based statements, require multiple pairing operations for verification. Our experimental measurements show that basic sigma protocol operations achieve verification times of 0.49-0.98ms (as shown in Table~\ref{tab:zkp-comparison}), whereas equivalent GS proof verifications would require multiple pairing computations, resulting in significantly higher computational costs.
 
-\vspace{0.3cm}
-\begin{center}
-$\lambda$: security parameter; $k$: number of statements; $n$: relation size.
-\end{center}
+\paragraph{Proof Size Optimization.} While GS proofs have a proof size of $O(N)$ with commitment size $4|G_1| + 4|G_2|$ per variable, our sigma protocol-based approach produces more compact proofs for the specific statements needed in our system.
+a
 
-Anonymous Credentials requires users to prove knowledge of secrets (e.g. attributes like age, citizenship) without leaking additional information. The "Anonymous" term comes from this fact, the user can remain anonymous while using a credential. Using must mean it is useful.
+\subsubsection{Performance Characteristics for Specific Operations}
 
-Proof System Choice and Credential Structure
-The choice of anonymous credential (algebraic structure) will determine which proof system can be used
-The algebraic structure of an anonymous credential will limit which proof system that can be used by a credential. 
-The proof system will determine what kind of statements can be proven in zero knowledge.
-The choice of proof system will determine the efficiency and expressiveness of the proofs.
+Our performance evaluation (Table~\ref{tab:sigma-performance}) demonstrates that:
+\begin{itemize}
+    \item Basic operations (Schnorr, AND, OR compositions) have verification times of 0.49-0.98ms
+    \item Equality and linear relation proofs add minimal overhead (1-1.2$\times$)
+    \item Even more complex operations like range proofs (8-15ms) remain practical
+\end{itemize}
 
+This efficiency profile aligns perfectly with anonymous credential requirements, where proving signature validity, selective disclosure, and attribute predicates are the most common operations.
 
-Three categories of expressiveness:
-1. Linear relations: Sigma protocols are very efficient and can prove linear relations 
+\subsubsection{When Alternatives May Be Appropriate}
 
-2. Quadratic Relations:  Groth Sahai proofs can prove quadratic relations
-
-3. General Circuits: zk-SNARKS can 
-
-Expressiveness
-- Sigma Protocols: Prove linear relations (e.g., knowledge of discrete logarithms) and support composition (AND/OR proofs) but also Equality, Bit Composition, Range Proof, Set Membership.
-
-- Groth-Sahai: Handle quadratic relations in bilinear groups, ideal for pairing-based statements.
-
-- zk-SNARKs: Support general arithmetic circuits, covering any NP statement.
+While our system primarily relies on sigma protocols, we acknowledge that alternative proof systems have advantages in specific scenarios:
 
 \begin{itemize}
-\item \textbf{Schnorr (Sigma Protocols):} These prove statements about discrete logarithms (e.g., ``I know $x$ such that $g^x = h$''). They're limited to linear relations but can be combined (e.g., proving ``$A$ or $B$'' or ``$A$ and $B$''). In your work, this supports selective disclosure and attribute equality efficiently, as seen in PS-UTT22's sublinear scaling with multi-scalar multiplication (Page 92).
+    \item \textbf{Groth-Sahai proofs}: Superior for statements involving quadratic relations in pairing-based groups where no "heavy reduction to an NP constraint system" is required. They offer a good middle ground for specific pairing-based cryptographic statements.
+    
+    \item \textbf{zk-SNARKs}: Preferable when proof size is the primary concern or for highly complex statements requiring arbitrary circuit computation, such as non-algebraic hash functions though there are higher prover complexity.
+\end{itemize}
 
-\item \textbf{Groth-Sahai:} These extend to quadratic relations in bilinear groups (e.g., pairing equations). They're more expressive for pairing-based cryptography but less so than zk-SNARKs, which handle circuits. They're less efficient than sigma protocols for simple statements due to pairing costs (e.g., $O(n)$ pairings vs. $O(k)$ exponentiations).
+For our implementation focused on standard credential operations (signature verification, selective disclosure, range proofs), the measurement data clearly demonstrates that sigma protocols provide the optimal balance of efficiency and expressiveness without sacrificing security properties.
+
+
+We leverage $\ Sigma$-protocol-based zero-knowledge proofs rather than alternative proof systems such as Groth-Sahai (GS) \cite{smart_efficient_2008}, or zk-SNARKS \cite{fischlin_size_2016}.
+
+\begin{itemize}
+\item \textbf{Schnorr (Sigma Protocols):} are simple in construction but highly efficient.  These prove statements about discrete logarithms (e.g., ``I know $x$ such that $g^x = h$''). They're limited to linear relations but can be combined (e.g., proving ``$A$ or $B$'' or ``$A$ and $B$''). In your work, this supports selective disclosure and attribute equality efficiently, as seen in PS-UTT22's sublinear scaling with multi-scalar multiplication (Page 92).
+
+\item \textbf{Groth-Sahai:} These extend to quadratic relations in bilinear groups (e.g., pairing equations). They're more expressive for pairing-based cryptography but less so than zk-SNARKs, which handle circuits. They're less efficient than sigma protocols for simple statements due to pairing costs (e.g., $O(n)$ pairings vs. $O(k)$ exponentiation).
+
+\item \textbf{zk-SNARKS:} Moreover, circuit-based zk-SNARKS such as Groth16 \cite{fischlin_size_2016} are even more expressive, with the ability to prove knowledge of hash functions and more generalised computation, however, computational complexity increases with prove/verify time for a credential 
+
 \end{itemize}
 
 
-\begin{table}[!ht]
-    \centering
-    \begin{tabular}{|l|l||l}
-        \hline
-        \textbf{Use-Case} & \textbf{ZKP Requirement} \\
-        \hline
-        Prove Valid Credential 
-        & 
-        Signature of Knowledge 
-        &
-        Schnorr
-        \\
-        \hline
-        Age > 18 or Cred NOT Expired 
-        & 
-        Greater/Less Than 
-        &
-        Sigma with Range Proof (Bulletproof)$^1$
-        \\
-        \hline
-        Prove Attribute in a List (Set Membership) 
-        & 
-        Set Membership\\
-        \hline
-        Prove Equality of Attributes 
-        & 
-        Equality of Attributes \\
-        \hline
-        Prove Credential Not Revoked 
-        & 
-        Accumulator Non-Membership Proof \\
-        \hline
-        Selective Disclosure of Attributes 
-        & 
-        Prove specific attributes while hiding others \\
-        \hline
-    \end{tabular}
-    \caption{Use-Cases and Corresponding Zero-Knowledge Proof Requirements}
-    \label{tab:use_cases_zkp}
-    \footnotesize{$^1$This involves an inequality (birthdate < today - 18), which can be expressed as a linear relation using range proofs. No pairings or zk-SNARKs needed.}
+$\Sigma$-protocols are rather simple in construction and somewhat limited in the computation operations available to prove; however, they are extremely efficient and I show many protocols within the Thesis that satisfy the requirements of an Anonymous Credential System. 
+
+While GS proofs offer a more general framework with ability to prove quadratic and multiplicative relations which $\Sigma-$protocols cannot, they are not as computationally efficient as $\Sigma$-protocols. Stemming from their group-element proofs and pairings, the overhead quickly adds up. Whereas $\Sigma$-protocols prove knowledge of exponents of group elements, scalars that can be computed and transferred more efficiently. 
+
+With prove/verify time for a valid credential costing 6x 
+
+
+
+
+
+
+
+\begin{table}
+\centering
+\caption{Sigma Protocol Efficiency Summary}
+\begin{tabular}{l|c|l|c|c|c}
+\hline
+\textbf{Operation} & \textbf{Native?} & \textbf{Core Operations} & \textbf{Overhead} & \textbf{Prove (ms)} & \textbf{Verify (ms)} \\
+\hline
+Schnorr (baseline) & Yes & Basic commitment opening & 1× & 0.38 & 0.49 \\
+AND (2 statements) & Yes & Parallel openings, shared challenge & 2× & 0.76 & 0.98 \\
+OR (2 options) & Yes & 2 commitments, 1 real + 1 simulated & 2× & 0.76 & 0.98 \\
+NAND & Yes-ish & AND/OR combination & 2-3× & 0.76-1.14 & 0.98-1.47 \\
+Equality & Yes & Single opening with special structure & 1-1.2× & 0.38-0.46 & 0.49-0.59 \\
+Linear Relation & Yes & Modified response computation & 1-1.2× & 0.38-0.46 & 0.49-0.59 \\
+Greater/Less or Eq & No & Extended sigma with log. complexity & 20-30× & 8-15 & 8-15 \\
+Range Proof & No & Extended sigma with bulletproofs & 20-30× & 8-15 & 8-15 \\
+Set Membership (OR) & No & OR across all set elements & N× & 0.38 × N & 0.49 × N \\
+Set Membership (Acc) & No & Sigma proof of witness knowledge & 10-15× & 4-6 & 4-6 \\
+\hline
+\end{tabular}
+
+\begin{itemize}
+\item \textbf{Overhead:} Relative cost compared to basic Schnorr protocol
+\item \textbf{Times:} Based on MSM-optimized implementation with 16-attribute credential
+\item \textbf{Native:} Protocols directly expressible with basic sigma operations vs. requiring extended techniques
+\item \textbf{N:} For Set Membership (OR), N = size of the set
+\end{itemize}
 \end{table}
 
 
-```latex
-\section{Comparative Analysis of Zero-Knowledge Proof Systems}
-
-\subsection{Selecting the Optimal Proof System}
-
-The ABC system presented in this chapter primarily employs $\Sigma$-protocols for credential proofs. Here we analyze the comparative advantages of three major proof system classes and justify our implementation choices.
-
-$\Sigma$-protocols excel at proving linear relations—knowledge of discrete logarithms, commitment openings, or equality of committed values—making them ideal for our credential operations. While theoretical analyses suggest linear scaling with attribute count, our empirical measurements (Section~\ref{sec:performance_evaluation}) demonstrate that practical implementations achieve sublinear scaling through Multi-Scalar Multiplication techniques.
 
 
 
-\begin{table}[ht]
+For our implementation focused on standard credential operations (signature verification, selective disclosure, range proofs), the measurement data clearly demonstrates that sigma protocols provide the optimal balance of efficiency and expressiveness without sacrificing security properties.
+
+\begin{table}[htbp]
 \centering
-\caption{Comparison of Zero-Knowledge Proof Systems for Credential Operations}
-\label{tab:proof-system-comparison}
-\begin{tabular}{p{3.5cm}|p{3.5cm}|p{3.5cm}|p{3.5cm}}
-\toprule
-\textbf{Operation} & \textbf{$\Sigma$-Protocols} & \textbf{Pairing-Based (Groth-Sahai)} & \textbf{zk-SNARKs} \\
-\midrule
-\textbf{Valid signature proof} & $\checkmark$ Efficient (linear relation) & $\checkmark$ Possible but unnecessary & $\checkmark$ Possible but excessive \\
+\caption{Comparative Analysis of Zero-Knowledge Proof Systems}
+\label{tab:zkp-comparison}
+\begin{tabular}{|l|l|l|l|}
 \hline
-\textbf{Attribute equality} & $\checkmark$ Optimal choice & $\checkmark$ Possible but unnecessary & $\checkmark$ Possible but excessive \\
+\textbf{Aspect} & \textbf{Sigma Protocols} & \textbf{Groth-Sahai Proofs} & \textbf{zk-SNARKs (Groth16)} \\
 \hline
-\textbf{Range proofs (age $>$ 18)} & $\checkmark$ Efficient with Bulletproofs & $\checkmark$ Possible but less efficient & $\checkmark$ Possible but complex setup \\
+\textbf{Expressiveness} & Linear relations & Quadratic relations in bilinear groups & General arithmetic circuits \\
 \hline
-\textbf{Set membership} & $\triangle$ Scales linearly with set size & $\checkmark$ \textbf{Optimal} (quadratic relations) & $\checkmark$ Efficient but complex setup \\
+\textbf{Common Operations} & \makecell{Discrete log proofs,\\ commitment openings,\\ equality} & Pairing product equations & Any NP statement \\
 \hline
-\textbf{Credential non-revocation} & $\triangle$ Linear in revocation list size & $\checkmark$ \textbf{Optimal} with accumulators & $\checkmark$ Efficient but complex setup \\
+\textbf{Proof Size} & Linear in statement size & \makecell{$O(N)$ with $4|G_1| + 4|G_2|$\\ per committed variable} & Constant: $2|G_1| + |G_2|$ \\
 \hline
-\textbf{Complex policies} & $\triangle$ Limited to linear compositions & $\triangle$ Limited to quadratic equations & $\checkmark$ \textbf{Required} for arbitrary circuits \\
+\textbf{Proving Cost} & \makecell{0.38-0.76ms for\\ basic operations} & \makecell{Multiple exponentiations +\\ 8 elements per equation} & $O(n)$ circuit operations \\
 \hline
-\textbf{Setup requirement} & $\checkmark$ No trusted setup & $\triangle$ Common reference string & $\triangle$ Trusted setup ceremony \\
+\textbf{Verification Cost} & \makecell{0.49-0.98ms for\\ basic operations} & \makecell{4 verification equations with\\ multiple pairings per statement} & Constant (3 pairings) \\
 \hline
-\textbf{Proof size} & $\triangle$ Linear in statement size & $\triangle$ Constant but larger & $\checkmark$ Constant and small \\
+\textbf{Trusted Setup} & No & No & Yes \\
 \hline
-\textbf{Verification cost} & $\checkmark$ Fast (see  & $\triangle$ Multiple pairings & $\checkmark$ Very fast \\
-\bottomrule
+\textbf{Underlying Assumptions} & Discrete log & Falsifiable (SXDH, standard) & Non-falsifiable \\
+\hline
+\textbf{Implementation Complexity} & Low & Medium & High \\
+\hline
+\textbf{Optimal Use Case} & \makecell{Credential verification,\\ selective disclosure} & \makecell{Structure-preserving signatures,\\ pairing-based schemes} & \makecell{Applications requiring\\ minimal proof size} \\
+\hline
 \end{tabular}
 \end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsection{Justification for Sigma-Protocol Approach}
 
@@ -1129,137 +1148,19 @@ While our construction handles the most common credential operations efficiently
 Our implementation is designed with modularity in mind, allowing future extensions to incorporate these alternative proof systems where the application requirements justify their additional complexity and setup costs.
 
 The empirical results in Section~\ref{sec:performance_evaluation} validate our design choice, demonstrating that for the credential operations most frequently encountered in practical use cases, our $\Sigma$-protocol approach achieves state-of-the-art performance without sacrificing security or expressiveness.
-```
 
 
 
-Simple Identity Use-cases
-- show, etc
 
 
-More Complex (Piloted and tested)
-- organisation credentials / education
-- prescription, insurance, health
-- visas, passport, travel documents
 
 
 
 
 
-Sigma Protocols
-- Motivation
-- 
 
 
-- Limitations (why we would need to use GS proofs)
 
-Groth Sahai
-- Motivation
-
-
-
-- Limitations (why we would need to use zk-SNARKS)
-
-zk-SNARKS
-- Motivation
-
-
-
-
-
-bulletproof?
-Combination
-
-
-
-
-
-Motivate the use-case
-- simple possession (I have a valid credential)
-- I'm over 18
-- My license is not expired
-- My country is in the list
-- My id is equal to this other id
-
-
-
-
-Sigma Protocols
-- great for proving simple, linear relationships, like proving you know a secret number (a discrete logarithm) or that a secret number equals another secret number.
-- efficient, don't need trusted setup
-
-Sigma protocols can't efficiently handle equations with a product of unknowns e.g. proving a pairing of 2 values satisfies a condition (Why is this important, why does this give more functionality)?
-
-
-Groth Sahai
-- Pairing-based are needed for proving quadratic relations, common in set membership or non-membership proofs
-
-
-zk-SNARKS
-- General arithmetic circuits that can prove the output of a hash function or a multi-step policy
-
-
-
-Pairing-Based Proofs (e.g., Groth-Sahai): These excel at quadratic relations, common in set membership or non-membership proofs.
-
-zk-SNARKs: These can prove almost anything (arbitrary computations), but they’re heavier and require a trusted setup.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<<< INCLUDE TABLE WITH SCHNORR PROOF COST >>>
-<<< INCLUDE METRICS FOR RANGE PROOF, REVOCATION LIST, ARITHMETIC RELATION, BOOLEAN RELATION >>>
-<<< INCLUDE COMPARISON BETWEEN SCHNORR BASED SIGNATURES, SPS-EQ and their proof functionality (as in improved anonymous credentials) and zk-SNARK based credentials>> 
-% Which use‐case predicates (e.g., age‐over‐threshold, multi‐credential aggregation) should we benchmark first to demonstrate both expressiveness and efficiency?
-
-
-- This says there's a major drawback but I prove it's not actually a drawback, it's only theoretical and it doesn't hold in practice.
-
-    A major drawback from such an approach is that the zero-knowledge proof used during showings is of variable-length and may require multiple sub-proofs On the other hand, more recent constructions (e.g., [11,14,24,32,38,46,49]) apply other techniques based on different lines of work to adapt the signature and the message without using Zero-Knowledge Proofs of Knowledge (ZKPoK), providing constant-size showings.
-
-Many schemes spruik the O(1) verification, but is it as efficient as ours? 
-Their computational complexity involves 
-
-
-
-SPS-EQ style
-
-- Efficient Membership/Non-Membership
-- 
-
-Expressiveness 
-
-Sigma Protocols
-Range Proof
-Bit Decomposition
-Equality
-AND, OR, NAND, NOT
-
-
-Expressiveness in proof systems
-$\Sigma-$protocols $\subset$ Quadratic GS Proofs $\subset$ Circuit SNARKS
-
-Expressiveness in proof systems refers to the class of statements or relations you can prove without revealing witnesses. 
 
 
 

@@ -15,9 +15,9 @@ These findings, validated in our library, extend beyond ABCs, offering insights 
 
 
 
-\subsection{Anonymous Credential Microbenchmarks}
+\section{Fair Anonymous Credential Microbenchmarks}
 
-The results table \ref{abc-performance-combined-table-chap6} demonstrates the standardized benchmark results, demonstrating newer anonymous credential schemes, such as BBS+2016 \cite{camenisch_anonymous_2016} and PS-UTT22 \cite{tomescu_utt_2022}, outperform older schemes like BBS+06 \cite{hutchison_constant-size_2006} and PS16 \cite{sako_short_2016} by shifting zero-knowledge proofs from the target group $(\mathbb{G}_T)$ to the source group ($\mathbb{G}_1)$\footnote{CL04 \cite{hutchison_signature_2004} is included in previous generation}. For 30 attributes, older schemes require computing over 3$\ell$, and 2$\ell$ $\G_T$ points respectively with Show and Verify times of 39.21 ms (BBS+06) and 32.78 ms (PS16). In comparison, newer schemes compute only in $\G_1$ and minimize pairings, achieving times of 5.72 ms and 5.38 ms—speedups of 6.85x and 6.09x, respectively. These improvements maintain full functionality, including selective disclosure and unlinkability, and rely on standard security assumptions, enhancing the practicality of anonymous credentials for digital identity systems.
+The results table \ref{abc-performance-combined-table-chap6} demonstrates the standardized benchmark results from my Anonymous Credential library \cite{polgar_anonymous_2025}, demonstrating newer anonymous credential schemes, such as BBS+2016 \cite{camenisch_anonymous_2016} and PS-UTT22 \cite{tomescu_utt_2022}, outperform older schemes like BBS+06 \cite{hutchison_constant-size_2006} and PS16 \cite{sako_short_2016} by shifting zero-knowledge proofs from the target group $(\mathbb{G}_T)$ to the source group ($\mathbb{G}_1)$\footnote{\cite{hutchison_signature_2004} is included in previous generation}. For 30 attributes, older schemes require computing over 3$\ell$, and 2$\ell$ $\G_T$ points respectively with Show and Verify times of 39.21 ms (BBS+06) and 32.78 ms (PS16). In comparison, newer schemes compute only in $\G_1$ and minimize pairings, achieving times of 5.72 ms and 5.38 ms—speedups of 6.85x and 6.09x, respectively. These improvements maintain full functionality, including selective disclosure and unlinkability, and rely on standard security assumptions, enhancing the practicality of anonymous credentials for digital identity systems.
 
 
 
@@ -51,6 +51,9 @@ PS-UTT22 & $\mathbb{G}_1$ & 1.59  & 3.79 & 5.38 & 6.09x over PS16 \\
 
 
 
+\section{Evaluating Cryptography Library Optimizations}
+A key challenge when assessing Anonymous Credential constructions is the use of optimizations lowering computational cost and therefore making practical benchmarks unclear and potentially unfair comparisons between different libraries. Optimizations like Multi-Scalar Multiplication and Pairing techniques lower computational cost. 
+Below, I explore the impact of these optimizations: 
 
 
 
@@ -115,15 +118,11 @@ These optimizations, implemented in our Rust library using frameworks like Arkwo
     \label{fig:elliptic_curve_pairings_speedup}
 \end{figure}
 
-% Concluding remarks
-In summary, pairing optimizations bridge the theoretical-practical divide, making pairing-based anonymous credentials viable for real-world applications. Our library not only implements these techniques but also provides a standardized platform to quantify their benefits, offering practitioners actionable insights for deploying efficient privacy-preserving systems.
-
 
 
 \section{Impact and Conclusion}
-This chapter delivers a standardized, accessible tool that empowers researchers and practitioners to evaluate ABC schemes empirically, accelerating their real-world adoption in digital identity systems (e.g., EU eIDAS, US mobile licenses). By debunking theoretical inefficiencies and showcasing practical gains—like sublinear Schnorr proofs and halved verification times—we provide a clearer picture of privacy/security costs. Future work could expand the library with more schemes and optimizations, enhancing its value. In summary, our contributions standardize comparisons, educate users, and optimize performance, paving the way for efficient, privacy-preserving identity solutions.
 
-
+My work addresses the challenge of inconsistent ABC evaluations by delivering a standardized Rust-based benchmarking library. Through rigorous empirical analysis, I uncover performance improvements as sent throughout the Thesis. These results bridge the divide between theoretical cryptography and real-world implementation, facilitating the adoption of ABCs in applications such as decentralized identity and secure voting systems. While currently focused on Rust-compatible schemes, future enhancements could integrate additional cryptographic primitives and optimizations, broadening its scope. Ultimately, this library empowers the cryptographic community with a resource for learning and implementing privacy-preserving technologies.
 
 
 
@@ -192,3 +191,4 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 \end{tabular}
 \end{table}
 
+\clearpage
