@@ -43,11 +43,11 @@ This chapter develops the cryptographic foundations needed for credential wallet
         \item Satisfaction of Anonymous Credential model \cite{fuchsbauer_structure-preserving_2019} security properties—correctness, unforgeability, and anonymity—for multi-show operations (Section \ref{sec:abc})
     \end{itemize}
 
-    \item \textbf{Fastest Show+Verify Operations:} Our construction achieves 10-16\% faster verification than UTT \cite{tomescu_utt_2022} and outperforms the most popular BBS+ variant \cite{camenisch_anonymous_2016} - we validate through comprehensive benchmarks \ref{sec:performance_evaluation}.
+    \item \textbf{Fastest Show+Verify Operations:} My construction achieves 10-16\% faster verification than UTT \cite{tomescu_utt_2022} and outperforms the most popular BBS+ variant \cite{camenisch_anonymous_2016} - I validate through comprehensive benchmarks \ref{fig:show_verify_utt_us}.
 
     \item \textbf{Malicious Issuer Security through Key Verification Protocols:} We formalize anonymity guarantees against malicious issuer via mandatory key verification (Section \ref{subsec:malicious_issuer_security_guarantee}), preventing deanonymization attacks through maliciously generated keys—a vulnerability that existing schemes do not address.
 
-    \item \textbf{Empirical Validation of Schnorr Protocol Efficiency:} Comprehensive benchmarks \ref{fig:schnorr-benchmarks}reveal that Schnorr protocols achieve sublinear complexity for attribute proofs via multi-scalar multiplication, outperforming theoretical predictions and enabling almost constant-size expressive predicate evaluation.
+    \item \textbf{Empirical Validation of Schnorr Protocol Efficiency:} Comprehensive benchmarks \ref{fig:schnorr-benchmarks} reveal that Schnorr protocols achieve sublinear complexity for attribute proofs via multi-scalar multiplication, outperforming theoretical predictions and enabling almost constant-size expressive predicate evaluation.
 \end{enumerate}
 
 \subsubsection*{Chapter Roadmap}
@@ -1474,72 +1474,39 @@ The advantage thus bounds the adversary's total advantage in the anonymity game 
 \section{Performance Evaluation}\label{sec:performance_evaluation}
 
 
-We implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. Our experiments were conducted on a MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2. All measurements represent the average of 100 independent trials with standard deviations below 5\%.
-
-\subsubsection{Implementation Details}
-We used the BLS12-381 elliptic curve group with 381-bit base field (approximately 128-bit security level) for all evaluated schemes. For multi-scalar multiplication operations, we leveraged arkworks' optimized MSM implementation that uses Pippenger's algorithm with windowing optimizations.
-
-\subsubsection{Schemes Evaluated}
-We implemented and compared five anonymous credential schemes:
-\begin{itemize}
-    \item BBS+ (2006) \cite{hutchison_constant-size_2006}: The original BBS+ signature scheme
-    \item BBS+ (2016) \cite{camenisch_anonymous_2016}: An optimized version with improved verification
-    \item PS (2016) \cite{sako_short_2016}: The Pointcheval-Sanders signature scheme adapted for credentials
-    \item PS-UTT G1 \cite{tomescu_utt_2022}: The UTT variant with signatures in $\mathbb{G}_1$
-    \item PS-UTT G2 (Our work): Our optimized variant with signatures in $\mathbb{G}_2$
-\end{itemize}
-
-\subsubsection{Performance Metrics}
-For each scheme, we measured four primary operations:
-\begin{itemize}
-    \item \textbf{Obtain}: User commitment generation and request preparation
-    \item \textbf{Issue}: Issuer credential generation and signing
-    \item \textbf{Show}: User credential presentation with zero-knowledge proof generation
-    \item \textbf{Verify}: Verifier signature and proof verification
-\end{itemize}
-
-We focused on per-credential computation time as our primary metric, varying the number of attributes per credential from 2 to 30 to understand scaling behavior. Each operation was timed independently to identify specific performance bottlenecks and advantages.
-
-Our implementation is available in our open-source repository \cite{polgar_anonymous_2025} allowing for reproduction of our results.
+I implemented all credential schemes using the arkworks library \cite{arkworks_contributors_arkworks_2022} in Rust, ensuring consistent cryptographic primitives across all implementations. My experiments were conducted on a MacBook Air M2 (2022) with 16GB RAM running macOS Sequoia 15.3.2. All measurements represent the average of 100 independent trials with standard deviations below 5\%. I used the BLS12-381 elliptic curve group with 381-bit base field (approximately 128-bit security level) for all evaluated schemes. For multi-scalar multiplication operations, I leveraged arkworks' optimized MSM implementation that uses Pippenger's algorithm with windowing optimizations. All operations are single-threaded. 
 
 
+\subsection{Empirically Faster Credential Presentations Compared to Original Construction in UTT}
 
+My $\G_2$ signature variant from \ref{subsec:g2_verify_speedup} optimizes credential presentation over credential issuance, representing optimization of 10 - 15\% improvement over the original approach \cite{tomescu_utt_2022} as seen in figure \ref{fig:show_verify_utt_us} and detailed in table \ref{tab:g1-g2-comparison}. It's worth noting that a 10 - 15\% improvement compounds when a user is verifying multiple credentials from a credential wallet. By relocating signature components from $\G_1$ to $\G_2$, I achieve faster credential presentation.
 
-\subsection{Our Construction Improves on Key Credential Operations}
-
-Our G2 signature variant \ref{subsec:g2_verify_speedup} represents an optimization over the PS-UTT G1 approach described in \cite{tomescu_utt_2022}. By relocating signature components from $\G_1$ to $\G_2$, we achieve verification speedups and complete Show + Verify speedup by reducing a pairing operation. 
-
-
-\begin{figure}
+\begin{figure}[!htbp]
     \centering
     % First row with two larger figures
     \begin{minipage}{\textwidth}
         \centering
-        \includegraphics[width=0.75\textwidth]{figures/show_verify_utt_g2.png}
+        \includegraphics[width=0.95\textwidth]{figures/chap2_show_verify_utt_vs_us.png}
     \end{minipage}
-    
-    \vspace{0.05cm}
 
     \vspace{0.05cm}
     
     % Bottom row with 2x2 grid of smaller figures
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{figures/show_utt_g2.png}
+        \includegraphics[width=\textwidth]{figures/chap2_show_utt_vs_us.png}
     \end{minipage}
-    \hfill
-    \begin{minipage}{0.48\textwidth}
+    \hspace{-1em}  % Add negative space to bring plots closer
+    \begin{minipage}{0.49\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{figures/verify_utt_g2.png}
+        \includegraphics[width=\textwidth]{figures/chap2_verify_utt_vs_us.png}
     \end{minipage}
     
-    \caption{Performance Comparison between UTT and Our Construction. We improve key operations: Verify and Show + Verify}
+    \caption[Credential Presentation Comparison - My Construction is Fastest]{Credential Presentation Comparison between UTT and my G2 variant - my construction is the fastest by 10 - 15\%}
     \label{fig:show_verify_utt_us}
 \end{figure}
-
-
-
-\begin{table}[htbp]
+\vspace{-0.05cm}
+\begin{table}[!htbp]
 \centering
 \caption{Performance Comparison: PS-UTT and Our Construction (time in ms)}
 \label{tab:g1-g2-comparison}
@@ -1547,14 +1514,14 @@ Our G2 signature variant \ref{subsec:g2_verify_speedup} represents an optimizati
 \toprule
 \textbf{Attributes} & \multicolumn{2}{c@{\hspace{4em}}}{\textbf{Show}} & \multicolumn{2}{c@{\hspace{2.5em}}}{\textbf{Verify}} & \multicolumn{2}{c}{\textbf{Show + Verify}} \\
 \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
- & \textbf{G1} & \textbf{G2 (Ours)} & \textbf{G1} & \textbf{G2 (Ours)} & \textbf{G1} & \textbf{G2 (Ours)} \\
+ & \textbf{\cite{tomescu_utt_2022}} & \textbf{Mine} & \textbf{\cite{tomescu_utt_2022}} & \textbf{Mine} & \textbf{\cite{tomescu_utt_2022}} & \textbf{Mine} \\
 \midrule
-2 & 1.14 & 1.29 (11.6\% $\uparrow$) & 2.47 & 1.79 (27.5\% $\downarrow$) & 3.61 & 3.08 (14.7\%$\downarrow$) \\
-5 & 1.16 & 1.29 (10.1\% $\uparrow$)& 2.73 & 2.01 (26.4\%$\downarrow$) & 3.90 & 3.30 (15.4\%$\downarrow$) \\
-10 & 1.22 & 1.33 (8.27\% $\uparrow$) & 3.16 & 2.44 (22.8\%$\downarrow$) & 4.38 & 3.77 (13.9\%$\downarrow$) \\
-15 & 1.40 & 1.37 (2.19\% $\downarrow$)& 3.47 & 2.72 (21.6\%$\downarrow$) & 4.87 & 4.09 (16.0\%$\downarrow$) \\
-20 & 1.41 & 1.51 (6.62\% $\uparrow$) & 3.84 & 3.21 (16.4\%$\downarrow$) & 5.25 & 4.72 (10.1\%$\downarrow$) \\
-30 & 1.37 & 1.59 (13.8\% $\uparrow$)& 4.67 & 3.79 (18.8\%$\downarrow$) & 6.04 & 5.37 (11.1\%$\downarrow$) \\
+2 & 1.14 & 1.29  & 2.47 & 1.79  & 3.61 & 3.08 (14.7\%$\downarrow$) \\
+5 & 1.16 & 1.29 & 2.73 & 2.01  & 3.90 & 3.30 (15.4\%$\downarrow$) \\
+10 & 1.22 & 1.33  & 3.16 & 2.44  & 4.38 & 3.77 (13.9\%$\downarrow$) \\
+15 & 1.40 & 1.37 & 3.47 & 2.72  & 4.87 & 4.09 (16.0\%$\downarrow$) \\
+20 & 1.41 & 1.51  & 3.84 & 3.21  & 5.25 & 4.72 (10.1\%$\downarrow$) \\
+30 & 1.37 & 1.59 & 4.67 & 3.79  & 6.04 & 5.37 (11.1\%$\downarrow$) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1563,23 +1530,36 @@ Our G2 signature variant \ref{subsec:g2_verify_speedup} represents an optimizati
 
 
 
-\subsection{Performance Comparison: Our Construction is State-Of-The-Art}
 
-We now present a comprehensive comparison of our construction against four state-of-the-art anonymous credential schemes. Table~\ref{abc-performance-combined-table} summarizes the performance across all credential operations and attribute counts.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Empirically Faster Credential Presentations Compared to Popular Anonymous Credentials}
+I implemented and compared five Anonymous Credential schemes, BBS+ (2006) \cite{hutchison_constant-size_2006}: The original BBS+ signature scheme, BBS+ (2016) \cite{camenisch_anonymous_2016}: An optimized version with proofs in $\G_1$, PS (2016) \cite{sako_short_2016}: The Pointcheval-Sanders scheme, UTT \cite{tomescu_utt_2022}: The UTT variant with signatures in $\mathbb{G}_1$ and my optimized variant with signatures in $\mathbb{G}_2$. I benchmarked the Anonymous Credential algorithms and present the data. Implementations and benchmarks are available for reproduction\footnote{https://github.com/sampolgar/anonymous-credentials} \cite{polgar_anonymous_2025}
 
 \begin{figure}
     \centering
     % First row with two larger figures
     \begin{minipage}{\textwidth}
         \centering
-        \includegraphics[width=0.75\textwidth]{figures/anoncreds_obtain_issue.png}
+        \includegraphics[width=0.75\textwidth]{figures/chap2_anoncreds_obtain_issue.png}
     \end{minipage}
     
     \vspace{0.05cm}
     
     \begin{minipage}{\textwidth}
         \centering
-        \includegraphics[width=0.75\textwidth]{figures/anoncreds_show_verify.png}
+        \includegraphics[width=0.75\textwidth]{figures/chap2_anoncreds_show_verify.png}
     \end{minipage}
     
     \vspace{0.05cm}
@@ -1587,24 +1567,24 @@ We now present a comprehensive comparison of our construction against four state
     % Bottom row with 2x2 grid of smaller figures
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{figures/anoncreds_obtain.png}
+        \includegraphics[width=\textwidth]{figures/chap2_anoncreds_obtain.png}
     \end{minipage}
     \hfill
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{figures/anoncreds_issue.png}
+        \includegraphics[width=\textwidth]{figures/chap2_anoncreds_issue.png}
     \end{minipage}
     
     \vspace{0.1cm}
     
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{figures/anoncreds_show.png}
+        \includegraphics[width=\textwidth]{figures/chap2_anoncreds_show.png}
     \end{minipage}
     \hfill
     \begin{minipage}{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{figures/anoncreds_verify.png}
+        \includegraphics[width=\textwidth]{figures/chap2_anoncreds_verify.png}
     \end{minipage}
     
     \caption{Performance comparison of different operations across varying numbers of attributes}
@@ -1687,8 +1667,6 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 
 
 
-\subsection{Future Work}
-Benchmark these schemes against SPS-EQ and zk-creds for efficient anonymous credential comparison.
 
 
 
@@ -1718,63 +1696,6 @@ Benchmark these schemes against SPS-EQ and zk-creds for efficient anonymous cred
 
 
 
-
-
-
-
-
-% \subsection{Introduction}
-% Privacy-preserving authentication systems require cryptographic primitives that allow users to prove certified attributes (e.g., citizenship, qualifications) without revealing additional information or enabling linkage across sessions. Anonymous credential schemes address this by encoding attributes into cryptographically randomized signatures, enabling users to generate unlinkable "showings" of credentials through zero-knowledge proofs (ZKPs). A critical challenge lies in balancing three properties: (1) multi-show unlinkability (proving attributes without correlating sessions), (2) selective disclosure (revealing subsets of attributes), and (3) practical efficiency for real-world deployment.
-
-% The problems in accountable privacy were first introduced by Chaum \cite{chaum_untraceable_1981, chaum1985security} and later formalized as the \emph{CL framework} \cite{goos_pseudonym_2000, goos_efficient_2001}, establishing the paradigm of encoding credentials as signatures over committed attributes. While early signature schemes lacked the algebraic structure to support efficient ZKPs and signature randomization, the advent of pairing-based cryptography \cite{goos_short_2001, hutchison_short_2004} coupled with commitment schemes and zero-knowledge proof systems enabled homomorphic rerandomization of credentials—allowing users to transform signatures into fresh, unlinkable versions while preserving validity.
-
-% \subsection{Evolution of Anonymous Credential Schemes}
-% The progression of anonymous credential schemes reflects a sustained effort to simplify the mathematical structures underlying zero-knowledge proofs:
-
-% \paragraph{CL Signatures \cite{cimato_signature_2003, hutchison_signature_2004}}
-% Built on early pairing-based constructions, CL credentials introduced homomorphic rerandomization but required linear-in-attributes pairing operations during proofs, limiting scalability for complex credentials.
-
-% \paragraph{BBS+ Signatures \cite{hutchison_constant-size_2006}}
-% Achieved constant-size credentials by intertwining message commitments with signatures. While \cite{camenisch_anonymous_2016} improved computational complexity, The signature leverages the q-SDH assumption \cite{boneh_short_2008}, requiring a mathematical structure that which intertwines the message and secret key $A^{\frac{1}{x+e}}$ which enables zkp statements but complicates proofs 
-
-% \paragraph{BBS+ Signatures \cite{hutchison_constant-size_2006}}
-% Achieved constant-size credentials through a structure where signatures take the form $A = (gh_0^s\prod_{i=1}^n h_i^{m_i})^{\frac{1}{e+x}}$. While \cite{camenisch_anonymous_2016} improved computational complexity, the signature structure necessitates complex blinding operations with inverse relationships ($r_3 = \frac{1}{r_1}$), cross-terms ($s' = s - r_2 \cdot r_3$), and complex equality checks during proof generation, e.g. 
-% \[
-% g = ((gh_0^s \prod_1^nh_i^{-m_i})^{r_1} \cdot h_0^{-r_2})^{r_3}h_0^{-s'}\prod_{i=1}^n h_i^{-m_i}
-% \]
-% This leads to a zero-knowledge proof relation involving multiple auxiliary variables and non-linear equations, complicating the implementation and composition of proofs across multiple credentials.
-
-
-% \paragraph{PS and PS\_UTT Signatures \cite{sako_short_2016, tomescu2022utt}}
-% Introduced separation between signature components and message commitments. The UTT variant further simplified rerandomization by decoupling attribute commitments from the core signature structure, enabling linear ZKP relations over Pedersen commitments. PS based signature rely on the LRSW assumption \cite{goos_pseudonym_2000} rather than BBS+ q-SDH which enables simpler algebraic structures, which we show now. 
-
-% \subsection{Cryptographic Foundations: q-SDH vs LRSW}
-% The choice between these shapes the proof complexity:
-
-% \paragraph{BBS+ and q-SDH Limitations}
-% The $q$-Strong Diffie-Hellman (q-SDH) assumption \cite{boneh_short_2008} requires signatures of the form $A = (g_0g_1^s\prod h_i^{m_i})^{\frac{1}{e+x}}$. This structure:
-% \begin{itemize}
-%     \item Demands \textit{inverse exponentiation} ($1/(e+x)$), creating non-linear relationships between secrets
-%     \item Forces proofs to handle \textit{cross-term cancellation} (e.g., $A_1^e = g_1^{\delta_1}g_2^{\delta_2}$)
-%     \item Requires pairing inversions ($e(A_2, \hat{h_0})^{-e}$) to verify credential validity
-% \end{itemize}
-
-
-% \paragraph{PS\_UTT and LRSW Advantages}
-% The LRSW assumption \cite{lysyanskaya2000pseudonym} underpinning PS\_UTT enables signatures with \textit{linear} algebraic structure:
-% \begin{itemize}
-%     \item Signatures take form $\sigma = (h^u, (X \cdot \prod g_i^{m_i} \cdot h^r)^u)$ with \textit{no inverse operations}
-%     % \item Randomization factors ($u_\Delta, r_\Delta$) modify signatures additively rather than multiplicatively
-%     \item Verification equations remain bilinear pairings without cross-term cancellation
-% \end{itemize}
-
-
-% \paragraph{Assumption-Driven Efficiency}
-% The LRSW assumption enables three key efficiency properties, each building on the previous:
-% \begin{itemize}
-%     \item \textbf{Linear Exponent Relations}: Messages appear directly in the exponent as $\prod g_i^{m_i}$, avoiding the nested fraction structure of q-SDH
-%     \item \textbf{Independent Randomization}: The separation of $u_\Delta$ and $r_\Delta$ creates a natural two-layer randomization strategy, unlike BBS+'s entangled randomized
-% \end{itemize}
 
 
 
