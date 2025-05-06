@@ -964,70 +964,25 @@ We separate our security analysis of the verification key $\vk$ and commitment k
 
 \section{Sigma Protocols for Efficient, Expressive Proofs}\label{chap2:expressive_proofs}
 
-\subsection{Efficiency Analysis of Zero-Knowledge Proof Systems}
+The algebraic structure of an Anonymous Credential scheme determines the compatible proof system. In this work, we focus on $\Sigma-$protocols as the proof system of choice due to their efficiency and sufficient expressiveness for practical credential use cases. Sigma protocols are three-move, interactive zero-knowledge proofs over cyclic groups, such as $\G_1, \G_T$, where a prover demonstrates knowledge of a secret (e.g., an exponent $x$)) satisfying a specific relation, under the discrete logarithm assumption. These protocols are particularly well-suited for proving linear relations over scalars, which are common in certain credential types. 
 
-In designing our anonymous credential system, we carefully evaluated the efficiency tradeoffs between different zero-knowledge proof systems. This section provides a concrete analysis of why we chose sigma protocol-based proofs over alternative approaches like Groth-Sahai (GS) proofs and zk-SNARKs.
+Our credential construction builds on the line of work following initial rerandomizable signatures on bilinear groups, such as  CL04 \cite{hutchison_signature_2004}, BBS+ \cite{hutchison_constant-size_2006, camenisch_anonymous_2016, tessaro_revisiting_2023}, and PS \cite{sako_short_2016, tomescu_utt_2022}. Earlier schemes \cite{hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016} required proofs over exponents in $\mathbb{G}_T$, with sub-optimal computational overhead. In contrast, newer constructions \cite{camenisch_anonymous_2016, tessaro_revisiting_2023, tomescu_utt_2022} restructure the algebraic setup to enable zero-knowledge proofs over $\mathbb{G}_1$ points, minimizing computation by leveraging faster scalar exponent operations and efficient optimizations like Multi-Scalar Multiplication. 
 
-\subsubsection{Efficiency Comparison for Credential Operations}
+In these schemes, the prover uses $\Sigma$-protocols to prove knowledge of exponents (scalars) corresponding to hidden attributes. The soundness of the security proofs relies on the extraction of these scalars, ensuring unforgeability. $\Sigma$-protocols excel in efficiency for such tasks, with basic operations like credential verification, selective disclosure, and equality proofs achieving show+verify times of 0.49--0.98 ms (see Table \ref{tab:sigma_protocol_efficiency_compare}). Furthermore, sigma protocols naturally support composition for more expressive statements, such as AND/OR combinations and linear relations, with minimal overhead (approximately 2--3 times the baseline cost). They can also be extended to handle range proofs \cite{bunz_bulletproofs_2017} and set membership proofs via accumulators \cite{camenisch_dynamic_2002, camenisch_scalable_2016, crites_allosaur_2024}, making them versatile for credential systems.
 
-Sigma protocols are particularly well-suited for the core operations in our credential system for several key reasons:
+\subsubsection*{Predicate Satisfaction}
 
-\paragraph{Computational Efficiency.} For the primary operations in our credential system (proving knowledge of signatures, attribute equality, and selective disclosure), sigma protocols demonstrate superior performance. Groth-Sahai proofs, while elegant for pairing-based statements, require multiple pairing operations for verification. Our experimental measurements show that basic sigma protocol operations achieve verification times of 0.49-0.98ms (as shown in Table~\ref{tab:zkp-comparison}), whereas equivalent GS proof verifications would require multiple pairing computations, resulting in significantly higher computational costs.
+In our credential system, a predicate $\phi$ is a boolean function over an attribute vector $\attrs$, formally $\phi: \mathcal{A} \to \{0,1\}$, where $\mathcal{A}$ is the space of attribute vectors. For a credential with attributes $\attrs = [\text{id}, \text{k}, \text{ctx}, \text{exp}]$, we say that ``$\attrs$ satisfies $\phi$'' if $\phi(\mathbf{a}) = 1$.
 
-\paragraph{Proof Size Optimization.} While GS proofs have a proof size of $O(N)$ with commitment size $4|G_1| + 4|G_2|$ per variable, our sigma protocol-based approach produces more compact proofs for the specific statements needed in our system.
-a
+The prover uses sigma protocols to demonstrate that their attributes $\attrs$ satisfy a given predicate $\phi$ (i.e., $\phi(\attrs) = 1$) in zero-knowledge, meaning the verifier learns only that the predicate holds, not the attribute values. For example, consider a predicate $\phi_{\text{age}}: \text{age} > 18$. The prover proves knowledge of attributes $\attrs= [\text{age}, \dots]$ such that $\text{age} > 18$, without revealing the exact value of $\text{age}$.
 
-\subsubsection{Performance Characteristics for Specific Operations}
-
-Our performance evaluation (Table~\ref{tab:sigma-performance}) demonstrates that:
-\begin{itemize}
-    \item Basic operations (Schnorr, AND, OR compositions) have verification times of 0.49-0.98ms
-    \item Equality and linear relation proofs add minimal overhead (1-1.2$\times$)
-    \item Even more complex operations like range proofs (8-15ms) remain practical
-\end{itemize}
-
-This efficiency profile aligns perfectly with anonymous credential requirements, where proving signature validity, selective disclosure, and attribute predicates are the most common operations.
-
-\subsubsection{When Alternatives May Be Appropriate}
-
-While our system primarily relies on sigma protocols, we acknowledge that alternative proof systems have advantages in specific scenarios:
-
-\begin{itemize}
-    \item \textbf{Groth-Sahai proofs}: Superior for statements involving quadratic relations in pairing-based groups where no "heavy reduction to an NP constraint system" is required. They offer a good middle ground for specific pairing-based cryptographic statements.
-    
-    \item \textbf{zk-SNARKs}: Preferable when proof size is the primary concern or for highly complex statements requiring arbitrary circuit computation, such as non-algebraic hash functions though there are higher prover complexity.
-\end{itemize}
-
-For our implementation focused on standard credential operations (signature verification, selective disclosure, range proofs), the measurement data clearly demonstrates that sigma protocols provide the optimal balance of efficiency and expressiveness without sacrificing security properties.
-
-
-We leverage $\ Sigma$-protocol-based zero-knowledge proofs rather than alternative proof systems such as Groth-Sahai (GS) \cite{smart_efficient_2008}, or zk-SNARKS \cite{fischlin_size_2016}.
-
-\begin{itemize}
-\item \textbf{Schnorr (Sigma Protocols):} are simple in construction but highly efficient.  These prove statements about discrete logarithms (e.g., ``I know $x$ such that $g^x = h$''). They're limited to linear relations but can be combined (e.g., proving ``$A$ or $B$'' or ``$A$ and $B$''). In your work, this supports selective disclosure and attribute equality efficiently, as seen in PS-UTT22's sublinear scaling with multi-scalar multiplication (Page 92).
-
-\item \textbf{Groth-Sahai:} These extend to quadratic relations in bilinear groups (e.g., pairing equations). They're more expressive for pairing-based cryptography but less so than zk-SNARKs, which handle circuits. They're less efficient than sigma protocols for simple statements due to pairing costs (e.g., $O(n)$ pairings vs. $O(k)$ exponentiation).
-
-\item \textbf{zk-SNARKS:} Moreover, circuit-based zk-SNARKS such as Groth16 \cite{fischlin_size_2016} are even more expressive, with the ability to prove knowledge of hash functions and more generalised computation, however, computational complexity increases with prove/verify time for a credential 
-
-\end{itemize}
-
-
-$\Sigma$-protocols are rather simple in construction and somewhat limited in the computation operations available to prove; however, they are extremely efficient and I show many protocols within the Thesis that satisfy the requirements of an Anonymous Credential System. 
-
-While GS proofs offer a more general framework with ability to prove quadratic and multiplicative relations which $\Sigma-$protocols cannot, they are not as computationally efficient as $\Sigma$-protocols. Stemming from their group-element proofs and pairings, the overhead quickly adds up. Whereas $\Sigma$-protocols prove knowledge of exponents of group elements, scalars that can be computed and transferred more efficiently. 
-
-With prove/verify time for a valid credential costing 6x 
+The soundness of the sigma protocol ensures that a prover cannot generate a valid proof for $\phi(\attrs) = 1$ unless their attributes truly satisfy the predicate, reinforcing the unforgeability of our credential system.
 
 
 
-
-
-
-
-\begin{table}
+\begin{table}[!htb]
 \centering
-\caption{Sigma Protocol Efficiency Summary}
+\caption{Sigma Protocol Efficiency Summary}\label{tab:sigma_protocol_efficiency_compare}
 \begin{tabular}{l|c|l|c|c|c}
 \hline
 \textbf{Operation} & \textbf{Native?} & \textbf{Core Operations} & \textbf{Overhead} & \textbf{Prove (ms)} & \textbf{Verify (ms)} \\
@@ -1053,11 +1008,12 @@ Set Membership (Acc) & No & Sigma proof of witness knowledge & 10-15× & 4-6 & 4
 \end{itemize}
 \end{table}
 
+\subsection{Groth-Sahai Proofs}
+Groth-Sahai \cite{smart_efficient_2008,krawczyk_fine-tuning_2014} proofs underpin Structure-Preserving Signatures \cite{kiltz_structure-preserving_2015, fuchsbauer_structure-preserving_2019, hanaoka_improved_2022, steinfeld_threshold_2023} where the verification keys, messages, and signatures are group elements. GS proofs offer more expressive proofs for complex statements than $\Sigma$-protocols such as quadratic relations using Pairing-Product Equations (PPE). They enable commitments to group elements with soundness relying on extracting the elements under falsifiable assumptions e.g. SXDH. However, expressiveness comes at a cost, each committed attribute may require 4x $\G_1$ + 4x$\G_2$ per committed attribute \cite{kiltz_structure-preserving_2015, sedaghat_groth-sahai_2023} and multiple pairings for verification, quickly increasing verification time exponentially over $\Sigma$-protocols. A more detailed analysis is found \ref{tab:zkp-comparison}. 
 
+\subsection{zk-SNARKs (Groth16)}
+zk-SNARKs provide maximimum expressiveness, supporting proofs of any NP statement. In the zk-creds system \cite{rosenberg_zk-creds_2022} (along the line of work starting with \cite{garman_decentralized_2014} ) they prove set membership in merkle trees as the credential verification, their hash is a non-algebraic structure incompatible with $\Sigma$-protocols and GS proofs. Groth16 \cite{fischlin_size_2016} proofs offer constant-size proofs $(2x \G_1, + \G_2)$ and fast verification. Yet their proving computational is preventative for wide-scale adoption in credential systems requiring fast Show+Verify algorithms, costing 465 ms(worst case) for a simple credential show in zk-creds, compared to 3.77ms for credential show for our signature and $\Sigma$-protocols. Composing statements (e.g., AND operations) adds 43 ms just for the AND operation without the additional statement, whereas sigma protocols handle composition “for free” via shared challenges. Furthermore, such proofs do not allow multi-credential linking. Additionally, zk-SNARKs require a trusted setup, introducing a security risk absent in sigma protocols and Groth-Sahai proofs, and rely on non-falsifiable assumptions. A detailed analysis is found \ref{tab:zkp-comparison}. 
 
-
-
-For our implementation focused on standard credential operations (signature verification, selective disclosure, range proofs), the measurement data clearly demonstrates that sigma protocols provide the optimal balance of efficiency and expressiveness without sacrificing security properties.
 
 \begin{table}[htbp]
 \centering
@@ -1088,186 +1044,7 @@ For our implementation focused on standard credential operations (signature veri
 \end{tabular}
 \end{table}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Justification for Sigma-Protocol Approach}
-
-Our ABC system employs $\Sigma$-protocols because the core credential operations—signature validity, selective disclosure, and attribute equality checks—are all expressible as linear relations. As demonstrated in Section~\ref{sigma-protocol-analysis}, our $\Sigma$-protocol implementation achieves sublinear scaling through Multi-Scalar Multiplication techniques, countering the theoretical linear complexity. This practical efficiency, combined with the absence of trusted setup requirements, makes $\Sigma$-protocols ideal for our wallet-centric architecture where verification performance is critical.
-
-The primary operations in our system involve:
-
-\begin{itemize}
-    \item \textbf{Proving signature validity:} Showing knowledge of signature components $\sigma' = (\sigma_1', \sigma_2')$ such that $e(\sigma_2', \tilde{g}) = e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}}')$
-    
-    \item \textbf{Proving commitment openings:} Demonstrating knowledge of attribute values $(m_1, \ldots, m_\ell)$ and randomness $r$ such that $\mathsf{cm} = g^r \prod_{i=1}^\ell g_i^{m_i}$
-    
-    \item \textbf{Proving predicate satisfaction:} Showing that revealed or hidden attributes satisfy policy conditions like $\phi(m_1, \ldots, m_\ell) = 1$
-\end{itemize}
-
-Each of these operations maps naturally to the linear relation proof capabilities of $\Sigma$-protocols, allowing for efficient verification without the overhead of more complex proof systems.
-
-\subsection{Addressing Limitations and Extension Points}
-
-While our construction handles the most common credential operations efficiently, certain applications would require alternative proof systems:
-
-\begin{itemize}
-    \item \textbf{Large-scale set membership:} For proving an attribute belongs to a large set (e.g., university affiliation among hundreds of institutions), pairing-based approaches using cryptographic accumulators would provide more efficient proofs with constant size, compared to the linear scaling of $\Sigma$-protocols.
-    
-    \item \textbf{Efficient revocation:} Credential revocation against large lists would benefit from pairing-based accumulator techniques that enable constant-size non-membership proofs.
-    
-    \item \textbf{Complex policy compliance:} Proof of arbitrary computation (e.g., hash function evaluation or complex decision trees) would necessitate zk-SNARKs despite their trusted setup requirements.
-\end{itemize}
-
-Our implementation is designed with modularity in mind, allowing future extensions to incorporate these alternative proof systems where the application requirements justify their additional complexity and setup costs.
-
-The empirical results in Section~\ref{sec:performance_evaluation} validate our design choice, demonstrating that for the credential operations most frequently encountered in practical use cases, our $\Sigma$-protocol approach achieves state-of-the-art performance without sacrificing security or expressiveness.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\textbf{Predicate Satisfaction:} For credentials with attributes that satisfy a policy $\phi$:
-    \[
-    \mathcal{R}_{\phi} = \{(\{\cm_j\}, (\{\attrs_j\})) \mid \forall j: \cm_j \text{ correctly commits to } \attrs_j \wedge
-    \phi(\{\attrs_j\}) = 1 \}
-    \]
-    
-    A predicate $\phi$ is simply a policy statement about attributes that is satisfiable by the supported algebraic constraints in Sigma protocols, noting that sigma protocols are extremely expressive and can  . For example:
-
-    These can be composed to support complex policies while maintaining zero-knowledge properties, revealing nothing beyond the fact that the policy is satisfied.
-    \begin{itemize}
-    \item ``age > 18'' (for a single credential)
-    \item ``has valid driver's license AND passport'' (requiring multiple credentials)
-    \item ``degree = 'Computer Science' AND university in accredited\_list''
-    \end{itemize}
-    
-    The $\Sigma$-protocol allows proving these statements are true without revealing the actual attribute values, only that they satisfy the predicate $\phi$.
-
-    The $\Sigma$-protocol framework allows for highly expressive predicates $\phi$ including:
-    \begin{itemize}
-    \item \textbf{Boolean operations:} AND, OR, and NOT compositions of simpler predicates
-    \item \textbf{Arithmetic relations:} Equality, inequality ($<$, $>$, $\leq$, $\geq$), and linear combinations 
-    \item \textbf{Range proofs:} Demonstrating a value lies within a specific range (e.g., ``18 $\leq$ age $<$ 65'')
-    \item \textbf{Set membership:} Proving an attribute belongs to an approved set without revealing which one
-    \end{itemize}
-
-    
-
-\subsubsection*{Predicate Satisfaction}
-We define a predicate $\phi$ as a boolean function over an attribute vector $\attrs$, formally  $\phi: (\mathcal{A}) \rightarrow \{0,1\}$, where $\mathcal{A}$ is the space of the attribute vectors. 
-For a credential with attributes $\attrs = [\id, \k, \ctx, \exp]$, we say that "$\attrs$ satisfies $\phi$", denoted as $\phi(\attrs) = 1$, if the boolean function evaluates to true on the attributes.
-For example, the predicate $\phi_{master}:\ctx = "master"$ is satisfied by $\attrs: [\id="123", \ctx="master"]$. Our system supports complex predicates such as $\phi: age > 18 \wedge country = US$ enabling expressive policies beyond simple equality checks. In our unforgeability definition, predicate satisfaction ensures an adversary cannot forge a proof for a predicate they do not legitimately satisfy beyond legitimately reusing existing credentials.
-
-
-To demonstrate the practical impact of our optimizations, we compared our approach against alternative systems for the common use case of verifying credential expiration. Table~\ref{tab:expiry-comparison} presents the results for generating and verifying a proof that a credential has not expired.
-
-
-
-\begin{table}[htbp]
-\centering
-\caption{Performance Comparison for Credential Operations}
-\label{tab:expiry-comparison}
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Approach} & \textbf{Scheme} & \textbf{Show (ms)} & \textbf{Verify (ms)} & \textbf{Proof Size} \\
-\midrule
-Simple Possession & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
-& Us & 2 & 2 & \\
-\midrule
-Expiry & \cite{rosenberg_zk-creds_2022} & 2 & 2 & 424B \\
-& Us & 2 & 2 & \\
-\midrule
-Linkable Show & \cite{rosenberg_zk-creds_2022} & 41 &  &  \\
-& Us & 2 & 2 & \\
-\midrule
-Rate Limiting & \cite{rosenberg_zk-creds_2022} & 58 &  &  \\
-& Us & 2 & 2 & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Our evaluation reveals that our system can verify a credential's expiry status in just 3.3ms (combined Show+Verify), compared to 45-55ms for ZK-Creds approaches—a performance improvement of over 13×. This dramatic difference highlights how our optimized signature scheme and sigma protocol enables efficient predicate verification without sacrificing privacy.
-
-Importantly, while general-purpose zero-knowledge systems provide flexibility, they introduce substantial computational overhead that makes interactive verification scenarios impractical. Our approach achieves similar expressiveness with dramatically better performance for the most common credential verification operations.
-
-
-
-
-
-
-
-
-
-
-
-
+$\Sigma$-protocols outperform Groth-Sahai proofs and zk-SNARKs in verification efficiency (0.49–0.98 ms vs. higher costs due to pairings or circuit complexity) and avoid trusted setups. Their expressiveness, while limited to linear relations, suffices for credential operations like selective disclosure and equality proofs, as shown in Table 1. Groth-Sahai proofs excel in pairing-based schemes but suffer from large proof sizes and slow verification for large credentials. zk-SNARKs, despite their versatility and compact proofs, are hindered by slow proving times (e.g., 465 ms in zk-creds) and setup requirements, making them less practical where efficiency is paramount.
 
 
 
