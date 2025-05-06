@@ -370,7 +370,7 @@ We implemented MIMC-ABC using the arkworks library~\cite{arkworks_contributors_a
         \includegraphics[width=\textwidth]{figures/chap3_multi_issuer_privacy_overhead.png}
     \end{minipage}
     
-    \caption{Performance Comparison between UTT and Our Construction. We improve key operations: Verify and Show + Verify}
+    \caption[The Cost of Privacy for Multi-Credential Verifiable Presentations]{These graphs show the cost of privacy for single-issuer (left) and multi-issuer(right) credential use with multiple credentials. The graph shows a 2.6x increase in Show+Verify time for private multi-credential use. The left graph shows single-issuer multi-credential verification (with batch verification). The right graph shows multi-issuer multi-credential verification (no batch verification). Both graphs use a credential with 16 attributes displaying Show+Verify time.}
     \label{fig:chap3_privacy_overhead_graphs}
 \end{figure}
 
@@ -391,7 +391,7 @@ We implemented MIMC-ABC using the arkworks library~\cite{arkworks_contributors_a
         \includegraphics[width=\textwidth]{figures/chap3_private_batch_speedup.png}
     \end{minipage}
     
-    \caption{Performance Comparison between UTT and Our Construction. We improve key operations: Verify and Show + Verify}
+    \caption[Signature Aggregation/Batch Verification Speedup for Multi-Credential Verifiable Presentations]{These graphs show the benefit of single-issuer signature aggregation, but also show that multi-issuer credential verification adds small 2.4x-3x overhead and therefore does not impact the Show+Verify significantly}
     \label{fig:chap3_batch_verify_improvements}
 \end{figure}
 

@@ -1,4 +1,4 @@
-\chapter{Sybil Resistant Threshold Issued Identity System from Anonymous Credentials and Anonymous Nullifiers}\label{chap5}
+\chapter{Threshold-Issued, Sybil-Resistant Private Identity System from Anonymous Credentials and Nullifiers}\label{chap5}
 
 \section{Introduction}\label{sec:threshold-intro}
 Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram_candid_2020} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context.
@@ -217,14 +217,7 @@ Building on our threshold PS signature scheme, we now present T-SIRIS, a complet
 \end{itemize}
 
 
-We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold. These malicious issuers may:
-\begin{itemize}
-    \item Deviate from the protocol specification
-    \item Collude to attempt to forge credentials
-    \item Attempt to track or deanonymize users
-    \item Refuse to participate in the issuance protocol
-\end{itemize}
-
+We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold. These malicious issuers may: Deviate from the protocol specification, Collude to attempt to forge credentials, Attempt to track or deanonymize users, or Refuse to participate in the issuance protocol.
 We also assume users may attempt sybil attacks by requesting multiple credentials for the same context. However, the adversary cannot break the underlying cryptographic assumptions (DL and $q$-DDHI).
 
 A tSIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$. We use $\RSSetup, \RSRand, \RSVer$ from the rerandomizable signature scheme.
