@@ -1,63 +1,101 @@
 \chapterstar{Abstract}
-The Abstract
-% Contributions
-
-% \textbf{Anonymous Credential and MIMC}
-% We address a critical gap in anonymous credential literature by formalizing new security properties for multi-issuer, multi-credential environments. 
-% We construct an MIMC system from our optimized anonymous credential based on PS Signatures; we show its 5-10 percent speedup from previous construction and further, show its strengths in this application. We prove it is secure in the algebraic group model.
-
-% We introduce Identity Binding property for Credentials. 
-% We introduce structured relationship binding property for credentials
-
-% % Identity Binding: “In our MIMC-ABC system, identity binding ensures all credentials share a common identifier, preventing credential mixing and Sybil attacks while preserving anonymity.”
-% % Credential Relationship Binding: “We further define credential relationship binding to prove structured relationships between credentials, such as the derivation of a context credential from a master credential, enabling expressive and secure use-cases like our Sybil-resistant identity system.”
+% (1) motivation/problem/task definition, 
+Digital credential wallets manage diverse identity documents ranging from government IDs to financial certificates, and face the trilemma between privacy, security, and usability. While anonymous credentials protect user privacy, their verification operations incorporate zero-knowledge proofs to preserve user privacy, exceeding practical usability thresholds (50- 500ms versus <1ms for standard credentials). Moreover, anonymity introduces security challenges, including vulnerability to sybil attacks and revocation difficulties. These limitations become critical with EU-mandated credential wallets and the need to privately combine multiple credentials from different issuers, as is standard in today's e.g., KYC scenarios.
 
 
-% \textbf{Novel ZKP Scheme for Sybil Resistance}
-% We create a novel zero-knowledge building block to add privacy-preserving sybil resistance to MIMC-ABCs. The nullifier scheme we use achieves a speedup of 1.9 times compared to previous constructions (UTT, ACT)
-
-
-% \textbf{Privacy-Preserving Decentralized Identity System with Sybil Resistance and Revocation}
-% We extend our MIMC system for a Threshold environment and use our Sybil-resistant mechanism to build a privacy-preserving decentralized identity system with Sybil resistance. We show that our system is state-of-the-art and has improved on all benchmark metrics compared to previous construction. 
+% (2) proposed method or idea, 
 
 
 
-% \textbf{Opensource Benchmark Framwork}
-% We address inconsistencies in previous evaluations by building the first open-source toolkit for fair benchmarking of Anonymous Credential schemes. 
+
+% "This thesis develops a comprehensive framework of cryptographic primitives to resolve the credential wallet trilemma. At its core is an enhanced rerandomizable signature scheme optimized for verification efficiency, achieving 5.37ms Show+Verify time for credentials with 30 attributes. This foundation enables four key innovations: (1) a formal identity binding property and protocol allowing secure multi-credential verification across different issuers, (2) efficient nullifier constructions from the q-DDHI assumption using novel Σ-protocols to enable sybil resistance with 5× performance improvement over prior methods, (3) a threshold-issued credential system protecting against malicious issuers while maintaining verification efficiency, and (4) an open-source benchmarking framework quantifying the "cost of privacy" across implementations."
 
 
-% Roadmap
-% sec1. MIMC-ABC + security reductions
-% sec2. Optimized PS
-% sec3. Security in AGM
-
-% chap2. 
-% sec1. building block
-% sec2. benchmark
-
-% chap3. 
-% sec1. 
-
-% chap5. extended preliminaries
+To solve the accountable privacy paradox, 
+such is the paradox of Accountable Privacy, such that a user must remain anonymous but simultaneously be accounted for. 
 
 
 
 
 
 
+Digital Credential Wallets hold identity documents such as national ID cards, bank certificates, and prescriptions, and must balance the trilemma between privacy, security, and usability. Credential usage should be efficient and protect user privacy, while identity systems should be secure against malicious users.
+Anonymous Credentials ensures user privacy but compromises on usability and security. Verification costs of (50- 500ms) vs standard credentials (<1ms) and system security is challenged by the risks/downsides of anonymity such as Sybil Attacks and the Revocation Difficulty. 
 
 
 
 
+Digital Credential Wallets manage credentials for identity verification  storage and use in identity verification. They face the 
+Anonymous Credentials ensure privacy but compromise usability (50–500ms vs. <1ms) and security (e.g., sybil resistance).
+
+
+- Digital Credential Wallets face the fundamental trilemma-tradeoff between privacy, security, and usability. 
+- Anonymous Credentials provide user privacy, but usability suffers with operations ranging from 50 - 500ms compared to less than 1ms for standard credentials. 
+- Improving privacy means a user is private, increasing the risk of malicious users, reducing the security of the system as it's harder to keep them accountable, and reducing the system functionality, without sybil resistance protection or revocation. 
+- Digital Credential Wallets are housing many heterogeneous credentials, from national ID cards, to bank certificates, to prescriptions and can be used for identity verification or attesting to signed information such as for new bank account / KYC/AML requirements. 
+- We need to plan for a world where we have all our credentials in our credential wallet, we will need to verify for loads of things, more so than we do today e.g.
+- humans need to distance their real self from ``deepfakes`` and online age verification pilots have started, content credentials
+- credentials are not only for identity verification but also attribute attestation e.g. does the user satisfy some predicate
 
 
 
 
+Today's credentials can verify under 1ms, 
+Non-Private credential sign+verify is under 1ms, Anonymous Credentials
+
+
+Private Identity Verification 
+
+
+Digital Credential Wallets have emerged as the tool of choice for issuing, storing, and using the next generation of credentials for identity verification in online and offline contexts. In parallel, identity verification scope is expanding;  humans need to distance their real self from ``deepfakes`` and online age verification pilots have started. 
+
+% A fast Anonymous Credential for Show+Verify algorithms
+% verifying multiple credentials together
+% Generating nullifiers for private-sybil resistance 
+% Fast Threshold Issued Identity System
+
+
+% proposed method
+Anonymous Credentials within a Digital Credential Wallet enable users to own their own data and \emph{privately} verify themselves and their attributes online, consequently, introducing the trilemma between privacy, security, and usability. Initial academic work and industry implementations were private and secure but lagged in efficiency and functionality. 
+
+
+% Main Results - solving the privacy, security, usability trilemma. 
+
+Practical Anonymous Credentials for Digital Wallets - (5ms Show+Verify)
+
+
+
+- fastest anonymous credential in show+verify
+- functionality (expressive, can satisfy most statements efficiently)
+
+- Identity binding security property and feasibility / empirical evidence of the use-case being satisfied by the constraints needed (16 different credentials from unique issuers verified in 72ms) 
+
+- Made a DY VRF in $\G_1$ 3x more efficient than original preserving security properties. Created private nullifiers from new $\Sigma$-protocols we made which are 5x faster than previous constructions. 
+
+- 
+
+- 
 
 
 
 
-% We are often forced to make decisions without having access to all the information we need. The need to make some guarantees about the quality of the solution resulting from these decisions is what motivates our search for strongly competitive online algorithms. Traditionally, an online algorithm must service a request upon its arrival. In many practical situations, one can delay the service of a request in the hope of servicing it more efficiently in the near future. As a result, the study of online algorithms \emph{with delay} has recently gained considerable traction. A variety of problems have been considered with delay. For most problems, competitive algorithms have been developed that are independent of properties of the delay functions associated with each request. Interestingly, this is not the case for the online min-cost perfect matching with delays (MPMD) problem, introduced by Emek et al. (STOC 2016). Existing work for this problem is heavily tailored to the particular type of delay function considered. 
+Improving KYC/AML, massive economic impact, etc
+
+(1) problem/task definition, 
+
+(2) proposed method or idea, 
+
+(3) main results, and 
+
+(4) broader impact or significance.
+
+
+% \chapter*{Abstract}
+% We are often forced to make decisions without having access to all the information we need. The need to make some guarantees about the quality of the solution resulting from these decisions is what motivates our search for strongly competitive online algorithms. 
+
+% Traditionally, an online algorithm must service a request upon its arrival. In many practical situations, one can delay the service of a request in the hope of servicing it more efficiently in the near future. As a result, the study of online algorithms \emph{with delay} has recently gained considerable traction. 
+
+% A variety of problems have been considered with delay. For most problems, competitive algorithms have been developed that are independent of properties of the delay functions associated with each request. Interestingly, this is not the case for the online min-cost perfect matching with delays (MPMD) problem, introduced by Emek et al. (STOC 2016). Existing work for this problem is heavily tailored to the particular type of delay function considered. 
 
 % In this thesis we show that some techniques can be modified to extend to larger classes of delay functions, without affecting the competitive ratio. In the interest of designing competitive solutions for the problem in a more general setting, we introduce the study of online problems with \emph{set delay}. Here, the delay cost at any time is given by an arbitrary function of the set of pending requests, rather than the sum over individual delay functions associated with each request. In particular, we study the online min-cost perfect matching with set delay (\MPMGAD) problem, which provides a generalisation of MPMD. The notion of set delay allows us to examine an algorithm's accumulation of delay cost from a new perspective and define new classes of delay functions. In contrast to previous work, the new model also allows us to study the problem in the non-clairvoyant setting, i.e. where the future delay costs are unknown to the algorithm. 
 
