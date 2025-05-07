@@ -39,7 +39,7 @@ This chapter advances the state of anonymous credentials with:
             \texttt{id : 12345}, \\
             \texttt{ctx : "passport"}, \\
             \texttt{exp : "10/11/2026"}, \\
-            \texttt{k : 54321}
+            \texttt{s : 54321}
         };
         
         % Driver License Credential
@@ -196,25 +196,25 @@ For example, consider a user with credentials from three issuers ($j = 1, 2, 3$)
     \begin{pchstack}[boxed, center, space=4em]
         \begin{pcvstack}
             \procedure[space=auto]{Passport ($j=1$)}{
-                \id: 12345, \\
-                \ctx_1: "passport", \\
-                \exp_1: "10/11/2026"
+                \id: \texttt{12345}, \\
+                \ctx_1: \texttt{"passport"}, \\
+                \exp_1: \texttt{"10/11/2026"}
             }
         \end{pcvstack}
         \pcvspace
         \begin{pcvstack}
             \procedure[space=auto]{Driver’s License ($j=2$)}{
-                \id: 12345, \\
-                \ctx_2: "dmv", \\
-                \exp_2: "05/01/2027"
+                \id: \texttt{12345}, \\
+                \ctx_2: \texttt{"dmv"}, \\
+                \exp_2: \texttt{"05/01/2027"}
             }
         \end{pcvstack}
         \pcvspace
         \begin{pcvstack}
             \procedure[space=auto]{University Degree ($j=3$)}{
-                \id: 12345, \\
-                \ctx_3: "usyd-bcompsc", \\
-                \exp_3: "12/31/2024"
+                \id: \texttt{12345}, \\
+                \ctx_3: \texttt{"usyd-bcompsc"}, \\
+                \exp_3: \texttt{"12/31/2024"}
             }
         \end{pcvstack}
     \end{pchstack}

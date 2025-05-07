@@ -20,152 +20,7 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
         
         % Digital Credential Wallet
         \node[box] (wallet) at (0,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,+0.3)$) {Digital Credential Wallet};
-        
-        % Master Credential
-        \node[smallbox] (master) at (0,1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(master.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "passport", \\
-            exp : "10/11/2026", \\
-            k : 54321
-        };
-        
-        % Context Credential
-        \node[smallbox] (context) at (0,-1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(context.north) + (0,-0.2)$) {Context Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(context.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "DMV", \\
-            exp : "10/11/2028"
-        };
-        
-        % Nullifier in the middle
-        \node[nullifierbox] (nullifier) at (5.5,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
-        
-        % Centered nullifier text with better spacing
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-0.8)$){Sec: \ref{subsec:deterministic-nullifier}};
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.3)$) {$y = g^{1/(k + \text{"DMV"})}$};
-        
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.8)$) {Sec: \ref{sec-probabilistic-nullifier}};
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2.3)$) {$\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
-        
-        % Repositioned list boxes at least 1cm away from nullifier
-        \node[listbox] (userlist) at (11,0.7) {}; % Increased distance to at least 1cm
-        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Issued List};
-        
-        % Content positioned lower
-        \node[font=\footnotesize, align=center] at ($(userlist.center) + (0,0.1)$) {$y$}; % Slight adjustment
-        
-        % Revocation List - repositioned
-        \node[listbox] (revlist) at (11,-0.7) {}; % Increased distance to at least 1cm
-        \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
-        
-        % Content positioned lower
-        \node[font=\footnotesize, align=center] at ($(revlist.center) + (0,0.1)$) {$\cm_{y,1}$}; % Slight adjustment
-        
-        % Straight arrows as shown in screenshot
-        \draw[->, thick] (wallet.east) -- (nullifier.west);
-        \draw[->, thick] (nullifier.east) -- (userlist.west);
-        \draw[->, thick] (nullifier.east) -- (revlist.west);
-        
-        \end{tikzpicture}
-    }
-    \caption[Nullifier Scheme]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
-    \label{fig:credential-nullifier-revised}
-\end{figure}
-
-
-\begin{figure}
-    \centering
-    \scalebox{0.85}{ % Scale down the entire figure
-        \begin{tikzpicture}[
-            box/.style={draw, rounded corners=2pt, minimum width=4.5cm, minimum height=6cm},
-            smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=3.8cm, minimum height=2.2cm},
-            listbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=1.5cm},
-            nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
-            thick
-        ]
-        
-        % Digital Credential Wallet
-        \node[box] (wallet) at (0,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,+0.3)$) {Digital Credential Wallet};
-        
-        % Master Credential
-        \node[smallbox] (master) at (0,1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(master.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "passport", \\
-            exp : "10/11/2026", \\
-            k : 54321
-        };
-        
-        % Context Credential
-        \node[smallbox] (context) at (0,-1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(context.north) + (0,-0.2)$) {Context Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(context.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "DMV", \\
-            exp : "10/11/2028"
-        };
-        
-        % Nullifier in the middle
-        \node[nullifierbox] (nullifier) at (5.5,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
-        
-        % Centered nullifier text with better spacing
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-0.8)$) {Sec: 4.5.4};
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.3)$) {$y = g^{1/(k + \text{"DMV"})}$};
-        
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.8)$) {Sec: 4.5.5};
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2.3)$) {$\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
-        
-        % Repositioned list boxes at least 1cm away from nullifier
-        \node[listbox] (userlist) at (11,0.7) {}; % Increased distance to at least 1cm
-        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Issued List};
-        
-        % Content positioned lower
-        \node[font=\footnotesize, align=center] at ($(userlist.center) + (0,0.1)$) {$y$}; % Slight adjustment
-        
-        % Revocation List - repositioned
-        \node[listbox] (revlist) at (11,-0.7) {}; % Increased distance to at least 1cm
-        \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
-        
-        % Content positioned lower
-        \node[font=\footnotesize, align=center] at ($(revlist.center) + (0,0.1)$) {$\cm_{y,1}$}; % Slight adjustment
-        
-        % Straight arrows as shown in screenshot
-        \draw[->, thick] (wallet.east) -- (nullifier.west);
-        \draw[->, thick] (nullifier.east) -- (userlist.west);
-        \draw[->, thick] (nullifier.east) -- (revlist.west);
-        
-        \end{tikzpicture}
-    }
-    \caption[Nullifier Scheme]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
-    \label{fig:credential-nullifier-revised}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \scalebox{0.85}{ % Scale down the entire figure
-        \begin{tikzpicture}[
-            box/.style={draw, rounded corners=2pt, minimum width=4.5cm, minimum height=6cm},
-            smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=3.8cm, minimum height=2.2cm},
-            listbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=1.5cm},
-            nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
-            thick
-        ]
-        
-        % Digital Credential Wallet
-        \node[box] (wallet) at (0,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,+0.3)$) {Digital Credential Wallet};
+        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,0.4)$) {Digital Credential Wallet};
         
         % Master Credential
         \node[smallbox] (master) at (0,1.5) {};
@@ -192,202 +47,37 @@ Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to 
         \node[nullifierbox] (nullifier) at (5.5,0) {};
         \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
         
-        % Rearranged nullifier text with better spacing
-        \node[font=\footnotesize, align=left] at ($(nullifier.north) + (-1.8,-0.8)$) {Sec: 4.5.4};
-        \node[font=\footnotesize, align=left] at ($(nullifier.north) + (0,-1.1)$) {$y = g^{1/(s + \text{"DMV"})}$};
+        % Centered nullifier text with better spacing
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-0.5)$){Sec: \ref{subsec:deterministic-nullifier}};
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1)$) {$y = g^{1/(s + \text{"DMV"})}$};
         
-        \node[font=\footnotesize, align=left] at ($(nullifier.north) + (-1.8,-1.7)$) {Sec: 4.5.5};
-        \node[font=\footnotesize, align=left] at ($(nullifier.north) + (0,-2.0)$) {$\cm_y = g_1^{1/(s + \text{"DMV"})}g^{\usk_3}$};
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.5)$) {Sec: \ref{sec-probabilistic-nullifier}};
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2)$) {$\cm_y = g_1^{1/(s + \text{"DMV"})}g^{\usk_3}$};
         
-        % Repositioned list boxes to be more in line with the nullifier box
-        \node[listbox] (userlist) at (10,0.7) {}; % More horizontally aligned
-        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Issued List};
+        % Repositioned list boxes at least 1cm away from nullifier
+        \node[listbox] (userlist) at (11,0.8) {}; % Increased distance to at least 1cm
+        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Nullifier List};
         
-        % Just add the content without lines
-        \node[font=\footnotesize, align=center] at ($(userlist.center)$) {$y$};
+        % Content positioned lower
+        \node[align=center] at ($(userlist.center) + (0,-0.2)$) {$y$}; % Slight adjustment
         
         % Revocation List - repositioned
-        \node[listbox] (revlist) at (10,-0.7) {}; % More horizontally aligned
+        \node[listbox] (revlist) at (11,-0.8) {}; % Increased distance to at least 1cm
         \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
         
-        % Just add the content without lines
-        \node[font=\footnotesize, align=center] at ($(revlist.center)$) {$\cm_{y,1}$};
+        % Content positioned lower
+        \node[align=center] at ($(revlist.center) + (0,-0.3)$) {$\cm_{y}$}; % Slight adjustment
         
-        % Straighter arrows
+        % Straight arrows as shown in screenshot
         \draw[->, thick] (wallet.east) -- (nullifier.west);
-        \draw[->, thick] (nullifier.east) -- ($(nullifier.east)!0.25!(userlist.west)$) -- ($(nullifier.east)!0.25!(userlist.west) + (0,0.7)$) -- (userlist.west); % More direct
-        \draw[->, thick] (nullifier.east) -- ($(nullifier.east)!0.25!(revlist.west)$) -- ($(nullifier.east)!0.25!(revlist.west) + (0,-0.7)$) -- (revlist.west); % More direct
+        \draw[->, thick] (nullifier.east) -- (userlist.west);
+        \draw[->, thick] (nullifier.east) -- (revlist.west);
         
         \end{tikzpicture}
     }
     \caption[Nullifier Scheme]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
     \label{fig:credential-nullifier-revised}
 \end{figure}
-
-
-\begin{figure}
-    \centering
-    \scalebox{0.85}{ % Scale down the entire figure
-        \begin{tikzpicture}[
-            box/.style={draw, rounded corners=2pt, minimum width=4.5cm, minimum height=6cm}, % Reduced width
-            smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=3.8cm, minimum height=2.2cm}, % Adjusted size
-            listbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=1.5cm}, % Keeping size but removing internal lines
-            nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm}, % Keeping as is
-            thick
-        ]
-        
-        % Digital Credential Wallet
-        \node[box] (wallet) at (0,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,+0.3)$) {Digital Credential Wallet};
-        
-        % Master Credential
-        \node[smallbox] (master) at (0,1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(master.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "passport", \\
-            exp : "10/11/2026", \\
-            s : 54321
-        };
-        
-        % Context Credential
-        \node[smallbox] (context) at (0,-1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(context.north) + (0,-0.2)$) {Context Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(context.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "DMV", \\
-            exp : "10/11/2028"
-        };
-        
-        % Nullifier in the middle
-        \node[nullifierbox] (nullifier) at (5.5,0) {}; % Slightly adjusted position
-        \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
-        
-        % Add the deterministic nullifier algorithm with section reference
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.3)$) {Sec: \ref{subsec:deterministic-nullifier} $y = g^{1/(s + \text{"DMV"})}$};
-        
-        % Add the probabilistic nullifier algorithm with section reference
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2.0)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(s + \text{"DMV"})}g^{\usk_3}$};
-        
-        % Issued List - simplified
-        \node[listbox] (userlist) at (10,1.6) {}; % Adjusted position
-        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Issued List};
-        
-        % Just add the content without lines
-        \node[font=\footnotesize, align=center] at ($(userlist.center)$) {$y$};
-        
-        % Revocation List - simplified
-        \node[listbox] (revlist) at (10,-1.6) {}; % Adjusted position
-        \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
-        
-        % Just add the content without lines
-        \node[font=\footnotesize, align=center] at ($(revlist.center)$) {$\cm_{y,1}$};
-        
-        % Arrows - update to come from center of nullifier
-        \draw[->, thick] (wallet.east) -- (nullifier.west);
-        \draw[->, thick] (nullifier.east) -- ++(0.5,0) -- ++(0,1.6) -- (userlist.west); % From middle to Issued List
-        \draw[->, thick] (nullifier.east) -- ++(0.5,0) -- ++(0,-1.6) -- (revlist.west); % From middle to Revocation List
-        
-        \end{tikzpicture}
-    }
-    \caption[Nullifier Scheme for ]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
-    \label{fig:credential-nullifier-revised}
-\end{figure}
-
-
-
-
-
-
-
-
-
-
-
-
-
-\begin{figure}
-    \centering
-    \begin{tikzpicture}[
-        box/.style={draw, rounded corners=2pt, minimum width=5cm, minimum height=6cm},
-        smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=4cm, minimum height=2.5cm},
-        listbox/.style={draw, rounded corners=2pt, minimum width=3cm, minimum height=3cm},
-        nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=4.7cm, minimum height=2.5cm},
-        thick
-    ]
-    
-    % Digital Credential Wallet
-    \node[box] (wallet) at (0,0) {};
-    \node[anchor=north, font=\bfseries] at ($(wallet.north) + (0,+0.5)$) {Digital Credential Wallet};
-    
-    % Master Credential
-    \node[smallbox] (master) at (0,1.5) {};
-    \node[anchor=north, font=\small\bfseries] at ($(master.north) + (0,-0.3)$) {Master Credential};
-    
-    \node[anchor=north west, font=\small, align=left] at ($(master.north west) + (0.5,-0.7)$) {
-        id : 12345, \\
-        ctx : "passport", \\
-        exp : "10/11/2026", \\
-        k : 54321
-    };
-    
-    % Context Credential
-    \node[smallbox] (context) at (0,-1.5) {};
-    \node[anchor=north, font=\small\bfseries] at ($(context.north) + (0,-0.3)$) {Context Credential};
-    
-    \node[anchor=north west, font=\small, align=left] at ($(context.north west) + (0.5,-0.7)$) {
-        id : 12345, \\
-        ctx : "DMV", \\
-        exp : "10/11/2028"
-    };
-    
-    % Nullifier in the middle
-    \node[nullifierbox] (nullifier) at (6,0) {};
-    \node[anchor=north, font=\bfseries] at ($(nullifier.north) + (0,-0.3)$) {Nullifier Generation};
-    
-    % Add the deterministic nullifier algorithm with section reference
-    \node[font=\small, align=center] at ($(nullifier.north) + (0,-1.3)$) {Sec: \ref{subsec:deterministic-nullifier} $y = g^{1/(k + \text{"DMV"})}$};
-    
-    % Add the probabilistic nullifier algorithm with section reference
-    \node[font=\small, align=center] at ($(nullifier.north) + (0,-2.0)$) {Sec: \ref{sec-probabilistic-nullifier} $\cm_y = g_1^{1/(k + \text{"DMV"})}g^{\usk_3}$};
-    
-    % Anonymous User List
-    \node[listbox] (userlist) at (11,1.6) {};
-    \node[anchor=north, font=\bfseries] at ($(userlist.north) + (0,-0.3)$) {Issued List};
-    
-    % Draw horizontal lines in the user list
-    \draw ($(userlist.north west) + (0,-0.8)$) -- ($(userlist.north east) + (0,-0.8)$);
-    
-    % Reference to section in the user list but no formula
-    \node[font=\small, align=center] at ($(userlist.north) + (0,-1.3)$) {$y$};
-    
-    \draw ($(userlist.north west) + (0,-1.8)$) -- ($(userlist.north east) + (0,-1.8)$);
-    \draw ($(userlist.north west) + (0,-2.2)$) -- ($(userlist.north east) + (0,-2.2)$);
-    \draw ($(userlist.north west) + (0,-2.6)$) -- ($(userlist.north east) + (0,-2.6)$);
-    
-    % Revocation List
-    \node[listbox] (revlist) at (11,-1.6) {};
-    \node[anchor=north, font=\bfseries] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
-    
-    % Draw horizontal lines in the revocation list
-    \draw ($(revlist.north west) + (0,-0.8)$) -- ($(revlist.north east) + (0,-0.8)$);
-    \node[font=\small, align=center] at ($(revlist.north) + (0,-1.3)$) {$\cm_{y,1}$};
-    \draw ($(revlist.north west) + (0,-1.8)$) -- ($(revlist.north east) + (0,-1.8)$);
-    \draw ($(revlist.north west) + (0,-2.2)$) -- ($(revlist.north east) + (0,-2.2)$);
-    \draw ($(revlist.north west) + (0,-2.6)$) -- ($(revlist.north east) + (0,-2.6)$);
-    
-    % Arrows - update flow through nullifier
-    \draw[->, thick] (wallet.east) -- (nullifier.west);
-    \draw[->, thick] (nullifier.north east) -- (userlist.west);
-    \draw[->, thick] (nullifier.south east) -- (revlist.west);
-    
-    \end{tikzpicture}
-    \caption[Nullifier Scheme for ]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities}.
-    \label{fig:credential-nullifier-revised}
-\end{figure}
-
 
 
 \subsection{Goals}
@@ -531,7 +221,7 @@ Previous systems have addressed aspects of hierarchical credential binding and s
 
 
 \subsection{Contributions}\label{sec:vrf-contributions}
-We start with the $q$-DDHI assumption and work in two different directions. Firstly, we aim for efficiency and reconstruct the Dodis Yampolskiy VRF in a prime-order group and show XXX efficiency improvement while retaining security properties. Secondly, we aim for privacy,  starting with a novel zkpok protocol to prove the DDHI challenge $(g^{1/x})$ which we generalise to a sigma protocol for \emph{proof of inverse exponent}. We then extend this with a new private VRF to generate deterministic nullifiers from private inputs, combining our prime-order DY VRF and the ZKPoK of a DDHI challenge, where inputs are exponents in commitments for use in sybil-resistant mechanisms. We then extend this further for probabilistic outputs, committed but provable nullifiers to be used in revocation schemes. 
+We start with the $q$-DDHI assumption and work in two different directions. Firstly, we aim for efficiency and reconstruct the Dodis Yampolskiy VRF in a prime-order group and show 3-5x efficiency improvement while retaining security properties as seen in table \ref{chap4_table_originaldy_vs_mydy} and figure \ref{fig:chap4_public_vrf}. Secondly, we aim for privacy,  starting with a new $\Sigma$-protocol to prove the DDHI challenge $(g^{1/x})$ which we generalise to a sigma protocol for \emph{proof of inverse exponent}. We then extend this with a new private VRF to generate deterministic nullifiers from private inputs, combining our prime-order DY VRF and the ZKPoK of a DDHI challenge, where inputs are exponents in commitments for use in sybil-resistant mechanisms. We then extend this further for probabilistic outputs, committed but provable nullifiers to be used in revocation schemes. 
 
 
 \begin{figure}[ht]
@@ -727,7 +417,7 @@ Pedersen Commitments provide three key properties:
 
 \todonote{sam needs to update this}
 
-\section{We Formally Define a Nullifier}
+\section{New Formal Definition for a Nullifier}
 
 \begin{definition}[Nullifier Scheme]
 A nullifier scheme $\mathcal{N}$ is a tuple of algorithms $(Setup, Gen, Nullify, Verify)$ where:
@@ -814,12 +504,12 @@ where $sk'$ is a different secret key and $\mathcal{R}$ is the randomness space.
 
 \section{Efficient Prime-Order Dodis Yampolskiy VRF from the q-DDHI Assumption}\label{sec:vrf-prime-order}
 
-The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF provides an elegant solution for generating unique, pseudorandom nullifiers $y$ and their proofs of correctness $\pi$. We start with the question of removing pairings to improve efficiency. DY consists of $(y, \pi)$:
+The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF generates unique, pseudorandom nullifiers $y$ and their proofs of correctness $\pi$. We start with the question of removing pairings to improve efficiency. DY consists of $(y, \pi)$:
 \[
 y = e(g, \tilde{g})^{1/(sk+x)} \qquad \pi = \tilde{g}^{1/(sk+x)}
 \]
 
-Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \tilde{g})^{abc}$, which enables "exponent multiplication" across groups, allowing the transformations:
+Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \tilde{g})^{abc}$, which enables "exponent multiplication" across groups:
 
 \begin{align*}
     \begin{array}{rcl}
@@ -835,18 +525,18 @@ Verification depends on the bilinearity property $e(g^a, \tilde{g}^b)^c = e(g, \
     \end{array}
 \end{align*}
 
-Security relies on the $q$-DBDHI problem which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g})$, no $\PPT$ adversary can distinguish between $e(g,\tilde{g})^{1/x}$ and a uniform element in $\G_T$ with non-negligible advantage , ensuring the VRF outputs maintain pseudorandomness after the adversary has observed $(x',y',\pi')$ pairs.
+Security relies on the $q$-DBDHI problem which states that given $(g, g^x, g^{x^2}, \ldots, g^{x^q}, \tilde{g})$, no $\PPT$ adversary can distinguish between $e(g,\tilde{g})^{1/x}$ and a uniform element in $\G_T$ with non-negligible advantage, ensuring the VRF outputs maintain pseudorandomness after the adversary has observed $(x',y',\pi')$ pairs.
 
-\subsection{Technical Challenge}
+\subsection{Technical Challenge of Removing Pairings from Dodisy Yampolskiy VRF}
 
-Prime-order groups and standard group operations (without such bilinearity property) cannot be used to directly verify the $1/(sk+x)$ relationship with standard cryptographic operations. For example, given $pk  \cdot g^x = g^{sk+x}$, verification attempts to equate or cancel out fail:
+Prime-order groups and standard group operations (without the bilinearity property) cannot be used to directly verify the $1/(sk+x)$ relationship with standard cryptographic operations. For example, given $pk  \cdot g^x = g^{sk+x}$, verification attempts to equate or cancel out fail:
 
 \begin{enumerate}
     \item $g^{sk+x} \cdot g^{1/(sk+x)} = g^{sk + x + \frac{1}{sk+x}}$
     \item $\frac{g^{sk+x}}{g^{1/(sk+x)}} = g^{(sk+x)^2-\frac{1}{sk+x}}$
 \end{enumerate}
 
-Our insight is to reverse the verification approach. Instead of trying to derive $g^{1/(sk+x)}$ from $g^{sk+x}$ or cancel with a reciprocal, we use a zero knowledge proof $\Sigma$-protocol to verify that $y$ raised to the power $(sk+x)$ equals $g$. In doing so, our pairing-free construction shifts from the $q$-DBDHI assumption to the $q$-DDHI assumption. This gives us the relation:
+The insight is to reverse the verification approach. Instead of trying to derive $g^{1/(sk+x)}$ from $g^{sk+x}$ or cancel with a reciprocal, we use a zero knowledge proof $\Sigma$-protocol to verify that $y$ raised to the power $(sk+x)$ equals $g$. In doing so, our pairing-free construction shifts from the $q$-DBDHI assumption to the $q$-DDHI assumption. This gives us the relation:
 
 \[
 \mathcal{R}_{\mathsf{DY-PF}} = \left\{ 
@@ -861,7 +551,7 @@ y^{sk + x} = g  \\
 \end{array} \right\}
 \]
 
-\subsection{Our Sigma Protocol and Construction}\label{sec-dy-pf}
+\subsection{New Sigma Protocol and Construction for Prime Order Dodis Yampolskiy VRF}\label{sec-dy-pf}
 
 Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generator $g$. The message space is $\mathcal{X} = \mathbb{Z}_p$, the output space is $\mathcal{Y} = \mathbb{G}$, and the proof space is $\Pi = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. The algorithms are defined as follows:
 
@@ -924,63 +614,38 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 \end{proof}
 
 
-\subsection{Performance Evaluation}
+\subsection{Performance Evaluation - My DY VRF Construction is 3 - 6x More Efficient}
 
+I implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:chap4_vrf_public_table} compares the baseline Dodis Yampolskiy VRF against our constructions. As our construction does not use bilinear pairings, we present a comparison on BLS12-381 curve as well as more efficient Ed25519 and secp256k1 without a bilinear pairing\footnote{We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup}. Results are available in the figure \ref{fig:chap4_public_vrf}
 
-
-
-
-We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:chap4_vrf_public_table} compares the baseline Dodis Yampolskiy VRF against our constructions. As our construction does not use bilinear pairings, we present a comparison on BLS12-381 curve as well as more efficient Ed25519 and secp256k1 without a bilinear pairing. Results are available in the figures \ref{fig:chap4_public_vrf}
-\begin{table}[ht]
-\begin{center}
-\caption{VRF Comparison between Original DY and Our Prime Order DY VRF Construction}
-\label{tab:chap4_vrf_public_table}
-\begin{tabular}{l@{\hspace{1em}}l@{\hspace{1em}}c@{\hspace{2em}}c}
-\toprule
-\textbf{Scheme} & \textbf{Curve} & \textbf{Eval + Prove (ms)} & \textbf{Verify (ms)} \\
-\midrule
-\multirow{3}{*}{Our Prime Order DY VRF \ref{sec-dy-pf}} 
-& Ed25519 & 0.21 & 0.37 \\
-& secp256k1 & 0.25 & 0.42 \\
-& BLS12-381 & 0.41 & 0.71 \\
-\midrule
-Original DY $^1$ \cite{hutchison_verifiable_2005} & BLS12-381 & 1.27 & 2.20 \\
-\bottomrule
-\end{tabular}
-\par\medskip
-\raggedright
-\footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
-\end{center}
-\end{table}
-
-
-\begin{figure}[ht]
+\begin{figure}[!htb]
     \centering
-    \begin{minipage}{\textwidth}
-        \centering
-        \includegraphics[width=0.75\textwidth]{figures/chap4_public_vrf_combined.png}
-    \end{minipage}
-    
-    % Bottom row with 2x2 grid of smaller figures
-    \begin{minipage}{0.48\textwidth}
-        \centering
-         \includegraphics[width=\textwidth]{figures/chap4_public_vrf_eval_prove_performance.png}        
-    \end{minipage}
-    \hfill
-    \begin{minipage}{0.48\textwidth}
-        \centering
-       \includegraphics[width=\textwidth]{figures/chap4_public_vrf_verify_performance.png}
-    \end{minipage}
-    
-    \caption[Our DY VRF Construction is 3 - 6x more efficient]{DY VRF Performance Comparison - Our Construction is 3 - 6x more efficient}
+    \includegraphics[width=1\linewidth]{figures/chap4_dy_comparisons.png}
+        \caption[Our DY VRF Construction is 3 - 6x more efficient]{DY VRF Performance Comparison - Our Construction is 3 - 6x more efficient}
     \label{fig:chap4_public_vrf}
 \end{figure}
 
-
-
-
-
-
+% \begin{table}[!ht]\label{chap4_table_originaldy_vs_mydy}
+% \begin{center}
+% \caption{VRF Comparison between Original DY and Our Prime Order DY VRF Construction}
+% \label{tab:chap4_vrf_public_table}
+% \begin{tabular}{l@{\hspace{1em}}l@{\hspace{1em}}c@{\hspace{2em}}c@{\hspace{1em}}c}
+% \toprule
+% \textbf{Scheme} & \textbf{Curve} & \textbf{Eval + Prove (ms)} & \textbf{Verify (ms)} & \textbf{Total (ms)}\\
+% \midrule
+% \multirow{3}{*}{My DY Construction\ref{sec-dy-pf}} 
+% & Ed25519 & 0.21 & 0.37 & 0.58\\
+% & secp256k1 & 0.25 & 0.42 & 0.67\\
+% & BLS12-381 & 0.41 & 0.71 & 1.12 \\
+% \midrule
+% Original DY $^1$ \cite{hutchison_verifiable_2005} & BLS12-381 & 1.27 & 2.27 & 3.54 \\
+% \bottomrule
+% \end{tabular}
+% \par\medskip
+% \raggedright
+% \footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
+% \end{center}
+% \end{table}
 
 
 
@@ -1616,32 +1281,37 @@ Our evaluation reveals several key findings:
 
 
 
-\begin{figure}[ht]
+% \begin{figure}[ht]
+%     \centering
+%     \begin{minipage}{\textwidth}
+%         \centering
+%         \includegraphics[width=0.75\textwidth]{figures/chap4_private_nullifier_combined.png}
+%     \end{minipage}
+    
+%     % Bottom row with 2x2 grid of smaller figures
+%     \begin{minipage}{0.48\textwidth}
+%         \centering
+%          \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_eval_prove.png}        
+%     \end{minipage}
+%     \hfill
+%     \begin{minipage}{0.48\textwidth}
+%         \centering
+%        \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_verify.png}
+%     \end{minipage}
+    
+%     \caption[Our Nullifier Constructions are 3x - 5x more efficient]{Nullifier Performance Comparison - Our Constructions are 3x - 5x more efficient}
+%     \label{fig:nullifiers_figure}
+% \end{figure}
+
+
+
+
+\begin{figure}[!htb]
     \centering
-    \begin{minipage}{\textwidth}
-        \centering
-        \includegraphics[width=0.75\textwidth]{figures/chap4_private_nullifier_combined.png}
-    \end{minipage}
-    
-    % Bottom row with 2x2 grid of smaller figures
-    \begin{minipage}{0.48\textwidth}
-        \centering
-         \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_eval_prove.png}        
-    \end{minipage}
-    \hfill
-    \begin{minipage}{0.48\textwidth}
-        \centering
-       \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_verify.png}
-    \end{minipage}
-    
+    \includegraphics[width=1\linewidth]{figures/chap4_nullifier_comparisons.png}
     \caption[Our Nullifier Constructions are 3x - 5x more efficient]{Nullifier Performance Comparison - Our Constructions are 3x - 5x more efficient}
     \label{fig:nullifiers_figure}
 \end{figure}
-
-
-
-
-
 
 
 
