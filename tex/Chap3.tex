@@ -18,90 +18,86 @@ This chapter advances the state of anonymous credentials with:
 
 \begin{figure}
     \centering
-    \begin{tikzpicture}[
-        box/.style={draw, rounded corners=2pt, minimum width=6cm, minimum height=8.5cm},
-        smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
-        verifierbox/.style={draw, rounded corners=2pt, minimum width=4cm, minimum height=4cm},
-        showbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
-        thick
-    ]
-    
-    % Digital Credential Wallet
-    \node[box] (wallet) at (0,0) {};
-    \node[anchor=south, font=\bfseries] at ($(wallet.north) + (0,0.3)$) {Credential Wallet};
-    
-    % Master Credential
-    \node[smallbox] (master) at (0,2.75) {};
-    \node[anchor=north, font=\small\bfseries] at ($(master.north) + (0,-0.3)$) {Master Credential};
-    
-    \node[anchor=north west, font=\small, align=left] at ($(master.north west) + (0.5,-0.7)$) {
-        \texttt{id : 12345}, \\
-        \texttt{ctx : "passport"}, \\
-        \texttt{exp : "10/11/2026"}, \\
-        \texttt{k : 54321}
-    };
-    
-    % Driver License Credential
-    \node[smallbox] (driver) at (0,0) {};
-    \node[anchor=north, font=\small\bfseries] at ($(driver.north) + (0,-0.3)$) {Driver License};
-    
-    \node[anchor=north west, font=\small, align=left] at ($(driver.north west) + (0.5,-0.7)$) {
-        \texttt{id : 12345}, \\
-        \texttt{ctx : "DMV"}, \\
-        \texttt{exp : "10/11/2028"}
-    };
-
-    % Bank Statement Credential
-    \node[smallbox] (bank) at (0,-2.75) {};
-    \node[anchor=north, font=\small\bfseries] at ($(bank.north) + (0,-0.3)$) {Bank Statement};
-    
-    \node[anchor=north west, font=\small, align=left] at ($(bank.north west) + (0.5,-0.7)$) {
-        \texttt{id : 12345}, \\
-        \texttt{ctx : "bankstatement"}, \\
-        \texttt{date : "10/11/2027"}, \\
-        \texttt{bal : "10,000,000"}
-    };
-    
-    
-    
-    % Credential Show in the middle (replacing Nullifier Generation)
-    \node[showbox] (show) at (6.5,0) {};
-    \node[anchor=north, font=\bfseries] at ($(show.north) + (0,0.45)$) {Identity Binding Show};
-    
-   \node[font=\scriptsize, align=center] at ($(show.north) + (0,-1.3)$) 
-   {$\begin{aligned}
-    \credm.ctx &= \text{passport} \wedge \exp \geq \text{today} \\
-    \cred_d.ctx &= \text{DMV} \wedge \exp \geq \text{today} \\
-    &\wedge \cred_b.ctx = \text{"bankstatement"} \\
-    &\wedge \cred_b.bal \geq 10000
-    \end{aligned}$};
-
-    
-    % Verifier box (replacing the two boxes on the right)
-    \node[verifierbox] (verifier) at (12,0) {};
-    \node[anchor=north, font=\bfseries] at ($(verifier.north) + (0,-0.3)$) {Verifier};
-    
-    % Draw contents for the verifier box
-    \node[font=\small, align=center] at ($(verifier.north) + (0,-2.0)$) {
-        Validates credentials\\
-        Checks signatures\\
-        Verifies proofs
-    };
-
-    % Arrows from wallet edge to credential show
-    \draw[->, thick] ($(wallet.east) + (0,2.75)$) -- ($(show.west) + (0,0.5)$);
-    \draw[->, thick] ($(wallet.east) + (0,0)$) -- (show.west);
-    \draw[->, thick] ($(wallet.east) + (0,-2.75)$) -- ($(show.west) + (0,-0.5)$);
-    
-    % % Arrows from credentials to the credential show
-    % \draw[->, thick] (master.east) -- ++(0.5,0) -- ($(show.west) + (0,0.5)$);
-    % \draw[->, thick] (driver.east) -- (show.west);
-    % \draw[->, thick] (bank.east) -- ++(0.5,0) -- ($(show.west) + (0,-0.5)$);
-    
-    % Arrow from credential show to verifier
-    \draw[->, thick] (show.east) -- (verifier.west);
-    
-    \end{tikzpicture}
+    \scalebox{0.85}{ % Scale down the entire figure
+        \begin{tikzpicture}[
+            box/.style={draw, rounded corners=2pt, minimum width=5.8cm, minimum height=6cm}, % Increased height
+            smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=1.7cm}, % Slightly larger
+            verifierbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=4cm},
+            showbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=6cm, minimum height=4cm},
+            thick
+        ]
+        
+        % Digital Credential Wallet
+        \node[box] (wallet) at (0,0) {};
+        \node[anchor=south, font=\bfseries\small] at ($(wallet.north) + (0,0.2)$) {Credential Wallet};
+        
+        % Master Credential
+        \node[smallbox] (master) at (0,1.8) {}; % Adjusted position for 1cm spacing
+        \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
+        
+        \node[anchor=north west, font=\scriptsize, align=left] at ($(master.north west) + (0.3,-0.5)$) {
+            \texttt{id : 12345}, \\
+            \texttt{ctx : "passport"}, \\
+            \texttt{exp : "10/11/2026"}, \\
+            \texttt{k : 54321}
+        };
+        
+        % Driver License Credential
+        \node[smallbox] (driver) at (0,0) {}; % Center position
+        \node[anchor=north, font=\footnotesize\bfseries] at ($(driver.north) + (0,-0.2)$) {Driver License};
+        
+        \node[anchor=north west, font=\scriptsize, align=left] at ($(driver.north west) + (0.3,-0.5)$) {
+            \texttt{id : 12345}, \\
+            \texttt{ctx : "DMV"}, \\
+            \texttt{exp : "10/11/2028"}
+        };
+        
+        % Bank Statement Credential
+        \node[smallbox] (bank) at (0,-1.8) {}; % Adjusted position for 1cm spacing
+        \node[anchor=north, font=\footnotesize\bfseries] at ($(bank.north) + (0,-0.2)$) {Bank Statement};
+        
+        \node[anchor=north west, font=\scriptsize, align=left] at ($(bank.north west) + (0.3,-0.5)$) {
+            \texttt{id : 12345}, \\
+            \texttt{ctx : "bankstatement"}, \\
+            \texttt{date : "10/11/2027"}, \\
+            \texttt{bal : "10,000,000"}
+        };
+        
+        % Identity Binding Show
+        \node[showbox] (show) at (6.8,0) {}; % Slightly adjusted x-position
+        \node[anchor=north, font=\small\bfseries] at ($(show.north) + (0,0.4)$) {Identity Binding Show};
+        
+        \node[font=\footnotesize] at ($(show.north) + (0,-2)$) 
+        {$\phi = \left(\begin{aligned}
+         \textrm{cred}_m.\textrm{ctx} &= \textrm{passport} \wedge\\
+          \textrm{exp} &\geq \textrm{today} \\
+         \textrm{cred}_d.\textrm{ctx} &= \textrm{DMV} \wedge \\
+         \textrm{exp} &\geq \textrm{today} \wedge\\
+         \textrm{cred}_b.\textrm{ctx} &= \textrm{"bankstatement"} \wedge\\
+         \textrm{cred}_b.\textrm{bal} &\geq 10000
+        \end{aligned}\right)$};
+        
+        % Verifier box 
+        \node[verifierbox] (verifier) at (12,0) {}; % Adjusted x-position
+        \node[anchor=north, font=\small\bfseries] at ($(verifier.north) + (0,0.4)$) {Verifier};
+        
+        % Draw contents for the verifier box
+        \node[font=\footnotesize, align=center] at ($(verifier.north) + (0,-1.75)$) {
+            Validates credentials\\
+            Checks signatures\\
+            Verifies proofs
+        };
+        
+        % Arrows from wallet edge to credential show
+        \draw[->, thick] ($(wallet.east) + (0,1.8)$) -- ($(show.west) + (0,0.5)$);
+        \draw[->, thick] ($(wallet.east) + (0,0)$) -- (show.west);
+        \draw[->, thick] ($(wallet.east) + (0,-1.8)$) -- ($(show.west) + (0,-0.5)$);
+        
+        % Arrow from credential show to verifier
+        \draw[->, thick] (show.east) -- (verifier.west);
+        
+        \end{tikzpicture}
+    }
     \caption[Credential Showing Scheme]{A credential showing scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding multiple credentials (passport, driver's license, bank statement) to enable secure and privacy-preserving presentation to verifiers.}
     \label{fig:credential-show-revised}
 \end{figure}
@@ -111,7 +107,7 @@ This chapter advances the state of anonymous credentials with:
 
 \section{System Model and Definitions}
 
-Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends the single-issuer Attribute-Based Anonymous Credential (ABC) framework from Chapter 2 to support credentials from multiple, mutually distrusting issuers, bound to a single identity. The ABC system (Section 2.4) uses a variant of rerandomizable Pointcheval-Sanders signatures~\cite{sako_short_2016} and position-binding Pedersen commitments~\cite{tomescu_utt_2022} to enable expressive predicate proofs over attributes. MIMC-ABC builds on this by introducing multi-issuer key generation and a cryptographic identity binding mechanism, ensuring all credentials verifiably belong to the same user without revealing their identity.
+Our Multi-Issuer Multi-Credential Anonymous Credential (MIMC-ABC) system extends the single-issuer Attribute-Based Anonymous Credential (ABC) framework from Chapter 2 to support credentials from multiple, mutually distrusting issuers, bound to a single identity. The ABC system uses a variant of rerandomizable Pointcheval-Sanders signatures~\cite{sako_short_2016} and position-binding Pedersen commitments~\cite{tomescu_utt_2022} to enable expressive predicate proofs over attributes. MIMC-ABC builds on this by introducing multi-issuer key generation and a cryptographic identity binding mechanism, ensuring all credentials verifiably belong to the same user without revealing their identity.
 
 \subsection{MIMC-ABC Syntax}
 
@@ -125,7 +121,7 @@ A MIMC-ABC system consists of the following probabilistic polynomial-time (PPT) 
 
     \item $(\mathsf{Obtain}(\attrs, \{\mathsf{opk}_j\}_j, \mathsf{aux}), \mathsf{Issue}(\mathsf{osk}_j, \mathsf{cm}, \mathsf{aux})) \to (\mathsf{cred}_j, \bot)$: An interactive protocol between a user and issuer $j$. The user inputs an attribute vector $\attrs = [\id, \ctx_j, \exp_j]$, where $\id$ is a unique identifier, $\ctx_j$ is the issuer-specific context, and $\attrs_j$ are attributes. The user samples $\usk_j \sample \Z_p$, commits as $\mathsf{cm} \gets \mathsf{CM.Com}(\attrs; \usk_j)$, and proves its opening (Section 2.4.3). The issuer signs $\mathsf{cm}$ with $\mathsf{osk}_j$, outputting $\mathsf{cred}_j = (\sigma_j, \mathsf{cm})$ to the user and $\bot$ to itself.
 
-    \item $(\mathsf{Show}(\{\mathsf{cred}_j\}_j, \{\usk_j\}_j, \phi), \mathsf{Verify}(\{\mathsf{cred}_j'\}_j, \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a set of credentials $\{\mathsf{cred}_j\}_j$ from (optionally) distinct issuers, rerandomizes each $(\sigma_j, \mathsf{cm})$ to $(\sigma_j', \mathsf{cm}')$, and computes a proof $\pi$ that $\phi(\{\attrs_j\}_j) = 1$ and all $\id$ values match, using $\Sigma$-protocols (Section 2.4.3). The verifier checks the proof and rerandomized credentials against $\{\mathsf{opk}_j\}_j$, outputting 1 if valid, 0 otherwise.
+    \item $(\mathsf{Show}(\{\mathsf{cred}_j\}_j, \{\usk_j\}_j, \phi), \mathsf{Verify}(\{\mathsf{cred}_j'\}_j, \pi)) \to \{0,1\}$: An interactive protocol between a user and verifier. The user inputs a set of credentials $\{\mathsf{cred}_j\}_j$ from (optionally) distinct issuers, rerandomizes each $(\sigma_j, \mathsf{cm})$ to $(\sigma_j', \mathsf{cm}')$, and computes a proof $\pi$ that $\phi(\{\attrs_j\}_j) = 1$ and all $\id$ values match, using $\Sigma$-protocols. The verifier checks the proof and rerandomized credentials against $\{\mathsf{opk}_j\}_j$, outputting 1 if valid, 0 otherwise.
 \end{itemize}
 \end{definition}
 

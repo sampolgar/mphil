@@ -72,7 +72,7 @@ $\Sigma$-protocols, such as Schnorr proofs, are often characterized as having li
 
 
 
-\subsection{Pairing Protocols}
+\subsection{Optimizations for Pairing Protocols }
 
 Pairing-based cryptography underpins many anonymous credential schemes, enabling functionalities like zero-knowledge proofs and attribute-based signatures through bilinear maps. However, pairings are computationally expensive, often dominating the runtime of schemes such as BBS+06~\cite{hutchison_constant-size_2006} and PS16~\cite{sako_short_2016}. Most theoretical analyses, such as those in~\cite{sako_short_2016}, measure complexity as a count of pairing operations (e.g., $3\ell$ or $2\ell$ pairings for $\ell$ attributes), overlooking practical optimizations available in modern cryptographic libraries. In this subsection, we detail two key optimizations—Miller Loop with Final Exponentiation and Batch Pairing Inversion—implemented in our open-source Rust library, and demonstrate their impact on bridging the gap between theoretical complexity and practical performance.
 
@@ -108,15 +108,6 @@ where $c^{-1}$ is the inverse of $c$ in its source group. By combining the pairi
 % Connecting optimizations to practical performance
 \subsubsection*{Practical Impact}
 These optimizations, implemented in our Rust library using frameworks like Arkworks, significantly enhance the performance of pairing-based anonymous credentials. For instance, older schemes like PS16 and BBS+06, which rely heavily on $\mathbb{G}_T$ operations, see verification times of 32.78~ms and 39.21~ms for 30 attributes (Table~\ref{tab:anon_creds_performance_old_gen_vs_new}). By applying Miller Loop and Final Exponentiation optimizations, we reduce the pairing overhead, while Batch Pairing Inversion streamlines equality checks in verification. Benchmarks, visualized in Figure~\ref{fig:elliptic_curve_pairings_speedup}, show that these techniques yield speedups of up to 2x for pairing-intensive operations compared to unoptimized implementations. When combined with the shift to $\mathbb{G}_1$-based proofs in newer schemes like PS-UTT22 and BBS+2016, the cumulative effect is a 6x performance boost, underscoring the critical role of practical optimizations.
-
-% Referencing the figure
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=0.75\linewidth]{pairing_comparison.png}
-    \includegraphics[width=0.75\linewidth]{pairing_comparison2.png}
-    \caption{Elliptic Curve Pairings - Practical Benchmarks with Miller-Loop Intermediate Computation}
-    \label{fig:elliptic_curve_pairings_speedup}
-\end{figure}
 
 
 

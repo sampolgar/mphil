@@ -1,4 +1,5 @@
 \chapter{Fast and Expressive Anonymous Credentials from New Rerandomizable Signatures}\label{chap2}
+% \chapter{Fast and Expressive Anonymous Credentials from New Rerandomizable Signatures}\label{chap2}
 
 
 \subsection{Motivation}
@@ -51,11 +52,7 @@ This chapter develops the cryptographic foundations needed for credential wallet
 \end{enumerate}
 
 \subsubsection*{Chapter Roadmap}
-This chapter develops cryptographic foundations for efficient anonymous credentials in decentralized identity systems. Section \ref{chap2:preliminaries} establishes the mathematical setting with SDLP and PS-LRSW assumptions.
-
-Section \ref{sec:formal_treatment_utt_rerand_sig} provides the first complete security proofs for our rerandomizable signature scheme, proving position-binding under SDLP and EUF-CMA security under PS-LRSW. Section \ref{chap2:extending_utt_construction} presents my key optimization: moving signatures from $\G_1$ to $\G_2$ for 10-16\% faster verification, plus malicious issuer protection through key verification.
-
-Section \ref{chap2:expressive_proofs} demonstrates how Sigma protocols achieve efficient predicate evaluation over complex policies. Section \ref{sec:abc} constructs my complete credential system with security proofs. Section \ref{sec:performance_evaluation} validates my approach through benchmarks, showing state-of-the-art performance with up to 83\% verification speedup.
+Section \ref{chap2:preliminaries} establishes the background preliminaries, section \ref{sec:formal_treatment_utt_rerand_sig} provides the first complete security proofs for our rerandomizable signature scheme. Section \ref{chap2:extending_utt_construction} presents my key optimization: moving signatures from $\G_1$ to $\G_2$ for 10-16\% faster verification, plus malicious issuer protection through key verification. Section \ref{chap2:expressive_proofs} demonstrates how Sigma protocols achieve efficient predicate evaluation over complex policies. Section \ref{sec:abc} constructs my complete credential system with security proofs. Section \ref{sec:performance_evaluation} validates my approach through benchmarks, showing state-of-the-art performance with up to 83\% verification speedup.
 
 
 
@@ -968,7 +965,7 @@ The algebraic structure of an Anonymous Credential scheme determines the compati
 
 The credential construction builds on the line of work following initial rerandomizable signatures on bilinear groups, such as  CL04 \cite{hutchison_signature_2004}, BBS+ \cite{hutchison_constant-size_2006, camenisch_anonymous_2016, tessaro_revisiting_2023}, and PS \cite{sako_short_2016, tomescu_utt_2022}. Earlier schemes \cite{hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016} required proofs over exponents in $\mathbb{G}_T$, with sub-optimal computational overhead. In contrast, newer constructions \cite{camenisch_anonymous_2016, tessaro_revisiting_2023, tomescu_utt_2022} restructure the algebraic setup to enable zero-knowledge proofs over $\mathbb{G}_1$ points, minimizing computation by leveraging faster scalar exponent operations and efficient optimizations like Multi-Scalar Multiplication. 
 
-In these schemes, the prover uses $\Sigma$-protocols to prove knowledge of exponents (scalars) corresponding to hidden attributes. The soundness of the security proofs relies on the extraction of these scalars, ensuring unforgeability. $\Sigma$-protocols excel in efficiency for such tasks, with basic operations like credential verification, selective disclosure, and equality proofs achieving show+verify times of 0.49--0.98 ms (see Table \ref{tab:sigma_protocol_efficiency_compare}). Furthermore, sigma protocols naturally support composition for more expressive statements, such as AND/OR combinations and linear relations, with minimal overhead (approximately 2--3 times the baseline cost). They can also be extended to handle range proofs \cite{bunz_bulletproofs_2017} and set membership proofs via accumulators \cite{camenisch_dynamic_2002, camenisch_scalable_2016, crites_allosaur_2024}, making them versatile for credential systems.
+In these schemes, the prover uses $\Sigma$-protocols to prove knowledge of exponents (scalars) corresponding to hidden attributes. The soundness of the security proofs relies on the extraction of these scalars, ensuring unforgeability. $\Sigma$-protocols excel in efficiency for such tasks, with basic operations like credential verification, selective disclosure, and equality proofs achieving show+verify times of 0.49--0.98 ms (see Table \ref{tab:sigma_protocol_efficiency_compare}). Furthermore, sigma protocols naturally support composition for more expressive statements, such as AND/OR combinations and linear relations, with minimal overhead (approximately 2--3 times the baseline cost). They can also be extended to handle range proofs \cite{bunz_bulletproofs_2017} and set membership proofs via accumulators \cite{goos_dynamic_2002, jaques_allosaur_2024}, making them versatile for credential systems.
 
 \subsubsection*{Predicate Satisfaction}
 
@@ -976,7 +973,7 @@ In my credential system, a predicate $\phi$ is a boolean function over an attrib
 
 The prover uses sigma protocols to demonstrate that their attributes $\attrs$ satisfy a given predicate $\phi$ (i.e., $\phi(\attrs) = 1$) in zero-knowledge, meaning the verifier learns only that the predicate holds, not the attribute values. For example, consider a predicate $\phi_{\text{age}}: \text{age} > 18$. The prover proves knowledge of attributes $\attrs= [\text{age}, \dots]$ such that $\text{age} > 18$, without revealing the exact value of $\text{age}$.
 
-The soundness of the sigma protocol ensures that a prover cannot generate a valid proof for $\phi(\attrs) = 1$ unless their attributes truly satisfy the predicate, reinforcing the unforgeability of my credential system.
+The soundness of the $\Sigma$-protocol ensures that a prover cannot generate a valid proof for $\phi(\attrs) = 1$ unless their attributes truly satisfy the predicate, reinforcing the unforgeability of my credential system.
 
 
 
@@ -1023,9 +1020,9 @@ zk-SNARKs provide maximimum expressiveness, supporting proofs of any NP statemen
 \hline
 \textbf{Aspect} & \textbf{Sigma Protocols} & \textbf{Groth-Sahai Proofs} & \textbf{zk-SNARKs (Groth16)} \\
 \hline
-\textbf{Expressiveness} & Linear relations & Quadratic relations in bilinear groups & General arithmetic circuits \\
+\textbf{Expressiveness} & Linear relations & \makecell{Quadratic relations \\in bilinear groups} & General arithmetic circuits \\
 \hline
-\textbf{Common Operations} & \makecell{Discrete log proofs,\\ commitment openings,\\ equality} & Pairing product equations & Any NP statement \\
+\textbf{Operations} & \makecell{Discrete log proofs,\\ commitment openings,\\ equality} & Pairing product equations & Any NP statement \\
 \hline
 \textbf{Proof Size} & Linear in statement size & \makecell{$O(N)$ with $4|G_1| + 4|G_2|$\\ per committed variable} & Constant: $2|G_1| + |G_2|$ \\
 \hline
@@ -1035,11 +1032,11 @@ zk-SNARKs provide maximimum expressiveness, supporting proofs of any NP statemen
 \hline
 \textbf{Trusted Setup} & No & No & Yes \\
 \hline
-\textbf{Underlying Assumptions} & Discrete log & Falsifiable (SXDH, standard) & Non-falsifiable \\
+\textbf{Assumptions} & Discrete log & Falsifiable (SXDH, standard) & Non-falsifiable \\
 \hline
-\textbf{Implementation Complexity} & Low & Medium & High \\
+\textbf{Complexity} & Low & Medium & High \\
 \hline
-\textbf{Optimal Use Case} & \makecell{Credential verification,\\ selective disclosure} & \makecell{Structure-preserving signatures,\\ pairing-based schemes} & \makecell{Applications requiring\\ minimal proof size} \\
+\textbf{Use Cases} & \makecell{Credential verification,\\ selective disclosure} & \makecell{Structure-preserving signatures,\\ pairing-based schemes} & \makecell{Applications requiring\\ minimal proof size} \\
 \hline
 \end{tabular}
 \end{table}
@@ -1331,41 +1328,69 @@ This prevents deanonymization via specially crafted keys, and signature forgery 
 \subsubsection{Two-Party Protocol for VRF Key Generation}
 The key $k$ in the master credential, used as input to a Verifiable Random Function (VRF), is generated through a two-party protocol between the user and issuer to enhance both unforgeability and privacy. The user samples a secret $k_1 \sample \mathbb{Z}_p$ and commits to it, while the issuer samples $k_2 \sample \mathbb{Z}_p$ and embeds it into the credential's attribute vector. The final key, computed as $k = k_1 + k_2$, ensures $k$ can't have been copied from another user or been maliciously issued by the issuer. The issuer learns the user's identity during registration but never learns the complete VRF key, maintaining user privacy while still enabling credential verification.
 
-
-
-\begin{figure}\label{construction-ABC}
-    \caption{ABC System}
-    \begin{center}
-    \begin{tabular}{l@{\hspace{5em}}c@{\hspace{5em}}l}
-    \multicolumn{3}{l}{$\underline{\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)}$ for attribute vector length $\ell$} \\[1em]
-    \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam), \; \mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
-    \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}), \; \text{Return } (\osk, \opk) = (\sk, (\vk, \ck))$} \\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{(Obtain, Issue)}}$:} \\[1em]
-    \multicolumn{3}{l}{$\pirzero(\cm_1) = \zkpok\{(\k_1,\usk) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}$} \\[1em]
-    \multicolumn{3}{l}{$\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$} \\[1em]
-    $\underline{\mathsf{Obtain}(\opk)}$ && $\underline{\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)}$ \\[1em]
-    & $\xleftarrow{\pirverkey(\sk, \vk, \ck)}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
-    If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
-    \multicolumn{3}{l}{$\k_1 \sample \Z_p, \usk \sample \Z_p\;, \cm_1 = \CMCom([0,0,0,\k_1];\usk)$} \\[1em]
-     & $\xrightarrow{\;\; \pirzero(\cm_1) \;\;}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
-     \multicolumn{3}{r}{$\k_2 \sample \Z_p, \cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0)$ where $\ctx$="master"} \\[1em]
-     \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
-    If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\qquad \sigma, \cm, \k_2, \id, \ctx, \exp \qquad}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
-    \multicolumn{3}{l}{\; Else, return $\cred = (\sigma, \cm, \usk, \opk)$} \\[1em]
-    \multicolumn{3}{l}{$\underline{\mathsf{(Show, Verify)}}$ for credential $\cred$ and predicate $\phi$:} \\[1em]
-    \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1em]
-    $\underline{\mathsf{Show}(\cred)}$ && $\underline{\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)}$ \\[1em]
-    \multicolumn{3}{r}{Send empty access policy $\phi = \bot$} \\[0.5em]
-    \multicolumn{3}{l}{Parse $\cred = (\sigma, \cm, \usk, \opk)$} \\[0.5em]
-    \multicolumn{3}{l}{\quad Sample $\Delta_\usk, \Delta_u \sample \Z_p$} \\[1em]
-    \multicolumn{3}{l}{\quad $\sigma' = \RSRand(\sigma, \Delta_\usk, \Delta_u)$} \\[1em]
-    \multicolumn{3}{l}{\quad $\cm' = \CMRand(\cm, \Delta_\usk), \; \usk' = \usk + \Delta_\usk$} \\[1em]
-    \multicolumn{3}{l}{\quad Compute $\Pi_\phi$} \\[1em]
-    & $\xrightarrow{\sigma', \cm', \pi_\phi}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
+\begin{figure}
+    \label{construction-ABC}
+    \centering
+    % Adjusting the tabular environment to fit within textwidth and improve readability
+    \begin{adjustbox}{max width=\textwidth}
+    \begin{tabular}{p{0.35\textwidth}@{\hspace{2em}}c@{\hspace{2em}}p{0.35\textwidth}}
+        % OrgKeyGen section
+        \multicolumn{3}{l}{\underline{$\mathsf{OrgKeyGen}(1^{\lambda}, 1^\ell)$} for attribute vector length $\ell$} \\[1em]
+        \multicolumn{3}{l}{$\BG = (\G_1, \G_2, \G_T, e, g, \tilg, p) \sample \BGGen(\secparam),$} \\
+        \multicolumn{3}{l}{$\mathsf{ck} \sample \mathsf{CM.Setup}(\BG, \secparam, \ell)$} \\[1em]
+        \multicolumn{3}{l}{$(\sk, \vk) \sample \mathsf{RS.KeyGen}(\mathsf{ck}),$} \\
+        \multicolumn{3}{l}{Return $(\osk, \opk) = (\sk, (\vk, \ck))$} \\[1.5em]
+        
+        % Definitions for Obtain and Issue
+        \multicolumn{3}{l}{\underline{$\mathsf{(Obtain, Issue)}$}:} \\[1em]
+        \multicolumn{3}{l}{\begin{tabular}{@{}l@{}}
+            $\pirzero(\cm_1) = \zkpok\{(\k_1,\usk) \mid \cm = g_1^0 g_2^0 g_3^0 g_4^{\k_1} g^{\usk} \}$ \\
+            $\pirverkey(\sk, \vk, \ck) = \zkpok\{(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x$ \\
+            $\quad \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}$
+        \end{tabular}} \\[1.5em]
+        
+        % Obtain and Issue interaction
+        \addlinespace[1em]
+        $\mathsf{Obtain}(\opk)$ &&$\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)$\\
+        \midrule \\
+        % $\mathsf{Obtain}(\opk)$ && $\mathsf{Issue}(\pirzero, \cm, \id, \ctx, \exp, \osk)$ \\
+        % {\setlength{\aboverulesep}{0pt}\midrule}
+        & $\xleftarrow{\scalebox{1.2}{$\pirverkey(\sk, \vk, \ck)$}}$ & Compute and send $\pirverkey(\sk, \vk, \ck)$ \\[1em]
+        If $\pirverkey(\vk, \ck)$ fails, return $\bot$ && \\[1em]
+        \begin{tabular}{@{}l@{}}
+            $\k_1 \sample \Z_p, \usk \sample \Z_p,$ \\
+            $\cm_1 = \CMCom([0,0,0,\k_1];\usk)$
+        \end{tabular} && \\[1em]
+        & $\xrightarrow{\scalebox{1.2}{$\pirzero(\cm_1)$}}$ & If $\pirzero(\cm_1)$ fails, return $\bot$ \\[1em]
+        \multicolumn{3}{r}{$\k_2 \sample \Z_p,\cm_2 = \CMCom([\id,\ctx,\exp,\k_2];0) \text{ where } \ctx=\texttt{"master"}$} \\[1em]
+        \multicolumn{3}{r}{$\cm = \cm_1 + \cm_2 = \CMCom([\id,\ctx,\exp,\k_1 + \k_2];\usk)$} \\[1em]
+        If $\RSVer(\sigma, \cm, \opk) = 0$, return $\bot$ & $\xleftarrow{\scalebox{1.2}{$\sigma, \cm, \k_2, \id, \ctx, \exp$}}$ & $u \sample \Z_p, \; \sigma \sample \RSSign(\cm, \osk, u)$ \\[1em]
+        Else, return $\cred = (\sigma, \cm, \usk, \opk)$ && \\[1.5em]
+        
+        % Show and Verify section
+        \multicolumn{3}{l}{\underline{$\mathsf{(Show, Verify)}$} for credential $\cred$ and predicate $\phi$:} \\[1em]
+        \multicolumn{3}{l}{$\Pi_\phi = \zkpok\{(\vec{m}, \usk') \mid \cm' = \CMCom(\vec{m}; \usk') \wedge \RSVer(\sigma', \cm', \opk) = 1 \wedge \phi(\vec{m}) = 1 \}$} \\[1.5em]
+        
+        % Show and Verify interaction
+        \addlinespace[1em]
+        $\mathsf{Show}(\cred)$ && $\mathsf{Verify}(\sigma', \cm', \pi_\phi, \opk)$ \\
+        \midrule \\
+        && Send empty access policy $\phi = \bot$ \\[1em]
+        \begin{tabular}{@{}l@{}}
+            Parse $\cred = (\sigma, \cm, \usk, \opk)$ \\
+            Sample $\Delta_\usk, \Delta_u \sample \Z_p$ \\
+            $\sigma' = \RSRand(\sigma, \Delta_\usk, \Delta_u)$ \\
+            $\cm' = \CMRand(\cm, \Delta_\usk),$ \\
+            $\usk' = \usk + \Delta_\usk$ \\
+            Compute $\Pi_\phi$
+        \end{tabular} && \\[1em]
+        & $\xrightarrow{\scalebox{1.2}{$\sigma', \cm', \pi_\phi$}}$ & If $\pi_\phi$ fails, return 0, else 1 \\[1em]
     \end{tabular}
-    \end{center}
-    \label{fig:single-cred-protocol}
+    \end{adjustbox}
+    \caption{ABC System}
 \end{figure}
+
+
 
 
 \subsection{Security of my Construction}
