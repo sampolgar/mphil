@@ -1,107 +1,27 @@
 \chapter{New Nullifiers and VRFs from the q-DDHI and Applications to Privacy Systems}\label{chap4}
 By definition, an anonymous user's interaction with a system should be indistinguishable from any of its other interactions. Sybil resistance enforces identity uniqueness, preventing users from performing the same action more than once. The paradox of enforcing uniqueness of indistinguishable users is representative of the challenges of the security, privacy, and usability trilemma. A nullifier is a privacy-preserving, publicly-provable, unique output generated from a user's private information, enabling actions like spending coins, voting anonymously, or issuing credentials while preventing double-spending and maintaining anonymity through zero-knowledge proofs. Nullifiers are currently defined within specific contexts in privacy-preserving protocols like Zcash, Tornado Cash, and Crypto-Wallets like MetaMask and Ledger, but there is no standard definition with its own security properties. Current constructions either use computationally-heavy pairings and $\Sigma$-protocols \cite{tomescu_utt_2022} taking 12.38ms, or support ECDSA leveraging zk-SNARK proofs \cite{ben_sasson_zerocash_2014, gupta_plume_2022}, with between 10-45 seconds SNARK proof-generation overhead \cite{distributed_lab_-_noir_noir-plumebenchmarkmd_2024}. My goal is to create the fastest nullifier scheme without relying on pairings or zk-SNARKS while ensuring compatibility with efficient $\Sigma$-protocols for composition within larger cryptographic protocols.
 
-This chapter starts with the first formal definition of a nullifier designed to generalize to different constructions. I then present my nullifiers based on the $q-$DDHI assumption, which total computation (Eval, Prove, Verify) for both deterministic and probabilistic variants in 2.49ms and 3.66ms, respectively, on the BLS12-381 curve. Additional testing on secp256k1 shows 1.12ms and 1.88ms, Ed25519 shows 1.32ms and 2.34ms. Demonstrating my Nullifiers are at least 5x faster than the fastest Pairing-based construction \cite{tomescu_utt_2022}. My constructions required 3 new $\Sigma$-protocols for proving a structure similar to the Dodis Yampolskiy VRF structure. I also show a VRF construction from the $q-$DDHI assumption, which is 3x 6x more efficient than the original.
+I start with a formal definition of a nullifier. I then present my nullifiers based on the $q-$DDHI assumption, which total computation (Eval, Prove, Verify) for both deterministic and probabilistic variants in 2.49ms and 3.66ms, respectively, on the BLS12-381 curve. Additional testing on secp256k1 shows 1.12ms and 1.88ms, Ed25519 shows 1.32ms and 2.34ms. Demonstrating my Nullifiers are at least 5x faster than the fastest Pairing-based construction \cite{tomescu_utt_2022}. My constructions required 3 new $\Sigma$-protocols for proving a structure similar to the Dodis-Yampolskiy VRF structure. I also show a VRF construction from the $q-$DDHI assumption, which is 3x - 6x more efficient than the original.
+
+% \subsubsection{Chapter Roadmap}
+% The chapter is structured as follows: Section~\ref{sec-vrf-preliminaries} covers cryptographic preliminaries, including the $q$-DDHI assumption. Section~\ref{sec:vrf-prime-order} introduces an efficient, pairing-free nullifier construction. Section~\ref{sec:privacy-preserving-vrf} extends this to privacy-preserving deterministic and probabilistic nullifiers. Section~\ref{sec:performance-vrf} evaluates performance against existing schemes, and Section~\ref{sec-vrf-instantiation} instantiates our nullifiers in anonymous credential systems, showcasing their practical utility.
+
+\section{Chapter Roadmap and Contributions}
+
+\begin{enumerate}
+    \item \textbf{Fast DY VRF Variant:} I start with a detour in section \ref{sec:vrf-prime-order} and construct a DY VRF in a prime-order group (without pairings) by creating a new $\Sigma$-protocol for \emph{proving inverse linear relation} to directly verify the DY structure and show my construction is 3-5x efficiency improvement to the original DY, seen in  figure \ref{fig:chap4_public_vrf}.
+
+    \item \textbf{Private Proof of Inverse Exponent:} The rest of the work focuses on privacy.  My first step in section \ref{sec:vrf-prime-order} is a new $\Sigma$-protocol to anonymously prove the DDHI challenge $(g^{1/x})$, which I generalise to a sigma protocol for \emph{Private Proof of Inverse Exponent}.
+
+    \item \textbf{Deterministic Nullifier:} In Section \ref{sec:privacy-preserving-vrf} I combine the \emph{Private Proof of Inverse Exponent} with the \emph{Proof of Inverse Linear Relation} to now anonymously prove the prime-order DY, which is the output of my deterministic nullifier. 
+
+    \item \textbf{Provable Probabilistic Nullifier:} I use a similar but more complicated protocol to generate a provable probabilistic nullifier and explain its use cases in revocation schemes.
+\end{enumerate}
 
 
-The chapter is structured as follows: Section~\ref{sec-vrf-preliminaries} covers cryptographic preliminaries, including the $q$-DDHI assumption. Section~\ref{sec:vrf-prime-order} introduces an efficient, pairing-free nullifier construction. Section~\ref{sec:privacy-preserving-vrf} extends this to privacy-preserving deterministic and probabilistic nullifiers. Section~\ref{sec:performance-vrf} evaluates performance against existing schemes, and Section~\ref{sec-vrf-instantiation} instantiates our nullifiers in anonymous credential systems, showcasing their practical utility.
+\section{Nullifier Definition}
 
 
-
-- what nullifiers do
-- where we see nullifiers
-- what they are constructed from
-- what security properties do we need
-- what assumptions? e.g. some constructed from decisional or computational problem
-
-
-
-
-
-PLUME (correctness, uniqueness, secrecy)
-
-How do they motivate the problem: 
-- PLUME: to prevent double spending or enable a consistent private identity between anonymous actions. Needs to work with ECDSA and secp256k1 for widespread adoption. ECDSA is non-deterministic because it uses a nonce and message hash. 
-
-- PLUME: nf = Hash(m, sk) is a good nullifier (no way to reverse engineer sk) but sk is needed for verification, as in, it's needed to be input in plaintext to the verify algorithm. They suggest that's bad for applications. Computation should run on a hardware wallet, so proving elliptic curve operations inside a snark is not feasible. 
-
-- PLUME says their DDH-VRF incorporates SNARK verifiers rather than sigma protocols since (public key) set membership is easier with zk-snarks and that the public key should be kept private (ofc). 
-
-- zk-creds: "Linkable Show", with use-cases like anonymous Reddit threads, where you want to re-authenticate yourself as the private user and post again. 
-
-- Tornado Cash
-
-- Remco Bloemen: prevent anonymous users from doing an action twice. How can we track an anonymous user? He changes colors every time we see him. How can we track a person if the person changes each time? In some applications we want to attach data to the interaction, like what the interaction is about. 
-- 
-
-
-So a nullifier contains both authentication and some nullifier token? So the input is the token, the reason its authentic, and the nullifier data structure storage. 
-
-So it involves proving 3 things. 1) that the nullifier is formed correctly from some object/s you have. 2) Those objects are valid. 3) the nullifier is/isn't within the data structure already. 
-
-PLUME: "I can prove I own a private key (via generating a valid signature) for some public key that is a leaf of the merkle tree comprised of all set members with this public merkel root". The private key validates 2). The public key is the nullifier. The merkle tree is the data structure. 
-
-
-Application: 
-
-
-
-Definition: 
-- PLUME: nullifier N(sk,pk) for ECDSA (sk,pk), and some app-specific message $m$ can also include CRS. Correctness, for all $pk_i, m, Ver$; $Ver(N(m,sk_i,pk_i), proof_j , m, pk_i)) = pk_i$
-
-Correctness
-\begin{align*}
-    \text{for all }pk_i, Verify(), m, \\
-    Ver(N(m, sk_i, pk_i)) = pk_i \forall proof_j \quad \wedge \\
-    \Pr[V(x, x\neq N(m, sk_i, pk_i) \forall i, proof) = 0] > 1-\epsilon
-\end{align*}
-
-Uniqueness
-\begin{align*}
-    V[x, proof_x] = pk_1, V[y, proof_y] = pk_1 \text{ implies }x = y
-\end{align*}
-
-Secrecy also unpredictability/hiding, break a nullifier
-For $pk_1, pk_2$
-
-
-
-Construction:
-- PLUME: DDH-VRF proving uniqueness, secrecy, and existential unfogeability
-
-
-Properties
-PLUME: uniqueness, secrecy, and existential unfogeability
-
-
-Related Work
-- PLUME notes that their definition is almost identical to VUF but notes that all current VRF implementations are not compatible with secp256k1 curve.
-
-
-Zcash: (uniqueness, correctness via consensus rules)
-
-Algorithms: Setup, Gen, Nullify, Verify, with extensions for probabilistic nullifiers.
-Security Properties: Correctness, uniqueness, pseudonymity, indistinguishability, existential unforgeability, and unlinkability for probabilistic cases.
-
-
-
-ZCash. nf = Hash(spending key, rho)
-
-ZKopru = Hash(seed, utxo-leaf-index)
-
-The preimage of a nullifier shares a note id rho with the commitment.
-
-
-
-
-
-\section{Introduction}\label{sec-vrf-introduction}
-Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu_utt_2022, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu_utt_2022}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
-
-\section{New Nullifier Definition}
-
-
-\section{Definition}
 A nullifier Scheme takes as input a public commitment $\cm_s = \CMCom([s])$to a private seed $s$, input $x$, optionally a nullifier list $\mathcal{N}$. It generates a pseudorandom deterministic nullifier $nf$, proof of correct evaluation $\Pi_{\mathsf{nf}}$, and optionally a proof of inclusion/exclusion within $\mathcal{NL}$.
 
 \begin{definition}[Nullifier]
@@ -153,315 +73,6 @@ A secure Nullifier scheme must satisfy the following properties:
     \]
     
 \end{itemize}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\newpage
-\section{OLD WORK}
-Anonymous credential systems enable users to prove identity attributes while preserving privacy. In Chapters 2 and 3, we progressed from single-issuer Attribute-Based Anonymous Credentials (ABC) to a Multi-Issuer Multi-Credential (MIMC) system that securely binds credentials from multiple issuers to a single identity. However, practical privacy-preserving protocols, including credential systems, require mechanisms to enforce uniqueness (e.g., preventing sybil attacks) and revocability without compromising anonymity. Nullifiers—cryptographic primitives that represent a user’s action or identity in secrecy—are critical for these purposes, with applications spanning credential binding, anonymous voting, and pseudonymous messaging. This chapter addresses the challenge of designing efficient, privacy-preserving nullifiers using pairing-free Verifiable Random Functions (VRFs), focusing on their application to hierarchical credential binding in the MIMC system while demonstrating their broader utility. Existing VRF constructions, reliant on pairings or RSA, suffer from computational overhead or limited privacy, making them impractical for large-scale anonymous systems. We overcome these limitations with novel Sigma-protocols and prime-order VRFs, achieving significant efficiency and privacy gains.
-
-\subsection*{Chapter Roadmap}
-The remainder of the chapter is structured as follows: In Section \ref{sec-vrf-introduction} we introduce nullifiers and their role in privacy-preserving protocols. In Section \ref{sec-vrf-preliminaries}, we introduce the preliminaries and building blocks, in Section \ref{subsec:deterministic-nullifier}, we present our Prime Order DY VRF construction, followed by privacy-preserving extensions in Section \ref{sec:privacy-preserving-vrf}. In Section \ref{sec:performance-vrf}, we evaluate our performance against the state-of-the-art schemes including implementation benchmarks\footnote{benchmarks and implementations are found here: https://github.com/sampolgar/nullifiers}, and in Section \ref{sec-vrf-instantiation}, we outline instantiations of our construction for Anonymous Credentials. 
-
-\section{Introduction}\label{sec-vrf-introduction}
-Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu_utt_2022, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu_utt_2022}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
-
-\begin{figure}
-    \centering
-    \scalebox{0.85}{ % Scale down the entire figure
-        \begin{tikzpicture}[
-            box/.style={draw, rounded corners=2pt, minimum width=4.5cm, minimum height=6cm},
-            smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=3.8cm, minimum height=2.2cm},
-            listbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=1.5cm},
-            nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
-            thick
-        ]
-        
-        % Digital Credential Wallet
-        \node[box] (wallet) at (0,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,0.4)$) {Digital Credential Wallet};
-        
-        % Master Credential
-        \node[smallbox] (master) at (0,1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(master.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "passport", \\
-            exp : "10/11/2026", \\
-            s : 54321
-        };
-        
-        % Context Credential
-        \node[smallbox] (context) at (0,-1.5) {};
-        \node[anchor=north, font=\footnotesize\bfseries] at ($(context.north) + (0,-0.2)$) {Context Credential};
-        
-        \node[anchor=north west, font=\footnotesize, align=left] at ($(context.north west) + (0.4,-0.6)$) {
-            id : 12345, \\
-            ctx : "DMV", \\
-            exp : "10/11/2028"
-        };
-        
-        % Nullifier in the middle
-        \node[nullifierbox] (nullifier) at (5.5,0) {};
-        \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
-        
-        % Centered nullifier text with better spacing
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-0.5)$){Sec: \ref{subsec:deterministic-nullifier}};
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1)$) {$y = g^{1/(s + \text{"DMV"})}$};
-        
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.5)$) {Sec: \ref{sec-probabilistic-nullifier}};
-        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2)$) {$\cm_y = g_1^{1/(s + \text{"DMV"})}g^{\usk_3}$};
-        
-        % Repositioned list boxes at least 1cm away from nullifier
-        \node[listbox] (userlist) at (11,0.8) {}; % Increased distance to at least 1cm
-        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Nullifier List};
-        
-        % Content positioned lower
-        \node[align=center] at ($(userlist.center) + (0,-0.2)$) {$y$}; % Slight adjustment
-        
-        % Revocation List - repositioned
-        \node[listbox] (revlist) at (11,-0.8) {}; % Increased distance to at least 1cm
-        \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
-        
-        % Content positioned lower
-        \node[align=center] at ($(revlist.center) + (0,-0.3)$) {$\cm_{y}$}; % Slight adjustment
-        
-        % Straight arrows as shown in screenshot
-        \draw[->, thick] (wallet.east) -- (nullifier.west);
-        \draw[->, thick] (nullifier.east) -- (userlist.west);
-        \draw[->, thick] (nullifier.east) -- (revlist.west);
-        
-        \end{tikzpicture}
-    }
-    \caption[Nullifier Scheme]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
-    \label{fig:credential-nullifier-revised}
-\end{figure}
-
-
-\subsection{Goals}
-
-
-\begin{enumerate}
-    \item \textbf{Efficiency}: The nullifier must be generated and verifiable with minimal overhead, avoiding bilinear pairings and MPC while maintaining provable uniqueness and verifiable pseudorandomness.
-    
-    \item \textbf{Anonymity}: Nullifier generation and verification must not reveal the user inputs $\k, \ctx$ and optionally enable unlinkable outputs. 
-    
-    \item \textbf{Integration with Anonymous Credentials}: The nullifier mechanism must seamlessly extend our existing anonymous credential framework without compromising its security properties.
-\end{enumerate}
-
-\subsection{Core Challenges}
-
-
-Creating an efficient, privacy-preserving nullifier for credential binding raises three specific challenges:
-
-\begin{enumerate}
-    \item \textbf{Prime Order (Pairing-Free) DY VRF}: The DY VRF provides a secure structure but uses expensive bilinear pairings. Our first challenge is to create a Pairing-Free DY VRF using a $\Sigma$-protocol to maintain security under the $q$-DDHI assumption.
-    
-    \item \textbf{Anonymous Input for Prime-Order VRF}: To transform our Prime-Order DY VRF for Anonymous Credentials, we must use a commitment to the VRF inputs. Our second core challenge is to create a $\Sigma$-protocol to prove knowledge of $x$ such that $y = g^{1/x}$ (the $q$-DDHI challenge). Our third core challenge extends this by incorporating the proof of linear relations, the final protocol proves knowledge of $(x, sk)$ such that $y = g^{1/(sk + x)}$ where $y$ is a deterministic nullifier.
-    
-    \item \textbf{Unlinkable Output for Prime-Order VRF}: The deterministic nullifier can be used for sybil resistance during credential generation but can't be used ongoing as each output links the user's actions. Our fourth and last core challenge is to extend our protocol to generate provable, probabilistic nullifiers. We need to output a commitment to the nullifier so it can be used without linking the user. The final protocol proves knowledge of $(x, sk,r)$ such that $\cm_y = g_1^{1/(sk + x)}g^r$. 
-\end{enumerate}
-
-
-
-\subsection{Related Work}
-We use standard $\Sigma$-protocols for their superior efficiency, familiarity among practical implementations, and composability with various cryptographic primitives like our anonymous credential system; additionally, they avoid the computational overhead of MPC and ZK-SNARKs. 
-
-\begin{table}
-\begin{center}
-\caption{Comparison of Nullifier/VRF Schemes for Credential Binding}
-\label{tab:nullifier-comparison}
-\begin{tabular}{l|cccccc}
-\toprule
-\textbf{Scheme} & 
-\textbf{Deterministic} & 
-\textbf{Unlinkable}  & 
-\textbf{Private} & 
-\textbf{Pairing-} & 
-\textbf{Proof} & 
-\textbf{Relative} \\
- & 
- \textbf{Output}$^1$ & 
- \textbf{Output}$^2$ & 
- \textbf{Input}$^3$ & 
- \textbf{Free} & 
- \textbf{Type} & 
- \textbf{Ver. Time}$^4$ \\
-\midrule
-NSEC5 \cite{goldberg_nsec5_2015} & 
-\ding{51} & 
-\ding{55} & 
-\ding{55} & 
-\ding{51} & 
-Sigma Only & 3x faster
-\\
-PLUME \cite{gupta_plume_2022} & 
-\ding{51} & 
-\ding{55} & 
-\ding{51} & 
-- & 
-ZK-SNARK & Slower
-\\
-DY VRF \cite{hutchison_verifiable_2005} & 
-\ding{51} & 
-\ding{55} & 
-\ding{55} & 
-\ding{55} & 
-Pairing & 3x slower 
-\\
-CanDID \cite{maram_candid_2020} & 
-\ding{51} & 
-\ding{55} & 
-\ding{51} & 
-- & 
-MPC & Very slow $^5$
-\\
-TACT/S3ID \cite{rabaninejad_attribute-based_2024} & 
-\ding{51} & 
-\ding{55} & 
-\ding{51} & 
-\ding{55} & 
-Groth Sahai + Pairing & ~4x slower 
-\\
-SyRA \cite{crites_syra_2024} & 
-\ding{51} & 
-\ding{55} & 
-\ding{55}  &
-\ding{55} & 
- Sigma+Pairing & ~4x slower 
-\\
-UTT Nullifier \cite{tomescu_utt_2022} & 
-\ding{51} & 
-\ding{51} & 
-\ding{51}  & 
-\ding{55} & 
-Sigma+Pairing & 4x slower 
-\\
-\text{Sec:} \ref{subsec:deterministic-nullifier}: & 
-\ding{51} & 
-\ding{55} & 
-\ding{51} & 
-\ding{51} & 
-Sigma only & 2x faster
-\\
-\text{Sec:} \ref{sec-probabilistic-nullifier}: & 
-\ding{51} & 
-\ding{51} & 
-\ding{51}  & 
-\ding{51} & 
-Sigma only & 1x (baseline) 
-\\
-\bottomrule
-\end{tabular}
-\end{center}
-\vspace{1em}
-\footnotesize{$^1$Ensures a unique underlying nullifier value per user-context pair for sybil resistance.} \\
-\footnotesize{$^2$Nullifier can be presented as a commitment for unlinkability.} \\
-\footnotesize{$^3$Operates on inputs (e.g., secret keys, attributes) hidden in commitments.} \\
-\footnotesize{$^4$Approximate verification time relative to CRBN, based on benchmarks in Section \ref{sec:performance-vrf}} \\
-\footnotesize{$^5$CanDIDs nullifier uses MPF{-}PRF with uncomparable efficiency}
-\footnotesize{$^6$}
-\end{table}
-
-Previous systems have addressed aspects of hierarchical credential binding and sybil resistance, but all have significant limitations:
-
-\begin{itemize}
-    
-    \item \textbf{Standard VRFs}~\cite{hutchison_verifiable_2005, goldberg_nsec5_2015} could generate unique nullifiers but use pairings and reveal the user's public key during verification, compromising anonymity.
-        
-    \item \textbf{Pairing-based systems} like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024} implement hierarchical credentials but suffer from efficiency issues due to their reliance on pairings and S3ID uses Groth Sahai proofs which are less efficient than $\Sigma$-protocols.
-    
-    \item \textbf{UTT}~\cite{tomescu_utt_2022} uses a similar approach to ours for anonymous payments, creating serial numbers (nullifiers) from a registration credential. However, UTT relies on bilinear pairings, introducing substantial computational overhead.
-    
-    \item \textbf{CanDID}~\cite{maram_candid_2020} clearly defines the master/context credential relationship but compromises privacy by maintaining mappings between credential public keys, enabling linkability across interactions.
-
-\end{itemize}
-
-
-\subsection{Contributions}\label{sec:vrf-contributions}
-We start with the $q$-DDHI assumption and work in two different directions. Firstly, we aim for efficiency and reconstruct the Dodis Yampolskiy VRF in a prime-order group and show 3-5x efficiency improvement while retaining security properties as seen in table \ref{chap4_table_originaldy_vs_mydy} and figure \ref{fig:chap4_public_vrf}. Secondly, we aim for privacy,  starting with a new $\Sigma$-protocol to prove the DDHI challenge $(g^{1/x})$ which we generalise to a sigma protocol for \emph{proof of inverse exponent}. We then extend this with a new private VRF to generate deterministic nullifiers from private inputs, combining our prime-order DY VRF and the ZKPoK of a DDHI challenge, where inputs are exponents in commitments for use in sybil-resistant mechanisms. We then extend this further for probabilistic outputs, committed but provable nullifiers to be used in revocation schemes. 
-
-
-\begin{figure}[ht]
-\centering
-\begin{tikzpicture}[
-    node distance=1cm,
-    box/.style={rectangle, rounded corners, draw, fill=white, text width=2.5cm, minimum height=1cm, align=center, font=\small},
-    arrow/.style={thick,->,>=stealth},
-    improvement/.style={text width=3cm, align=center, font=\footnotesize\itshape}
-]
-% Root node
-\node[box, fill=gray!10] (ddhi) {\textbf{DDHI Assumption}};
-
-% Branch 1 - Top horizontal branch
-\node[box, right=1.25cm of ddhi, yshift=1cm] (pfdy) {\textbf{Prime Order DY}};
-
-% Branch 2 - Bottom horizontal branch with sequence
-\node[box, right=1.25cm of ddhi, yshift=-1cm] (zkpok) {\textbf{ZKPoK of DDHI challenge}};
-\node[box, right=1.25cm of zkpok] (anon) {\textbf{Anonymous VRF}};
-\node[box, right=1.25cm of anon] (unlink) {\textbf{Unlinkable VRF}};
-
-% Arrows between nodes with smooth curves
-\draw[arrow] (ddhi.east) -- ++(0,0) -- (pfdy.west);
-\draw[arrow] (ddhi.east) -- ++(0,0) -- (zkpok.west);
-\draw[arrow] (zkpok.east) -- (anon.west);
-\draw[arrow] (anon.east) -- (unlink.west);
-
-% Improvement labels - positioned below the boxes
-% \node[improvement, below=0.2cm of pfdy] {Remove Pairings};
-
-% \node[improvement, below=0.2cm of zkpok] {Prove};
-% \node[improvement, below=0.2cm of anon] {Adds privacy protection};
-% \node[improvement, below=0.2cm of unlink] {Maintains verifiability while adding unlinkability};
-\end{tikzpicture}
-\caption{Sigma Protocols and VRF Constructions from the $q$-DDHI assumption}
-\label{fig:vrf-construction-overview}
-\end{figure}
-
-\subsection{Our Novel Sigma Protocols}
-
-\begin{table}[htbp]
-\centering
-\caption{Our Sigma Protocols and Their Applications}
-\label{tab:nullifier-protocols}
-\begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}}
-\toprule
-\textbf{Sigma Protocol} & \textbf{Application} \\
-\midrule
-DY Prime Order Proof Protocol \ref{protocol-pdy-protocol1} & Efficient VRF \\
-\midrule
-Proving Knowledge of Committed Inverse Exponent  \ref{pok-committed-inverse-exponent} & Generalized $\Sigma$-protocol \\
-\midrule
-Proving Knowledge of Committed Inverse Linear Relation \ref{pok-committed-inverse-linear-relation} & Anonymous Deterministic Nullifier VRF \ref{subsec:deterministic-nullifier}\\
-\midrule
-Proving Knowledge of Committed Nullifier \ref{prot:committed-nullifier} & Anonymous Probabilistic Nullifier VRF \ref{sec-probabilistic-nullifier} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
 
 
 \section{Preliminaries}\label{sec-vrf-preliminaries}
@@ -596,6 +207,77 @@ Pedersen Commitments provide three key properties:
 
 
 
+
+
+
+% \begin{figure}[ht]
+% \centering
+% \begin{tikzpicture}[
+%     node distance=1cm,
+%     box/.style={rectangle, rounded corners, draw, fill=white, text width=2.5cm, minimum height=1.5cm, align=center, font=\small},
+%     arrow/.style={thick,->,>=stealth},
+%     improvement/.style={text width=3cm, align=center, font=\footnotesize\itshape}
+% ]
+% % Root node
+% \node[box, fill=gray!10] (ddhi) {\textbf{q-DDHI Assumption}};
+
+% % Branch 1 - Top horizontal branch
+% \node[box, right=1.25cm of ddhi, yshift=1cm] (pfdy) {\textbf{My Improved DY VRF}};
+
+% % Branch 2 - Bottom horizontal branch with sequence
+% \node[box, right=1.25cm of ddhi, yshift=-1cm] (zkpok) {\textbf{ZKPoK of q-DDHI challenge}};
+% \node[box, right=1.25cm of zkpok] (anon) {\textbf{Anonymous VRF}};
+% \node[box, right=1.25cm of anon] (unlink) {\textbf{Unlinkable VRF}};
+
+% % Arrows between nodes with smooth curves
+% \draw[arrow] (ddhi.east) -- ++(0,0) -- (pfdy.west);
+% \draw[arrow] (ddhi.east) -- ++(0,0) -- (zkpok.west);
+% \draw[arrow] (zkpok.east) -- (anon.west);
+% \draw[arrow] (anon.east) -- (unlink.west);
+
+% % Improvement labels - positioned below the boxes
+% % \node[improvement, below=0.2cm of pfdy] {Remove Pairings};
+
+% % \node[improvement, below=0.2cm of zkpok] {Prove};
+% % \node[improvement, below=0.2cm of anon] {Adds privacy protection};
+% % \node[improvement, below=0.2cm of unlink] {Maintains verifiability while adding unlinkability};
+% \end{tikzpicture}
+% \caption{Sigma Protocols and VRF Constructions from the $q$-DDHI assumption}
+% \label{fig:vrf-construction-overview}
+% \end{figure}
+
+
+
+
+
+% \subsection{Our Novel Sigma Protocols}
+
+% \begin{table}[htbp]
+% \centering
+% \caption{Our Sigma Protocols and Their Applications}
+% \label{tab:nullifier-protocols}
+% \begin{tabular}{p{0.45\textwidth}|p{0.45\textwidth}}
+% \toprule
+% \textbf{Sigma Protocol} & \textbf{Application} \\
+% \midrule
+% DY Prime Order Proof Protocol \ref{protocol-pdy-protocol1} & Efficient VRF \\
+% \midrule
+% Proving Knowledge of Committed Inverse Exponent  \ref{pok-committed-inverse-exponent} & Generalized $\Sigma$-protocol \\
+% \midrule
+% Proving Knowledge of Committed Inverse Linear Relation \ref{pok-committed-inverse-linear-relation} & Anonymous Deterministic Nullifier VRF \ref{subsec:deterministic-nullifier}\\
+% \midrule
+% Proving Knowledge of Committed Nullifier \ref{prot:committed-nullifier} & Anonymous Probabilistic Nullifier VRF \ref{sec-probabilistic-nullifier} \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+
+
+
+
+
+
+
 \section{Efficient Prime-Order Dodis Yampolskiy VRF from the q-DDHI Assumption}\label{sec:vrf-prime-order}
 
 The Dodis-Yampolskiy \cite{hutchison_verifiable_2005} VRF generates unique, pseudorandom nullifiers $y$ and their proofs of correctness $\pi$. We start with the question of removing pairings to improve efficiency. DY consists of $(y, \pi)$:
@@ -710,7 +392,8 @@ The $\Sigma$-protocol is zero-knowledge, leaking no information about $sk$ beyon
 
 \subsection{Performance Evaluation - My DY VRF Construction is 3 - 6x More Efficient}
 
-I implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:chap4_vrf_public_table} compares the baseline Dodis Yampolskiy VRF against our constructions. As our construction does not use bilinear pairings, we present a comparison on BLS12-381 curve as well as more efficient Ed25519 and secp256k1 without a bilinear pairing\footnote{We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup}. Results are available in the figure \ref{fig:chap4_public_vrf}
+I implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:chap4_vrf_public_table} compares the baseline Dodis Yampolskiy VRF against our constructions. As our construction does not use bilinear pairings, we present a comparison on BLS12-381 curve as well as more efficient Ed25519 and secp256k1 without a bilinear pairing\footnote{We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup}. Results are available in the figure \ref{fig:chap4_public_vrf} and table \ref{chap4_table_originaldy_vs_mydy}
+
 
 \begin{figure}[!htb]
     \centering
@@ -719,27 +402,27 @@ I implemented our constructions \cite{polgar_anonymous_2025} using the arkworks 
     \label{fig:chap4_public_vrf}
 \end{figure}
 
-% \begin{table}[!ht]\label{chap4_table_originaldy_vs_mydy}
-% \begin{center}
-% \caption{VRF Comparison between Original DY and Our Prime Order DY VRF Construction}
-% \label{tab:chap4_vrf_public_table}
-% \begin{tabular}{l@{\hspace{1em}}l@{\hspace{1em}}c@{\hspace{2em}}c@{\hspace{1em}}c}
-% \toprule
-% \textbf{Scheme} & \textbf{Curve} & \textbf{Eval + Prove (ms)} & \textbf{Verify (ms)} & \textbf{Total (ms)}\\
-% \midrule
-% \multirow{3}{*}{My DY Construction\ref{sec-dy-pf}} 
-% & Ed25519 & 0.21 & 0.37 & 0.58\\
-% & secp256k1 & 0.25 & 0.42 & 0.67\\
-% & BLS12-381 & 0.41 & 0.71 & 1.12 \\
-% \midrule
-% Original DY $^1$ \cite{hutchison_verifiable_2005} & BLS12-381 & 1.27 & 2.27 & 3.54 \\
-% \bottomrule
-% \end{tabular}
-% \par\medskip
-% \raggedright
-% \footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
-% \end{center}
-% \end{table}
+\begin{table}[!ht]\label{chap4_table_originaldy_vs_mydy}
+\begin{center}
+\caption{VRF Comparison between Original DY and Our Prime Order DY VRF Construction}
+\label{tab:chap4_vrf_public_table}
+\begin{tabular}{l@{\hspace{1em}}l@{\hspace{1em}}c@{\hspace{2em}}c@{\hspace{1em}}c}
+\toprule
+\textbf{Scheme} & \textbf{Curve} & \textbf{Eval + Prove (ms)} & \textbf{Verify (ms)} & \textbf{Total (ms)}\\
+\midrule
+\multirow{3}{*}{My DY Construction\ref{sec-dy-pf}} 
+& Ed25519 & 0.21 & 0.37 & 0.58\\
+& secp256k1 & 0.25 & 0.42 & 0.67\\
+& BLS12-381 & 0.41 & 0.71 & 1.12 \\
+\midrule
+Original DY $^1$ \cite{hutchison_verifiable_2005} & BLS12-381 & 1.27 & 2.27 & 3.54 \\
+\bottomrule
+\end{tabular}
+\par\medskip
+\raggedright
+\footnotesize{$^1$I use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
+\end{center}
+\end{table}
 
 
 
@@ -892,7 +575,7 @@ We verify the three properties of a $\Sigma$-protocol:
 
 
 
-\subsection{Our Sigma-Protocol: Proving Knowledge of a Committed Inverse Linear Relation}\label{sec-pok-committed-inv-linear-relation}
+\subsection{My Sigma-Protocol: Proving Knowledge of a Committed Inverse Linear Relation}\label{sec-pok-committed-inv-linear-relation}
 
 We now address proving inverse relationships involving linear combinations of committed values. Specifically, we prove knowledge of $(sk, x, r_1, r_2)$ such that:
 
@@ -916,7 +599,7 @@ y = g^{1/(sk + x)} \\
 
 
 \subsubsection{Construction}
-The protocol extends our single-commitment construction by (1) proving knowledge of openings for $\cm_1$ and $\cm_2$ simultaneously, and (2) verifying $y^{sk+x} = g$ where $sk+x$ combines values from distinct commitments. The consistency check $z_m = z_{sk} + z_x$ prevents substitution attacks where an adversary might use different linear combinations across verification equations.
+The protocol extends my single-commitment construction by (1) proving knowledge of openings for $\cm_1$ and $\cm_2$ simultaneously, and (2) verifying $y^{sk+x} = g$ where $sk+x$ combines values from distinct commitments. The consistency check $z_m = z_{sk} + z_x$ prevents substitution attacks where an adversary might use different linear combinations across verification equations.
 
 \begin{protocol}{Proving Committed Inverse Linear Relation}{}\label{pok-committed-inverse-linear-relation}
 \textbf{Common Input:} Group generators $g_1, g_2, g \in \mathbb{G}$, $\cm_1, \cm_2, y \in \mathbb{G}$ \\
@@ -980,7 +663,7 @@ Protocol~\ref{pok-committed-inverse-linear-relation} is a $\Sigma$-protocol for 
 \subsection{We Construct a Deterministic Nullifier from \ref{sec-pok-committed-inv-linear-relation}}
 \label{subsec:deterministic-nullifier}
 
-Our VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generators $g_1, g_2, g_3, g$. The message space is $ x \in \mathcal{X} = \Z_p^*$, the output space is $y \in \mathcal{Y} = \Z_p^*$, and the proof space is $\pi \in \Pi\ = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. We assume the existence of $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$.
+My VRF operates in a prime-order group $\mathbb{G}$ of order $p$ with generators $g_1, g_2, g_3, g$. The message space is $ x \in \mathcal{X} = \Z_p^*$, the output space is $y \in \mathcal{Y} = \Z_p^*$, and the proof space is $\pi \in \Pi\ = \mathbb{G} \times \mathbb{G} \times \mathbb{Z}_p$. We assume the existence of $\cm_1 = g_1^{sk} g^{r_1}$ and $\cm_2 = g_2^{x} g^{r_2}$.
 
 The algorithms are defined as follows
 
@@ -1057,11 +740,11 @@ The advantage is bounded by the $q$-DDHI advantage plus the negligible HVZK simu
 
 
 
-\subsection{Our Sigma-Protocol: Proving Knowledge of a Committed Inverse Linear Relation}\label{chap4:pok_committed_inverse_linear_relation}
+\subsection{My Sigma-Protocol: Proving Knowledge of a Committed Inverse Linear Relation}\label{chap4:pok_committed_inverse_linear_relation}
 
 A deterministic nullifier $y = g^{1/(sk + x)}$ is essential for sybil resistance, ensuring a unique, verifiable value for each $(sk, x)$ pair derived from a master credential key $sk$ and context identifier $x$. However, revealing the nullifier directly introduces linkability risks, as each presentation exposes a deterministic function of $(sk, x)$, potentially allowing user actions to be tracked across interactions. To resolve this, we construct a zero-knowledge Sigma-protocol that proves knowledge of a nullifier embedded within a Pedersen commitment, enabling unlinkable presentations while preserving the verifiable binding necessary for security.
 
-Our solution commits to the nullifier as:
+My solution commits to the nullifier as:
 \[
 \cm_{\text{null}} = g_3^{1/(sk + x)} g^{r_3}
 \]
@@ -1122,7 +805,7 @@ The key innovation is an auxiliary commitment $\cm_4 = \cm_3^{sk + x} g^{r_4} = 
 
 
 \subsubsection{Security Analysis}
-We establish the security of our protocol by proving three core properties: completeness, special soundness, and honest-verifier zero-knowledge (HVZK). These properties ensure that the protocol is correct, extractable, and privacy-preserving, respectively.
+We establish the security of my protocol by proving three core properties: completeness, special soundness, and honest-verifier zero-knowledge (HVZK). These properties ensure that the protocol is correct, extractable, and privacy-preserving, respectively.
 
 \paragraph{Completeness}
 Completeness guarantees that an honest prover, using the correct witness $(sk, x, r_1, r_2, r_3, r_4)$ satisfying the relation $\mathcal{R}_{\mathsf{CN}}$, always convinces the verifier. We verify each step of the protocol to confirm that all verification equations hold.
@@ -1223,7 +906,7 @@ These satisfy the verification equations, and the simulated transcript’s distr
 
 
 
-\subsection{We Construct a Probabilistic Nullifier from \ref{chap4:pok_committed_inverse_linear_relation}}\label{sec-probabilistic-nullifier}
+\subsection{New Probabilistic Nullifier from \ref{chap4:pok_committed_inverse_linear_relation}}\label{sec-probabilistic-nullifier}
 
 \subsubsection{Algorithm Syntax}
 Here, the output is a commitment $\cm_y = g_3^{1/(sk + x)} g^{r_3}$, randomized per presentation, with an auxiliary commitment $\cm_4$ for verification.
@@ -1293,35 +976,12 @@ Each presentation uses independent randomness, making transcripts indistinguisha
 
 \section{Performance Evaluation}\label{sec:performance-vrf}
 
-We implemented our constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares our constructions on BLS12-381 curve against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification. Table \ref{tab:performance-vrf-curves} shows our constructions built on different, non-pairing curves.
+I implemented my constructions \cite{polgar_anonymous_2025} using the arkworks cryptography library \cite{arkworks_contributors_arkworks_2022} in Rust and evaluated performance on a MacBook Air M2 with 16GB RAM. Table~\ref{tab:performance-vrf} compares my constructions on BLS12-381 curve against baseline approaches, focusing on the critical operations of evaluation, proof generation, and verification. Table \ref{tab:performance-vrf-curves} shows our constructions built on different, non-pairing curves.
+
 
 \begin{table}[ht]
 \begin{center}
-\caption{VRF Comparison with curve BLS12-381}
-\label{tab:performance-vrf}
-\begin{tabular}{l@{\hspace{1em}}c@{\hspace{1em}}r@{\hspace{2em}}r@{\hspace{5em}}r@{\hspace{2em}}r}
-\toprule
-\textbf{Scheme} & \textbf{Pairing} & \multicolumn{2}{c}{\textbf{Eval + Prove (ms)}} & \multicolumn{2}{c}{\textbf{Verify (ms)}} \\
-\cmidrule(lr){3-4} \cmidrule(lr){5-6}
-& & \textbf{ms} & \textbf{Speedup} & \textbf{ms} & \textbf{Speedup} \\
-\midrule
-DY $^1$ \cite{hutchison_verifiable_2005}                     & yes & 1.27 &  -      & 2.2   &  -     \\
-Us (Prime Order DY) \ref{sec-dy-pf}                                   & no  & 0.41 & 3.1x   & 0.70  & 3.1x  \\
-\midrule
-DY Anonymous \cite{tomescu_utt_2022}                            & yes & 5.91 &   -     & 6.47  &   -    \\
-Us (Anonymous + Deterministic) \ref{pok-committed-inverse-linear-relation} & no  & 1.08 & 5.5x   & 1.41  & 4.6x  \\
-Us (Anonymous + Probabilistic) ~\ref{prot:committed-nullifier} & no  & 2.01 & 2.9x   & 1.65  & 3.9x  \\
-\bottomrule
-\end{tabular}
-\par\medskip
-\raggedright
-\footnotesize{$^1$We use optimized pairing for verification by computing all pairings in Miller Loop format before a single Final Exponentiation, reducing verify time from 2.85(ms) to 2.27(ms), a 1.26x speedup.}
-\end{center}
-\end{table}
-
-\begin{table}[ht]
-\begin{center}
-\caption{Performance of our VRF Constructions Across Elliptic Curves (time in ms)}
+\caption{Performance of my VRF Constructions Across Elliptic Curves (time in ms)}
 \label{tab:performance-vrf-curves}
 \begin{tabular}{ll@{\hspace{1em}}r@{\hspace{1em}}r@{\hspace{3em}}r@{\hspace{1em}}r}
 \toprule
@@ -1352,14 +1012,22 @@ Us (Anonymous + Probabilistic) ~\ref{prot:committed-nullifier} & no  & 2.01 & 2.
 \end{table}
 
 
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/chap4_nullifier_comparisons.png}
+    \caption[My Nullifier Constructions are 3x - 5x more efficient]{Nullifier Performance Comparison - Our Constructions are 3x - 5x more efficient}
+    \label{fig:nullifiers_figure}
+\end{figure}
 
 
-Our evaluation reveals several key findings:
+
+
+My evaluation reveals several key findings:
 
 \begin{enumerate}
-    \item \textbf{Pairing Elimination:} Our DY-PF construction achieves a 3.1× speedup over the original DY VRF by eliminating pairing operations, demonstrating the efficiency benefits of our approach.
+    \item \textbf{Pairing Elimination:} My DY-PF construction achieves a 3.1× speedup over the original DY VRF by eliminating pairing operations, demonstrating the efficiency benefits of our approach.
     
-    \item \textbf{Privacy Preservation Overhead:} Adding privacy preservation through commitments inevitably increases computational costs, but our DY-PF-Private design achieves a 5.5× speedup over comparable pairing-based private VRF schemes.
+    \item \textbf{Privacy Preservation Overhead:} Adding privacy preservation through commitments inevitably increases computational costs, but my DY-PF-Private design achieves a 5.5× speedup over comparable pairing-based private VRF schemes.
     
     \item \textbf{Unlinkability Trade-off:} The committed nullifier variant (DY-PF-Private-ComOut) involves additional operations for commitment handling, yet still maintains a 2.9× evaluation speedup and 3.9× verification speedup over pairing-based alternatives.
 
@@ -1375,92 +1043,413 @@ Our evaluation reveals several key findings:
 
 
 
-% \begin{figure}[ht]
-%     \centering
-%     \begin{minipage}{\textwidth}
-%         \centering
-%         \includegraphics[width=0.75\textwidth]{figures/chap4_private_nullifier_combined.png}
-%     \end{minipage}
-    
-%     % Bottom row with 2x2 grid of smaller figures
-%     \begin{minipage}{0.48\textwidth}
-%         \centering
-%          \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_eval_prove.png}        
-%     \end{minipage}
-%     \hfill
-%     \begin{minipage}{0.48\textwidth}
-%         \centering
-%        \includegraphics[width=\textwidth]{figures/chap4_private_nullifier_verify.png}
-%     \end{minipage}
-    
-%     \caption[Our Nullifier Constructions are 3x - 5x more efficient]{Nullifier Performance Comparison - Our Constructions are 3x - 5x more efficient}
-%     \label{fig:nullifiers_figure}
-% \end{figure}
 
 
 
+
+
+
+
+\subsection{Applications and Integration of Nullifiers}\label{sec-vrf-instantiation}
+
+% Introducing the nullifier and its cryptographic role
+In this section, we detail the application of nullifiers in privacy-preserving systems and their integration into the credential wallet. A nullifier, built using a pairing-free Verifiable Random Function (VRF) and Sigma-protocols, ensures efficient uniqueness and revocability with strong privacy guarantees.
+
+\subsubsection{Applications}
+
+% Explaining Sybil resistance with nullifiers
+\textbf{Sybil Resistance.} The deterministic nullifier $y = g^{1/(sk + x)}$, where $sk$ is the user's secret key and $x$ is a context identifier, enforces uniqueness per user-context pair. For instance, in anonymous voting, a user computes $y = g^{1/(sk + \text{"Election2024"})}$ and submits it alongside a zero-knowledge (ZK) proof of correctness, without disclosing $sk$ or $x$. The system verifies the proof and checks $y$ against a public list of used nullifiers, rejecting duplicates to prevent double-voting. This leverages Sigma-protocols in prime-order groups for efficiency, avoiding pairing operations.
+
+% Detailing revocation with committed nullifiers
+\textbf{Revocation.} The committed nullifier $cm_y = g_3^{1/(sk + x)} g^{r_3}$, where $r_3$ is randomness, enables privacy-preserving revocation. In a service access scenario, a user registers with $y = g^{1/(sk + \text{"ServiceA"})}$. Upon revocation, $y$ is published to a public list. For access, the user presents $cm_y$ with a ZK proof that $cm_y$ commits to a nullifier absent from the list, using set non-membership techniques. The randomness $r_3$ ensures unlinkability across presentations.
+
+\subsubsection{Integration into the Credential Wallet}
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics[width=1\linewidth]{figures/chap4_nullifier_comparisons.png}
-    \caption[Our Nullifier Constructions are 3x - 5x more efficient]{Nullifier Performance Comparison - Our Constructions are 3x - 5x more efficient}
-    \label{fig:nullifiers_figure}
+    \scalebox{0.85}{ % Scale down the entire figure
+        \begin{tikzpicture}[
+            box/.style={draw, rounded corners=2pt, minimum width=4.5cm, minimum height=6cm},
+            smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=3.8cm, minimum height=2.2cm},
+            listbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=1.5cm},
+            nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
+            thick
+        ]
+        
+        % Digital Credential Wallet
+        \node[box] (wallet) at (0,0) {};
+        \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,0.4)$) {Digital Credential Wallet};
+        
+        % Master Credential
+        \node[smallbox] (master) at (0,1.5) {};
+        \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
+        
+        \node[anchor=north west, font=\footnotesize, align=left] at ($(master.north west) + (0.4,-0.6)$) {
+            id : 12345, \\
+            ctx : "passport", \\
+            exp : "10/11/2026", \\
+            s : 54321
+        };
+        
+        % Context Credential
+        \node[smallbox] (context) at (0,-1.5) {};
+        \node[anchor=north, font=\footnotesize\bfseries] at ($(context.north) + (0,-0.2)$) {Context Credential};
+        
+        \node[anchor=north west, font=\footnotesize, align=left] at ($(context.north west) + (0.4,-0.6)$) {
+            id : 12345, \\
+            ctx : "DMV", \\
+            exp : "10/11/2028"
+        };
+        
+        % Nullifier in the middle
+        \node[nullifierbox] (nullifier) at (5.5,0) {};
+        \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
+        
+        % Centered nullifier text with better spacing
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-0.5)$){Sec: \ref{subsec:deterministic-nullifier}};
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1)$) {$y = g^{1/(s + \text{"DMV"})}$};
+        
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.5)$) {Sec: \ref{sec-probabilistic-nullifier}};
+        \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2)$) {$\cm_y = g_1^{1/(s + \text{"DMV"})}g^{\usk_3}$};
+        
+        % Repositioned list boxes at least 1cm away from nullifier
+        \node[listbox] (userlist) at (11,0.8) {}; % Increased distance to at least 1cm
+        \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Nullifier List};
+        
+        % Content positioned lower
+        \node[align=center] at ($(userlist.center) + (0,-0.2)$) {$y$}; % Slight adjustment
+        
+        % Revocation List - repositioned
+        \node[listbox] (revlist) at (11,-0.8) {}; % Increased distance to at least 1cm
+        \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
+        
+        % Content positioned lower
+        \node[align=center] at ($(revlist.center) + (0,-0.3)$) {$\cm_{y}$}; % Slight adjustment
+        
+        % Straight arrows as shown in screenshot
+        \draw[->, thick] (wallet.east) -- (nullifier.west);
+        \draw[->, thick] (nullifier.east) -- (userlist.west);
+        \draw[->, thick] (nullifier.east) -- (revlist.west);
+        
+        \end{tikzpicture}
+    }
+    \caption[Nullifier Scheme]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
+    \label{fig:credential-nullifier-revised}
 \end{figure}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\section{Instantiation: Anonymous Nullifiers for Sybil Resistance and Revocation}\label{sec-vrf-instantiation}
-
-In this section, we instantiate the Credential Relationship Binding Nullifier (CRBN) within the Multi-Issuer Multi-Credential (MIMC) system, demonstrating its utility in real-world privacy-preserving identity frameworks. The CRBN leverages the prime-order, pairing-free Verifiable Random Function (VRF) constructions from Sections~\ref{sec:vrf-prime-order} and~\ref{sec:privacy-preserving-vrf} to provide efficient, anonymous nullifiers. We focus on two primary applications—sybil resistance and revocation—while highlighting additional use cases inspired by novel zkp applications. 
-
-\subsection{Applications}\label{subsec:applications}
-
-The CRBN enables a range of privacy-preserving applications by binding credentials hierarchically while enforcing uniqueness and revocability. Below, we outline key use cases:
-
-\subsubsection{Sybil Resistance}\label{subsubsec:sybil-resistance}
-Sybil resistance ensures that users cannot create multiple identities to exploit a system. The CRBN achieves this through its deterministic nullifier, $y = g^{1/(sk + x)}$, where $sk$ is the master credential key and $x$ is the context identifier (e.g., "DMV" for a driver's license). This nullifier is unique per user-context pair and verifiable via the zero-knowledge proof from Protocol~\ref{pok-committed-inverse-linear-relation}.
-
-\textbf{Example: Anonymous Voting.} Consider a voting system where each user should vote once per election. A user with master credential key $sk$ computes $y = g^{1/(sk + x)}$ for election context $x$ (e.g., "Election2024"). They present $y$ with a zero-knowledge proof that it corresponds to a valid credential, without revealing $sk$ or $x$. The system maintains an anonymous user list (see Figure~\ref{fig:credential-nullifier-revised}) and rejects duplicate nullifiers, preventing double voting while preserving anonymity.
-
-\subsubsection{Revocation}\label{subsubsec:revocation}
-Revocation allows credentials to be invalidated without compromising privacy. Suppose an identity system has some connection between a user's nullifier, which was submitted at the beginning of their relationship with the system and their user. Should the system require to revoke the user, they place the nullifier in the revocation list. The committed CRBN variant, $\cm_y = g_3^{1/(sk + x)} g^{r_3}$ (Protocol~\ref{prot:committed-nullifier}), supports this by embedding the nullifier in a commitment, enabling unlinkable presentations and privacy-preserving revocation checks.
-
-\textbf{Example: Service Access.} A user accesses a service with a credential tied to context $x$ (e.g., "ServiceA"). If revocation is required, the service adds the nullifier $g^{1/(sk + x)}$ to a revocation list. Subsequent access attempts require a zero-knowledge proof that the user’s nullifier is not in the list, using techniques like set membership proofs~\cite{goos_dynamic_2002}. The committed variant ensures each presentation is unlinkable, protecting user privacy.
-
-\subsubsection{Additional Use Cases}\label{subsubsec:other-applications}
-Beyond sybil resistance and revocation, the CRBN supports diverse applications, drawing from recent privacy-preserving protocol designs:
+% Describing credential management in the wallet
+The credential wallet employs nullifiers for secure credential management:
 
 \begin{itemize}
-    \item \textbf{ZK Airdrops:} In cryptocurrency airdrops, users prove eligibility (e.g., ownership of a key in a Merkle tree) and uniqueness via a nullifier, claiming rewards once anonymously.
-    \item \textbf{Persistent Anonymous Identities:} On message boards, users post under a consistent nullifier (e.g., $y = g^{1/(sk + \text{"threadID"})})$), linking posts to one identity without revealing it.
-    \item \textbf{Uniqueness Claims:} For proof of ownership (e.g., a unique asset), a nullifier ensures single claims while maintaining anonymity.
+    \item \textbf{Storing and Presenting Credentials.} For a credential tied to context $x$, the wallet computes $y = g^{1/(sk + x)}$. During presentation, it provides $y$ and a ZK proof of correctness, validating the credential without linking presentations.
+    \item \textbf{Revocation Handling.} The wallet either checks $y$ against a revocation list or generates a ZK proof demonstrating non-revocation, preserving user privacy.
 \end{itemize}
 
-\subsection{Discussion}
+% Summarizing the nullifier's role and efficiency
+The nullifier’s deterministic design guarantees uniqueness, while its efficient verification in prime-order groups suits real-time use. This integration ensures the credential wallet balances security, privacy, and practicality.
 
 
-\section{Conclusion and Future Work}
-\todonote{sam to do}
 
-The CRBN’s pairing-free design and zero-knowledge proofs provide efficiency and privacy advantages over pairing-based alternatives (e.g., UTT~\cite{tomescu_utt_2022}), as shown in Section~\ref{sec:performance-vrf}. Its flexibility supports both deterministic (sybil resistance) and committed (revocation) variants, addressing diverse needs in anonymous credential systems.
 
-The CRBN instantiates a versatile, efficient nullifier mechanism for the MIMC system, enabling sybil-resistant credential binding and privacy-preserving revocation. Its applications extend to emerging use cases like ZK airdrops and persistent identities, positioning it as a foundational tool for next-generation privacy-preserving identity frameworks.
 
-A stronger more general definition of a nullifier and formal definition of security properties would be good, similar to SPS-EQ has done for Anonymous Credentials. 
+
+
+
+
+
+
+
+
+
+
+% Anonymous credential systems enable users to prove identity attributes while preserving privacy. In Chapters 2 and 3, we progressed from single-issuer Attribute-Based Anonymous Credentials (ABC) to a Multi-Issuer Multi-Credential (MIMC) system that securely binds credentials from multiple issuers to a single identity. However, practical privacy-preserving protocols, including credential systems, require mechanisms to enforce uniqueness (e.g., preventing sybil attacks) and revocability without compromising anonymity. Nullifiers—cryptographic primitives that represent a user’s action or identity in secrecy—are critical for these purposes, with applications spanning credential binding, anonymous voting, and pseudonymous messaging. This chapter addresses the challenge of designing efficient, privacy-preserving nullifiers using pairing-free Verifiable Random Functions (VRFs), focusing on their application to hierarchical credential binding in the MIMC system while demonstrating their broader utility. Existing VRF constructions, reliant on pairings or RSA, suffer from computational overhead or limited privacy, making them impractical for large-scale anonymous systems. We overcome these limitations with novel Sigma-protocols and prime-order VRFs, achieving significant efficiency and privacy gains.
+
+% \section{Introduction}\label{sec-vrf-introduction}
+% Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu_utt_2022, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu_utt_2022}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
+
+% \begin{figure}
+%     \centering
+%     \scalebox{0.85}{ % Scale down the entire figure
+%         \begin{tikzpicture}[
+%             box/.style={draw, rounded corners=2pt, minimum width=4.5cm, minimum height=6cm},
+%             smallbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=3.8cm, minimum height=2.2cm},
+%             listbox/.style={draw, rounded corners=2pt, minimum width=3.5cm, minimum height=1.5cm},
+%             nullifierbox/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=5cm, minimum height=2.5cm},
+%             thick
+%         ]
+        
+%         % Digital Credential Wallet
+%         \node[box] (wallet) at (0,0) {};
+%         \node[anchor=north, font=\bfseries\small] at ($(wallet.north) + (0,0.4)$) {Digital Credential Wallet};
+        
+%         % Master Credential
+%         \node[smallbox] (master) at (0,1.5) {};
+%         \node[anchor=north, font=\footnotesize\bfseries] at ($(master.north) + (0,-0.2)$) {Master Credential};
+        
+%         \node[anchor=north west, font=\footnotesize, align=left] at ($(master.north west) + (0.4,-0.6)$) {
+%             id : 12345, \\
+%             ctx : "passport", \\
+%             exp : "10/11/2026", \\
+%             s : 54321
+%         };
+        
+%         % Context Credential
+%         \node[smallbox] (context) at (0,-1.5) {};
+%         \node[anchor=north, font=\footnotesize\bfseries] at ($(context.north) + (0,-0.2)$) {Context Credential};
+        
+%         \node[anchor=north west, font=\footnotesize, align=left] at ($(context.north west) + (0.4,-0.6)$) {
+%             id : 12345, \\
+%             ctx : "DMV", \\
+%             exp : "10/11/2028"
+%         };
+        
+%         % Nullifier in the middle
+%         \node[nullifierbox] (nullifier) at (5.5,0) {};
+%         \node[anchor=north, font=\bfseries\small] at ($(nullifier.north) + (0,0.4)$) {Nullifier Generation};
+        
+%         % Centered nullifier text with better spacing
+%         \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-0.5)$){Sec: \ref{subsec:deterministic-nullifier}};
+%         \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1)$) {$y = g^{1/(s + \text{"DMV"})}$};
+        
+%         \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-1.5)$) {Sec: \ref{sec-probabilistic-nullifier}};
+%         \node[font=\footnotesize, align=center] at ($(nullifier.north) + (0,-2)$) {$\cm_y = g_1^{1/(s + \text{"DMV"})}g^{\usk_3}$};
+        
+%         % Repositioned list boxes at least 1cm away from nullifier
+%         \node[listbox] (userlist) at (11,0.8) {}; % Increased distance to at least 1cm
+%         \node[anchor=north, font=\bfseries\small] at ($(userlist.north) + (0,-0.3)$) {Nullifier List};
+        
+%         % Content positioned lower
+%         \node[align=center] at ($(userlist.center) + (0,-0.2)$) {$y$}; % Slight adjustment
+        
+%         % Revocation List - repositioned
+%         \node[listbox] (revlist) at (11,-0.8) {}; % Increased distance to at least 1cm
+%         \node[anchor=north, font=\bfseries\small] at ($(revlist.north) + (0,-0.3)$) {Revocation List};
+        
+%         % Content positioned lower
+%         \node[align=center] at ($(revlist.center) + (0,-0.3)$) {$\cm_{y}$}; % Slight adjustment
+        
+%         % Straight arrows as shown in screenshot
+%         \draw[->, thick] (wallet.east) -- (nullifier.west);
+%         \draw[->, thick] (nullifier.east) -- (userlist.west);
+%         \draw[->, thick] (nullifier.east) -- (revlist.west);
+        
+%         \end{tikzpicture}
+%     }
+%     \caption[Nullifier Scheme]{A nullifier scheme for privacy-preserving protocols, illustrated with a credential hierarchy binding context credentials (e.g., driver's license) to a master credential (e.g., passport). The deterministic nullifier prevents sybil attacks, while the probabilistic nullifier supports revocation, with applications extending to voting, e-cash, and pseudonymous identities.}
+%     \label{fig:credential-nullifier-revised}
+% \end{figure}
+
+
+% \subsection{Goals}
+
+
+% \begin{enumerate}
+%     \item \textbf{Efficiency}: The nullifier must be generated and verifiable with minimal overhead, avoiding bilinear pairings and MPC while maintaining provable uniqueness and verifiable pseudorandomness.
+    
+%     \item \textbf{Anonymity}: Nullifier generation and verification must not reveal the user inputs $\k, \ctx$ and optionally enable unlinkable outputs. 
+    
+%     \item \textbf{Integration with Anonymous Credentials}: The nullifier mechanism must seamlessly extend our existing anonymous credential framework without compromising its security properties.
+% \end{enumerate}
+
+% \subsection{Core Challenges}
+
+
+% Creating an efficient, privacy-preserving nullifier for credential binding raises three specific challenges:
+
+% \begin{enumerate}
+%     \item \textbf{Prime Order (Pairing-Free) DY VRF}: The DY VRF provides a secure structure but uses expensive bilinear pairings. Our first challenge is to create a Pairing-Free DY VRF using a $\Sigma$-protocol to maintain security under the $q$-DDHI assumption.
+    
+%     \item \textbf{Anonymous Input for Prime-Order VRF}: To transform our Prime-Order DY VRF for Anonymous Credentials, we must use a commitment to the VRF inputs. Our second core challenge is to create a $\Sigma$-protocol to prove knowledge of $x$ such that $y = g^{1/x}$ (the $q$-DDHI challenge). Our third core challenge extends this by incorporating the proof of linear relations, the final protocol proves knowledge of $(x, sk)$ such that $y = g^{1/(sk + x)}$ where $y$ is a deterministic nullifier.
+    
+%     \item \textbf{Unlinkable Output for Prime-Order VRF}: The deterministic nullifier can be used for sybil resistance during credential generation but can't be used ongoing as each output links the user's actions. Our fourth and last core challenge is to extend our protocol to generate provable, probabilistic nullifiers. We need to output a commitment to the nullifier so it can be used without linking the user. The final protocol proves knowledge of $(x, sk,r)$ such that $\cm_y = g_1^{1/(sk + x)}g^r$. 
+% \end{enumerate}
+
+
+
+% \subsection{Related Work}
+% We use standard $\Sigma$-protocols for their superior efficiency, familiarity among practical implementations, and composability with various cryptographic primitives like our anonymous credential system; additionally, they avoid the computational overhead of MPC and ZK-SNARKs. 
+
+% \begin{table}
+% \begin{center}
+% \caption{Comparison of Nullifier/VRF Schemes for Credential Binding}
+% \label{tab:nullifier-comparison}
+% \begin{tabular}{l|cccccc}
+% \toprule
+% \textbf{Scheme} & 
+% \textbf{Deterministic} & 
+% \textbf{Unlinkable}  & 
+% \textbf{Private} & 
+% \textbf{Pairing-} & 
+% \textbf{Proof} & 
+% \textbf{Relative} \\
+%  & 
+%  \textbf{Output}$^1$ & 
+%  \textbf{Output}$^2$ & 
+%  \textbf{Input}$^3$ & 
+%  \textbf{Free} & 
+%  \textbf{Type} & 
+%  \textbf{Ver. Time}$^4$ \\
+% \midrule
+% NSEC5 \cite{goldberg_nsec5_2015} & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{55} & 
+% \ding{51} & 
+% Sigma Only & 3x faster
+% \\
+% PLUME \cite{gupta_plume_2022} & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{51} & 
+% - & 
+% ZK-SNARK & Slower
+% \\
+% DY VRF \cite{hutchison_verifiable_2005} & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{55} & 
+% \ding{55} & 
+% Pairing & 3x slower 
+% \\
+% CanDID \cite{maram_candid_2020} & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{51} & 
+% - & 
+% MPC & Very slow $^5$
+% \\
+% TACT/S3ID \cite{rabaninejad_attribute-based_2024} & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{51} & 
+% \ding{55} & 
+% Groth Sahai + Pairing & ~4x slower 
+% \\
+% SyRA \cite{crites_syra_2024} & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{55}  &
+% \ding{55} & 
+%  Sigma+Pairing & ~4x slower 
+% \\
+% UTT Nullifier \cite{tomescu_utt_2022} & 
+% \ding{51} & 
+% \ding{51} & 
+% \ding{51}  & 
+% \ding{55} & 
+% Sigma+Pairing & 4x slower 
+% \\
+% \text{Sec:} \ref{subsec:deterministic-nullifier}: & 
+% \ding{51} & 
+% \ding{55} & 
+% \ding{51} & 
+% \ding{51} & 
+% Sigma only & 2x faster
+% \\
+% \text{Sec:} \ref{sec-probabilistic-nullifier}: & 
+% \ding{51} & 
+% \ding{51} & 
+% \ding{51}  & 
+% \ding{51} & 
+% Sigma only & 1x (baseline) 
+% \\
+% \bottomrule
+% \end{tabular}
+% \end{center}
+% \vspace{1em}
+% \footnotesize{$^1$Ensures a unique underlying nullifier value per user-context pair for sybil resistance.} \\
+% \footnotesize{$^2$Nullifier can be presented as a commitment for unlinkability.} \\
+% \footnotesize{$^3$Operates on inputs (e.g., secret keys, attributes) hidden in commitments.} \\
+% \footnotesize{$^4$Approximate verification time relative to CRBN, based on benchmarks in Section \ref{sec:performance-vrf}} \\
+% \footnotesize{$^5$CanDIDs nullifier uses MPF{-}PRF with uncomparable efficiency}
+% \footnotesize{$^6$}
+% \end{table}
+
+% Previous systems have addressed aspects of hierarchical credential binding and sybil resistance, but all have significant limitations:
+
+% \begin{itemize}
+    
+%     \item \textbf{Standard VRFs}~\cite{hutchison_verifiable_2005, goldberg_nsec5_2015} could generate unique nullifiers but use pairings and reveal the user's public key during verification, compromising anonymity.
+        
+%     \item \textbf{Pairing-based systems} like SyRA~\cite{crites_syra_2024} and S3ID~\cite{rabaninejad_attribute-based_2024} implement hierarchical credentials but suffer from efficiency issues due to their reliance on pairings and S3ID uses Groth Sahai proofs which are less efficient than $\Sigma$-protocols.
+    
+%     \item \textbf{UTT}~\cite{tomescu_utt_2022} uses a similar approach to ours for anonymous payments, creating serial numbers (nullifiers) from a registration credential. However, UTT relies on bilinear pairings, introducing substantial computational overhead.
+    
+%     \item \textbf{CanDID}~\cite{maram_candid_2020} clearly defines the master/context credential relationship but compromises privacy by maintaining mappings between credential public keys, enabling linkability across interactions.
+
+% \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% In this section, we instantiate the Credential Relationship Binding Nullifier (CRBN) within the Multi-Issuer Multi-Credential (MIMC) system, demonstrating its utility in real-world privacy-preserving identity frameworks. The CRBN leverages the prime-order, pairing-free Verifiable Random Function (VRF) constructions from Sections~\ref{sec:vrf-prime-order} and~\ref{sec:privacy-preserving-vrf} to provide efficient, anonymous nullifiers. We focus on two primary applications—sybil resistance and revocation—while highlighting additional use cases inspired by novel zkp applications. 
+
+% \subsection{Applications}\label{subsec:applications}
+
+% The CRBN enables a range of privacy-preserving applications by binding credentials hierarchically while enforcing uniqueness and revocability. Below, we outline key use cases:
+
+% \subsubsection{Sybil Resistance}\label{subsubsec:sybil-resistance}
+% Sybil resistance ensures that users cannot create multiple identities to exploit a system. The CRBN achieves this through its deterministic nullifier, $y = g^{1/(sk + x)}$, where $sk$ is the master credential key and $x$ is the context identifier (e.g., "DMV" for a driver's license). This nullifier is unique per user-context pair and verifiable via the zero-knowledge proof from Protocol~\ref{pok-committed-inverse-linear-relation}.
+
+% \textbf{Example: Anonymous Voting.} Consider a voting system where each user should vote once per election. A user with master credential key $sk$ computes $y = g^{1/(sk + x)}$ for election context $x$ (e.g., "Election2024"). They present $y$ with a zero-knowledge proof that it corresponds to a valid credential, without revealing $sk$ or $x$. The system maintains an anonymous user list (see Figure~\ref{fig:credential-nullifier-revised}) and rejects duplicate nullifiers, preventing double voting while preserving anonymity.
+
+% \subsubsection{Revocation}\label{subsubsec:revocation}
+% Revocation allows credentials to be invalidated without compromising privacy. Suppose an identity system has some connection between a user's nullifier, which was submitted at the beginning of their relationship with the system and their user. Should the system require to revoke the user, they place the nullifier in the revocation list. The committed CRBN variant, $\cm_y = g_3^{1/(sk + x)} g^{r_3}$ (Protocol~\ref{prot:committed-nullifier}), supports this by embedding the nullifier in a commitment, enabling unlinkable presentations and privacy-preserving revocation checks.
+
+% \textbf{Example: Service Access.} A user accesses a service with a credential tied to context $x$ (e.g., "ServiceA"). If revocation is required, the service adds the nullifier $g^{1/(sk + x)}$ to a revocation list. Subsequent access attempts require a zero-knowledge proof that the user’s nullifier is not in the list, using techniques like set membership proofs~\cite{goos_dynamic_2002}. The committed variant ensures each presentation is unlinkable, protecting user privacy.
+
+% \subsubsection{Additional Use Cases}\label{subsubsec:other-applications}
+% Beyond sybil resistance and revocation, the CRBN supports diverse applications, drawing from recent privacy-preserving protocol designs:
+
+% \begin{itemize}
+%     \item \textbf{ZK Airdrops:} In cryptocurrency airdrops, users prove eligibility (e.g., ownership of a key in a Merkle tree) and uniqueness via a nullifier, claiming rewards once anonymously.
+%     \item \textbf{Persistent Anonymous Identities:} On message boards, users post under a consistent nullifier (e.g., $y = g^{1/(sk + \text{"threadID"})})$), linking posts to one identity without revealing it.
+%     \item \textbf{Uniqueness Claims:} For proof of ownership (e.g., a unique asset), a nullifier ensures single claims while maintaining anonymity.
+% \end{itemize}
+
+% \subsection{Discussion}
+
+
+% \section{Conclusion and Future Work}
+% \todonote{sam to do}
+
+% The CRBN’s pairing-free design and zero-knowledge proofs provide efficiency and privacy advantages over pairing-based alternatives (e.g., UTT~\cite{tomescu_utt_2022}), as shown in Section~\ref{sec:performance-vrf}. Its flexibility supports both deterministic (sybil resistance) and committed (revocation) variants, addressing diverse needs in anonymous credential systems.
+
+% The CRBN instantiates a versatile, efficient nullifier mechanism for the MIMC system, enabling sybil-resistant credential binding and privacy-preserving revocation. Its applications extend to emerging use cases like ZK airdrops and persistent identities, positioning it as a foundational tool for next-generation privacy-preserving identity frameworks.
+
+% A stronger more general definition of a nullifier and formal definition of security properties would be good, similar to SPS-EQ has done for Anonymous Credentials. 
 
 
 % Could compare my construction with others
@@ -1571,3 +1560,79 @@ A stronger more general definition of a nullifier and formal definition of secur
 % \end{enumerate}
 % \end{protocol}
 
+
+
+
+
+% PLUME (correctness, uniqueness, secrecy)
+
+% How do they motivate the problem: 
+% - PLUME: to prevent double spending or enable a consistent private identity between anonymous actions. Needs to work with ECDSA and secp256k1 for widespread adoption. ECDSA is non-deterministic because it uses a nonce and message hash. 
+
+% - PLUME: nf = Hash(m, sk) is a good nullifier (no way to reverse engineer sk) but sk is needed for verification, as in, it's needed to be input in plaintext to the verify algorithm. They suggest that's bad for applications. Computation should run on a hardware wallet, so proving elliptic curve operations inside a snark is not feasible. 
+
+% - PLUME says their DDH-VRF incorporates SNARK verifiers rather than sigma protocols since (public key) set membership is easier with zk-snarks and that the public key should be kept private (ofc). 
+
+% - zk-creds: "Linkable Show", with use-cases like anonymous Reddit threads, where you want to re-authenticate yourself as the private user and post again. 
+
+% - Tornado Cash
+
+% - Remco Bloemen: prevent anonymous users from doing an action twice. How can we track an anonymous user? He changes colors every time we see him. How can we track a person if the person changes each time? In some applications we want to attach data to the interaction, like what the interaction is about. 
+% - 
+
+
+% So a nullifier contains both authentication and some nullifier token? So the input is the token, the reason its authentic, and the nullifier data structure storage. 
+
+% So it involves proving 3 things. 1) that the nullifier is formed correctly from some object/s you have. 2) Those objects are valid. 3) the nullifier is/isn't within the data structure already. 
+
+% PLUME: "I can prove I own a private key (via generating a valid signature) for some public key that is a leaf of the merkle tree comprised of all set members with this public merkel root". The private key validates 2). The public key is the nullifier. The merkle tree is the data structure. 
+
+
+% Application: 
+
+
+
+% Definition: 
+% - PLUME: nullifier N(sk,pk) for ECDSA (sk,pk), and some app-specific message $m$ can also include CRS. Correctness, for all $pk_i, m, Ver$; $Ver(N(m,sk_i,pk_i), proof_j , m, pk_i)) = pk_i$
+
+% Correctness
+% \begin{align*}
+%     \text{for all }pk_i, Verify(), m, \\
+%     Ver(N(m, sk_i, pk_i)) = pk_i \forall proof_j \quad \wedge \\
+%     \Pr[V(x, x\neq N(m, sk_i, pk_i) \forall i, proof) = 0] > 1-\epsilon
+% \end{align*}
+
+% Uniqueness
+% \begin{align*}
+%     V[x, proof_x] = pk_1, V[y, proof_y] = pk_1 \text{ implies }x = y
+% \end{align*}
+
+% Secrecy also unpredictability/hiding, break a nullifier
+% For $pk_1, pk_2$
+
+
+
+% Construction:
+% - PLUME: DDH-VRF proving uniqueness, secrecy, and existential unfogeability
+
+
+% Properties
+% PLUME: uniqueness, secrecy, and existential unfogeability
+
+
+% Related Work
+% - PLUME notes that their definition is almost identical to VUF but notes that all current VRF implementations are not compatible with secp256k1 curve.
+
+
+% Zcash: (uniqueness, correctness via consensus rules)
+
+% Algorithms: Setup, Gen, Nullify, Verify, with extensions for probabilistic nullifiers.
+% Security Properties: Correctness, uniqueness, pseudonymity, indistinguishability, existential unforgeability, and unlinkability for probabilistic cases.
+
+
+
+% ZCash. nf = Hash(spending key, rho)
+
+% ZKopru = Hash(seed, utxo-leaf-index)
+
+% The preimage of a nullifier shares a note id rho with the commitment.
