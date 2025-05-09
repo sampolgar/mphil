@@ -5,7 +5,7 @@ Anonymous credential systems enable users to prove statements about their attrib
 
 Consider a user proving they hold (1) a government-issued ID confirming residency, (2) an employer credential verifying income, and (3) a training certificate—all tied to one identity, without linking them via a public identifier. Alternatively, in content credentialing, a user might present images signed by different devices (e.g., cameras) to a journal, proving they share an account while selectively disclosing metadata. Existing approaches fall short: attribute-based signatures lack aggregation~\cite{cimato_signature_2003}, aggregate signatures assume a single issuer \cite{goos_short_2001, hutchison_short_2004} or limit revocation flexibility~\cite{galdi_traceable_2022}, and generic zkSNARKs, while expressive, incur high computational costs~\cite{rosenberg_zk-creds_2022}. CanDID~\cite{maram_candid_2020} binds credentials via a consistent name, but this offers weaker security against malicious issuers and their system lacks issuer-privacy for internal identifiers. ZKcreds~\cite{rosenberg_zk-creds_2022} uses a zkSNARK-based join gadget for multi-credential proofs, yet its proof computation scales poorly, especially for multiple credentials. Our Multi-Issuer Multi-Credential Anonymous Credential system (MIMC-ABC) overcomes these limitations with a secure, efficient solution.
 
-MIMC-ABC employs position-binding commitments and zero-knowledge proofs to cryptographically bind credentials from distinct issuers to a single, private identifier, ensuring anonymity and unforgeability even against colluding adversaries. We formalize a security model for multi-issuer identity binding, define the identity binding property, and provide rigorous proofs of its guarantees. Our comprehensive attack taxonomy—covering forgery, predicate manipulation, and binding attacks—demonstrates robustness, while a scaling analysis shows security holds as issuers and credentials grow. Performance evaluations reveal that privacy-preserving multi-issuer verification, though roughly 3× slower than non-private baselines (e.g., 18.67ms vs. 6.77ms for 4 credentials), remains efficient for practical use.
+MIMC-ABC employs position-binding commitments and zero-knowledge proofs to cryptographically bind credentials from distinct issuers to a single, private identifier, ensuring anonymity and unforgeability even against colluding adversaries. We formalize a security model for multi-issuer identity binding, define the identity binding property, and provide rigorous proofs of its guarantees. Our comprehensive attack taxonomy—covering forgery, predicate manipulation, and binding attacks—demonstrates robustness, while a scaling analysis shows security holds as issuers and credentials grow. Performance evaluations reveal that privacy-preserving multi-issuer verification, though roughly 3× slower than non-private baselines (e.g., 18.67ms vs. 6.77ms for 4 credentials), remains efficient for practical use. Implementations can be found on my GitHub\footnote{https://github.com/sampolgar/mimc-abc}
 
 \subsection{Contributions}
 This chapter advances the state of anonymous credentials with:
@@ -191,7 +191,7 @@ Each credential from issuer $j$ commits to an attribute vector $\attrs_j = [\id,
 
 For example, consider a user with credentials from three issuers ($j = 1, 2, 3$): a passport, driver’s license, and university degree, each with the same $\id = 12345$ (Figure~\ref{fig:three-creds}). The user rerandomizes each pair $(\sigma_j, \mathsf{cm}_j)$ to $(\sigma_j', \mathsf{cm}_j')$ and proves they meet a policy, e.g., $\phi = (\ctx_1 = \text{"passport"} \land \exp_1 > \text{today} \land \ctx_2 = \text{"dmv"} \land \ctx_3 \in \mathcal{D})$, where $\mathcal{D}$ is a set of accredited universities.
 
-\begin{figure}[h]
+\begin{figure}[!htb]
     \centering
     \begin{pchstack}[boxed, center, space=4em]
         \begin{pcvstack}
@@ -330,10 +330,6 @@ If $\mathcal{A}$ outputs $\{\mathsf{cred}_j'\}_j$, $\phi^*$ requiring same $\id$
 
 The identity binding advantage scales linearly with $n$ and $m$, reflecting the number of opportunities to break position-binding. This graceful degradation ensures MIMC-ABC remains secure as the system grows, a key advantage over prior multi-issuer schemes lacking formal binding guarantees.
 
-\section{Identity Binding Application: Efficient KYC/AML Identity Verification}
-
-\todonote{Sam to do}
-Speak about the KYC/AML process and why identity binding is necessary
 
 
 \section{Performance Evaluation}

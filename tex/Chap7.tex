@@ -1,3 +1,23 @@
 \chapter{Conclusion and Future Work}\label{chap7}
+Summary of the security-privacy-usability trilemma
 
-Quantum Secure
+
+\subsection{Summary of Prior Limitations}
+
+
+
+\subsection{Summary of Contributions}
+\begin{enumerate}
+    \item In Chapter 2, I improved the base Anonymous Credential building block with the fastest construction for credential presentation, 10-15\% faster than prior. I proved my construction secure in the ABC model and extended it with security against a malicious issuer. I compared our work with empirical benchmarks from 4 other schemes I built in Rust. Furthermore, I show $\Sigma$-protocols are the best zero-knoweldge proof system for expressiveness and efficiency. 
+
+    \item In Chapter 3 I introduce the Identity Binding security property and built a Multi-Issuer Multi-Credential system that processes 16 credential presentations + verify in 72ms, demonstrating that the credential-wallet use-case of verifying multiple credentials from unique issuers together is practical and efficient. I benchmark this system against a non-private system and show privacy costs just 2.6x the cost of a standard system verifying the same, which is a negligible difference for the benefit of privacy. Furthermore, I show our result (72ms) is worst case and signature aggregation can reduce the multi-credential presentation significantly though our construction only allows this if the signatures are signed by the same issuer.
+
+    \item In Chapter 4 I introduce a formal definition for a Nullifier. I then make contributions in two directions. First, I create a $\Sigma$-protocol to prove the Dodis Yampolskiy VRF structure and show my construction is 3-5x faster than the original and I remove the pairing computation. I then create a suite of $\Sigma-$protocols to prove the $q-$DDHI assumption in different structures which I use to construct the Deterministic and Rerandomizable Nullifiers. My Nullifiers are at least 5x faster than previous constructions and supported by prime-order groups, unlike the Dodis Yamposkiy requiring bilinear pairing. 
+
+    \item In Chapter 5, I constructed a threshold-issued rerandomizable signature from the attribute-based anonymous credential in Chapter 2. I show it's orders of magnitude more efficient for all but 1 operation than another a recent "efficient" paper \cite{rabaninejad_attribute-based_2024}. I then construct a Sybil Resistant Threshold Issued Identity System using called T-Siris using the threshold anonymous credential and the nullifier from chapter 4. I show my construction is far more efficient than the state of the art, additionally I show it's more expressive for zero knowledge proof predicate verification. 
+    
+\end{enumerate}
+
+
+
+\subsection{Future Work}
