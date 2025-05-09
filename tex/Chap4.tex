@@ -1,65 +1,18 @@
 \chapter{New Nullifiers and VRFs from the q-DDHI and Applications to Privacy Systems}\label{chap4}
+By definition, an anonymous user's interaction with a system should be indistinguishable from any of its other interactions. Sybil resistance enforces identity uniqueness, preventing users from performing the same action more than once. The paradox of enforcing uniqueness of indistinguishable users is representative of the challenges of the security, privacy, and usability trilemma. A nullifier is a privacy-preserving, publicly-provable, unique output generated from a user's private information, enabling actions like spending coins, voting anonymously, or issuing credentials while preventing double-spending and maintaining anonymity through zero-knowledge proofs. Nullifiers are currently defined within specific contexts in privacy-preserving protocols like Zcash, Tornado Cash, and Crypto-Wallets like MetaMask and Ledger, but there is no standard definition with its own security properties. Current constructions either use computationally-heavy pairings and $\Sigma$-protocols \cite{tomescu_utt_2022} taking 12.38ms, or support ECDSA leveraging zk-SNARK proofs \cite{ben_sasson_zerocash_2014, gupta_plume_2022}, with between 10-45 seconds SNARK proof-generation overhead \cite{distributed_lab_-_noir_noir-plumebenchmarkmd_2024}. My goal is to create the fastest nullifier scheme without relying on pairings or zk-SNARKS while ensuring compatibility with efficient $\Sigma$-protocols for composition within larger cryptographic protocols.
+
+This chapter starts with the first formal definition of a nullifier designed to generalize to different constructions. I then present my nullifiers based on the $q-$DDHI assumption, which total computation (Eval, Prove, Verify) for both deterministic and probabilistic variants in 2.49ms and 3.66ms, respectively, on the BLS12-381 curve. Additional testing on secp256k1 shows 1.12ms and 1.88ms, Ed25519 shows 1.32ms and 2.34ms. Demonstrating my Nullifiers are at least 5x faster than the fastest Pairing-based construction \cite{tomescu_utt_2022}. My constructions required 3 new $\Sigma$-protocols for proving a structure similar to the Dodis Yampolskiy VRF structure. I also show a VRF construction from the $q-$DDHI assumption, which is 3x 6x more efficient than the original.
+
+
+The chapter is structured as follows: Section~\ref{sec-vrf-preliminaries} covers cryptographic preliminaries, including the $q$-DDHI assumption. Section~\ref{sec:vrf-prime-order} introduces an efficient, pairing-free nullifier construction. Section~\ref{sec:privacy-preserving-vrf} extends this to privacy-preserving deterministic and probabilistic nullifiers. Section~\ref{sec:performance-vrf} evaluates performance against existing schemes, and Section~\ref{sec-vrf-instantiation} instantiates our nullifiers in anonymous credential systems, showcasing their practical utility.
+
+
 
 - what nullifiers do
 - where we see nullifiers
 - what they are constructed from
 - what security properties do we need
 - what assumptions? e.g. some constructed from decisional or computational problem
-
-
-
-
-I need a good definition of a Nullifier.
-
-\section{Definition}
-A nullifier Scheme takes as input a public commitment $\cm_s = \CMCom([s])$to a private seed $s$, input $x$, optionally a nullifier list $\mathcal{N}$. It generates a pseudorandom deterministic nullifier $nf$, proof of correct evaluation $\Pi_{\mathsf{nf}}$, and optionally a proof of inclusion/exclusion within $\mathcal{NL}$.
-
-\begin{definition}[Nullifier]
-A Nullifier Scheme is a tuple of PPT algorithms with input space $\mathcal{X}$, nullifier space $\mathcal{N}$ and proof space $\Pi$ where
-\begin{itemize}
-    \item $\NullifierEval(s,x) \to \nf$: Computes the Nullifier output $\nf \in \mathcal{N}$ for input $x \in \mathcal{X}$ using seed $s$.
-    \item $\NullifierProve(\cm_s, x) \to \pi$: Produces a proof $\pi \in \Pi$ that $\nf = \NullifierEval(s,x)$ is computed correctly from the public commitment to the private seed $s$.
-    \item $\NullifierVerify(\cm,x,\nf,\pi) \to \{0,1\}$: Verifies that $\nf$ is the correct Nullifier output for input $x$, committed seed $s$ using proof $\pi$.
-\end{itemize}
-    
-\end{definition}
-
-A secure Nullifier scheme must satisfy the following properties:
-
-\begin{itemize}
-    \item \textbf{Completeness}: For all seeds $s$, inputs $x \in \mathcal{X}$, and commitments $\cm = \CMCom(s)$:
-    \[
-    \Pr\left[ \NullifierVerify(\cm, x, \nf, \pi) = 1 :  
-    \begin{array}{l}
-    \nf \gets \NullifierEval(s,x), \\
-    \pi \gets \NullifierProve(\cm_s, x)
-    \end{array}
-    \right] \geq 1-\negl(\lambda)
-    \]
-
-    \item \textbf{Uniqueness:} For each input $x$, commitment $\cm$, only one nullifier $\nf$ can be generated:
-    \[
-    \text{if} \quad \NullifierVerify(\cm, x, \nf_0, \pi_0) = \NullifierVerify(\cm, x, \nf_1, \pi_1) = 1 \quad \text{then} \quad \nf_0 = \nf_1
-    \]
-
-    \item \textbf{Pseudorandomness:} The nullifier output is indistinguishable from random for any input not previously queried, defined by the following game $\mathcal{G}_{\mathcal{A}}^{\text{nf}}$:
-    \begin{enumerate}
-        \item The nullifier challenger samples $s \sample \{0,1\}^\lambda$, computes $\cm = \CMCom(s)$, and sends $\cm$ to $\mathcal{A}$.
-        \item $\mathcal{A}$ submits evaluation queries $x_1, \ldots, x_Q \in \mathcal{X}$, and receives $(\nf_i, \pi_i)$ for each query, where $\nf_i = \NullifierEval(s, x_i)$ and $\pi_i \leftarrow \NullifierProve(\cm, x_i)$.
-        \item At any point, $\mathcal{A}$ submits a challenge input $x_* \in \mathcal{X}$ such that $x_* \not\in \{x_1, \ldots, x_Q\}$.
-        \item The challenger computes $\nf_0^* = \NullifierEval(s, x_*)$, samples $\nf_1^* \sample \mathcal{N}$ uniformly at random, then samples $b \sample \{0,1\}$ and sends $\nf_b^*$ to $\mathcal{A}$.
-        \item $\mathcal{A}$ may continue to make evaluation queries for inputs other than $x_*$.
-        \item At the end, $\mathcal{A}$ outputs a guess $b'$. The game outputs 1 if $b' = b$, and 0 otherwise.
-    \end{enumerate}
-    
-    We say that the nullifier scheme satisfies pseudorandomness if for all PPT adversaries $\mathcal{A}$:
-    \[
-    \text{Adv}_{\mathcal{A}}^{\text{nf}} := \left|\Pr\left[\mathcal{G}_{\mathcal{A}}^{\text{nf}}(\lambda) = 1\right] - \frac{1}{2}\right| \leq \text{negl}(\lambda)
-    \]
-    
-\end{itemize}
-
-
 
 
 
@@ -142,85 +95,67 @@ The preimage of a nullifier shares a note id rho with the commitment.
 
 
 
+\section{Introduction}\label{sec-vrf-introduction}
+Nullifiers are a cornerstone of privacy-preserving protocols, enabling users to perform actions exactly once (e.g. spending a coin, voting, issuing a credential) while remaining anonymous. In real-world identity systems, credentials often form hierarchies—for example, a passport (master credential) with a secret key $k$ serves as a foundational identity, while a driver’s license (context credential) is tied to a specific domain $ctx$ (e.g., "DMV"). Binding these credentials to prevent sybil attacks (e.g., obtaining multiple driver’s licenses) or enable revocation requires nullifiers that are unique, verifiable, and privacy-preserving. In our Multi-Issuer Multi-Credential (MIMC) system, such nullifiers ensure secure credential management across issuers. Beyond credentials, nullifiers are critical for applications like persistent pseudonymous identities, privacy e-cash systems, anonymous voting, as seen in recent privacy-preserving frameworks \cite{gupta_plume_2022, goldberg_nsec5_2015, gurkan_community_2020, tomescu_utt_2022, ben_sasson_zerocash_2014}. Our nullifier scheme takes a master credential key $\k$ and context $\ctx$ to produce deterministic outputs for sybil resistance (e.g., $y = g^{1/(k + ctx)}$) and probabilistic outputs for revocation (e.g., $\cm_y = g_1^{1/(k + ctx)} g^r$), verified via zero-knowledge proofs. Unlike pairing-based schemes \cite{tomescu_utt_2022}, our approach leverages prime-order groups and Sigma-protocols for efficiency and compatibility with standard cryptographic assumptions, making it a versatile and efficient for privacy frameworks.
+
+\section{New Nullifier Definition}
 
 
+\section{Definition}
+A nullifier Scheme takes as input a public commitment $\cm_s = \CMCom([s])$to a private seed $s$, input $x$, optionally a nullifier list $\mathcal{N}$. It generates a pseudorandom deterministic nullifier $nf$, proof of correct evaluation $\Pi_{\mathsf{nf}}$, and optionally a proof of inclusion/exclusion within $\mathcal{NL}$.
 
+\begin{definition}[Nullifier]
+A Nullifier Scheme is a tuple of PPT algorithms with input space $\mathcal{X}$, nullifier space $\mathcal{N}$ and proof space $\Pi$ where
+\begin{itemize}
+    \item $\NullifierEval(s,x) \to \nf$: Computes the Nullifier output $\nf \in \mathcal{N}$ for input $x \in \mathcal{X}$ using seed $s$.
+    \item $\NullifierProve(\cm_s, x) \to \pi$: Produces a proof $\pi \in \Pi$ that $\nf = \NullifierEval(s,x)$ is computed correctly from the public commitment to the private seed $s$.
+    \item $\NullifierVerify(\cm,x,\nf,\pi) \to \{0,1\}$: Verifies that $\nf$ is the correct Nullifier output for input $x$, committed seed $s$ using proof $\pi$.
+\end{itemize}
+    
+\end{definition}
 
-
-
-
-
-
-
-
-
-
-
-
-\subsection{Security Properties}
-
-A secure nullifier scheme satisfies the following properties:
-
-\begin{property}[Correctness]
-For all security parameters $\lambda$, contexts $ctx$, and valid key pairs $(sk, pk)$ generated by $Gen$:
-$$\Pr[Verify(pp, nf, \pi, ctx, S) = 1 \mid (nf, \pi) \leftarrow Nullify(pp, sk, ctx), pk \in S] = 1$$
-\end{property}
-
-\begin{property}[Uniqueness]
-It is computationally infeasible to generate two distinct valid nullifiers for the same $(sk, ctx)$ pair. Formally, for any PPT adversary $\mathcal{A}$:
-$$\Pr\left[\begin{array}{c}
-Verify(pp, nf, \pi, ctx, S) = 1 \\
-\land\; Verify(pp, nf', \pi', ctx, S) = 1 \\
-\land\; nf \neq nf' \\
-\end{array}
-\middle|
-\begin{array}{c}
-pp \leftarrow Setup(1^\lambda) \\
-(sk, pk) \leftarrow Gen(pp) \\
-(nf, \pi, nf', \pi', ctx) \leftarrow \mathcal{A}(pk)
-\end{array}
-\right] \leq negl(\lambda)$$
-\end{property}
-
-\begin{property}[Pseudonymity]
-Given a valid nullifier $nf$ for context $ctx$, it is computationally infeasible to determine which public key $pk \in S$ corresponds to $nf$ without knowledge of $sk$. Formally, for any PPT adversary $\mathcal{A}$:
-$$\left|\Pr\left[\mathcal{A}(pp, nf, \pi, ctx, S) = pk \mid \begin{array}{c} (nf, \pi) \leftarrow Nullify(pp, sk, ctx), \\ pk \text{ corresponds to } sk \end{array}\right] - \frac{1}{|S|}\right| \leq negl(\lambda)$$
-\end{property}
-
-\begin{property}[Indistinguishability]
-For any PPT adversary $\mathcal{A}$, any contexts $ctx_1, ctx_2$, and public keys $pk_0, pk_1 \in S$, $\mathcal{A}$ cannot distinguish between nullifiers generated by $pk_0$ or $pk_1$:
-$$\left|\Pr\left[\mathcal{A}(pp, nf_b, \pi_b, ctx, S) = b \mid \begin{array}{c} b \sample \{0,1\}, \\ (nf_b, \pi_b) \leftarrow Nullify(pp, sk_b, ctx) \end{array}\right] - \frac{1}{2}\right| \leq negl(\lambda)$$
-where $sk_b$ corresponds to $pk_b$.
-\end{property}
-
-\begin{property}[Existential Unforgeability]
-Without knowledge of a valid secret key $sk$ corresponding to some $pk \in S$, it is computationally infeasible to produce a valid nullifier. Formally, for any PPT adversary $\mathcal{A}$:
-$$\Pr\left[Verify(pp, nf, \pi, ctx, S) = 1 \land \nexists sk: (sk,pk) \in \mathcal{K} \mid \begin{array}{c} pp \leftarrow Setup(1^\lambda), \\ (nf, \pi, ctx) \leftarrow \mathcal{A}(pp, S) \end{array}\right] \leq negl(\lambda)$$
-where $\mathcal{K}$ is the set of all valid key pairs.
-\end{property}
-
-\subsection{Extensions for Probabilistic Nullifiers}
-
-For probabilistic nullifiers (committed nullifiers), we extend this definition with:
+A secure Nullifier scheme must satisfy the following properties:
 
 \begin{itemize}
-    \item $Nullify(pp, sk, ctx, r) \rightarrow (cm_{nf}, \pi)$: Produces a commitment to a nullifier $cm_{nf}$ using randomness $r$, and a proof $\pi$.
+    \item \textbf{Completeness}: For all seeds $s$, inputs $x \in \mathcal{X}$, and commitments $\cm = \CMCom(s)$:
+    \[
+    \Pr\left[ \NullifierVerify(\cm, x, \nf, \pi) = 1 :  
+    \begin{array}{l}
+    \nf \gets \NullifierEval(s,x), \\
+    \pi \gets \NullifierProve(\cm_s, x)
+    \end{array}
+    \right] \geq 1-\negl(\lambda)
+    \]
+
+    \item \textbf{Uniqueness:} For each input $x$, commitment $\cm$, only one nullifier $\nf$ can be generated:
+    \[
+    \text{if} \quad \NullifierVerify(\cm, x, \nf_0, \pi_0) = \NullifierVerify(\cm, x, \nf_1, \pi_1) = 1 \quad \text{then} \quad \nf_0 = \nf_1
+    \]
+
+    \item \textbf{Anonymous:} For each input $x$, commitment $\cm$, only one nullifier $\nf$ can be generated:
+    \[
+    \text{if} \quad \NullifierVerify(\cm, x, \nf_0, \pi_0) = \NullifierVerify(\cm, x, \nf_1, \pi_1) = 1 \quad \text{then} \quad \nf_0 = \nf_1
+    \]
+
+    \item \textbf{Pseudorandomness:} The nullifier output is indistinguishable from random for any input not previously queried, defined by the following game $\mathcal{G}_{\mathcal{A}}^{\text{nf}}$:
+    \begin{enumerate}
+        \item The nullifier challenger samples $s \sample \{0,1\}^\lambda$, computes $\cm = \CMCom(s)$, and sends $\cm$ to $\mathcal{A}$.
+        \item $\mathcal{A}$ submits evaluation queries $x_1, \ldots, x_Q \in \mathcal{X}$, and receives $(\nf_i, \pi_i)$ for each query, where $\nf_i = \NullifierEval(s, x_i)$ and $\pi_i \leftarrow \NullifierProve(\cm, x_i)$.
+        \item At any point, $\mathcal{A}$ submits a challenge input $x_* \in \mathcal{X}$ such that $x_* \not\in \{x_1, \ldots, x_Q\}$.
+        \item The challenger computes $\nf_0^* = \NullifierEval(s, x_*)$, samples $\nf_1^* \sample \mathcal{N}$ uniformly at random, then samples $b \sample \{0,1\}$ and sends $\nf_b^*$ to $\mathcal{A}$.
+        \item $\mathcal{A}$ may continue to make evaluation queries for inputs other than $x_*$.
+        \item At the end, $\mathcal{A}$ outputs a guess $b'$. The game outputs 1 if $b' = b$, and 0 otherwise.
+    \end{enumerate}
+    
+    We say that the nullifier scheme satisfies pseudorandomness if for all PPT adversaries $\mathcal{A}$:
+    \[
+    \text{Adv}_{\mathcal{A}}^{\text{nf}} := \left|\Pr\left[\mathcal{G}_{\mathcal{A}}^{\text{nf}}(\lambda) = 1\right] - \frac{1}{2}\right| \leq \text{negl}(\lambda)
+    \]
+    
 \end{itemize}
 
-\begin{property}[Unlinkability]
-For any contexts $ctx_1, ctx_2$ and any secret key $sk$, the distributions of nullifier commitments $cm_{nf_1}$ and $cm_{nf_2}$ are computationally indistinguishable, even when generated from the same $(sk, ctx)$ pair with different randomness. Formally, for any PPT adversary $\mathcal{A}$:
-$$\left|\Pr\left[\mathcal{A}(pp, cm_{nf_1}, \pi_1, cm_{nf_2}, \pi_2, ctx, S) = 1 \mid \begin{array}{c} 
-r_1, r_2 \sample \mathcal{R}, \\ 
-(cm_{nf_1}, \pi_1) \leftarrow Nullify(pp, sk, ctx, r_1), \\
-(cm_{nf_2}, \pi_2) \leftarrow Nullify(pp, sk, ctx, r_2)
-\end{array}\right]\right.$$
-$$\left. - \Pr\left[\mathcal{A}(pp, cm_{nf_1}, \pi_1, cm_{nf_3}, \pi_3, ctx, S) = 1 \mid \begin{array}{c} 
-r_1, r_3 \sample \mathcal{R}, \\ 
-(cm_{nf_1}, \pi_1) \leftarrow Nullify(pp, sk, ctx, r_1), \\
-(cm_{nf_3}, \pi_3) \leftarrow Nullify(pp, sk', ctx, r_3)
-\end{array}\right]\right| \leq negl(\lambda)$$
-where $sk'$ is a different secret key and $\mathcal{R}$ is the randomness space.
-\end{property}
+
+
 
 
 
@@ -1516,10 +1451,17 @@ Beyond sybil resistance and revocation, the CRBN supports diverse applications, 
 \end{itemize}
 
 \subsection{Discussion}
+
+
+\section{Conclusion and Future Work}
+\todonote{sam to do}
+
 The CRBN’s pairing-free design and zero-knowledge proofs provide efficiency and privacy advantages over pairing-based alternatives (e.g., UTT~\cite{tomescu_utt_2022}), as shown in Section~\ref{sec:performance-vrf}. Its flexibility supports both deterministic (sybil resistance) and committed (revocation) variants, addressing diverse needs in anonymous credential systems.
 
-\subsection{Conclusion}
 The CRBN instantiates a versatile, efficient nullifier mechanism for the MIMC system, enabling sybil-resistant credential binding and privacy-preserving revocation. Its applications extend to emerging use cases like ZK airdrops and persistent identities, positioning it as a foundational tool for next-generation privacy-preserving identity frameworks.
+
+A stronger more general definition of a nullifier and formal definition of security properties would be good, similar to SPS-EQ has done for Anonymous Credentials. 
+
 
 % Could compare my construction with others
 % https://eprint.iacr.org/2022/1255 e.g.
