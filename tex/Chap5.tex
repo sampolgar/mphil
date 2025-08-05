@@ -1,7 +1,9 @@
 \chapter{Threshold-Issued, Sybil-Resistant Private Identity System from Anonymous Credentials and Nullifiers}\label{chap5}
 
 \section{Introduction}\label{sec:threshold-intro}
-Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram_candid_2020} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context. 
+Self-sovereign identity (SSI) systems enable users to control their digital identities with strong privacy, Sybil resistance, and minimal issuer interaction. Distributing trust across multiple issuers is critical to avoid single points of failure. CanDID~\cite{maram_candid_2020} is a pioneering SSI system that uses multi-party computation (MPC) to deduplicate identities and issue credentials via a (threshold) committee of signing nodes. While effective, it has drawbacks: slow MPC-based deduplication, frequent issuer interactions, linkability risks, and little protection for credential non-transferability. Similar to Coconut~\cite{sonnino_coconut_2020}, a threshold credential system that distributes trust across multiple issuers, T-SIRIS employs a $t$-out-of-$N$ threshold issuance model to enhance decentralization. However, Coconut lacks a mechanism to prevent sybil attacks, a critical requirement for self-sovereign identity (SSI) systems. T-SIRIS addresses this gap by integrating anonymous, deterministic nullifiers from our Credential Relationship Binding Nullifier (CRBN) scheme (Chapter~\ref{chap4}), adding just 2.49ms to issuance overhead to credential issuance (Section~\ref{sec:threshold-performance}) while ensuring users cannot obtain multiple credentials per context. Our work extends the model in CanDID and answers open questions. 
+
+
 
 This chapter presents T-SIRIS, a threshold Sybil-resistant identity system built on our multi-issuer multi-credential anonymous credential system (MIMC-ABC) from Chapter~\ref{chap3} and Credential Relationship Binding Nullifier (CRBN) from Chapter~\ref{chap4}. T-SIRIS uses a $t$-out-of-$N$ threshold issuance model, secure against $t-1$ malicious issuers. We compare T-SIRIS with CanDID and S3ID~\cite{rabaninejad_attribute-based_2024}, which uses threshold anonymous counting tokens (tACT), showing improvements in efficiency and functionality. My implementation can be found on GitHub\footnote{https://github.com/sampolgar/t-siris}
 
@@ -70,7 +72,7 @@ Our Threshold Sybil-Resistant Identity System (T-SIRIS) advances self-sovereign 
 CanDID~\cite{maram_candid_2020} & \ding{51}$^{\text{a}}$ & \ding{51} & \ding{55} & \ding{55} & \ding{55} & \ding{55} \\
 SyRA~\cite{crites_syra_2024} & \ding{51} & \ding{55} & \ding{51} & \ding{55} & \ding{55} & \ding{55} \\
 S3ID~\cite{rabaninejad_attribute-based_2024} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} & \ding{55} \\
-Coconut~\cite{sonnino_coconut_2020} & \ding{55} & \ding{51} & \ding{51} & \ding{55} & \ding{51} & \ding{55} \\
+Coconut~\cite{sonnino_coconut_2020} & \ding{55} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{55} \\
 T-SIRIS (Ours) & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} & \ding{51} \\
 \bottomrule
 \end{tabular}
@@ -220,9 +222,9 @@ Building on our threshold PS signature scheme, we now present T-SIRIS, a complet
 We assume up to $t-1$ malicious issuers in an $n$-issuer system, where $t$ is the threshold. These malicious issuers may: Deviate from the protocol specification, Collude to attempt to forge credentials, Attempt to track or deanonymize users, or Refuse to participate in the issuance protocol.
 We also assume users may attempt sybil attacks by requesting multiple credentials for the same context. However, the adversary cannot break the underlying cryptographic assumptions (DL and $q$-DDHI).
 
-A tSIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$. We use $\RSSetup, \RSRand, \RSVer$ from the rerandomizable signature scheme.
+A T-SIRIS system consists of the following probabilistic polynomial-time (PPT) algorithms, parameterized by a security parameter $\lambda$ and attribute vector length $\ell$. We use $\RSSetup, \RSRand, \RSVer$ from the rerandomizable signature scheme.
 
-\begin{definition}[tSIRIS]
+\begin{definition}[T-SIRIS]
     \begin{itemize}
     \item $\mathsf{RS.Setup}(1^\lambda) \to \mathsf{pp}$: Outputs public parameters $\mathsf{pp}$, including a bilinear group $\BG = (\G_1, \G_2, \G_T, e, g, \tilde{g}, p)$.
 
@@ -243,7 +245,7 @@ A tSIRIS system consists of the following probabilistic polynomial-time (PPT) al
 
 
 \begin{definition}[Threshold Unforgeability]
-Threshold Unforgeability captures that with $t-1$ corrupt issuers, an adversary cannot forge valid credentials. We define the following experiment:
+Threshold Unforgeability based on \ref{def:euf-cma} captures that with $t-1$ corrupt issuers, an adversary cannot forge valid credentials. We define the following experiment:
 
 $\textbf{Experiment}~\mathsf{Exp}^{\mathsf{unf}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda):$
 \begin{enumerate}
@@ -308,7 +310,7 @@ $\Pr[\mathsf{Exp}^{\mathsf{sybil}}_{\mathcal{A},\mathsf{T\text{-}SIRIS}}(\lambda
 
 \subsection{Threshold Anonymity}
 
-We formalize threshold anonymity, capturing that credentials remain unlinkable and reveal nothing beyond what's explicitly proven, even when up to $t-1$ issuers are corrupted:
+We formalize threshold anonymity based on the standard anonymity notion \ref{def:anonymity}, capturing that credentials remain unlinkable and reveal nothing beyond what's explicitly proven, even when up to $t-1$ issuers are corrupted:
 
 \begin{definition}[Threshold Anonymity]
 We define the following experiment:
@@ -391,9 +393,9 @@ The current instantiation uses an interactive three-move $\Sigma$-protocols and 
 The Credential $\cred$ is a rerandomizable threshold signature over a commitment. The randomness of the commitment acts as a private key, provided the user can verify their credential with their commitment and prove knowledge of the opening of the commitment, they must know the randomness e.g. secret key that created the credential. 
 
 
-\subsubsection*{Master Credential Issuance}
+\subsubsection*{Master Credential Issuance}\label{master-credential-issuance}
 Since we are optimizing for a private, accountable system, we make a small trade-off in privacy during Master Credential generation to satisfy the efficiency and private accountability requirements of an organization or government deploying this system today. We note that we can swap our methods for complete privacy using credential oracles like \cite{zhang_deco_2020, celi_distefano_2025, baldimtsi_zklogin_2024, ritzdorf_tls-n_2018} with a reduction in security and accountability.
-During Master Credential registration, we enforce the user's Master Credential to be issued in a semi-trusted process where the user verifies their identity to the registration authority during its issuance. This enables Sybil resistance on the user identifier, stronger security for their VRF key $s$ discussed below \ref{t-siris:vrf-key-k-gen}, which is used to attach other credentials to it. The Registration Authority keeps track of user identities and can request their revocation from the Accountability Authority with techniques from \cite{damgard_balancing_2020}. At the end of registration, the user has a master credential $\credm = (\sigmam, \cmm, \vkm)$, including a rerandomizable, threshold-signature over commitment.
+During Master Credential registration, we enforce the user's Master Credential to be issued in a semi-trusted process where the user verifies their identity to the Registration Authority (RA) during its issuance. This enables Sybil resistance on the user identifier, and may use existing systems, stronger security for their VRF key $s$ discussed below \ref{t-siris:vrf-key-k-gen}, which is used to attach other credentials to it. The RA should not be a bottleneck as current systems should handle identity issuance, RA keeps track of user identities and can request their revocation from the Accountability Authority (AA) with techniques from \cite{damgard_balancing_2020}. At the end of registration, the user has a master credential $\credm = (\sigmam, \cmm, \vkm)$, including a rerandomizable, threshold-signature over commitment.
 
 \subsection{Multi-Party Protocol for Secure Nullifier Key Generation}\label{t-siris:vrf-key-k-gen}
 The VRF key $s$ is embedded in the master credential and used to generate nullifiers for every context credential. Therefore, $s$ must be generated in a way that prevents the user from stealing someone else's $s$ and embedding it in their master credential (and therefore generating their nullifiers and abusing the system), as well as ensuring the issuers can't modify or create it maliciously to attempt to break anonymity later.
@@ -403,7 +405,7 @@ The user computes $s_1$, $\cm_1 = \CMCom([s_1];r)$ and a proof of its opening.
 The issuers runs DKG with a subset  $|S| \geq t$ of nodes to produce $\vk = g^{s_2}$ and each node computes shared $\{k_{2_i}\}_{i \in S}$ and shares with the user (For efficiency, the issuers can precompute these values in bulk and retain a pool to choose from $s_2$).
 The user computes $s_2$ by combining $|S| \geq t$ with $\mathsf{DKG.Combine(\{s_{2_i}\}_{i \in S})}$, the user then computes $\cm = \CMCom([s_1 + s_2];r)$ and runs a sigma protocol to prove its correctness during credential generation. 
 \[
-\mathcal{R}_{\mathsf{DKG}}: \left\{ 
+\mathcal{R}_{\mathsf{DKG}}: \zkpok \left\{ 
 (\cm_1, \cm_s, \vk),(s_1, s_2, s, r) 
 \middle| 
 \begin{array}{lcl}
@@ -418,7 +420,7 @@ The issuer learns the user's identity during registration but never learns the c
 A context credential is linked to a master credential with the same committed identifier e.g., $\cmm = \CMCom([id,\ldots];r_1), \cmc = \CMCom([id, \ldots];r_2)$ kept secret during the issuance process.
 A context credential issuer may be the same threshold committee, but may also be in the form of a credential oracle \cite{zhang_deco_2020, celi_distefano_2025, baldimtsi_zklogin_2024, ritzdorf_tls-n_2018}. The context credential issuance criteria will vary depending on their individual requirements; we represent this as the predicate $\phi$ that should be satisfied by the user during issuance. For example, perhaps a user successfully completed their driving test and should be issued a driving license. A user interacting with the DMV should first verify their master credential (e.g. they have a valid passport), The user also commits to their identifier $\cmc = \CMCom([id, \ctxc, \ldots]; r_c)$ and proves their $id$ is consistent between the two commitments. The user proves this relation:
 \[
-\mathcal{R}_{\phi}: \left\{ 
+\mathcal{R}_{\phi}: \zkpok \left\{ 
 \begin{array}{l}
 (\sigmam, \cmm, \cmc), \\
 (id, s, \ctxm, \ctxc, r_m, r_c) 
@@ -435,7 +437,7 @@ The Context Credential issuer verifies the correctness of $\Pi_\phi$ and runs th
 \subsection*{Sybil Resistance with our Nullifier}
 In the above scenario, to enforce sybil resistance of the user's driver license, the DMV authority could request to retain $id$ in their system and check that value against another user with $id$ requesting a credential, upholding accountability but breaking the user's anonymity and open forgability vectors, breaking system security. Rather, the user generates an anonymous deterministic (pseudorandom) nullifier with the scheme \ref{subsec:deterministic-nullifier} as $\nullifier = g^{1/s + ctx} \gets \mathsf{dVRF.Eval}(s, ctx)$. The nullifier's proof of correctness $\pi \gets \mathsf{dVRF.Prove}(\cmm, \cmc, s, ctx, \nullifier)$, outlined here: \ref{sec-pok-committed-inv-linear-relation}, ensures it was generated by $s$ in the master credential and $\ctxc$ from the Context Credential. To prevent replay attacks, $\nullifier$ is an input into the context credential issuance process $\pi$ is combined with the previous $\Sigma$-protocol. 
 \[
-\mathcal{R}_{\phi}: \left\{ 
+\mathcal{R}_{\phi}: \zkpok \left\{ 
 \begin{array}{l}
 (\sigmam, \cmm, \cmc, \nullifier), \\
 (id, s, \ctxm, \ctxc, r_m, r_c) 

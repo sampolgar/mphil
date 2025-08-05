@@ -314,7 +314,7 @@ Prime-order groups and standard group operations (without the bilinearity proper
 The insight is to reverse the verification approach. Instead of trying to derive $g^{1/(s+x)}$ from $g^{s+x}$ or cancel with a reciprocal, we use a zero knowledge proof $\Sigma$-protocol to verify that $y$ raised to the power $(s+x)$ equals $g$. In doing so, our pairing-free construction shifts from the $q$-DBDHI assumption to the $q$-DDHI assumption. This gives us the relation:
 
 \[
-\mathcal{R}_{\mathsf{DY-PF}} = \left\{ 
+\mathcal{R}_{\mathsf{DY-PF}} = \zkpok \left\{ 
 \begin{array}{l} 
 (\pk, x, y),\\
 (sk) 
@@ -562,7 +562,7 @@ security of our protocol, as we're proving knowledge of the relationship rather 
 We now address proving inverse relationships involving linear combinations of committed values. Specifically, we prove knowledge of $(s, x, r_1, r_2)$ such that:
 
 \[
-\mathcal{R}_{\mathsf{nf}} = \left\{ 
+\mathcal{R}_{\mathsf{nf}} =  \zkpok \left\{ 
 \begin{array}{l} (\cm_1, \cm_2, y),\\
 (s, x, r_1, r_2) 
 \end{array}
@@ -672,7 +672,7 @@ Correctness follows directly from the completeness of Protocol~\ref{pok-committe
 \end{proof}
 
 \begin{theorem}[Uniqueness]
-Under the binding property of Pedersen commitments and the discrete logarithm assumption, for any $\cm_1$ and $\cm_2$, there exists at most one $y \in \mathbb{G}$ such that $\mathsf{dVRF.Verify}(\cm_1, \cm_2, y, \pi) = 1$ for any $\pi$.
+Under the binding property of Pedersen commitments and the discrete logarithm assumption, for any $\cm_1$ and $\cm_2$, there exists at most one $y \in \mathbb{G}$ such that $\mathsf{dVRF.Verify}$ $(\cm_1, \cm_2, y, \pi) = 1$ for any $\pi$.
 \end{theorem}
 
 \begin{proof}[Sketch]
@@ -1006,7 +1006,7 @@ I implemented my constructions \cite{polgar_anonymous_2025} using the arkworks c
 My evaluation reveals several key findings:
 
 \begin{enumerate}
-    \item \textbf{Pairing Elimination:} My DY-PF construction achieves a 3.1× speedup over the original DY VRF by eliminating pairing operations, demonstrating the efficiency benefits of our approach.
+    \item \textbf{Pairing Elimination:} My DY-PF construction achieves a 3.1x speedup over the original DY VRF by eliminating pairing operations. This enables faster anonymous interactions which bottleneck private interactions and may prevent widespread adoption of privacy preserving primitives.
     
     \item \textbf{Privacy Preservation Overhead:} Adding privacy preservation through commitments inevitably increases computational costs, but my DY-PF-Private design achieves a 5.5× speedup over comparable pairing-based private VRF schemes.
     

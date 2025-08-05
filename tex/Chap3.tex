@@ -128,14 +128,14 @@ A MIMC-ABC system consists of the following probabilistic polynomial-time (PPT) 
 
 \subsection{Security Properties}
 
-MIMC-ABC inherits the core security properties from the ABC system—correctness, unforgeability, and anonymity (Section 2.5)—and adds identity binding for the multi-issuer setting:
+MIMC-ABC inherits the core security properties from the ABC system—correctness, unforgeability, and anonymity \ref{sec:abc} —and adds identity binding for the multi-issuer setting:
 
 \begin{itemize}
     \item \textbf{Correctness}: An honest user with valid credentials from multiple issuers can generate a proof for any predicate $\phi$ their attributes satisfy, including same-identity constraints, which verifies with probability $1 - \negl(\lambda)$.
     
-    \item \textbf{Unforgeability}: No PPT adversary can produce a valid proof for a predicate $\phi$ they cannot legitimately satisfy, including forging credentials or mixing credentials from different identities, except with negligible probability.
+    \item \textbf{Unforgeability}: based off \ref{def:euf-cma} no PPT adversary can produce a valid proof for a predicate $\phi$ they cannot legitimately satisfy, including forging credentials or mixing credentials from different identities, except with negligible probability.
     
-    \item \textbf{Anonymity}: Proofs reveal only that $\phi$ is satisfied, not the user’s identity or credential details, even if all issuers and the verifier collude.
+    \item \textbf{Anonymity}: As per \ref{def:anonymity} proofs reveal only that $\phi$ is satisfied, not the user’s identity or credential details, even if all issuers and the verifier collude.
     
     \item \textbf{Identity Binding}: When $\phi$ requires all credentials to share the same $\id$, no PPT adversary can produce a valid proof using credentials with differing $\id$ values, except with negligible probability.
 \end{itemize}
@@ -222,9 +222,11 @@ For example, consider a user with credentials from three issuers ($j = 1, 2, 3$)
     \label{fig:three-creds}
 \end{figure}
 
+A pertinent question is how can the identifier $\texttt{12345}$ be used between multiple issuers while retaining its secrecy. We discuss this in more detail \ref{master-credential-issuance}. 
+
 \subsection{Construction Details}
 
-The MIMC-ABC system operates as follows, reusing primitives from Chapter 2 (Sections 2.3, 2.4):
+The MIMC-ABC system operates as follows, reusing primitives from \ref{sec:abc}:
 
 \begin{itemize}
     \item $\mathsf{Setup}(1^\lambda)$: Generates $\mathsf{pp}$ with bilinear group $\BG = (\G_1, \G_2, \G_T, e, g, \tilde{g}, p)$ and commitment generators $(g_1, g_2, g_3, \tilde{g}_1, \tilde{g}_2, \tilde{g}_3)$ for $\ell = 3$, extensible to more attributes.
@@ -238,7 +240,7 @@ The MIMC-ABC system operates as follows, reusing primitives from Chapter 2 (Sect
             \item Rerandomizes: $\mathsf{cm}_j' = \mathsf{CM.Rerand}(\mathsf{cm}_j, \Delta_{r_j})$, $\sigma_j' = \mathsf{RS.Rerand}(\sigma_j, \Delta_{r_j}, \Delta_{u_j})$.
             \item Proves via $\Sigma$-protocol:
                 \[
-                \mathcal{R}_\phi =\left\{ 
+                \mathcal{R}_\phi = \zkpok \left\{ 
                 \begin{array}{l} 
                 (\{\mathsf{cm}_j', \sigma_j'\}_j, (\id, \{\ctx_j, \exp_j, \usk_j + \Delta_{r_j}\}_j)) \\
                 \end{array} 
@@ -258,7 +260,7 @@ The MIMC-ABC system operates as follows, reusing primitives from Chapter 2 (Sect
 
 \subsection{Identity Binding Mechanism}
 
-Identity binding relies on the position-binding property of Pedersen commitments (Section 2.2). The $\Sigma$-protocol proves that all $\mathsf{cm}_j'$ share the same $\id$ in the first position ($g_1^\id$), using an equality proof across commitments:
+Identity binding relies on the position-binding property of Pedersen commitments \ref{sec:commitment}. The $\Sigma$-protocol \ref{def:zeroknowledgeproofofoknowledge} proves that all $\mathsf{cm}_j'$ share the same $\id$ in the first position ($g_1^\id$), using an equality proof across commitments:
 \[
 \rid = \zkpok \left\{ 
 \begin{array}{l} 
@@ -279,7 +281,7 @@ The position-binding assumption (SDLP, Section 2.1) ensures an adversary cannot 
 
 \section{Security Analysis}
 
-We analyze the security of MIMC-ABC against a PPT adversary controlling issuers, corrupting users, and querying oracles (adapted from Section 2.5). Our system inherits the ABC framework’s guarantees (Section 2.6) and strengthens them with identity binding for the multi-issuer setting. We prove correctness informally, then formalize unforgeability, anonymity, and identity binding, reducing security to the underlying primitives’ assumptions: EUF-CMA of the signature scheme (Section 2.3), position-binding of the commitment scheme (Section 2.2), and soundness of $\Sigma$-protocols (Section 2.4.3).
+We analyze the security of MIMC-ABC against a PPT adversary controlling issuers, corrupting users, and querying oracles (adapted from Section 2.5). Our system inherits the ABC framework’s guarantees (Section 2.6) and strengthens them with identity binding for the multi-issuer setting. We prove correctness informally, then formalize unforgeability, anonymity, and identity binding, reducing security to the underlying primitives’ assumptions: EUF-CMA of the signature scheme \ref{def:euf-cma}, position-binding of the commitment scheme \ref{sec:commitment}, and soundness of $\Sigma$-protocols \ref{def:zeroknowledgeproofofoknowledge}.
 
 \subsection{Correctness}
 
@@ -287,24 +289,26 @@ An honest user with valid credentials $\{\mathsf{cred}_j\}_j$ from issuers $\{j\
 
 \subsection{Unforgeability}
 
+Unforgeability of the Multi-Issuer Multi-Credential Attribute-Based Credential system builds upon the unforgeability proof of the standard Attribute-Based Credential system in \ref{chap2} and the security proof \ref{eufcma-proof}. 
+
 \begin{theorem}[Unforgeability]
-MIMC-ABC is unforgeable if the rerandomizable signature scheme is EUF-CMA secure, the Pedersen commitment scheme is position-binding, and the $\Sigma$-protocol is sound. For any PPT adversary $\mathcal{A}$, $\Adv^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq \negl(\lambda)$.
+MIMC-ABC is unforgeable if the rerandomizable signature scheme is EUF-CMA \ref{def:eufcma-commitment} secure, the Pedersen commitment scheme is position-binding \ref{def:commitmentscheme}, and the $\Sigma$-protocol is sound \ref{def:zeroknowledgeproofofoknowledge}. For any PPT adversary $\mathcal{A}$, $\Adv^{\mathsf{UNF}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq \negl(\lambda)$.
 \end{theorem}
 
 \begin{proof}[Sketch]
-We reduce unforgeability to three cases, adapting Section 2.6’s ABC proof:
+We reduce unforgeability to three cases, adapting ABC proof \ref{fig:abc-security-games}:
 \begin{enumerate}
     \item \textbf{Forged Signature}: If $\mathcal{A}$ outputs a valid $\mathsf{cred}_j' = (\sigma_j', \mathsf{cm}_j')$ not issued by any $\mathsf{osk}_j$, we extract $\sigma_j'$ as an EUF-CMA forgery.
-    \item \textbf{Predicate Misuse}: If $\mathcal{A}$ uses valid credentials but proves a false $\phi^*$ (e.g., $\exp_j < \text{today}$ when $\exp_j > \text{today}$), the $\Sigma$-protocol’s special soundness lets us extract a witness contradicting the original attributes, breaking position-binding.
+    \item \textbf{Predicate Misuse}: If $\mathcal{A}$ uses valid credentials but proves a false $\phi^*$ (e.g., $\exp_j < \text{today}$ when $\exp_j > \text{today}$), the $\Sigma$-protocol’s special soundness \ref{def:zeroknowledgeproofofoknowledge} lets us extract a witness contradicting the original attributes, breaking position-binding.
     \item \textbf{Identity Mixing}: If $\mathcal{A}$ combines credentials with different $\id$ values yet proves same-$\id$, we extract two openings of some $\mathsf{cm}_j'$ (e.g., $g_1^{\id_1}$ vs. $g_1^{\id_2}$), breaking position-binding.
 \end{enumerate}
-A reduction $\mathcal{B}$ simulates the game (Section 2.5), embedding EUF-CMA and position-binding challenges into $\{\mathsf{opk}_j\}_j$ and $\mathsf{cm}_j$. Any forgery violates one assumption, bounding $\mathcal{A}$’s advantage by $\negl(\lambda)$.
+A reduction $\mathcal{B}$ simulates the game \ref{eufcma-proof}, embedding EUF-CMA and position-binding challenges into $\{\mathsf{opk}_j\}_j$ and $\mathsf{cm}_j$. Any forgery violates at least one assumption, bounding $\mathcal{A}$’s advantage by $\negl(\lambda)$.
 \end{proof}
 
 \subsection{Anonymity}
 
 \begin{theorem}[Anonymity]
-MIMC-ABC is anonymous, even against colluding issuers, if the signature scheme’s rerandomization is indistinguishable, the commitment scheme is hiding, and the $\Sigma$-protocol is zero-knowledge. For any PPT adversary $\mathcal{A}$, $\Adv^{\mathsf{ANON}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq \negl(\lambda)$.
+MIMC-ABC is anonymous based on the definition \ref{def:anonymity}, even against colluding issuers, if the signature scheme’s rerandomization is indistinguishable, the commitment scheme is hiding, and the $\Sigma$-protocol is zero-knowledge. For any PPT adversary $\mathcal{A}$, $\Adv^{\mathsf{ANON}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq \negl(\lambda)$.
 \end{theorem}
 
 \begin{proof}[Sketch]
@@ -319,16 +323,16 @@ The hiding property of Pedersen commitments ensures $\mathsf{cm}_j'$ is uniform,
 \subsection{Identity Binding}
 
 \begin{theorem}[Identity Binding]
-MIMC-ABC satisfies identity binding under the SDLP assumption (Section 2.1). For any PPT adversary $\mathcal{A}$ mixing credentials with distinct $\id$ values, $\Adv^{\mathsf{BIND}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq n \cdot m \cdot \Adv^{\mathsf{SDLP}}(\lambda) + \negl(\lambda)$, where $n$ is the number of issuers and $m$ is credentials per user.
+MIMC-ABC satisfies identity binding under the SDLP assumption \ref{sdlp}. For any PPT adversary $\mathcal{A}$ mixing credentials with distinct $\id$ values, $\Adv^{\mathsf{BIND}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq n \cdot m \cdot \Adv^{\mathsf{SDLP}}(\lambda) + \negl(\lambda)$, where $n$ is the number of issuers and $m$ is credentials per user.
 \end{theorem}
 
 \begin{proof}[Sketch]
 If $\mathcal{A}$ outputs $\{\mathsf{cred}_j'\}_j$, $\phi^*$ requiring same $\id$, and $\pi^*$ verifying despite $\id_j \neq \id_k$ for some $j, k$, the $\Sigma$-protocol’s special soundness extracts witnesses from $\pi^*$. For each $\mathsf{cm}_j' = g_1^{\id_j} g_2^{\ctx_j} g_3^{\exp_j} g^{\usk_j'}$, we get $\id_j$, and differing $\id$ values imply two openings of some $\mathsf{cm}_j'$ at position 1 (e.g., $g_1^{\id_1}$ vs. $g_1^{\id_2}$). A reduction $\mathcal{B}$ embeds an SDLP challenge $(g^x, \tilde{g}^x)$ into $g_1, \tilde{g}_1$, solving $x$ with probability $1/(n \cdot m)$ per credential, yielding the bound.
 \end{proof}
 
-\subsection{Security Scaling}
-
-The identity binding advantage scales linearly with $n$ and $m$, reflecting the number of opportunities to break position-binding. This graceful degradation ensures MIMC-ABC remains secure as the system grows, a key advantage over prior multi-issuer schemes lacking formal binding guarantees.
+\begin{remark}[Security Degradation]
+    The identity binding advantage scales as $\Adv^{\mathsf{BIND}}_{\MIMCABC, \mathcal{A}}(\lambda) \leq n \cdot m \cdot \Adv^{\mathsf{SDLP}}(\lambda)$ and therefore decreases by the factor $1/(n \cdot m)$, which should be taken into account when assessing security on multiple credential verifications simultaneously. 
+\end{remark}
 
 
 

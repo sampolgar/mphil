@@ -61,12 +61,20 @@ Section \ref{chap2:preliminaries} establishes the background preliminaries, sect
 
 \section{Preliminaries}\label{chap2:preliminaries}
 
-
 \subsection{Assumptions}
+
+\begin{definition}[Discrete Logarithm Assumption (DLP)]\label{dlp}
+Let $\G$ be a cyclic group of prime order $p$ with generator $g$. The discrete logarithm assumption \cite{DBLP:journals/tit/DiffieH76} states that for any PPT adversary $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+$$\Pr\left[\begin{array}{l}
+    x \sample \Z_p \\
+    x' \sample \mathcal{A}(\G, p, g, g^x)
+\end{array} : x = x'\right] \leq \negl(\lambda)$$
+where $\lambda$ is the security parameter.
+\end{definition}
 
 
 \begin{definition}[Symmetric Discrete Logarithm Assumption (SDLP)]\label{sdlp}
-For any PPT adversary $\mathcal{A}$, we say the SDLP assumption holds if there exists a negligible function $\negl$ such that:
+The SDLP assumption first proved in \cite{hutchison_get_2010} states that for any PPT adversary $\mathcal{A}$, we say the SDLP assumption holds if there exists a negligible function $\negl$ such that:
 $$\Pr\left[\begin{array}{l}
     \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
     x \sample \Z_p \\
@@ -76,8 +84,23 @@ where validity of input can be verified by checking $e(g, \tilde{g}^x) = e(g^x, 
 \end{definition} 
 
 
-\begin{definition}[Type-3 PS-LRSW Assumption]
-For any PPT adversary $\mathcal{A}$, we say the Type-3 PS-LRSW assumption holds in the generic bilinear group model if there exists a negligible function $\negl$ such that:
+\begin{definition}[Bilinear map]\label{bggroup}
+Let $\G_1, \G_2$ and $\G_T$ be cyclic groups of prime order $p$ both in multiplicative notation. Let $g, \tilde{g}$ be generators of $\G_1$ and $\G_2$ respectively. We call $e$ a bilinear pairing or map $e : \G_1 \times \G_2 \to G_T$ if it is efficiently computable and the following properties hold
+\begin{itemize}
+    \item Bilinearity: $e(g^a, \tilde{g}^b) = e(g^b, \tilde{g}^a) = e(g,\tilde{g})^{ab}$ $\forall$ $a,b \in \Z_p$
+    \item Non-degeneracy: $e(g,\tilde{g}) \neq 1_{\G_T}$ i.e., $e(g,\tilde{g})$ is the generator $\G_T$
+\end{itemize}
+We use Type-3 pairings, those without efficiently computable isomorphism between $\G_1 \to \G_2$ which are widely used in practice \cite{DBLP:journals/iacr/ChatterjeeM09}.
+    
+\end{definition}
+
+\begin{definition}[Bilinear Group Generator]\label{bggenerator}
+    A bilinear-group generator \cite{fuchsbauer_structure-preserving_2019} $\BGGen$ is a polynomial-time algorithm that takes a security parameter $1^\lambda$ and outputs a description of a bilinear group $\BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda)$. $\G_1 = \langle g \rangle, \G_2 = \langle \tilde{g} \rangle $ and $\G_T$ of prime order $p$ and pairing $e : \G_1 \times \G_2 \to \G_T$.
+\end{definition}
+
+\begin{definition}[Type-3 PS-LRSW Assumption]\label{def:pslrsw}
+The PS-LRSW assumption is based off the LRSW assumption \cite{goos_pseudonym_2000}, extended in \cite{sako_short_2016}. 
+For any PPT adversary $\mathcal{A}$, we say the Type-3 PS-LRSW  assumption holds in the generic bilinear group model if there exists a negligible function $\negl$ such that:
 $$\Pr\left[\begin{array}{l}
     \BG = (p, \G_1, \G_2, \G_T, e, g, \tilde{g}) \sample \BGGen(1^\lambda) \\
     x,y \sample \Z_p, X \gets g^x, \tilde{X} \gets \tilde{g}^x, \tilde{Y} \gets \tilde{g}^y \\
@@ -103,7 +126,7 @@ In this section, I introduce a specialized extension of Pedersen commitments tha
 
 
 \begin{definition}[Commitment Scheme]\label{def:commitmentscheme}
-A commitment scheme $\mathsf{Com}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ where:
+A Commitment scheme $\mathsf{Com}$, as denoted \cite{feigenbaum_non-interactive_1992} and expanded \cite{goos_rapid_1997} is a tuple of probabilistic polynomial-time algorithms $(\mathsf{Setup}, \mathsf{Commit}, \mathsf{Open})$ where:
 \begin{itemize}
     \item $\mathsf{Setup}(1^\lambda) \rightarrow \mathsf{ck}$: is a probabilistic algorithm that takes as input a security parameter $\lambda$ and outputs a commitment key $\mathsf{ck}$. The message space $\mathcal{M}$ is implicitly defined by $\mathsf{ck}$.
     
@@ -184,7 +207,7 @@ This construction preserves the message vector while updating the randomness, ma
 
 
 
-\begin{definition}[Signature Scheme]
+\begin{definition}[Digital Signature Scheme]\label{def:signaturescheme}
 A signature scheme $\mathsf{Sig}$ is a tuple of probabilistic polynomial-time algorithms $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ where:
 
 \begin{itemize}
@@ -202,8 +225,8 @@ A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is correc
 $$\Pr[\mathsf{Verify}(m, \mathsf{Sign}(m, \mathsf{sk}), \mathsf{pk}) = 1] = 1.$$
 \end{definition}
 
-\begin{definition}[EUF-CMA Security]
-A signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\begin{definition}[EUF-CMA Security]\label{def:euf-cma}
+A digital signature scheme $(\mathsf{KeyGen}, \mathsf{Sign}, \mathsf{Verify})$ is existentially unforgeable \cite{DBLP:journals/siamcomp/GoldwasserMR88} under adaptive chosen-message attacks if for all PPT algorithms $\mathcal{A}$, there exists a negligible function $\negl$ such that: 
 $$\Pr\left[\begin{array}{l}
     (\mathsf{sk}, \mathsf{pk}) \sample \mathsf{KeyGen}(1^\lambda) \\
     (m^*, \sigma^*) \sample \mathcal{A}^{\mathcal{O}_{\mathsf{sk}}}(\mathsf{pk})
@@ -220,8 +243,8 @@ where $Q$ is the set of queries made to $\mathcal{O}_{\mathsf{sk}}$ with access 
 
 
 
-\begin{definition}[Rerandomizable Signature]
-A rerandomizable signature scheme over commitments $\mathsf{RS}$ extends a standard signature scheme with the following interface:
+\begin{definition}[Rerandomizable Signature]\label{def:rerandomizablesignature}
+A rerandomizable signature as discussed in \cite{sako_short_2016} scheme over commitments $\mathsf{RS}$ extends a standard signature scheme with the following interface:
 \begin{itemize}
     \item $\mathsf{KeyGen}(1^\lambda, \mathsf{ck}) \rightarrow (\mathsf{sk}, \mathsf{pk})$: Takes security parameter $\lambda$ and commitment key $\mathsf{ck}$, outputs signing key $\mathsf{sk}$ and verification key $\mathsf{pk}$.
     
@@ -233,7 +256,7 @@ A rerandomizable signature scheme over commitments $\mathsf{RS}$ extends a stand
 \end{itemize}
 \end{definition}
 
-\begin{definition}[Correctness]
+\begin{definition}[Correctness]\label{def:rerandomizable-signature-correctness}
 A rerandomizable signature scheme over commitments satisfies correctness if for all security parameters $\lambda$, all key pairs $(\mathsf{sk}, \mathsf{pk}) \in [\mathsf{KeyGen}(1^\lambda, \mathsf{ck})]$, all messages $m \in \mathcal{M}$, all valid commitments $\mathsf{cm} = \mathsf{CM.Commit}(\mathsf{ck}, m, r)$, and all randomness values $u, \Delta_r, \Delta_u$:
 
 \begin{enumerate}
@@ -246,8 +269,8 @@ A rerandomizable signature scheme over commitments satisfies correctness if for 
 \end{definition}
 
 
-\begin{definition}[EUF-CMA]
-A rerandomizable signature scheme over commitments is existentially unforgeable under adaptive chosen message (commitment) attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+\begin{definition}[EUF-CMA Commitment]\label{def:eufcma-commitment}
+We extend the EUF-CMA property of \cite{DBLP:journals/siamcomp/GoldwasserMR88} to rerandomizable signatures and commitment schemes as the message. We note it's existentially unforgeable under adaptive chosen message (commitment) attacks if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
     \begin{align*}
         &\Pr\left[
             \begin{array}{l}
@@ -268,6 +291,21 @@ where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 \end{definition}
 
 
+\begin{definition}[Anonymity]\label{def:anonymity}
+The standard definition for anonymity \cite{goos_efficient_2001} An anonymous credential system $\mathcal{AC} = (\mathsf{Setup}, \mathsf{KeyGen}, \mathsf{Issue}, \mathsf{Show}, \mathsf{Verify})$ provides \emph{anonymity} if for any probabilistic polynomial-time adversary $\mathcal{A}$, the advantage in the following game is negligible:
+
+\begin{enumerate}
+\item The challenger runs $\mathsf{pp} \leftarrow \mathsf{Setup}(1^\lambda)$ and $(pk, sk) \leftarrow \mathsf{KeyGen}(\mathsf{pp})$, giving $(\mathsf{pp}, pk)$ to $\mathcal{A}$.
+\item $\mathcal{A}$ adaptively makes issuing and showing queries for various users and attributes.
+\item $\mathcal{A}$ chooses two users $\mathsf{id}_0, \mathsf{id}_1$ and attribute sets $\mathsf{attr}_0, \mathsf{attr}_1$ such that $\mathsf{attr}_0, \mathsf{attr}_1$ satisfy the same predicate $\phi$.
+\item The challenger flips a coin $b \leftarrow \{0,1\}$, issues a credential to user $\mathsf{id}_b$ with attributes $\mathsf{attr}_b$, and provides $\mathcal{A}$ with a proof $\pi$ that $\mathsf{attr}_b$ satisfies $\phi$.
+\item $\mathcal{A}$ outputs a guess $b'$ and wins if $b' = b$.
+\end{enumerate}
+
+The anonymity advantage is: $\mathsf{Adv}^{\text{anon}}_{\mathcal{AC}}(\mathcal{A}) = |\Pr[b' = b] - 1/2|$
+
+Anonymity ensures that credential presentations reveal no information about the user's identity beyond what is explicitly proven about their attributes.
+\end{definition}
 
 
 
@@ -275,66 +313,156 @@ where $Q_{\cm}$ is the set of all commitments queried to the signing oracle
 
 
 
-\subsection{Zero Knowledge Proofs and Sigma-protocols}
+\subsection{Zero Knowledge Proof of Knowledge and Sigma-protocols}\label{def:zeroknowledgeproofofoknowledge}
+We base our definitions of Zero Knowledge on the works in \cite{goldreich_foundations_2007, goldwasser_knowledge_1985, DBLP:conf/crypto/BellareG92}.
+Zero Knowledge \cite{goldwasser_knowledge_1985} Proofs of Knowledge \cite{DBLP:conf/crypto/BellareG92} enable two entities, a Prover and Verifier, to interact; the Prover convinces the Verifier they know some secret without yielding any additional information apart from the statement. $\Sigma$ protocols are based on Schnorr's construction \cite{schnorr_efficient_1991} based on the hardness of the discrete log problem, where a prover proves knowledge of a hidden exponent. Schnorr's construction leverages computational zero knowledge, that is, they are secure against bounded adversaries. $\Sigma$ protocols are an extremely efficient instantiation of zero knowledge, are extremely versatile, and heavily used in modern privacy protocols due to their simplicity, efficiency, and ease of understanding. We begin by introducing notation and definitions for Zero Knowledge and continue to $\Sigma-$protocols below. Interactive zero-knowledge proofs can be made non-interactive via the Fiat-Shamir transformation \cite{odlyzko_how_1986}. We do not include this in our protocols as we focus on feasibility; however, careful implementation of the Fiat-Shamir transformation is required, as many implementations contain vulnerabilities. There are attempts to standardise both $\Sigma-$protocols and the use of the Fiat-Shamir transformation \cite{stephan_krenn_proposal_2021}. I use the notation from \cite{DBLP:conf/eurocrypt/CamenischM99}. 
 
-\subsubsection{Proof Relations}
+
+We begin by establishing the foundational concepts of zero-knowledge proofs and sigma protocols, which form the basis for our constructions.
+
+\subsubsection{Relations and Languages}
+
 \begin{definition}[Relation]
-Let $\mathcal{R}  = \{((x)(w),crs)\} \subseteq \{0,1\}^* \times \{0,1\}^* \times \{0,1\}^*$ be a binary relation between an input string $x$, a witness string $w$, and a common reference string $crs$. We define $L_R = \{x : \exists w \text{ such that } (x,w,crs) \in R\}$.    
+\label{def:relation}
+aLet $\mathcal{R}$ be a binary relation between an input string $x$ and a witness string $w$ as per \cite{DBLP:conf/crypto/BellareG92, feige_zero-knowledge_1988}:
+$$\mathcal{R} \subseteq \{0,1\}^* \times \{0,1\}^*$$
+For $(x,w) \in \mathcal{R}$, we require that the length of $w$ is at most $p(|x|)$ for some polynomial $p$. We call $w$ a witness for the instance $x$. The language associated with $\mathcal{R}$ is defined as:
+$$L_\mathcal{R} = \{x : \exists w \text{ such that } (x,w) \in \mathcal{R}\}$$
 \end{definition}
 
 \subsubsection{Interactive Zero-Knowledge Proofs}
+
 \begin{definition}[Interactive Zero-Knowledge Proof]
-    An interactive zero-knowledge protocol describes a system between a prover $P$ and a verifier $V$ that satisfies the following properties:
+\label{def:zkproof}
+An interactive protocol between a prover $\mathcal{P}$ and a verifier $\mathcal{V}$ is a zero-knowledge proof for relation $\mathcal{R}$ if it satisfies:
 
 \begin{itemize}
-    \item \textbf{Completeness}: If $(x,w,crs) \in \mathcal{R}$, then $\Pr[(P(w), V)(x, crs) = 1] \geq 1 - \negl(\lambda)$.
+    \item \textbf{Completeness}: For all $(x,w) \in \mathcal{R}$:
+    $$\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] \geq 1 - \negl(\lambda)$$
     
-    \item \textbf{Soundness with Knowledge Extraction}: For any prover $P^*$ that convinces $V$ with probability $p(x) > \kappa(x)$ (where $\kappa$ is the knowledge error function), there exists a probabilistic polynomial-time knowledge extractor $\mathcal{E}$ such that given oracle access to $P^*$, $\mathcal{E}$ outputs $w$ satisfying $(w,x,crs) \in R$ within expected time proportional to $\frac{|x|^c}{p(x)-\kappa(x)}$.
+    \item \textbf{Soundness}: For any computationally bounded prover $\mathcal{P}^*$ and $x \notin L_\mathcal{R}$:
+    $$\Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] \leq \negl(\lambda)$$
     
-    \item \textbf{Honest Verifier Zero-Knowledge}: There exists a simulator $\mathcal{S}$ such that for all $(x,w,crs) \in R$ and any (possibly malicious) verifier $V^*$, the view of $V^*$ in the real interaction with $P(w)$ is computationally indistinguishable from $\mathcal{S}(x,crs)$.
+    \item \textbf{Zero-Knowledge}: There exists a probabilistic polynomial-time simulator $\mathcal{S}$ such that for all $(x,w) \in \mathcal{R}$ and any verifier $\mathcal{V}^*$:
+    $$\{\text{VIEW}_{\mathcal{V}^*}(\mathcal{P}(w), \mathcal{V}^*)(x)\} \approx_c \{\mathcal{S}(x)\}$$
+    where $\text{VIEW}_{\mathcal{V}^*}$ denotes the view of $\mathcal{V}^*$ in the interaction, and $\approx_c$ denotes computational indistinguishability as discussed \cite{goldwasser_probabilistic_1982}.
 \end{itemize}
 \end{definition}
 
-\begin{remark}[Extractor]
-    A proof is a proof of knowledge if an extractor $\mathcal{E}$, with rewind access to $\mathcal{P}^*$, can extract $w$ when $\mathcal{P}^*$ convinces $\mathcal{V}$ with non-negligible probability:
-\[
-\Pr[\mathcal{E}^{\mathcal{P}^*}(x) = w : (x, w) \in R] \geq \Pr[(\mathcal{P}^*, \mathcal{V})(x) = 1] - \negl(\lambda).
-\]
+\begin{remark}
+When the zero-knowledge property holds only for the honest verifier, we call the protocol \emph{Honest Verifier Zero-Knowledge} (HVZK).
 \end{remark}
 
-\begin{remark}[Zero Knowledge Simulator]
-A proof is zero-knowledge if it reveals only that $x \in L$. Formally, for any $\mathcal{V}^*$, there exists a simulator $\mathcal{S}$ such that:
-\[
-\{\text{VIEW}_{\mathcal{V}^*}(\mathcal{P}(w), \mathcal{V}^*)(x)\} \approx_c \{\mathcal{S}(x)\}, \quad \forall x \in L.
-\]    
-\end{remark}
+\subsubsection{Proofs of Knowledge}
 
+\begin{definition}[Proof of Knowledge]
+\label{def:pok}
+Let $\kappa: \{0,1\}^* \rightarrow [0,1]$ be the knowledge error function. An interactive protocol $(\mathcal{P}, \mathcal{V})$ is a proof of knowledge for relation $\mathcal{R}$ with knowledge error $\kappa$ if:
 
-\subsubsection{Sigma-Protocols}\label{preliminaries-sigmaprotocol}
+\begin{itemize}
+    \item \textbf{Completeness}: For all $(x,w) \in \mathcal{R}$:
+    $$\Pr[(\mathcal{P}(w), \mathcal{V})(x) = 1] = 1$$
+    
+    \item \textbf{Knowledge Soundness}: There exists a probabilistic polynomial-time knowledge extractor $\mathcal{E}$ such that for any prover $\mathcal{P}^*$, if $\epsilon(x)$ denotes the probability that $\mathcal{V}$ accepts on input $x$ when interacting with $\mathcal{P}^*$, then whenever $\epsilon(x) > \kappa(x)$:
+    \begin{itemize}
+        \item $\mathcal{E}$ with oracle access to $\mathcal{P}^*$ outputs $w$ such that $(x,w) \in \mathcal{R}$
+        \item The expected running time of $\mathcal{E}$ is at most:
+        $$\frac{|x|^c}{\epsilon(x) - \kappa(x)}$$
+        for some constant $c$, where oracle queries count as one step.
+    \end{itemize}
+\end{itemize}
+\end{definition}
+
+\subsubsection{Sigma Protocols}
+
 \begin{definition}[Sigma Protocol]
-    A Sigma-protocol for a relation $R$ is a three-move protocol:
-    \begin{enumerate}
-        \item $\mathcal{P}(x, w)$ sends commitment $a$.
-        \item $\mathcal{V}$ sends challenge $e \leftarrow \{0,1\}^t$.
-        \item $\mathcal{P}$ sends response $z$.
-    \end{enumerate}
-    $\mathcal{V}$ accepts if $\phi(x, a, e, z) = 1$. It satisfies completeness, special soundness, and SHVZK.
+\label{def:sigma}
+A sigma protocol for relation $\mathcal{R}$ is a three-move public-coin protocol of the following form:
+\begin{enumerate}
+    \item \textbf{Commitment}: $\mathcal{P}(x,w)$ sends commitment $a$
+    \item \textbf{Challenge}: $\mathcal{V}$ sends random challenge $e \leftarrow \{0,1\}^t$
+    \item \textbf{Response}: $\mathcal{P}$ sends response $z$
+\end{enumerate}
+
+The verifier accepts if and only if the verification predicate $\phi(x,a,e,z) = 1$. 
 \end{definition}
 
-\subsubsection{Schnorr Sigma Protocol}
-For $\mathcal{R}_{\mathsf{DL}} = \{(h, w) \in \mathbb{G} \times \mathbb{Z}_q : h = g^w\}$, Schnorr’s protocol proves knowledge of $w$:
+A sigma protocol must satisfy the following three properties:
+
 \begin{itemize}
-    \item \textbf{Commitment}: $\mathcal{P}$ samples $r \leftarrow \mathbb{Z}_q$, sends $a = g^r$.
-    \item \textbf{Challenge}: $\mathcal{V}$ sends $e \leftarrow \{0,1\}^t$.
-    \item \textbf{Response}: $\mathcal{P}$ sends $z = r + e w \mod q$.
-    \item \textbf{Verification}: $\mathcal{V}$ checks $g^z = a \cdot h^e$.
+    \item \textbf{Completeness}: If $\mathcal{P}$ and $\mathcal{V}$ follow the protocol on input $x$ with witness $w$ where $(x,w) \in \mathcal{R}$, then $\mathcal{V}$ always accepts.
+    
+    \item \textbf{Special Soundness}: From any $x$ and any two accepting transcripts $(a,e,z)$ and $(a,e',z')$ where:
+    \begin{itemize}
+        \item Both transcripts share the \emph{same} commitment $a$
+        \item The challenges are \emph{different}: $e \neq e'$
+    \end{itemize}
+    one can efficiently compute $w$ such that $(x,w) \in \mathcal{R}$.
+    
+    \begin{remark}
+    standard soundness states that a cheating prover can't succeed. Special soundness states that the extractor, given two accepting transcripts with the same commitment but different challenges can "rewind" the protocol to recover the witness. 
+    \end{remark}
+    
+    \item \textbf{Special Honest Verifier Zero-Knowledge (SHVZK)}: There exists a polynomial-time simulator $\mathcal{S}$ that on input $(x,e)$ outputs $(a,e,z)$ with the same distribution as real protocol transcripts between honest $\mathcal{P}$ and $\mathcal{V}$ where $\mathcal{V}$'s challenge is $e$.
+    
+    \begin{remark}
+    The distinction between standard HVZK and "special" HVZK:
+    \begin{itemize}
+        \item \textbf{Standard HVZK}: The simulator receives only the public input $x$ and may choose the challenge $e$ itself to produce a convincing transcript.
+        \item \textbf{Special HVZK}: The simulator receives both the public input $x$ \emph{and} a pre-specified challenge $e$, yet must still produce a transcript $(a,e,z)$ indistinguishable from real executions.
+    \end{itemize}
+    The "special" capability is that the simulator can handle \emph{any} externally chosen challenge, not just ones it selects. This stronger property is used in e.g. Fiat-Shamir transformation, where challenges are determined by a hash function rather than chosen by the simulator.
+    \end{remark}
 \end{itemize}
-\textbf{Properties}:
+
+\begin{theorem}
+\label{thm:sigma-pok}
+Any sigma protocol for relation $\mathcal{R}$ with challenge length $t$ is a proof of knowledge with knowledge error $2^{-t}$.
+\end{theorem}
+
+
+\paragraph{Zero-Knowledge Proof of Knowledge Notation}: We use the notation $\mathsf{PoK}$ to denote an interactive zero-knowledge proof of knowledge protocol based on $\Sigma-$protocol. Following the framework from~\cite{damgard_sigma_2010, DBLP:conf/eurocrypt/CamenischM99}, a $\mathsf{PoK}$ for relation $\mathcal{R}$ allows a prover to convince a verifier of the relation $\mathcal{R}$ specified \ref{def:relation} and as:
+
+$$\pi \gets \mathsf{PoK}\{(\text{private inputs}) : \text{public relation}\}$$
+
 \begin{itemize}
-    \item \textbf{Completeness}: $g^z = g^{r + e w} = g^r \cdot (g^w)^e = a \cdot h^e$.
-    \item \textbf{Special Soundness}: From $(a, e, z)$ and $(a, e', z')$, $w = (z - z') / (e - e') \mod q$.
-    \item \textbf{SHVZK}: Simulator samples $z \leftarrow \mathbb{Z}_q$, sets $a = g^z h^{-e}$.
+    \item $\pi$ is the resulting proof transcript
+    \item The parentheses contain the \textbf{private inputs} (witnesses) known only to the prover  
+    \item The colon separates private inputs from the \textbf{public relation} that must be satisfied
+    \item All variables not in parentheses are assumed to be public
 \end{itemize}
+
+\begin{example}[Commitment Opening Proof] for our commitment scheme \ref{def:commitmentscheme}
+$$\pircom \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r): \cm = g^{r} \prod_{i=1}^\ell g_i^{m_i}\}$$
+
+This represents a zero-knowledge proof of knowledge of the relation where:
+\begin{itemize}
+    \item \textbf{Private inputs}: The prover knows messages $(m_1,\ldots,m_\ell)$ and randomness $(r)$
+    \item \textbf{Public relation}: These inputs satisfy the commitment equation $\cm' = g^{r } \prod_{i=1}^\ell g_i^{m_i}$
+    \item \textbf{Public inputs}: The commitment $\cm$ and generators $g, g_1, \ldots, g_\ell$ are known to both parties
+\end{itemize}
+\end{example}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -373,14 +501,139 @@ For $\mathcal{R}_{\mathsf{DL}} = \{(h, w) \in \mathbb{G} \times \mathbb{Z}_q : h
 I build upon the rerandomizable signature scheme over commitments introduced in UTT~\cite{tomescu_utt_2022}. This signature scheme enables the anonymous credential system to present signatures that are both unlinkable and unforgeable without revealing the underlying identity attributes. My main contribution is the first complete and tight security proof in the Algebraic Group Model that establishes $\EUFCMA$ security with minimal assumptions (noted that \cite{tomescu_utt_2022} presents a proof sketch).
 
 
+\section{Security Analysis in the Algebraic Group Model}
+\label{sec:agm-analysis}
+
+We analyze our constructions in the Algebraic Group Model (AGM) \cite{shacham_algebraic_2018, hanaoka_pairing-free_2022}, where adversaries must provide algebraic representations for group elements they output.
+
+\begin{definition}[Algebraic Adversary]
+Let $\mathcal{A}$ be an adversary that receives group elements $(g_1, \ldots, g_n) \in \mathbb{G}^n$ 
+as input. We say $\mathcal{A}$ is algebraic if, whenever it outputs a group element $h \in \mathbb{G}$, 
+it also provides coefficients $(\alpha_1, \ldots, \alpha_n) \in \mathbb{Z}_p^n$ such that:
+$$h = \prod_{i=1}^n g_i^{\alpha_i}$$
+\end{definition}
+
+
+
+
+
+\subsection{Example - Pedersen Commitments Binding in AGM}
+We begin with an example of using the AGM to prove Pedersen Commitments \ref{def:commitmentscheme} are Binding. 
+
+
+\begin{theorem}[Pedersen Commitments are Binding in AGM]
+Let $\mathsf{CM}$ be the Pedersen commitment scheme with commitment key $\mathsf{ck} = (g, h)$ where $h = g^y$ for unknown $y$. For any algebraic adversary $\mathcal{A}$:
+$$\Pr[\mathcal{A} \text{ breaks binding}] \leq \mathsf{Adv}^{\mathsf{DL}}_{\mathcal{B}}(\lambda)$$
+\end{theorem}
+
+\begin{proof}
+We construct a reduction algorithm $\mathcal{B}$ that uses any binding-breaking algebraic adversary $\mathcal{A}$ to solve the discrete logarithm problem.
+
+\textbf{Reduction $\mathcal{B}$:}
+\begin{enumerate}
+\item $\mathcal{B}$ receives a DL challenge $(g, h)$ where $h = g^y$ and $y$ is unknown
+\item $\mathcal{B}$ sets $\mathsf{ck} = (g, h)$ and runs $\mathcal{A}(\mathsf{ck})$
+\item $\mathcal{A}$ outputs a commitment $\mathsf{cm}$ and two distinct openings: $(m_0, r_0)$ and $(m_1, r_1)$ with $m_0 \neq m_1$ (breaking binding).
+\end{enumerate}
+
+\textbf{Algebraic Extraction:} Since $\mathcal{A}$ is algebraic and has received only the group elements $(g, h)$, when it outputs $\mathsf{cm}$, it must provide coefficients $(\alpha, \beta)$ such that:
+$$\mathsf{cm} = g^\alpha \cdot h^\beta$$
+
+\textbf{Analysis:} The binding property is broken when:
+$$\mathsf{cm} = g^{m_0} h^{r_0} = g^{m_1} h^{r_1}$$
+
+Combining with the algebraic representation and substituting $h = g^y$:
+$$g^{\alpha + \beta y} = g^{m_0 + r_0 y} = g^{m_1 + r_1 y}$$
+
+This yields the system:
+$$\alpha + \beta y = m_0 + r_0 y = m_1 + r_1 y$$
+
+From the equality $m_0 + r_0 y = m_1 + r_1 y$ and the fact that $m_0 \neq m_1$, we must have $r_0 \neq r_1$. Therefore:
+$$y = \frac{m_1 - m_0}{r_0 - r_1}$$
+
+\textbf{Output:} $\mathcal{B}$ computes and outputs $y$, successfully solving the discrete logarithm problem.
+\end{proof}
+
+The AGM allows the reduction to extract the algebraic representation of $\mathsf{cm}$, which, combined with the two openings, provides enough linear equations to solve for the discrete logarithm $y$. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \subsection{Position Binding Pedersen Commitments for a Vector of Messages}
 
-Building on the standard commitment scheme defined in Section \ref{def:commitmentscheme}, I extend it with the following properties:
+Building on the standard commitment scheme defined in Section \ref{def:commitmentscheme}, I prove a multi-message pedersen commitment to be position binding in a similar sense to vector commitments \cite{gorbunov_pointproofs_2020}. Position binding states that once a vector of messages $m_1, \ldots, m_i$ is committed, the order of the messages is set in place and cannot be changed. This is heavily used in Anonymous Credentials particularly with $\Sigma-$protocols that prove knowledge of certain exponents. The benefit in my protocols is that a credential is defined with messages in certain positions, for example, a credential with the identifier at position $0$ of the array. A user can then prove they have an identical identifier in another credential with the responses of a $\Sigma-$protocol. This enables a prover to prove the equality of the attribute without showing the attribute itself, just that an exponent at the same position in two different commitments is equal. This requires that the commitments are position binding. 
 
 
-\begin{definition}[Position Binding]
+\begin{definition}[Position Binding]\label{def:position-binding}
 A commitment scheme with message vectors in $\mathcal{M}^n$ is position binding if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
     \Pr
@@ -418,7 +671,7 @@ Furthermore, the distribution of $\mathsf{cm}'$ should be computationally indist
 
 \subsection{SDLP and Position Binding Security Analysis in the AGM}
 
-The dual-group Pedersen commitment scheme satisfies the following properties:
+The dual-group Pedersen commitment scheme \ref{def:commitmentscheme} satisfies the following properties:
 
 \begin{itemize}
     \item \textbf{Perfect Hiding:} For any $\attrs \in \Z_p^n$, $\mathsf{Commit}(\mathsf{ck}, \attrs)$ outputs $(\mathsf{cm}, \widetilde{\mathsf{cm}}, r)$ where $\mathsf{cm} = g^r \prod_{i=1}^n g_i^{m_i}$ and $\widetilde{\mathsf{cm}} = \tilde{g}^r \prod_{i=1}^n \tilde{g}_i^{m_i}$. Since $r \sample \Z_p$ is uniform, $\mathsf{cm}$ and $\widetilde{\mathsf{cm}}$ are uniformly distributed in $\G_1$ and $\G_2$, revealing no information about $\attrs$.
@@ -431,7 +684,7 @@ The dual-group Pedersen commitment scheme satisfies the following properties:
 \end{itemize}
 
 \begin{theorem}\label{thereom_position_binding}
-In the Algebraic Group Model, if the Symmetric Discrete Logarithm Problem (SDLP) is hard in the bilinear group $\BG = (\G_1, \G_2, \G_T, e, p, g, \tilde{g})$, then the commitment scheme satisfies position binding. For any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
+In the Algebraic Group Model \ref{sec:agm-analysis}, if the Symmetric Discrete Logarithm Problem (SDLP)\ref{sdlp} is hard in the bilinear group $\BG = (\G_1, \G_2, \G_T, e, p, g, \tilde{g})$, then the commitment scheme satisfies position binding. For any algebraic PPT adversary $\mathcal{A}$ against position binding, there exists a PPT reduction $\mathcal{B}$ against SDLP such that:
 
 $$\mathsf{Adv}^{\mathsf{pos\text{-}bind}}_{\mathcal{A}, \mathsf{Com}}(\lambda) \leq n \cdot \mathsf{Adv}^{\mathsf{SDLP}}_{\mathcal{B}, BG}(\lambda),$$
 
@@ -592,17 +845,17 @@ We assume the existence of a commitment key $\ck$ from $\mathsf{CM.Setup}$ as in
 \subsection{Security Analysis in the AGM}
 
 \begin{theorem}
-The rerandomizable signature scheme is correct.
+The rerandomizable signature scheme is correct as defined \ref{def:rerandomizable-signature-correctness}.
 \end{theorem}
 
 
 \begin{proof}
-First we demonstrate the prover's rerandomized signature verifies with the verification key $\mathsf{vk}$ and the rerandomized commitment. Essentially, we need the following pairing to hold:
+First we demonstrate the prover's rerandomized signature verifies with the verification key $\mathsf{vk}$ and the rerandomized commitment. Essentially, we need the following pairing to hold for a valid signature verification:
 \[
     e(\sigma_2', \tilde{g}) = e(\sigma_1', \mathsf{vk} \cdot \widetilde{\mathsf{cm}'})
 \]
 
-We manipulate the bilinearity properties of the pairing groups to verify this equation:
+We manipulate the bilinearity properties \ref{bggroup} of the pairing groups to verify this equation:
     
 \begin{align*}
     e(\sigma_2', \tilde{g}) &= e((\mathsf{sk} \cdot \mathsf{cm})^{u \cdot \Delta_u} \cdot h^{\Delta_u \cdot \Delta_r}, \tilde{g}) \\
@@ -623,7 +876,7 @@ Thus the prover computes the following to prove equality of commitments across g
 \]
 Then proves the opening of the commitment in zero knowledge:
 \[
- \pircom  \gets \mathsf{ZKPoK}\{(m_1,\ldots,m_\ell, r + \Delta_r): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}\}
+ \pircom  \gets \mathsf{PoK}\{(m_1,\ldots,m_\ell, r + \Delta_r): \cm' = g^{r + \Delta_r} \prod_{i=1}^\ell g_i^{m_i}\}
 \]
 
 
@@ -632,14 +885,14 @@ Then proves the opening of the commitment in zero knowledge:
 
 
 \begin{theorem}[EUF-CMA Security]
-Assume the PS-LRSW assumption holds and the Pedersen commitment is computationally binding. Then, in the Algebraic Group Model, the rerandomizable signature scheme is existentially unforgeable under adaptive chosen-message(commitment) attacks. For any algebraic PPT adversary $\mathcal{A}$, there exist PPT reductions $\mathcal{B}_0, \mathcal{B}_1$ such that:
+Assume the PS-LRSW \ref{def:pslrsw} assumption holds and the Pedersen commitment is computationally binding. Then, in the Algebraic Group Model \ref{sec:agm-analysis}, the rerandomizable signature scheme is existentially unforgeable under adaptive chosen-message(commitment) attacks \ref{def:eufcma-commitment}. For any algebraic PPT adversary $\mathcal{A}$, there exist PPT reductions $\mathcal{B}_0, \mathcal{B}_1$ such that:
 \[
 \Adv^{\mathsf{EUF\mbox{-}CMA}}_{\mathsf{RS},\mathcal{A}}(\lambda) \leq \Adv^{\mathsf{PS\mbox{-}LRSW}}_{\mathcal{B}_0}(\lambda) + \Adv^{\mathsf{Binding}}_{\mathcal{B}_1}(\lambda) + \frac{q_v + q_s}{p},
 \]
 where $q_v$ (verification) and $q_s$ (signing) are query counts.
 \end{theorem}
 
-\begin{proof}
+\begin{proof}\label{eufcma-proof}
 We construct two reductions handling different forgery types. Let $\mathcal{A}$ be an adversary with advantage $\epsilon$.
 
 \textbf{Reduction Strategy: } Since we don't know in advance which type of forgery $\AdvA$ will produce, we design two reductions:
@@ -703,7 +956,7 @@ When $\mathcal{A}$ outputs a forgery $(m_1^*, m_2^*, r^*, \sigma^* = (\sigma_1^*
 
 
 \paragraph{Intuition for Security}
-My dual reduction approach handles all possible forgery types. The key insight is embedding the PS-LRSW challenge in a structured way that ensures:
+My dual reduction approach handles all possible forgery types. The key insight is embedding the PS-LRSW challenge \ref{def:pslrsw} in a structured way that ensures:
 \begin{enumerate}
     \item If the adversary forges a signature for a new linear combination of messages, we break PS-LRSW
     \item If the adversary reuses a linear combination but with different individual messages, we break binding
@@ -776,7 +1029,7 @@ Although the G2 variant reduces verification latency by eliminating one pairing,
 
 
 
-\subsection{Malicious Issuer Security Guarnatees}\label{subsec:malicious_issuer_security_guarantee}
+\subsection{Malicious Issuer Security Guarantees}\label{subsec:malicious_issuer_security_guarantee}
 My first improvement to the PS-UTT rerandomizable signature scheme is the addition of algorithm $\mathsf{RS.VerKey}$, which addresses a vulnerability in traditional anonymous credential systems that assume honest issuers. This assumption leaves users exposed to privacy breaches and potential forgeries from malicious credential providers. Through $\mathsf{RS.VerKey}$, we require issuers to prove knowledge of their secret key $\mathsf{sk} = g^x$ and demonstrate the well-formedness of the commitment key $\mathsf{ck} = \{g_i = g^{y_i}, \tilde{g}_i = \tilde{g}^{y_i}\}_{i \in [\ell]}$ via a zero-knowledge Sigma-protocol. This prevents issuers from constructing keys with hidden mathematical relationships that could deanonymize users during credential presentations or enable credential forgery, ensuring that anonymity guarantees remain intact even against adversarial issuers who attempt to subvert the cryptographic foundations of the system.
 
 \begin{itemize}
@@ -830,7 +1083,7 @@ I separate my security analysis of the verification key $\vk$ and commitment key
 
 \begin{proof}
     \begin{itemize}
-        \item \textbf{Completeness:} For an honest prover who knows $x$ such that $\vk = \tilde{g}^x$, the prover samples $r_x \sample \mathbb{Z}_q$, computes $\widetilde{T_{x}} = \tilde{g}^{r_x}$, and, upon receiving challenge $c$, responds with $z_x = r_x + c \cdot x$. The verifier checks:
+        \item \textbf{Completeness:} For an honest prover who knows $x$ such that $\vk = \tilde{g}^x$, the prover samples $r_x \sample \mathbb{Z}_q$, computes $\widetilde{T_{x}} = \tilde{g}^{r_x}$, and, upon receiving challenge $c$, responds with $z_x = r_x + c \cdot x$. Notation-wise, $\stackrel{?}{=}$ is the inequality check between two equations where the left hand side should equal the right hand side but has not been proven yet. Once proven, I use $\checkmark$ to represent a successful equality.
     \begin{align*}
         \tilde{g}^{z_x} &\stackrel{?}{=} \widetilde{T_{x}} \cdot \vk^c \\
         &\stackrel{?}{=} \tilde{g}^{r_x} \cdot \tilde{g}^{xc} \\
@@ -855,7 +1108,7 @@ I separate my security analysis of the verification key $\vk$ and commitment key
 
 
 \begin{theorem}
-    The $\Sigma$-protocol for $\mathsf{RS.VerKey}$, defined in Protocol \ref{prot:verkey_proof}, is complete, sound, and zero-knowledge, proving knowledge of $\{y_i\}_{i \in [\ell]} \in \mathbb{Z}_q$ such that $(\ck_i, \widetilde{\ck}_i)$ both exponentiate the same $y$ such that $(e(\ck_i, \widetilde{\ck}_i) = e(g^{y_i}, \tilde{g}^{y_i}) = e(g, \tilde{g}))$ for each $i \in [\ell]$
+    The $\Sigma$-protocol \ref{def:zeroknowledgeproofofoknowledge} for $\mathsf{RS.VerKey}$, defined in Protocol \ref{prot:verkey_proof}, is complete, sound, and zero-knowledge, proving knowledge of $\{y_i\}_{i \in [\ell]} \in \mathbb{Z}_q$ such that $(\ck_i, \widetilde{\ck}_i)$ both exponentiate the same $y$ such that $(e(\ck_i, \widetilde{\ck}_i) = e(g^{y_i}, \tilde{g}^{y_i}) = e(g, \tilde{g}))$ for each $i \in [\ell]$
 \end{theorem}
 
 \begin{proof}
@@ -912,7 +1165,7 @@ I separate my security analysis of the verification key $\vk$ and commitment key
     The pairing check $e(T_i, \tilde{g}) = e(g, \widetilde{T_i})$ ensures that $T_i = g^{r_i}$ and $\widetilde{T_i} = \tilde{g}^{r_i}$ use the same randomness $r_i$, which is crucial for the extractor to obtain consistent discrete logarithms from both group components. This consistency guarantees that the extracted $y_i$ values from G1 and G2 equations are identical, proving soundness
 
 
-    \item \textbf{Zero-Knowledge:} We need to construct a simulator $\mathcal{S}$ that, given challenge $c$, can produce a transcript indistinguishable from a real interaction without knowing the witnesses $y_i$. The simulator works as follows:
+    \item \textbf{Zero-Knowledge:} As per \ref{def:zeroknowledgeproofofoknowledge} We need to construct a simulator $\mathcal{S}$ that, given challenge $c$, can produce a transcript indistinguishable from a real interaction without knowing the witnesses $y_i$. The simulator works as follows:
 
     For each $i$, simulator $\mathcal{S}$ Samples $z_i \sample \mathbb{Z}_q$, computes $T_i = g^{z_i} \cdot \ck_i^{-c}$ and $\widetilde{T_i} = \tilde{g}^{z_i} \cdot \widetilde{\ck}_i^{-c}$
     
@@ -961,7 +1214,7 @@ I separate my security analysis of the verification key $\vk$ and commitment key
 
 \section{Sigma Protocols for Efficient, Expressive Proofs}\label{chap2:expressive_proofs}
 
-The algebraic structure of an Anonymous Credential scheme determines the compatible proof system. In this work, I focus on $\Sigma-$protocols as the proof system of choice due to their efficiency and sufficient expressiveness for practical credential use cases. Sigma protocols are three-move, interactive zero-knowledge proofs over cyclic groups, such as $\G_1, \G_T$, where a prover demonstrates knowledge of a secret (e.g., an exponent $x$)) satisfying a specific relation, under the discrete logarithm assumption. These protocols are particularly well-suited for proving linear relations over scalars, which are common in certain credential types. 
+The algebraic structure of an Anonymous Credential scheme determines the compatible proof system. In this work, I focus on $\Sigma-$protocols \ref{def:zeroknowledgeproofofoknowledge} as the proof system of choice due to their efficiency and sufficient expressiveness for practical credential use cases. Sigma protocols are three-move, interactive zero-knowledge proofs over cyclic groups, such as $\G_1, \G_T$, where a prover demonstrates knowledge of a secret (e.g., an exponent $x$) satisfying a specific relation, under the discrete logarithm assumption. These protocols are particularly well-suited for proving linear relations over scalars, which are common in certain credential types. 
 
 The credential construction builds on the line of work following initial rerandomizable signatures on bilinear groups, such as  CL04 \cite{hutchison_signature_2004}, BBS+ \cite{hutchison_constant-size_2006, camenisch_anonymous_2016, tessaro_revisiting_2023}, and PS \cite{sako_short_2016, tomescu_utt_2022}. Earlier schemes \cite{hutchison_signature_2004, hutchison_constant-size_2006, sako_short_2016} required proofs over exponents in $\mathbb{G}_T$, with sub-optimal computational overhead. In contrast, newer constructions \cite{camenisch_anonymous_2016, tessaro_revisiting_2023, tomescu_utt_2022} restructure the algebraic setup to enable zero-knowledge proofs over $\mathbb{G}_1$ points, minimizing computation by leveraging faster scalar exponent operations and efficient optimizations like Multi-Scalar Multiplication. 
 
@@ -971,7 +1224,7 @@ In these schemes, the prover uses $\Sigma$-protocols to prove knowledge of expon
 
 In my credential system, a predicate $\phi$ is a boolean function over an attribute vector $\attrs$, formally $\phi: \mathcal{A} \to \{0,1\}$, where $\mathcal{A}$ is the space of attribute vectors. For a credential with attributes $\attrs = [\text{id}, \text{k}, \text{ctx}, \text{exp}]$, we say that ``$\attrs$ satisfies $\phi$'' if $\phi(\mathbf{a}) = 1$.
 
-The prover uses sigma protocols to demonstrate that their attributes $\attrs$ satisfy a given predicate $\phi$ (i.e., $\phi(\attrs) = 1$) in zero-knowledge, meaning the verifier learns only that the predicate holds, not the attribute values. For example, consider a predicate $\phi_{\text{age}}: \text{age} > 18$. The prover proves knowledge of attributes $\attrs= [\text{age}, \dots]$ such that $\text{age} > 18$, without revealing the exact value of $\text{age}$.
+The prover uses sigma protocols \ref{def:zeroknowledgeproofofoknowledge} to demonstrate that their attributes $\attrs$ satisfy a given predicate $\phi$ (i.e., $\phi(\attrs) = 1$) in zero-knowledge, meaning the verifier learns only that the predicate holds, not the attribute values. For example, consider a predicate $\phi_{\text{age}}: \text{age} > 18$. The prover proves knowledge of attributes $\attrs= [\text{age}, \dots]$ such that $\text{age} > 18$, without revealing the exact value of $\text{age}$.
 
 The soundness of the $\Sigma$-protocol ensures that a prover cannot generate a valid proof for $\phi(\attrs) = 1$ unless their attributes truly satisfy the predicate, reinforcing the unforgeability of my credential system.
 
@@ -979,7 +1232,7 @@ The soundness of the $\Sigma$-protocol ensures that a prover cannot generate a v
 
 \begin{table}[!htb]
 \centering
-\caption{Sigma Protocol Efficiency Summary}\label{tab:sigma_protocol_efficiency_compare}
+\caption{Sigma Protocol Efficiency Summary, overhead is estimated based on estimated algebraic calculations}\label{tab:sigma_protocol_efficiency_compare}
 \begin{tabular}{l|c|l|c|c|c}
 \hline
 \textbf{Operation} & \textbf{Native?} & \textbf{Core Operations} & \textbf{Overhead} & \textbf{Prove (ms)} & \textbf{Verify (ms)} \\
@@ -1009,7 +1262,7 @@ Set Membership (Acc) & No & Sigma proof of witness knowledge & 10-15× & 4-6 & 4
 Groth-Sahai \cite{smart_efficient_2008,krawczyk_fine-tuning_2014} proofs underpin Structure-Preserving Signatures \cite{kiltz_structure-preserving_2015, fuchsbauer_structure-preserving_2019, hanaoka_improved_2022, steinfeld_threshold_2023} where the verification keys, messages, and signatures are group elements. GS proofs offer more expressive proofs for complex statements than $\Sigma$-protocols such as quadratic relations using Pairing-Product Equations (PPE). They enable commitments to group elements with soundness relying on extracting the elements under falsifiable assumptions e.g. SXDH. However, expressiveness comes at a cost, each committed attribute may require 4x $\G_1$ + 4x$\G_2$ per committed attribute \cite{kiltz_structure-preserving_2015, sedaghat_groth-sahai_2023} and multiple pairings for verification, quickly increasing verification time exponentially over $\Sigma$-protocols. A more detailed analysis is found \ref{tab:zkp-comparison}. 
 
 \subsection{zk-SNARKs (Groth16)}
-zk-SNARKs provide maximimum expressiveness, supporting proofs of any NP statement. In the zk-creds system \cite{rosenberg_zk-creds_2022} (along the line of work starting with \cite{garman_decentralized_2014} ) they prove set membership in merkle trees as the credential verification, their hash is a non-algebraic structure incompatible with $\Sigma$-protocols and GS proofs. Groth16 \cite{fischlin_size_2016} proofs offer constant-size proofs $(2x \G_1, + \G_2)$ and fast verification. Yet their proving computational is preventative for wide-scale adoption in credential systems requiring fast Show+Verify algorithms, costing 465 ms(worst case) for a simple credential show in zk-creds, compared to 3.77ms for credential show for my signature and $\Sigma$-protocols. Composing statements (e.g., AND operations) adds 43 ms just for the AND operation without the additional statement, whereas sigma protocols handle composition “for free” via shared challenges. Furthermore, such proofs do not allow multi-credential linking. Additionally, zk-SNARKs require a trusted setup, introducing a security risk absent in sigma protocols and Groth-Sahai proofs, and rely on non-falsifiable assumptions. A detailed analysis is found \ref{tab:zkp-comparison}. 
+zk-SNARKs provide maximum expressiveness, supporting proofs of any NP statement. In the zk-creds system \cite{rosenberg_zk-creds_2022} (along the line of work starting with \cite{garman_decentralized_2014} ) they prove set membership in merkle trees as the credential verification, their hash is a non-algebraic structure incompatible with $\Sigma$-protocols and GS proofs. Groth16 \cite{fischlin_size_2016} proofs offer constant-size proofs $(2x \G_1, + \G_2)$ and fast verification. Yet their proving computational is preventative for wide-scale adoption in credential systems requiring fast Show+Verify algorithms, costing 465 ms(worst case) for a simple credential show in zk-creds, compared to 3.77ms for credential show for my signature and $\Sigma$-protocols. Composing statements (e.g., AND operations) adds 43 ms just for the AND operation without the additional statement, whereas sigma protocols handle composition “for free” via shared challenges. Furthermore, such proofs do not allow multi-credential linking. Additionally, zk-SNARKs require a trusted setup, introducing a security risk absent in sigma protocols and Groth-Sahai proofs, and rely on non-falsifiable assumptions. A detailed analysis is found \ref{tab:zkp-comparison}. 
 
 
 \begin{table}[htbp]
@@ -1201,7 +1454,7 @@ To model the adversary's capabilities and the system's state, we introduce the f
 \end{figure}
 
 \begin{definition}[Unforgeability]
-An ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
+An ABC system is unforgeable based off the definition \ref{def:eufcma-commitment} if for all PPT adversaries $\mathcal{A}$, there exists a negligible function $\negl$ such that:
 \[
 \mathsf{Adv}\left[\mathrm{Game}^{\mathsf{\UNF}}_{\ABC, \adv}(\lambda) = 1\right] \leq \negl(\secparam)
 \]
@@ -1210,7 +1463,7 @@ An ABC system is unforgeable if for all PPT adversaries $\mathcal{A}$, there exi
 \paragraph{Intuition:} An ABC system is unforgeable if no probabilistic polynomial-time adversary can produce a valid proof for a predicate that they cannot legitimately satisfy based on credentials they have been issued. This prevents forging credentials or proving false statements about them.
 
 \begin{definition}[Anonymity]
-An $\ABC$ system provides anonymity if, for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
+An $\ABC$ system provides anonymity \ref{def:anonymity} if, for all PPT adversaries $\adv$, the advantage in the following experiment is negligible:
 \[
 \mathsf{Adv}^{\mathsf{anon}}_{\adv}(\secparam) = \left| \Pr[\mathrm{Game}^{\mathsf{anon-1}}_{\ABC, \adv}(\secparam) = 1] - \Pr[\mathrm{Game}^{\mathsf{anon-0}}_{\ABC, \adv}(\secparam) = 1] \right| \leq \negl(\lambda)
 \]
@@ -1233,7 +1486,7 @@ My credential system operates over attribute space $\Z_p$. The user is indexed b
 
 \subsection{The Sigma Protocols}
 
-My $\ABC$ system relies on five core relations proven via $\Sigma$-protocols:
+My $\ABC$ system relies on five core relations proven via $\Sigma$-protocols as based on the definition \ref{def:zeroknowledgeproofofoknowledge}:
 \begin{enumerate}
     \item \textbf{Commitment Opening:} For commitment $\cm$ to attribute vector $\attrs  = [\id, \ctx, \exp, \attrs]$ and randomness $\usk$. $\pircom(\cm)$ is a proof for relation:
     \[
@@ -1243,7 +1496,7 @@ My $\ABC$ system relies on five core relations proven via $\Sigma$-protocols:
      \item \textbf{Proof of Zero's}: we use adjust the commitment opening proof to prove specific committed values are zero by removing their position in the commitment key. To prove that $\cm=\CMCom([0,0,0,\k];\usk)$, we run the commitment opening protocol with $\ck = g_4g$, if the output verifies, we prove the absence of the first three exponents.
      $\pirzero(\cm)$ is a proof for relation: 
     \[
-    \rzero = \{((\cm),(\k_1, \usk)) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}
+    \rzero = \zkpok \{((\cm),(\k_1, \usk)) \mid \cm = g_1^0g_2^0g_3^0g_4^{\k_1}g^{\usk} \}
     \]
      
     
@@ -1265,7 +1518,7 @@ My $\ABC$ system relies on five core relations proven via $\Sigma$-protocols:
 
     \item \textbf{Malicious Issuer Protection:} For verification key $\vk$ and commitment key $\ck$, $\pirverkey$ is a proof for relation:
     \[
-    \mathcal{R}_{\mathsf{verkey}} = \{(\vk, \ck, (\sk, x, \{y_i\}_{i=1}^{\ell})) \mid \sk = g^x \wedge \vk = \tilde{g}^x \wedge 
+    \mathcal{R}_{\mathsf{verkey}} = \zkpok \{(\vk, \ck, (\sk, x, \{y_i\}_{i=1}^{\ell})) \mid \sk = g^x \wedge \vk = \tilde{g}^x \wedge 
     \forall i \in [1,\ell]: g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i} \}
     \]
     
@@ -1320,7 +1573,7 @@ To prevent attacks from malicious issuers, we extend our signature scheme with:
     \item $\mathsf{RS.VerKey}(\sk, \vk, \ck) \to \bit$: Verifies issuer keys via relation:
 \end{itemize}
 \[
-\mathcal{R}_{\mathsf{verkey}} = \{(\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \wedge \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
+\mathcal{R}_{\mathsf{verkey}} =\zkpok \{(\vk, \ck),(\sk, x, \{y_i\}_{i=1}^\ell) \mid \sk = g^x \wedge \vk = \tilde{g}^x \wedge \bigwedge_{i=1}^\ell (g_i = g^{y_i} \wedge \tilde{g}_i = \tilde{g}^{y_i})\}
 \]
 
 This prevents deanonymization via specially crafted keys, and signature forgery via hidden key relationships. In security proofs, extractability enables reductions to standard cryptographic assumptions.
@@ -1422,7 +1675,7 @@ The reduction algorithm $\mathcal{B}$ proceeds as follows: $\AdvB$ receives a PS
 
 
 \begin{theorem}[Anonymity]
-    The $\ABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{preliminaries-sigmaprotocol} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
+    The $\ABC$ system is anonymous even in the case of malicious issuer keys if the rerandomized signature is computationally indistinguishable from the standard, the commitment is hidden, and the zero-knowledge property of the $\Sigma$-protocol \ref{def:sigma} ensures a simulator generates $\pi$ indistinguishable from real proofs. 
 \end{theorem}
 
 
@@ -1504,7 +1757,7 @@ I implemented all credential schemes using the arkworks library \cite{arkworks_c
 
 \subsection{Empirically Faster Credential Presentations Compared to Original Construction in UTT}
 
-My $\G_2$ signature variant from \ref{subsec:g2_verify_speedup} optimizes credential presentation over credential issuance, representing optimization of 10 - 15\% improvement over the original approach \cite{tomescu_utt_2022} as seen in figure \ref{fig:show_verify_utt_us} and detailed in table \ref{tab:g1-g2-comparison}. It's worth noting that a 10 - 15\% improvement compounds when a user is verifying multiple credentials from a credential wallet. By relocating signature components from $\G_1$ to $\G_2$, I achieve faster credential presentation.
+My $\G_2$ signature variant from \ref{subsec:g2_verify_speedup} optimizes credential presentation over credential issuance, representing optimization of 10 - 15\% improvement over the original approach \cite{tomescu_utt_2022} as seen in figure \ref{fig:show_verify_utt_us} and detailed in table \ref{tab:g1-g2-comparison}. It's worth noting that a 10 - 15\% improvement compounds when a user is verifying multiple credentials from a credential wallet. By relocating signature components from $\G_1$ to $\G_2$, I achieve faster credential presentation. Signature schemes are constantly seeking improvements to reduce costs, for example redactable signatures \cite{sanders_improving_2021} attempt to remove some elements before proving knowledge of them to reduce complexity. Practically, a reduction from 3.9ms to 3.30ms is 0.6ms and may not be directly noticeable alone, but as we prove later, credentials may be bundled together and thus a 10 - 15\% reduction with many credentials may yield a larger and more practically noticeable difference.
 
 \begin{figure}[!htbp]
     \centering
@@ -1569,7 +1822,7 @@ My $\G_2$ signature variant from \ref{subsec:g2_verify_speedup} optimizes creden
 
 
 
-\subsection{Empirically Faster Credential Presentations Compared to Popular Anonymous Credentials}
+\subsection{Empirically Faster Credential Presentations Compared to Popular Anonymous Credentials. Efficiencies are mainly due to reducing the pairing operation}
 I implemented and compared five Anonymous Credential schemes, BBS+ (2006) \cite{hutchison_constant-size_2006}: The original BBS+ signature scheme, BBS+ (2016) \cite{camenisch_anonymous_2016}: An optimized version with proofs in $\G_1$, PS (2016) \cite{sako_short_2016}: The Pointcheval-Sanders scheme, UTT \cite{tomescu_utt_2022}: The UTT variant with signatures in $\mathbb{G}_1$ and my optimized variant with signatures in $\mathbb{G}_2$. I benchmarked the Anonymous Credential algorithms and present the data. Implementations and benchmarks are available for reproduction\footnote{https://github.com/sampolgar/anonymous-credentials} \cite{polgar_anonymous_2025}
 
 \begin{figure}
@@ -1693,8 +1946,8 @@ $n$ & \cite{hutchison_constant-size_2006} & \cite{camenisch_anonymous_2016} & \c
 
 
 \section{Summary and Future Work}
-
-
+Investigating concrete benchmarks for different proof systems is a practically useful avenue for exploration. Based on the literature and our experiments, $\Sigma-$protocols are extremely expressive and efficient though are not compatible with many signature and algebraic constructions, such as hash functions and group elements. 
+Furthermore, detailed comparisons should be made between these constructions and zkSNARKS \cite{ben-sasson_snarks_2013}, particularly of the STARK \cite{ben-sasson_stark_2020} variety, which are secure against quantum adversaries. Doing so may significantly change the architecture of Anonymous Credentials as is done in \cite{rosenberg_zk-creds_2022}.
 
 
 
